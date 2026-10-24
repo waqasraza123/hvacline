@@ -185,3 +185,12 @@ def test_reschedule_is_atomic_and_cancellation_releases_capacity(
         ).status
         == "HELD"
     )
+
+
+def test_phone_request_rejects_unresolved_call_context(
+    migrated_database: Engine,
+) -> None:
+    service, agency_id, _ = configure(migrated_database)
+    with pytest.raises(ApiError) as error:
+        service.create_request(agency_id, service_request(), uuid4(), call_id=uuid4())
+    assert error.value.status_code == 404

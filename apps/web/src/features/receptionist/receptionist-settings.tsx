@@ -108,8 +108,8 @@ export function ReceptionistSettingsEditor({
         <p className="eyebrow">Development workspace</p>
         <h1>Configure your AI receptionist</h1>
         <p className="summary">
-          These backend-owned settings define the public business identity and
-          safe handoff language used across the receptionist experience.
+          These settings define your business identity and safe handoff language
+          used across the receptionist experience.
         </p>
       </header>
       <section className="settings-card" aria-labelledby="agency-profile-title">
@@ -189,7 +189,8 @@ export function ReceptionistSettingsEditor({
             {status === "saving" ? "Saving…" : "Save configuration"}
           </button>
           <p className="settings-note">
-            Updates use optimistic concurrency and save an audit record.
+            Changes are recorded. Reload if another team member edits these
+            settings.
           </p>
         </div>
         {message && (

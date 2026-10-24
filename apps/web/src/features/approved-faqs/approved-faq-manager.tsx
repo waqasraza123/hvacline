@@ -110,8 +110,8 @@ export function ApprovedFaqManager({
         <p className="eyebrow">Approved knowledge</p>
         <h1>Control what the receptionist can answer</h1>
         <p className="summary">
-          Only active FAQs are eligible for deterministic matching. Uncertain or
-          unsupported questions use the configured human handoff message.
+          The receptionist answers from the business information you approve.
+          Questions without a clear answer go to your team.
         </p>
       </header>
 

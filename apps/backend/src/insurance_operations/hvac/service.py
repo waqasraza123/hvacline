@@ -13,6 +13,7 @@ from insurance_operations.database.models.hvac import (
     HvacServiceRequest,
 )
 from insurance_operations.database.models.identity import Agency
+from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.availability import candidate_slots, overlaps
 from insurance_operations.hvac.schemas import (
@@ -100,6 +101,15 @@ class SchedulingService:
                 select(Agency).where(Agency.id == agency_id).with_for_update()
             )
             if call_id:
+                call = session.scalar(
+                    select(InboundCall).where(
+                        InboundCall.id == call_id, InboundCall.agency_id == agency_id
+                    )
+                )
+                if call is None:
+                    raise ApiError(
+                        status_code=404, code="CALL_NOT_FOUND", message="Call not found"
+                    )
                 existing = session.scalar(
                     select(HvacServiceRequest).where(
                         HvacServiceRequest.agency_id == agency_id,
