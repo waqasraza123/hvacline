@@ -10,16 +10,22 @@ export function BrowserBooking({
   serviceRequestId,
   postalCode,
   hazardous,
+  initialAppointment,
+  initialTimezone,
 }: {
   apiBaseUrl: string;
   adminToken?: string;
   serviceRequestId: string;
   postalCode: string;
   hazardous: boolean;
+  initialAppointment?: Appointment;
+  initialTimezone?: string;
 }) {
   const [day, setDay] = useState("");
   const [availability, setAvailability] = useState<Availability>();
-  const [appointment, setAppointment] = useState<Appointment>();
+  const [appointment, setAppointment] = useState<Appointment | undefined>(
+    initialAppointment,
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const reservationRef = useRef<{ slot: string; key: string } | undefined>(
@@ -65,11 +71,14 @@ export function BrowserBooking({
   if (hazardous)
     return (
       <p role="status">
-        Your request needs human attention. No appointment was booked. For
-        immediate danger, contact emergency services.
+        Your request needs human attention.{" "}
+        {appointment?.status === "CONFIRMED"
+          ? "Your existing appointment remains saved; no new appointment can be booked here."
+          : "No appointment was booked."}{" "}
+        For immediate danger, contact emergency services.
       </p>
     );
-  const timezone = availability?.timezone;
+  const timezone = availability?.timezone ?? initialTimezone;
   function time(value: string) {
     return new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
@@ -172,9 +181,10 @@ export function BrowserBooking({
                 disabled={busy}
                 onClick={() =>
                   void act(async () => {
-                    await api("appointments/" + appointment.id + "/cancel", {
-                      explicit_confirmation: true,
-                    });
+                    await api(
+                      "appointments/" + appointment.id + "/release",
+                      {},
+                    );
                     setAppointment(undefined);
                     setAvailability(undefined);
                     reservationRef.current = undefined;

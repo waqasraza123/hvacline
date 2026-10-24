@@ -150,6 +150,16 @@ def create_hvac_router(
         )
 
     @router.post(
+        "/appointments/{appointment_id}/release", response_model=AppointmentView
+    )
+    def release(
+        appointment_id: UUID, request: Request, actor: Actor
+    ) -> AppointmentView:
+        return service.release_hold(
+            actor.agency_id, appointment_id, UUID(request.state.correlation_id)
+        )
+
+    @router.post(
         "/appointments/{appointment_id}/cancel", response_model=AppointmentView
     )
     def cancel(

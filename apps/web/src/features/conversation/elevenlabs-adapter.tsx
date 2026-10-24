@@ -6,6 +6,7 @@ import {
   useConversationControls,
 } from "@elevenlabs/react";
 import type { ReactNode } from "react";
+import type { VoiceBookingTool } from "./voice-booking";
 
 import type {
   ApprovedFaqToolLookup,
@@ -17,10 +18,14 @@ import type {
 type AdapterProperties = Readonly<{
   children: (client: ConversationClient) => ReactNode;
   onDisconnect: () => void;
-  onDraft: (draft: ConversationDraft) => void;
+  onDraft: (draft: ConversationDraft) => Promise<string>;
   onError: (message: string) => void;
   onApprovedFaqLookup: ApprovedFaqToolLookup;
   onTranscript: (speaker: ConversationSpeaker, text: string) => void;
+  onBookingTool: (
+    tool: VoiceBookingTool,
+    parameters: Record<string, unknown>,
+  ) => Promise<string>;
 }>;
 
 type IntakeToolParameters = Readonly<{
@@ -56,6 +61,7 @@ function AdapterBridge({
   onError,
   onApprovedFaqLookup,
   onTranscript,
+  onBookingTool,
 }: AdapterProperties) {
   const controls = useConversationControls();
   const conversation = useConversation({
@@ -85,25 +91,47 @@ function AdapterBridge({
                 },
         });
       },
-      submit_intake_draft: (parameters: IntakeToolParameters) => {
-        onDraft({
-          fullName: optionalString(parameters.full_name),
-          email: optionalString(parameters.email),
-          phone: optionalString(parameters.phone),
-          intakeIntent: optionalString(parameters.intake_intent),
-          addressLine1: optionalString(parameters.address_line1),
-          city: optionalString(parameters.city),
-          stateCode: optionalString(parameters.state_code),
-          postalCode: optionalString(parameters.postal_code),
-          serviceKind: optionalString(parameters.service_kind),
-          preferredWindow: optionalString(parameters.preferred_window),
-          hazardousCondition:
-            typeof parameters.hazardous_condition === "boolean"
-              ? parameters.hazardous_condition
-              : undefined,
-        });
-        return "The draft is visible for user review. No data has been saved.";
+      submit_intake_draft: async (parameters: IntakeToolParameters) => {
+        try {
+          return await onDraft({
+            fullName: optionalString(parameters.full_name),
+            email:
+              typeof parameters.email === "string"
+                ? parameters.email.trim()
+                : undefined,
+            phone: optionalString(parameters.phone),
+            intakeIntent: optionalString(parameters.intake_intent),
+            addressLine1: optionalString(parameters.address_line1),
+            city: optionalString(parameters.city),
+            stateCode: optionalString(parameters.state_code),
+            postalCode: optionalString(parameters.postal_code),
+            serviceKind: optionalString(parameters.service_kind),
+            preferredWindow: optionalString(parameters.preferred_window),
+            hazardousCondition:
+              typeof parameters.hazardous_condition === "boolean"
+                ? parameters.hazardous_condition
+                : undefined,
+          });
+        } catch {
+          return JSON.stringify({
+            ok: false,
+            message:
+              "The draft or hazard update failed. Do not book an appointment. Retry submit_intake_draft.",
+          });
+        }
       },
+      prepare_intake_confirmation: (parameters: Record<string, unknown>) =>
+        onBookingTool("prepare_intake_confirmation", parameters),
+      confirm_service_request: (parameters: Record<string, unknown>) =>
+        onBookingTool("confirm_service_request", parameters),
+      check_appointment_availability: (parameters: Record<string, unknown>) =>
+        onBookingTool("check_appointment_availability", parameters),
+      reserve_appointment: (parameters: Record<string, unknown>) =>
+        onBookingTool("reserve_appointment", parameters),
+      confirm_appointment: (parameters: Record<string, unknown>) =>
+        onBookingTool("confirm_appointment", parameters),
+      release_appointment_hold: (parameters: Record<string, unknown>) =>
+        onBookingTool("release_appointment_hold", parameters),
     },
     onDisconnect,
     onError: (message) => {
@@ -127,7 +155,31 @@ function AdapterBridge({
     mode: conversation.mode,
     isMuted: conversation.isMuted,
     start: async (credential) => {
-      await conversation.startSession({ conversationToken: credential });
+      await new Promise<void>((resolve, reject) => {
+        const timer = window.setTimeout(() => {
+          controls.endSession();
+          reject(new Error("Voice connection timed out. Try a new session."));
+        }, 20_000);
+        const fail = () => {
+          window.clearTimeout(timer);
+          reject(new Error("Voice connection could not be established."));
+        };
+        try {
+          conversation.startSession({
+            conversationToken: credential,
+            connectionType: "webrtc",
+            onConnect: () => {
+              window.clearTimeout(timer);
+              resolve();
+            },
+            onError: fail,
+            onDisconnect: fail,
+          });
+        } catch (failure) {
+          window.clearTimeout(timer);
+          reject(failure);
+        }
+      });
     },
     end: async () => {
       await conversation.endSession();

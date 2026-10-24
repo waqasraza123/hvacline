@@ -23,7 +23,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSessionStatus,
 )
 from insurance_operations.database.models.customer import Customer
-from insurance_operations.database.models.hvac import HvacServiceRequest
+from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.database.models.identity import (
     Agency,
     AgencyEnvironment,
@@ -599,3 +599,127 @@ def test_browser_confirmation_creates_one_hvac_request_on_retry(
         assert row.customer_details["phone"] == "+12025550123"
         assert session.scalar(select(func.count()).select_from(HvacServiceRequest)
             .where(HvacServiceRequest.agency_id == api.agency_id)) == 1
+
+
+def test_browser_voice_books_only_after_two_spoken_confirmations(
+    development_conversation_api: DevelopmentConversationApi,
+    migrated_database: Engine,
+) -> None:
+    api = development_conversation_api
+    day = (datetime.now(UTC) + timedelta(days=2)).date()
+    windows: list[JsonValue] = [
+        {"weekday": day.weekday(), "start": "08:00", "end": "17:00"}
+    ]
+    configured, _, _ = asyncio.run(request_json(
+        api.application, "PUT", "/api/v1/development/hvac/schedule",
+        {
+            "expected_version": 0, "enabled": True,
+            "timezone": "America/New_York", "postal_codes": ["10001"],
+            "windows": windows,
+            "teams": [{"key": "team-a", "name": "Service team", "windows": windows}],
+            "notice_minutes": 0,
+        },
+    ))
+    assert configured == 200
+    status_code, authorization, _ = authorize_session(api)
+    assert status_code == 201
+    session_id = authorization["session_id"]
+    assert isinstance(session_id, str)
+    base = f"/api/v1/development/conversation-sessions/{session_id}/booking"
+
+    def post(path: str, body: JsonObject) -> tuple[int, dict[str, object], dict[str, str]]:
+        return asyncio.run(post_json(api.application, base + path, body))
+
+    assert post("/availability", {"day": day.isoformat()})[0] == 409
+    payload: JsonObject = {
+        "conversation_session_id": session_id,
+        "customer": {
+            "full_name": "Fictional Browser Caller", "phone": "+12025550123",
+            "address": {
+                "line1": "123 Example Street", "city": "New York",
+                "state_code": "NY", "postal_code": "10001",
+            },
+        },
+        "intake_intent": "AC stopped cooling",
+        "service": {
+            "kind": "AC_REPAIR", "equipment_issue": "AC stopped cooling",
+            "preferred_window": day.isoformat(), "hazardous_condition": False,
+        },
+        "spoken_confirmation": True,
+    }
+    prepared_status, prepared, _ = post("/intake-readback", {
+        "customer": payload["customer"], "service": payload["service"],
+    })
+    assert prepared_status == 200
+    readback = prepared["readback"]
+    assert isinstance(readback, str)
+    payload["transcript"] = [
+        {"speaker": "AGENT", "text": readback},
+        {"speaker": "USER", "text": "Yes, but change the address."},
+    ]
+    denied = asyncio.run(post_json(api.application,
+        "/api/v1/development/conversation-intakes", payload,
+        idempotency_key="spoken-browser-intake"))
+    assert denied[0] == 422
+    with Session(migrated_database) as session:
+        assert session.scalar(select(func.count()).select_from(HvacServiceRequest)
+            .where(HvacServiceRequest.agency_id == api.agency_id)) == 0
+    payload["transcript"] = [
+        {"speaker": "AGENT", "text": readback},
+        {"speaker": "USER", "text": "Yes, save my request."},
+    ]
+    saved = asyncio.run(post_json(api.application,
+        "/api/v1/development/conversation-intakes", payload,
+        idempotency_key="spoken-browser-intake"))
+    replay = asyncio.run(post_json(api.application,
+        "/api/v1/development/conversation-intakes", payload,
+        idempotency_key="spoken-browser-intake"))
+    assert saved[0] == 201
+    assert replay[1] == saved[1]
+    assert authorize_session(api)[0] == 409
+    available_status, available, _ = post("/availability", {"day": day.isoformat()})
+    assert available_status == 200
+    slots = available["slots"]
+    assert isinstance(slots, list) and slots
+    slot = slots[0]
+    reservation: JsonObject = {
+        "team_key": slot["team_key"], "starts_at": slot["starts_at"],
+        "idempotency_key": "spoken-browser-reservation",
+    }
+    held_status, held, _ = post("/reservations", reservation)
+    assert held_status == 200
+    appointment = held["appointment"]
+    assert isinstance(appointment, dict)
+    assert appointment["status"] == "HELD"
+    assert post("/reservations", reservation)[1]["appointment"] == appointment
+    appointment_id = appointment["id"]
+    booking_readback = held["readback"]
+    assert isinstance(booking_readback, str)
+    confirmation: JsonObject = {
+        "explicit_confirmation": True,
+        "transcript": [
+            {"speaker": "AGENT", "text": booking_readback},
+            {"speaker": "USER", "text": "No, that time does not work."},
+        ],
+    }
+    assert post(f"/appointments/{appointment_id}/confirm", confirmation)[0] == 409
+    confirmation["transcript"] = [
+        {"speaker": "AGENT", "text": booking_readback},
+        {"speaker": "USER", "text": "Yes, confirm my appointment."},
+    ]
+    confirmed_status, confirmed, _ = post(f"/appointments/{appointment_id}/confirm", confirmation)
+    assert confirmed_status == 200
+    confirmed_appointment = confirmed["appointment"]
+    assert isinstance(confirmed_appointment, dict)
+    assert confirmed_appointment["status"] == "CONFIRMED"
+    assert post(f"/appointments/{appointment_id}/release", {})[0] == 409
+    with Session(migrated_database) as session:
+        assert session.scalar(select(func.count()).select_from(Appointment)
+            .where(Appointment.agency_id == api.agency_id)) == 1
+    ended = asyncio.run(post_json(api.application,
+        f"/api/v1/development/conversation-sessions/{session_id}/end",
+        {"outcome": "INTERRUPTED"}))
+    assert ended[0] == 200
+    assert ended[1]["status"] == "CONFIRMED"
+    assert post("/availability", {"day": day.isoformat()})[0] == 409
+    assert authorize_session(api)[0] == 201

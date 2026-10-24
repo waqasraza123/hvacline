@@ -311,6 +311,12 @@ class SchedulingService:
         with self.sessions() as session, session.begin():
             configuration = self._lock_schedule(session, agency_id)
             row = self._appointment(session, agency_id, appointment_id)
+            service_request = self._request(session, agency_id, row.service_request_id)
+            if service_request.service_details.get("hazardous_condition"):
+                raise unavailable(
+                    "This service request requires human attention.",
+                    "HUMAN_ATTENTION_REQUIRED",
+                )
             if row.status == "CONFIRMED":
                 return AppointmentView.model_validate(row)
             now = datetime.now(UTC)
@@ -336,6 +342,58 @@ class SchedulingService:
                     agency_id=agency_id,
                     event_type="HVAC_APPOINTMENT_CONFIRMED",
                     summary="Appointment confirmed",
+                    details={"appointment_id": str(row.id)},
+                    correlation_id=correlation_id,
+                )
+            )
+            return AppointmentView.model_validate(row)
+
+    def flag_hazard(
+        self, agency_id: UUID, request_id: UUID, correlation_id: UUID
+    ) -> None:
+        with self.sessions() as session, session.begin():
+            session.scalar(
+                select(BusinessSchedule)
+                .where(BusinessSchedule.agency_id == agency_id)
+                .with_for_update()
+            )
+            row = self._request(session, agency_id, request_id)
+            row.service_details = {**row.service_details, "hazardous_condition": True}
+            row.status = "HANDOFF_REQUESTED"
+            for appointment in session.scalars(
+                select(Appointment).where(
+                    Appointment.agency_id == agency_id,
+                    Appointment.service_request_id == request_id,
+                    Appointment.status == "HELD",
+                )
+            ):
+                appointment.status = "CANCELLED"
+            session.add(
+                system_audit(
+                    agency_id=agency_id,
+                    event_type="HVAC_HAZARD_REPORTED",
+                    summary="Browser request requires human attention",
+                    details={"service_request_id": str(request_id)},
+                    correlation_id=correlation_id,
+                )
+            )
+
+    def release_hold(
+        self, agency_id: UUID, appointment_id: UUID, correlation_id: UUID
+    ) -> AppointmentView:
+        with self.sessions() as session, session.begin():
+            self._lock_schedule(session, agency_id)
+            row = self._appointment(session, agency_id, appointment_id)
+            if row.status in {"CANCELLED", "EXPIRED"}:
+                return AppointmentView.model_validate(row)
+            if row.status != "HELD":
+                raise unavailable("Only an unconfirmed hold can be released.")
+            row.status = "CANCELLED"
+            session.add(
+                system_audit(
+                    agency_id=agency_id,
+                    event_type="HVAC_APPOINTMENT_HOLD_RELEASED",
+                    summary="Unconfirmed appointment hold released",
                     details={"appointment_id": str(row.id)},
                     correlation_id=correlation_id,
                 )

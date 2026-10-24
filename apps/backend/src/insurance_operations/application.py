@@ -35,6 +35,7 @@ from insurance_operations.approved_faqs import (
     ApprovedFaqStatusInput,
     ApprovedFaqUpdateInput,
 )
+from insurance_operations.conversations.booking import create_browser_booking_router
 from insurance_operations.conversations.contracts import ConversationProvider
 from insurance_operations.conversations.providers import (
     ElevenLabsConversationProvider,
@@ -777,6 +778,9 @@ def create_app(
         return result
 
     application.include_router(create_hvac_router(session_factory, development_actor))
+    application.include_router(
+        create_browser_booking_router(session_factory, conversation_actor)
+    )
 
     return application
 

@@ -5,6 +5,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from insurance_operations.conversations.spoken import (
+    intake_readback,
+    require_spoken_confirmation,
+)
 from insurance_operations.customers import CustomerInput, CustomerView
 from insurance_operations.database.models.lead import LeadUrgency
 from insurance_operations.hvac.schemas import ServiceDetails, ServiceRequestInput
@@ -57,6 +61,7 @@ class ConversationIntakeConfirmationInput(BaseModel):
     customer: CustomerInput
     intake_intent: str = Field(min_length=1, max_length=2_000)
     service: ServiceDetails | None = None
+    spoken_confirmation: bool = False
     urgency: LeadUrgency = LeadUrgency.NORMAL
     transcript: list[ConversationTurn] = Field(min_length=2, max_length=60)
 
@@ -70,11 +75,19 @@ class ConversationIntakeConfirmationInput(BaseModel):
         if sum(len(turn.text) for turn in self.transcript) > 30_000:
             raise ValueError("transcript cannot exceed 30000 characters")
         if self.service is not None:
-            ServiceRequestInput(
+            service_request = ServiceRequestInput(
                 customer=self.customer,
                 service=self.service,
                 explicit_confirmation=True,
             )
+            if self.spoken_confirmation:
+                if self.intake_intent.strip() != self.service.equipment_issue:
+                    raise ValueError("The spoken request must match the readback issue")
+                require_spoken_confirmation(
+                    self.transcript, intake_readback(service_request)
+                )
+        elif self.spoken_confirmation:
+            raise ValueError("Spoken confirmation requires complete HVAC details")
         return self
 
 

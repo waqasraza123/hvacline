@@ -196,8 +196,11 @@ class ApprovedFaqService:
                 conversation_session is None
                 or conversation_session.agency_id != actor.agency_id
                 or conversation_session.initiated_by != actor.app_user_id
-                or conversation_session.status
-                != ConversationSessionStatus.AUTHORIZED.value
+                or conversation_session.status not in {
+                    ConversationSessionStatus.AUTHORIZED.value,
+                    ConversationSessionStatus.CONFIRMED.value,
+                }
+                or conversation_session.ended_at is not None
                 or conversation_session.authorization_expires_at <= now
             ):
                 raise ApiError(

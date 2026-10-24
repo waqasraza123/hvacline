@@ -25,6 +25,8 @@ import {
 } from "./lifecycle";
 import type { ConnectionFailureSource, ConversationPhase } from "./lifecycle";
 import { appendTranscript, validateConfirmation } from "./review";
+import { VoiceBookingSession } from "./voice-booking";
+import type { VoiceAppointment, VoiceBookingTool } from "./voice-booking";
 import type { ReceptionistSettings } from "../receptionist/contracts";
 
 type VoiceTestProperties = Readonly<{
@@ -70,6 +72,9 @@ export function VoiceTest({
   const [form, setForm] = useState<IntakeForm>(EMPTY_FORM);
   const [phase, setPhaseState] = useState<ConversationPhase>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
+  const [savedIntake, setSavedIntake] = useState<ConfirmedConversationIntake>();
+  const [voiceAppointment, setVoiceAppointment] = useState<VoiceAppointment>();
+  const voiceBookingRef = useRef<VoiceBookingSession | undefined>(undefined);
   const phaseRef = useRef<ConversationPhase>("idle");
   const sessionIdRef = useRef<string | undefined>(undefined);
   const intentionalEndRef = useRef(false);
@@ -85,13 +90,23 @@ export function VoiceTest({
         return;
       }
       setTranscript((current) => appendTranscript(current, speaker, text));
+      voiceBookingRef.current?.recordTurn(speaker, text);
     },
     [],
   );
 
-  const handleDraft = useCallback((draft: ConversationDraft) => {
+  const handleDraft = useCallback(async (draft: ConversationDraft) => {
     if (!isLiveConversationPhase(phaseRef.current)) {
-      return;
+      return "The voice session is no longer active.";
+    }
+    if (draft.hazardousCondition) {
+      setForm((current) => ({ ...current, hazardousCondition: true }));
+    }
+    const result = await voiceBookingRef.current?.updateDraft(draft);
+    if (voiceBookingRef.current?.savedIntake) {
+      if (draft.hazardousCondition)
+        setForm((current) => ({ ...current, hazardousCondition: true }));
+      return result ?? "The request is already saved.";
     }
     setForm((current) => ({
       fullName: draft.fullName ?? current.fullName,
@@ -105,9 +120,23 @@ export function VoiceTest({
       serviceKind: draft.serviceKind ?? current.serviceKind,
       preferredWindow: draft.preferredWindow ?? current.preferredWindow,
       hazardousCondition:
-        draft.hazardousCondition ?? current.hazardousCondition,
+        current.hazardousCondition || draft.hazardousCondition === true,
     }));
+    return result ?? "The draft is visible for review. Nothing has been saved.";
   }, []);
+
+  const handleBookingTool = useCallback(
+    async (tool: VoiceBookingTool, parameters: Record<string, unknown>) => {
+      const booking = voiceBookingRef.current;
+      if (!booking)
+        return JSON.stringify({
+          ok: false,
+          message: "Start a voice session first.",
+        });
+      return JSON.stringify(await booking.execute(tool, parameters));
+    },
+    [],
+  );
 
   const handleApprovedFaqLookup = useCallback(
     async (query: string) => {
@@ -152,7 +181,9 @@ export function VoiceTest({
       }
 
       setErrorMessage(
-        "The live voice connection ended unexpectedly. Start a new session.",
+        voiceBookingRef.current?.savedIntake
+          ? "The voice connection ended. Your saved request and any confirmed booking are kept."
+          : "The live voice connection ended unexpectedly. Start a new session.",
       );
       setPhase("stopping");
       void endConversationSession(
@@ -164,7 +195,7 @@ export function VoiceTest({
         .catch(() => undefined)
         .finally(() => {
           if (phaseRef.current === "stopping") {
-            setPhase("error");
+            setPhase(voiceBookingRef.current?.savedIntake ? "saved" : "error");
           }
         });
     },
@@ -210,6 +241,7 @@ export function VoiceTest({
       onDraft={handleDraft}
       onError={handleError}
       onTranscript={handleTranscript}
+      onBookingTool={handleBookingTool}
     >
       {(client) => (
         <VoiceTestExperience
@@ -228,6 +260,11 @@ export function VoiceTest({
           setPhase={setPhase}
           setTranscript={setTranscript}
           transcript={transcript}
+          savedIntake={savedIntake}
+          setSavedIntake={setSavedIntake}
+          voiceAppointment={voiceAppointment}
+          setVoiceAppointment={setVoiceAppointment}
+          voiceBookingRef={voiceBookingRef}
         />
       )}
     </ConfiguredConversationAdapter>
@@ -250,6 +287,13 @@ type ExperienceProperties = Readonly<{
   setPhase: (phase: ConversationPhase) => void;
   setTranscript: Dispatch<SetStateAction<ConversationTurn[]>>;
   transcript: ConversationTurn[];
+  savedIntake: ConfirmedConversationIntake | undefined;
+  setSavedIntake: Dispatch<
+    SetStateAction<ConfirmedConversationIntake | undefined>
+  >;
+  voiceAppointment: VoiceAppointment | undefined;
+  setVoiceAppointment: Dispatch<SetStateAction<VoiceAppointment | undefined>>;
+  voiceBookingRef: MutableRefObject<VoiceBookingSession | undefined>;
 }>;
 
 function VoiceTestExperience({
@@ -268,6 +312,11 @@ function VoiceTestExperience({
   setPhase,
   setTranscript,
   transcript,
+  savedIntake,
+  setSavedIntake,
+  voiceAppointment,
+  setVoiceAppointment,
+  voiceBookingRef,
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
@@ -275,7 +324,6 @@ function VoiceTestExperience({
     useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(180);
   const [maximumDuration, setMaximumDuration] = useState(180);
-  const [savedIntake, setSavedIntake] = useState<ConfirmedConversationIntake>();
   const [confirmationLocked, setConfirmationLocked] = useState(false);
   const confirmationKeyRef = useRef<string | undefined>(undefined);
   const finishConversationRef = useRef<() => Promise<void>>(
@@ -308,13 +356,14 @@ function VoiceTestExperience({
         setPhase("error");
         return;
       }
-      setPhase("review");
+      setPhase(voiceBookingRef.current?.savedIntake ? "saved" : "review");
     } catch {
       setErrorMessage(
-        "The conversation ended, but the review could not be prepared. " +
-          "Start a new session.",
+        voiceBookingRef.current?.savedIntake
+          ? "The voice session ended. Your saved request and any confirmed appointment are kept."
+          : "The conversation ended, but the review could not be prepared. Start a new session.",
       );
-      setPhase("review_error");
+      setPhase(voiceBookingRef.current?.savedIntake ? "saved" : "review_error");
     } finally {
       intentionalEndRef.current = false;
     }
@@ -326,6 +375,7 @@ function VoiceTestExperience({
     sessionIdRef,
     setErrorMessage,
     setPhase,
+    voiceBookingRef,
   ]);
 
   useEffect(() => {
@@ -360,6 +410,8 @@ function VoiceTestExperience({
     }
     setErrorMessage(undefined);
     setSavedIntake(undefined);
+    setVoiceAppointment(undefined);
+    voiceBookingRef.current = undefined;
     setTranscript([]);
     setForm(EMPTY_FORM);
     confirmationKeyRef.current = undefined;
@@ -376,6 +428,24 @@ function VoiceTestExperience({
         adminToken,
       );
       sessionIdRef.current = authorization.sessionId;
+      voiceBookingRef.current = new VoiceBookingSession({
+        apiBaseUrl,
+        adminToken,
+        sessionId: authorization.sessionId,
+        isActive: () =>
+          sessionIdRef.current === authorization.sessionId &&
+          isLiveConversationPhase(phaseRef.current),
+        onSaved: (intake) => {
+          if (sessionIdRef.current !== authorization.sessionId) return;
+          setSavedIntake(intake);
+          setConfirmationLocked(true);
+          if (!isLiveConversationPhase(phaseRef.current)) setPhase("saved");
+        },
+        onAppointment: (appointment) => {
+          if (sessionIdRef.current === authorization.sessionId)
+            setVoiceAppointment(appointment);
+        },
+      });
       setMaximumDuration(authorization.maximumDurationSeconds);
       setRemainingSeconds(authorization.maximumDurationSeconds);
       setPhase("connecting");
@@ -472,6 +542,8 @@ function VoiceTestExperience({
     setTranscript([]);
     setForm(EMPTY_FORM);
     setSavedIntake(undefined);
+    setVoiceAppointment(undefined);
+    voiceBookingRef.current = undefined;
     setErrorMessage(undefined);
     setPhase("idle");
   }
@@ -507,8 +579,9 @@ function VoiceTestExperience({
           ElevenLabs and third-party AI/LLM providers for processing. Use
           fictional test data only—never real customer or sensitive information.
           This app does not retain raw audio or a live draft transcript. Intake
-          details and transcript text are saved only after you review and
-          explicitly confirm them.
+          details and transcript text are saved only after you confirm the full
+          spoken readback or explicitly confirm the on-screen review. An
+          appointment requires a separate confirmation of its date and time.
         </div>
         <label className="consent-row">
           <input
@@ -571,7 +644,7 @@ function VoiceTestExperience({
                 onClick={() => void finishConversation()}
                 type="button"
               >
-                Finish and review
+                {savedIntake ? "Finish conversation" : "Finish and review"}
               </button>
             </>
           )}
@@ -644,6 +717,30 @@ function VoiceTestExperience({
           </ol>
         )}
       </section>
+
+      {savedIntake && phase === "active" && (
+        <section className="voice-card" aria-live="polite">
+          <h2>Service request saved</h2>
+          <p>Your spoken confirmation saved your details and transcript.</p>
+          {voiceAppointment?.appointment.status === "CONFIRMED" ? (
+            <p>
+              Appointment confirmed:{" "}
+              {new Intl.DateTimeFormat("en-US", {
+                dateStyle: "full",
+                timeStyle: "short",
+                timeZone: voiceAppointment.timezone,
+              }).format(new Date(voiceAppointment.appointment.starts_at))}{" "}
+              · {voiceAppointment.timezone}
+            </p>
+          ) : (
+            <p>
+              {voiceAppointment
+                ? "An appointment is temporarily held. Confirm the date and time with the receptionist to book it."
+                : "No appointment is booked yet. Continue speaking to choose a time."}
+            </p>
+          )}
+        </section>
+      )}
 
       {(phase === "review" || phase === "saving" || phase === "saved") && (
         <section
@@ -754,11 +851,18 @@ function VoiceTestExperience({
           {phase === "saving" && <p aria-live="polite">Saving confirmation…</p>}
           {savedIntake?.serviceRequestId && (
             <BrowserBooking
+              key={
+                voiceAppointment
+                  ? `${voiceAppointment.appointment.id}:${voiceAppointment.appointment.status}`
+                  : savedIntake.serviceRequestId
+              }
               apiBaseUrl={apiBaseUrl}
               adminToken={adminToken}
               serviceRequestId={savedIntake.serviceRequestId}
               postalCode={form.postalCode}
               hazardous={form.hazardousCondition}
+              initialAppointment={voiceAppointment?.appointment}
+              initialTimezone={voiceAppointment?.timezone}
             />
           )}
           {savedIntake && (

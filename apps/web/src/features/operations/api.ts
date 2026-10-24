@@ -76,6 +76,16 @@ export type Availability = {
   message: string | null;
 };
 
+export class OperationsApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "OperationsApiError";
+  }
+}
+
 export async function requestApi<T>(
   baseUrl: string,
   token: string,
@@ -95,7 +105,8 @@ export async function requestApi<T>(
   });
   const data = await response.json();
   if (!response.ok)
-    throw new Error(
+    throw new OperationsApiError(
+      response.status,
       data?.error?.message ?? "The request could not be completed.",
     );
   return data as T;

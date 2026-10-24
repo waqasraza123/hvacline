@@ -3,7 +3,7 @@ import json
 from datetime import UTC, datetime, time, timedelta
 from uuid import UUID
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -23,6 +23,7 @@ from insurance_operations.conversations.schemas import (
 )
 from insurance_operations.customers import customer_from_input, customer_view
 from insurance_operations.database.models.conversation import (
+    ConversationChannel,
     ConversationIntake,
     ConversationSession,
     ConversationSessionStatus,
@@ -219,12 +220,19 @@ class ConversationService:
                     conversation_session.status = ConversationSessionStatus.FAILED.value
                     conversation_session.failure_code = expected_code
                     conversation_session.ended_at = now
-                elif not (
+                elif conversation_session.status != (
+                    ConversationSessionStatus.CONFIRMED.value
+                ) and not (
                     conversation_session.status
                     == ConversationSessionStatus.FAILED.value
                     and conversation_session.failure_code == expected_code
                 ):
                     raise self._session_state_conflict()
+
+            if conversation_session.status == (
+                ConversationSessionStatus.CONFIRMED.value
+            ):
+                conversation_session.ended_at = conversation_session.ended_at or now
 
             return ConversationEndResponse(
                 session_id=conversation_session.id,
@@ -298,7 +306,15 @@ class ConversationService:
                     code="CONVERSATION_SESSION_EXPIRED",
                     message="The conversation confirmation window has expired",
                 )
-            if conversation_session.status != (
+            live_confirmation = (
+                request.spoken_confirmation
+                and conversation_session.channel == ConversationChannel.BROWSER.value
+                and conversation_session.status
+                == ConversationSessionStatus.AUTHORIZED.value
+                and conversation_session.ended_at is None
+                and conversation_session.authorization_expires_at > now
+            )
+            if not live_confirmation and conversation_session.status != (
                 ConversationSessionStatus.REVIEW_PENDING.value
             ):
                 raise self._session_state_conflict()
@@ -394,6 +410,9 @@ class ConversationService:
                         details={
                             "conversation_intake_id": str(conversation_intake.id),
                             "conversation_session_id": str(conversation_session.id),
+                            "confirmation_mode": (
+                                "SPOKEN" if request.spoken_confirmation else "SCREEN"
+                            ),
                         },
                         correlation_id=correlation_id,
                         event_version=1,
@@ -499,7 +518,14 @@ class ConversationService:
         active_session_id = session.scalar(
             select(ConversationSession.id).where(
                 ConversationSession.agency_id == agency_id,
-                ConversationSession.status.in_(ACTIVE_SESSION_STATUSES),
+                or_(
+                    ConversationSession.status.in_(ACTIVE_SESSION_STATUSES),
+                    (
+                        ConversationSession.status
+                        == ConversationSessionStatus.CONFIRMED.value
+                    )
+                    & ConversationSession.ended_at.is_(None),
+                ),
                 ConversationSession.authorization_expires_at > now,
             )
         )

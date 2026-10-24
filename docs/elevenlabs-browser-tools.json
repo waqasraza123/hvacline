@@ -1,0 +1,170 @@
+[
+  {
+    "type": "client",
+    "name": "submit_intake_draft",
+    "description": "Update fictional HVAC intake details in browser memory, including corrections. Does not save a request. Report hazardous conditions immediately, even after saving.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "full_name": {
+          "type": "string",
+          "description": "Fictional full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "Optional fictional email. Use an empty string to remove it."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Fictional U.S. callback number, including country code."
+        },
+        "intake_intent": {
+          "type": "string",
+          "description": "Short equipment issue, without diagnosis or repair instructions."
+        },
+        "address_line1": {
+          "type": "string",
+          "description": "Complete fictional street address, including unit if applicable."
+        },
+        "city": {
+          "type": "string",
+          "description": "Service city."
+        },
+        "state_code": {
+          "type": "string",
+          "description": "Two-letter U.S. state code."
+        },
+        "postal_code": {
+          "type": "string",
+          "description": "Five-digit ZIP code."
+        },
+        "service_kind": {
+          "type": "string",
+          "enum": [
+            "AC_REPAIR",
+            "HEATING_REPAIR",
+            "INSTALLATION",
+            "MAINTENANCE"
+          ],
+          "description": "Requested HVAC service category."
+        },
+        "preferred_window": {
+          "type": "string",
+          "description": "Preferred appointment date or window."
+        },
+        "hazardous_condition": {
+          "type": "boolean",
+          "description": "True for gas odor, smoke, a carbon monoxide alarm or electrical danger; false only after asking and receiving a negative answer."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "lookup_approved_faq",
+    "description": "Look up business-specific facts. Speak only a matched approved_answer; otherwise use fallback_message. Never speak source identifiers.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The customer's complete company question."
+        }
+      },
+      "required": ["query"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "prepare_intake_confirmation",
+    "description": "Validate the complete current draft without saving. Read returned readback exactly and wait for the customer's answer. Corrections require an updated draft and a new readback.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "confirm_service_request",
+    "description": "Save the request and transcript only after the customer says a clear yes following prepare_intake_confirmation's full readback. On a transport error retry this tool; do not create another request.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "explicit_confirmation": {
+          "type": "boolean",
+          "description": "True only after the customer clearly says yes following the complete current readback."
+        }
+      },
+      "required": ["explicit_confirmation"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "check_appointment_availability",
+    "description": "Check actual internal-calendar slots for the confirmed service ZIP. Offer only returned slots, using their business timezone.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "day": {
+          "type": "string",
+          "description": "Exact service date as YYYY-MM-DD. Use returned business_date and timezone to resolve relative dates; if unavailable, ask for an exact date."
+        }
+      },
+      "required": ["day"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "reserve_appointment",
+    "description": "Temporarily hold a slot the customer selected from the most recent availability result. Read returned readback exactly. HELD is not booked.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "team_key": {
+          "type": "string",
+          "description": "Copy team_key exactly from the selected returned slot."
+        },
+        "starts_at": {
+          "type": "string",
+          "description": "Copy starts_at exactly from the selected returned slot, including its timezone offset."
+        }
+      },
+      "required": ["team_key", "starts_at"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "confirm_appointment",
+    "description": "Confirm the current hold only after a clear yes following its full date, time and timezone readback. Say booked only if result has booked=true and appointment.status=CONFIRMED.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "explicit_confirmation": {
+          "type": "boolean",
+          "description": "True only after the customer clearly says yes following the complete current readback."
+        }
+      },
+      "required": ["explicit_confirmation"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "release_appointment_hold",
+    "description": "Release the current unconfirmed hold when the customer declines it or wants another time. Cannot cancel a confirmed appointment.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  }
+]

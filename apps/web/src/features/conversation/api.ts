@@ -107,7 +107,7 @@ export async function endConversationSession(
   return body.review_available;
 }
 
-type ConfirmationInput = Readonly<{
+export type ConfirmationInput = Readonly<{
   sessionId: string;
   fullName: string;
   email: string;
@@ -122,7 +122,35 @@ type ConfirmationInput = Readonly<{
   serviceKind: string;
   preferredWindow: string;
   hazardousCondition: boolean;
+  spokenConfirmation?: boolean;
 }>;
+
+export function intakePayload(input: ConfirmationInput) {
+  return {
+    conversation_session_id: input.sessionId,
+    customer: {
+      full_name: input.fullName,
+      email: input.email || null,
+      phone: input.phone || null,
+      address: {
+        line1: input.addressLine1,
+        city: input.city,
+        state_code: input.stateCode,
+        postal_code: input.postalCode,
+        country_code: "US",
+      },
+    },
+    intake_intent: input.intakeIntent,
+    service: {
+      kind: input.serviceKind,
+      equipment_issue: input.intakeIntent,
+      preferred_window: input.preferredWindow,
+      hazardous_condition: input.hazardousCondition,
+    },
+    spoken_confirmation: input.spokenConfirmation ?? false,
+    transcript: input.transcript,
+  };
+}
 
 export async function confirmConversationIntake(
   apiBaseUrl: string,
@@ -139,32 +167,7 @@ export async function confirmConversationIntake(
         ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
-      body: JSON.stringify({
-        conversation_session_id: input.sessionId,
-        customer: {
-          full_name: input.fullName,
-          email: input.email || null,
-          phone: input.phone || null,
-          address: {
-            line1: input.addressLine1,
-            city: input.city,
-            state_code: input.stateCode,
-            postal_code: input.postalCode,
-            country_code: "US",
-          },
-        },
-        intake_intent: input.intakeIntent,
-        service: {
-          kind: input.serviceKind,
-          equipment_issue: input.intakeIntent,
-          preferred_window: input.preferredWindow,
-          hazardous_condition: input.hazardousCondition,
-        },
-        transcript: input.transcript.map((turn) => ({
-          speaker: turn.speaker,
-          text: turn.text,
-        })),
-      }),
+      body: JSON.stringify(intakePayload(input)),
     },
   );
   const body: unknown = await readJson(response);

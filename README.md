@@ -60,7 +60,7 @@ The internal calendar is authoritative only for teams whose availability is main
 
 ## Browser voice without phone numbers
 
-Enable the browser feature flags and configure a separate private ElevenLabs browser agent using [browser setup](docs/elevenlabs-agent-setup.md). The protected `/operations` workspace includes a **browser voice** tab. Customers in the fictional test scenario speak, review and confirm details, then choose an actual available slot and confirm the appointment on screen. Saved requests and bookings appear in the same workspace. Booking during the spoken session is not implemented.
+Enable the browser feature flags and configure a separate private ElevenLabs browser agent using [browser setup](docs/elevenlabs-agent-setup.md) and all eight [client tools](docs/elevenlabs-browser-tools.json). The protected `/operations` workspace includes a **browser voice** tab. Fictional callers can confirm their details by voice, hear actual available slots, select a temporary hold, and explicitly confirm its date, time and timezone to book during the conversation. The backend validates both spoken readbacks and affirmative transcript answers. The existing on-screen review and booking flow remains available. Saved requests and bookings appear in the same workspace. This implementation is owner-unverified; provider configuration, deployment and live acceptance remain pending.
 
 Phone numbers and human transfers are optional for this path. Keep telephone provider routing disabled without numbers. Public production customer access remains blocked by unfinished identity and tenant provisioning; never share the development admin token with customers. This new flow is implemented but unverified.
 
