@@ -4,6 +4,9 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "business_schedules": ("hvac", "agency_id"),
+    "hvac_service_requests": ("hvac", "agency_id"),
+    "hvac_appointments": ("hvac", "agency_id"),
     "agencies": ("identity", None),
     "app_users": ("identity", None),
     "agency_memberships": ("identity", "agency_id"),

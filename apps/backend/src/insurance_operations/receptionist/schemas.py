@@ -20,7 +20,7 @@ class ReceptionistSettingsContent(BaseModel):
     office_hours: str = Field(min_length=1, max_length=1_000)
     contact_email: EmailStr | None = None
     contact_phone: str | None = Field(default=None, min_length=7, max_length=32)
-    supported_insurance_categories: list[str] = Field(min_length=1, max_length=20)
+    supported_service_categories: list[str] = Field(min_length=1, max_length=20)
     escalation_message: str = Field(min_length=1, max_length=600)
 
     @field_validator("contact_phone")
@@ -38,7 +38,7 @@ class ReceptionistSettingsContent(BaseModel):
             raise ValueError("contact phone contains unsupported characters")
         return normalized
 
-    @field_validator("supported_insurance_categories")
+    @field_validator("supported_service_categories")
     @classmethod
     def normalize_categories(cls, values: list[str]) -> list[str]:
         normalized_values: list[str] = []
@@ -47,11 +47,11 @@ class ReceptionistSettingsContent(BaseModel):
             normalized = value.strip()
             if not normalized or len(normalized) > 80:
                 raise ValueError(
-                    "insurance categories must contain between 1 and 80 characters"
+                    "HVAC services must contain between 1 and 80 characters"
                 )
             comparison_key = normalized.casefold()
             if comparison_key in seen:
-                raise ValueError("insurance categories must be unique")
+                raise ValueError("HVAC services must be unique")
             seen.add(comparison_key)
             normalized_values.append(normalized)
         return normalized_values

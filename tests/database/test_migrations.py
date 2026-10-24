@@ -32,6 +32,9 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "business_schedules",
+    "hvac_service_requests",
+    "hvac_appointments",
     "agencies",
     "app_users",
     "agency_memberships",
@@ -52,6 +55,29 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "business_schedules": {"agency_id", "version", "configuration"},
+    "hvac_service_requests": {
+        "id",
+        "agency_id",
+        "inbound_call_id",
+        "customer_details",
+        "service_details",
+        "status",
+        "fingerprint",
+        "confirmed_at",
+    },
+    "hvac_appointments": {
+        "id",
+        "agency_id",
+        "service_request_id",
+        "team_key",
+        "starts_at",
+        "ends_at",
+        "status",
+        "hold_expires_at",
+        "idempotency_key",
+        "fingerprint",
+    },
     "agencies": {
         "id",
         "name",

@@ -23,6 +23,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSession,
     ConversationSessionStatus,
 )
+from insurance_operations.database.models.hvac import HvacServiceRequest
 from insurance_operations.database.models.lead import (
     AgencyLead,
     HandoffContactMethod,
@@ -568,6 +569,16 @@ class PhoneReceptionistService:
             email=receipt.email,
             phone=receipt.phone,
         )
+        service_request = session.scalar(
+            select(HvacServiceRequest).where(
+                HvacServiceRequest.agency_id == inbound_call.agency_id,
+                HvacServiceRequest.inbound_call_id == inbound_call.id,
+            )
+        )
+        if service_request is not None:
+            customer_input = CustomerInput.model_validate(
+                service_request.customer_details
+            )
         customer = customer_from_input(customer_input, actor)
         session.add(customer)
         session.flush()

@@ -2,7 +2,7 @@ import argparse
 from dataclasses import dataclass
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -23,7 +23,7 @@ from insurance_operations.database.models.identity import AgencyEnvironment
 from insurance_operations.settings import DatabaseSettings, RuntimeEnvironment
 
 DEVELOPMENT_AGENCY_ID = UUID("00000000-0000-4000-8000-000000000001")
-DEVELOPMENT_AGENCY_NAME = "Development Agency"
+DEVELOPMENT_AGENCY_NAME = "Harborline Heating & Air"
 DEVELOPMENT_AGENCY_SLUG = "development-agency"
 DEVELOPMENT_ACTOR_USER_ID = UUID("00000000-0000-4000-8000-000000000002")
 DEVELOPMENT_ACTOR_AUTH_SUBJECT = UUID("00000000-0000-4000-8000-000000000003")
@@ -37,7 +37,32 @@ DEVELOPMENT_APPROVED_FAQ_IDS = (
 DEVELOPMENT_CALL_POLICY_ID = UUID("00000000-0000-4000-8000-000000000009")
 DEVELOPMENT_INBOUND_NUMBER_ID = UUID("00000000-0000-4000-8000-000000000010")
 DEVELOPMENT_ACTOR_DISPLAY_NAME = "Synthetic Voice AI Tester"
-DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME = "Harborline Insurance"
+DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME = "Harborline Heating & Air"
+
+
+DEVELOPMENT_FAQ_CONTENT = (
+    (
+        DEVELOPMENT_APPROVED_FAQ_IDS[0],
+        "What are your office hours?",
+        "what are your office hours",
+        "Our office is open Monday through Friday from 9:00 AM "
+        "to 5:00 PM Eastern Time.",
+    ),
+    (
+        DEVELOPMENT_APPROVED_FAQ_IDS[1],
+        "What HVAC services do you offer?",
+        "what hvac services do you offer",
+        "Our synthetic showcase handles air conditioning repair, "
+        "heating repair, installation, and maintenance.",
+    ),
+    (
+        DEVELOPMENT_APPROVED_FAQ_IDS[2],
+        "How can I request an installation estimate?",
+        "how can i request an installation estimate",
+        "I can collect your contact details and HVAC service needs. "
+        "A service team member must provide estimates and pricing.",
+    ),
+)
 
 
 @dataclass(frozen=True)
@@ -95,21 +120,21 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                 agency_id=DEVELOPMENT_AGENCY_ID,
                 public_name=DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME,
                 greeting=(
-                    "Thanks for contacting Harborline Insurance. I'm the AI "
+                    "Thanks for contacting Harborline Heating & Air. I'm the AI "
                     "receptionist for this synthetic demonstration."
                 ),
                 office_hours=("Monday through Friday, 9:00 AM to 5:00 PM Eastern Time"),
                 contact_email="receptionist@example.com",
                 contact_phone="+1 555 010 0142",
                 supported_insurance_categories=[
-                    "Auto",
-                    "Homeowners",
-                    "Renters",
-                    "Small business",
+                    "AC repair",
+                    "Heating repair",
+                    "Installation",
+                    "Maintenance",
                 ],
                 escalation_message=(
-                    "A licensed team member will follow up for quotes, coverage "
-                    "advice, binding, claims, or any request I cannot safely answer."
+                    "A service team member will follow up for urgent requests, "
+                    "hazards, estimates, or any request I cannot safely answer."
                 ),
                 created_by=DEVELOPMENT_ACTOR_USER_ID,
                 updated_by=DEVELOPMENT_ACTOR_USER_ID,
@@ -133,31 +158,73 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                 constraint="uq_agency_approved_faqs_agency_question"
             )
             .returning(AgencyApprovedFaq.id)
-            for faq_id, question, normalized_question, approved_answer in (
-                (
-                    DEVELOPMENT_APPROVED_FAQ_IDS[0],
-                    "What are your office hours?",
-                    "what are your office hours",
-                    "Our office is open Monday through Friday from 9:00 AM "
-                    "to 5:00 PM Eastern Time.",
-                ),
-                (
-                    DEVELOPMENT_APPROVED_FAQ_IDS[1],
-                    "What types of insurance can your agency help with?",
-                    "what types of insurance can your agency help with",
-                    "Our synthetic showcase handles new inquiries about auto, "
-                    "homeowners, renters, and small business insurance.",
-                ),
-                (
-                    DEVELOPMENT_APPROVED_FAQ_IDS[2],
-                    "How can I get an insurance quote?",
-                    "how can i get an insurance quote",
-                    "I can collect your contact details and insurance interest. "
-                    "A licensed team member must discuss and provide any quote.",
-                ),
-            )
+            for (
+                faq_id,
+                question,
+                normalized_question,
+                approved_answer,
+            ) in DEVELOPMENT_FAQ_CONTENT
         ]
         with database_engine.begin() as connection:
+            connection.execute(
+                update(Agency)
+                .where(
+                    Agency.id == DEVELOPMENT_AGENCY_ID,
+                    Agency.environment_kind == AgencyEnvironment.DEVELOPMENT.value,
+                    Agency.name == "Development Agency",
+                )
+                .values(name=DEVELOPMENT_AGENCY_NAME)
+            )
+            connection.execute(
+                update(AgencyReceptionistSettings)
+                .where(
+                    AgencyReceptionistSettings.id
+                    == DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
+                    AgencyReceptionistSettings.agency_id == DEVELOPMENT_AGENCY_ID,
+                    AgencyReceptionistSettings.public_name == "Harborline Insurance",
+                )
+                .values(
+                    public_name=DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME,
+                    greeting=(
+                        "Thanks for calling Harborline Heating & Air. "
+                        "I am the AI receptionist for this "
+                        "fictional-data demonstration."
+                    ),
+                    supported_insurance_categories=[
+                        "AC repair",
+                        "Heating repair",
+                        "Installation",
+                        "Maintenance",
+                    ],
+                    escalation_message=(
+                        "A service team member will follow up for urgent requests, "
+                        "hazards, estimates, or questions I cannot safely answer."
+                    ),
+                )
+            )
+            for faq_id, old_question in (
+                (
+                    DEVELOPMENT_APPROVED_FAQ_IDS[1],
+                    "what types of insurance can your agency help with",
+                ),
+                (DEVELOPMENT_APPROVED_FAQ_IDS[2], "how can i get an insurance quote"),
+            ):
+                _, question, normalized_question, answer = DEVELOPMENT_FAQ_CONTENT[
+                    DEVELOPMENT_APPROVED_FAQ_IDS.index(faq_id)
+                ]
+                connection.execute(
+                    update(AgencyApprovedFaq)
+                    .where(
+                        AgencyApprovedFaq.id == faq_id,
+                        AgencyApprovedFaq.agency_id == DEVELOPMENT_AGENCY_ID,
+                        AgencyApprovedFaq.normalized_question == old_question,
+                    )
+                    .values(
+                        question=question,
+                        normalized_question=normalized_question,
+                        approved_answer=answer,
+                    )
+                )
             agency_created = connection.scalar(agency_statement) is not None
             actor_created = connection.scalar(actor_statement) is not None
             membership_created = connection.scalar(membership_statement) is not None
