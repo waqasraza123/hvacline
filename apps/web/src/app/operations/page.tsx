@@ -3,5 +3,10 @@ import { parsePublicEnvironment } from "@/lib/environment";
 export const metadata = { title: "Service workspace" };
 export default function OperationsPage() {
   const environment = parsePublicEnvironment(process.env);
-  return <OperationsWorkspace apiBaseUrl={environment.apiBaseUrl} />;
+  return (
+    <OperationsWorkspace
+      apiBaseUrl={environment.apiBaseUrl}
+      conversationAiEnabled={environment.conversationAiEnabled}
+    />
+  );
 }

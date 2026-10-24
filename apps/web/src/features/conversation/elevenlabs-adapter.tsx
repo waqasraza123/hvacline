@@ -28,6 +28,13 @@ type IntakeToolParameters = Readonly<{
   email?: unknown;
   phone?: unknown;
   intake_intent?: unknown;
+  address_line1?: unknown;
+  city?: unknown;
+  state_code?: unknown;
+  postal_code?: unknown;
+  service_kind?: unknown;
+  preferred_window?: unknown;
+  hazardous_condition?: unknown;
 }>;
 
 type ApprovedFaqToolParameters = Readonly<{
@@ -84,6 +91,16 @@ function AdapterBridge({
           email: optionalString(parameters.email),
           phone: optionalString(parameters.phone),
           intakeIntent: optionalString(parameters.intake_intent),
+          addressLine1: optionalString(parameters.address_line1),
+          city: optionalString(parameters.city),
+          stateCode: optionalString(parameters.state_code),
+          postalCode: optionalString(parameters.postal_code),
+          serviceKind: optionalString(parameters.service_kind),
+          preferredWindow: optionalString(parameters.preferred_window),
+          hazardousCondition:
+            typeof parameters.hazardous_condition === "boolean"
+              ? parameters.hazardous_condition
+              : undefined,
         });
         return "The draft is visible for user review. No data has been saved.";
       },

@@ -24,12 +24,16 @@ export class ConversationApiError extends Error {
 
 export async function authorizeConversationSession(
   apiBaseUrl: string,
+  adminToken?: string,
 ): Promise<ConversationSessionAuthorization> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/development/conversation-sessions`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
+      },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({
         ai_disclosure_accepted: true,
@@ -75,12 +79,16 @@ export async function endConversationSession(
   apiBaseUrl: string,
   sessionId: string,
   outcome: "COMPLETED" | "INTERRUPTED" | "FAILED",
+  adminToken?: string,
 ): Promise<boolean> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/development/conversation-sessions/${sessionId}/end`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
+      },
       keepalive: true,
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({ outcome }),
@@ -107,11 +115,19 @@ type ConfirmationInput = Readonly<{
   intakeIntent: string;
   transcript: readonly ConversationTurn[];
   idempotencyKey: string;
+  addressLine1: string;
+  city: string;
+  stateCode: string;
+  postalCode: string;
+  serviceKind: string;
+  preferredWindow: string;
+  hazardousCondition: boolean;
 }>;
 
 export async function confirmConversationIntake(
   apiBaseUrl: string,
   input: ConfirmationInput,
+  adminToken?: string,
 ): Promise<ConfirmedConversationIntake> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/development/conversation-intakes`,
@@ -120,6 +136,7 @@ export async function confirmConversationIntake(
       headers: {
         "Content-Type": "application/json",
         "Idempotency-Key": input.idempotencyKey,
+        ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({
@@ -128,8 +145,21 @@ export async function confirmConversationIntake(
           full_name: input.fullName,
           email: input.email || null,
           phone: input.phone || null,
+          address: {
+            line1: input.addressLine1,
+            city: input.city,
+            state_code: input.stateCode,
+            postal_code: input.postalCode,
+            country_code: "US",
+          },
         },
         intake_intent: input.intakeIntent,
+        service: {
+          kind: input.serviceKind,
+          equipment_issue: input.intakeIntent,
+          preferred_window: input.preferredWindow,
+          hazardous_condition: input.hazardousCondition,
+        },
         transcript: input.transcript.map((turn) => ({
           speaker: turn.speaker,
           text: turn.text,
@@ -162,7 +192,13 @@ export async function confirmConversationIntake(
       "The intake service returned invalid data",
     );
   }
-  return { conversationIntakeId, customerId, customerName, confirmedAt };
+  return {
+    conversationIntakeId,
+    customerId,
+    customerName,
+    confirmedAt,
+    serviceRequestId: requiredString(body.service_request_id),
+  };
 }
 
 async function readJson(response: Response): Promise<unknown> {

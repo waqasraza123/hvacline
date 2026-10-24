@@ -2,20 +2,14 @@ from enum import StrEnum
 from typing import Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from insurance_operations.approved_faqs.schemas import ApprovedFaqLookupResponse
 from insurance_operations.conversations.schemas import ConversationTurn
 from insurance_operations.customers import CustomerInput
 from insurance_operations.database.models.lead import LeadUrgency
+from insurance_operations.telephony.context import PhoneCallContext as PhoneCallContext
 from insurance_operations.telephony.schemas import CallAction
-
-
-class PhoneCallContext(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    inbound_call_id: UUID
-    conversation_id: str = Field(min_length=1, max_length=200)
 
 
 class PhoneConsentInput(PhoneCallContext):

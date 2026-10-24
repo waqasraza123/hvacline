@@ -23,6 +23,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSessionStatus,
 )
 from insurance_operations.database.models.customer import Customer
+from insurance_operations.database.models.hvac import HvacServiceRequest
 from insurance_operations.database.models.identity import (
     Agency,
     AgencyEnvironment,
@@ -541,3 +542,60 @@ def test_lead_lifecycle_detail_and_handoff_are_versioned_and_idempotent(
     error = invalid["error"]
     assert isinstance(error, dict)
     assert error["code"] == "LEAD_STATUS_TRANSITION_INVALID"
+
+
+@pytest.mark.parametrize("hazardous", [False, True])
+def test_browser_confirmation_creates_one_hvac_request_on_retry(
+    development_conversation_api: DevelopmentConversationApi,
+    migrated_database: Engine,
+    hazardous: bool,
+) -> None:
+    api = development_conversation_api
+    status_code, authorization, _ = authorize_session(api)
+    assert status_code == 201
+    session_id = authorization["session_id"]
+    assert isinstance(session_id, str)
+    ended, _, _ = asyncio.run(post_json(
+        api.application,
+        f"/api/v1/development/conversation-sessions/{session_id}/end",
+        {"outcome": "COMPLETED"},
+    ))
+    assert ended == 200
+    payload: JsonObject = {
+        "conversation_session_id": session_id,
+        "customer": {
+            "full_name": "Fictional HVAC Caller", "phone": "+12025550123",
+            "address": {
+                "line1": "123 Example Street", "city": "New York",
+                "state_code": "NY", "postal_code": "10001",
+            },
+        },
+        "intake_intent": "AC stopped cooling",
+        "service": {
+            "kind": "AC_REPAIR", "equipment_issue": "AC stopped cooling",
+            "preferred_window": "Tomorrow morning", "hazardous_condition": hazardous,
+        },
+        "transcript": [
+            {"speaker": "AGENT", "text": "Please review your fictional details."},
+            {"speaker": "USER", "text": "I confirm these fictional details."},
+        ],
+    }
+    first = asyncio.run(post_json(api.application,
+        "/api/v1/development/conversation-intakes", payload,
+        idempotency_key="browser-hvac-confirm"))
+    replay = asyncio.run(post_json(api.application,
+        "/api/v1/development/conversation-intakes", payload,
+        idempotency_key="browser-hvac-confirm"))
+    assert first[0] == 201
+    assert replay[1] == first[1]
+    assert replay[2]["idempotent-replayed"] == "true"
+    request_id = first[1]["service_request_id"]
+    assert isinstance(request_id, str)
+    with Session(migrated_database) as session:
+        row = session.get(HvacServiceRequest, UUID(request_id))
+        assert row is not None
+        assert row.agency_id == api.agency_id
+        assert row.status == ("HANDOFF_REQUESTED" if hazardous else "OPEN")
+        assert row.customer_details["phone"] == "+12025550123"
+        assert session.scalar(select(func.count()).select_from(HvacServiceRequest)
+            .where(HvacServiceRequest.agency_id == api.agency_id)) == 1

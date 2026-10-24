@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from insurance_operations.customers import CustomerInput
-from insurance_operations.telephony.phone_schemas import PhoneCallContext
+from insurance_operations.telephony.context import PhoneCallContext
 
 
 class ServiceKind(StrEnum):
@@ -103,6 +103,9 @@ class ServiceRequestInput(BaseModel):
             (address.line1, address.city, address.state_code, address.postal_code)
         ):
             raise ValueError("a complete service address is required")
+        postal_code = address.postal_code or ""
+        if len(postal_code) != 5 or not postal_code.isascii() or not postal_code.isdigit():
+            raise ValueError("a five-digit U.S. service ZIP code is required")
         if address.country_code != "US":
             raise ValueError("only U.S. service addresses are supported")
         return self

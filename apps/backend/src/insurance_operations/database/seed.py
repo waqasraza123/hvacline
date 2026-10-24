@@ -257,10 +257,8 @@ def configure_demo_telephony(
 ) -> tuple[bool, bool]:
     inbound_number = settings.demo_inbound_number_e164
     transfer_destination = settings.demo_transfer_destination_e164
-    if inbound_number is None and transfer_destination is None:
+    if inbound_number is None:
         return False, False
-    if inbound_number is None or transfer_destination is None:
-        raise ValueError("demo telephony seed requires both demo phone-number settings")
 
     availability_windows = [
         {
@@ -274,7 +272,7 @@ def configure_demo_telephony(
         "inbound_enabled": True,
         "timezone": "UTC",
         "availability_windows": availability_windows,
-        "transfer_enabled": True,
+        "transfer_enabled": transfer_destination is not None,
         "transfer_destination_e164": transfer_destination,
         "transfer_ring_timeout_seconds": 20,
         "max_concurrent_calls": 2,

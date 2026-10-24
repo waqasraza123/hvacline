@@ -47,7 +47,7 @@ alembic upgrade head
 insurance-operations-seed-development
 ```
 
-For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` plus the existing demo telephone fields. The `/operations` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
+For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` and no telephone fields for browser-only use. The `/operations` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
 
 ```bash
 npm run dev:web
@@ -57,6 +57,12 @@ uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
 Open `/operations`, connect to the development workspace, and configure **Scheduling**. Add business hours, ZIP codes, a timezone, and real technician capacity for the fictional test scenario. Add each team's hours and unavailable dates. Scheduling starts disabled and is never seeded with pretend appointments.
 
 The internal calendar is authoritative only for teams whose availability is maintained here. Google Calendar's HTTP adapter and provider-neutral contract are implemented and testable, but OAuth account connection, runtime synchronization, external-event reconciliation, and live provider authorization are not complete. The UI does not offer Google Calendar as connected.
+
+## Browser voice without phone numbers
+
+Enable the browser feature flags and configure a separate private ElevenLabs browser agent using [browser setup](docs/elevenlabs-agent-setup.md). The protected `/operations` workspace includes a **browser voice** tab. Customers in the fictional test scenario speak, review and confirm details, then choose an actual available slot and confirm the appointment on screen. Saved requests and bookings appear in the same workspace. Booking during the spoken session is not implemented.
+
+Phone numbers and human transfers are optional for this path. Keep telephone provider routing disabled without numbers. Public production customer access remains blocked by unfinished identity and tenant provisioning; never share the development admin token with customers. This new flow is implemented but unverified.
 
 ## Telephone setup and live validation
 
