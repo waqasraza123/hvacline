@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 
 export type Customer = Readonly<{
   id: string;
@@ -18,6 +19,24 @@ export class CustomerBackendError extends Error {
     super(message);
     this.name = "CustomerBackendError";
   }
+}
+
+export async function completeCustomerLogout(
+  revocation: Promise<Response>,
+): Promise<NextResponse> {
+  await revocation.catch(() => undefined);
+  const response = new NextResponse(null, {
+    status: 204,
+    headers: { "Cache-Control": "no-store" },
+  });
+  response.cookies.set(CUSTOMER_COOKIE, "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0,
+  });
+  return response;
 }
 
 export function parseCustomer(value: unknown): Customer {

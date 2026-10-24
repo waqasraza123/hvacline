@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  CUSTOMER_COOKIE,
   CustomerBackendError,
+  completeCustomerLogout,
   customerBackend,
   parseCustomer,
 } from "@/features/customer/server";
@@ -26,26 +26,18 @@ async function handle(request: NextRequest, context: Context) {
     if (request.method === "POST") requireSameOrigin(request);
     const body =
       request.method === "POST" ? await requestBody(request) : undefined;
+    if (action === "logout") {
+      const response = await completeCustomerLogout(
+        customerBackend("auth/logout", request.method, body),
+      );
+      return response;
+    }
     const upstream = await customerBackend(
       `auth/${action}`,
       request.method,
       body,
     );
     if (!upstream.ok) return forwardResponse(upstream, await upstream.text());
-    if (action === "logout") {
-      const response = new NextResponse(null, {
-        status: 204,
-        headers: { "Cache-Control": "no-store" },
-      });
-      response.cookies.set(CUSTOMER_COOKIE, "", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 0,
-      });
-      return response;
-    }
     const data: unknown = await upstream.json();
     if (action === "me")
       return NextResponse.json(parseCustomer(data), {

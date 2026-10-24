@@ -167,9 +167,13 @@ function AppointmentList({ onBook }: { onBook: () => void }) {
           throw new Error("Invalid appointments");
         setData(value);
       })
-      .catch(() => {
+      .catch((failure) => {
         if (active)
-          setError("We couldn’t load your appointments. Please try again.");
+          setError(
+            failure instanceof OperationsApiError && failure.status === 401
+              ? "Your session has ended. Sign in again to see your appointments."
+              : "We couldn’t load your appointments. Please try again.",
+          );
       })
       .finally(() => {
         if (active) setLoading(false);
