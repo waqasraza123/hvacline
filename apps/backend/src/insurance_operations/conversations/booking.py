@@ -80,11 +80,10 @@ def appointment_readback(appointment: AppointmentView, timezone: str) -> str:
 
 
 def create_browser_booking_router(
-    sessions: sessionmaker[Session], actor_dependency: Callable[..., ActorContext]
+    sessions: sessionmaker[Session], actor_dependency: Callable[..., ActorContext],
+    *, prefix: str = "/api/v1/development/conversation-sessions/{session_id}/booking",
 ) -> APIRouter:
-    router = APIRouter(
-        prefix="/api/v1/development/conversation-sessions/{session_id}/booking"
-    )
+    router = APIRouter(prefix=prefix)
     scheduling = SchedulingService(sessions)
     Actor = Annotated[ActorContext, Depends(actor_dependency)]
 

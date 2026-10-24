@@ -723,3 +723,76 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
     assert ended[1]["status"] == "CONFIRMED"
     assert post("/availability", {"day": day.isoformat()})[0] == 409
     assert authorize_session(api)[0] == 201
+
+
+def test_customer_accounts_cannot_access_another_customers_booking(
+    development_conversation_api: DevelopmentConversationApi,
+    migrated_database: Engine,
+    database_settings: DatabaseSettings,
+) -> None:
+    settings = ApiSettings(
+        _env_file=None,
+        app_environment=RuntimeEnvironment.DEVELOPMENT,
+        api_host="127.0.0.1", api_port=8000,
+        database_url=database_settings.runtime_database_url,
+        database_ssl_mode=database_settings.database_ssl_mode,
+        development_actor_user_id=development_conversation_api.app_user_id,
+        conversation_ai_enabled=True,
+        elevenlabs_api_key="fictional-provider-key", elevenlabs_agent_id="agent_test",
+        elevenlabs_privacy_confirmed=True,
+        demo_sandbox_enabled=True,
+        demo_admin_token="fictional-administrator-token-for-tests-only",
+        customer_portal_enabled=True,
+        customer_portal_secret="fictional-customer-portal-key-for-tests-only",
+    )
+    application = create_app(settings, migrated_database, FakeConversationProvider())
+
+    async def send(path: str, body: JsonObject | None = None, token: str | None = None, method: str = "POST") -> tuple[int, dict[str, object]]:
+        headers = {"X-Customer-Portal-Key": "fictional-customer-portal-key-for-tests-only"}
+        if token:
+            headers["Authorization"] = "Bearer " + token
+        if path == "conversation-intakes":
+            headers["Idempotency-Key"] = "fictional-customer-intake"
+        async with AsyncClient(transport=ASGITransport(app=application), base_url="http://test") as client:
+            response = await client.request(method, "/api/v1/customer/" + path, headers=headers, json=body)
+        return response.status_code, response.json() if response.content else {}
+
+    def signup(email: str) -> str:
+        status_code, body = asyncio.run(send("auth/signup", {
+            "full_name": "Fictional Customer", "email": email,
+            "password": "fictional account passphrase", "fictional_data_acknowledged": True,
+        }))
+        assert status_code == 201
+        token = body["session_token"]
+        assert isinstance(token, str)
+        return token
+
+    first = signup("fictional-alpha@example.com")
+    second = signup("fictional-beta@example.com")
+    assert asyncio.run(send("auth/me", token=first, method="GET"))[0] == 200
+    assert asyncio.run(send("auth/me", method="GET"))[0] == 401
+    authorized, grant = asyncio.run(send("conversation-sessions", {
+        "ai_disclosure_accepted": True, "microphone_consent_granted": True,
+        "synthetic_data_acknowledged": True,
+    }, first))
+    assert authorized == 201
+    session_id = grant["session_id"]
+    assert isinstance(session_id, str)
+    assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, second))[0] == 404
+    assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, first))[0] == 200
+    saved_status, saved = asyncio.run(send("conversation-intakes", {
+        "conversation_session_id": session_id,
+        "customer": {"full_name": "Fictional Customer", "phone": "+12025550123", "address": {"line1": "123 Example Street", "city": "New York", "state_code": "NY", "postal_code": "10001"}},
+        "intake_intent": "AC is not cooling",
+        "service": {"kind": "AC_REPAIR", "equipment_issue": "AC is not cooling", "preferred_window": "Morning", "hazardous_condition": False},
+        "transcript": [{"speaker": "AGENT", "text": "Please review your fictional details."}, {"speaker": "USER", "text": "I confirm these fictional details."}],
+    }, first))
+    assert saved_status == 201
+    request_id = saved["service_request_id"]
+    assert isinstance(request_id, str)
+    assert asyncio.run(send("hvac/reservations", {"service_request_id": request_id, "team_key": "team-a", "starts_at": "2030-01-01T12:00:00Z", "idempotency_key": "fictional-cross-account-booking"}, second))[0] == 404
+    assert asyncio.run(send("appointments", token=second, method="GET"))[1]["appointments"] == []
+    assert asyncio.run(send("auth/logout", {}, first))[0] == 204
+    assert asyncio.run(send("auth/me", token=first, method="GET"))[0] == 401
+    assert asyncio.run(send("auth/login", {"email": "fictional-alpha@example.com", "password": "wrong fictional password"}))[0] == 401
+    assert asyncio.run(send("auth/login", {"email": "fictional-alpha@example.com", "password": "fictional account passphrase"}))[0] == 200

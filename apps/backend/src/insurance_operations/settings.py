@@ -137,6 +137,8 @@ class ApiSettings(DatabaseSettings):
     demo_sandbox_enabled: bool = False
     demo_admin_token: SecretStr | None = None
     demo_result_ttl_minutes: int = Field(default=15, ge=5, le=60)
+    customer_portal_enabled: bool = False
+    customer_portal_secret: SecretStr | None = None
 
     @field_validator("web_origin")
     @classmethod
@@ -206,6 +208,20 @@ class ApiSettings(DatabaseSettings):
             raise ValueError(
                 "ElevenLabs audio saving and zero-day retention must be confirmed"
             )
+        return self
+
+    @model_validator(mode="after")
+    def validate_customer_portal(self) -> Self:
+        if not self.customer_portal_enabled:
+            return self
+        if (
+            self.app_environment is not RuntimeEnvironment.DEVELOPMENT
+            or not self.demo_sandbox_enabled
+            or not self.conversation_ai_enabled
+        ):
+            raise ValueError("customer portal requires the protected development voice environment")
+        if self.customer_portal_secret is None or len(self.customer_portal_secret.get_secret_value()) < 32:
+            raise ValueError("CUSTOMER_PORTAL_SECRET must contain at least 32 characters")
         return self
 
     @model_validator(mode="after")

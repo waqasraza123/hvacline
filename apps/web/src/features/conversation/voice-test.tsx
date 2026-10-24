@@ -28,11 +28,14 @@ import { appendTranscript, validateConfirmation } from "./review";
 import { VoiceBookingSession } from "./voice-booking";
 import type { VoiceAppointment, VoiceBookingTool } from "./voice-booking";
 import type { ReceptionistSettings } from "../receptionist/contracts";
+import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 
 type VoiceTestProperties = Readonly<{
   apiBaseUrl: string;
   adminToken?: string;
   receptionistSettings: ReceptionistSettings;
+  presentation?: "workspace" | "customer";
+  onActivityChange?: (active: boolean) => void;
 }>;
 
 type IntakeForm = {
@@ -67,6 +70,8 @@ export function VoiceTest({
   apiBaseUrl,
   adminToken,
   receptionistSettings,
+  presentation = "workspace",
+  onActivityChange,
 }: VoiceTestProperties) {
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [form, setForm] = useState<IntakeForm>(EMPTY_FORM);
@@ -78,6 +83,15 @@ export function VoiceTest({
   const phaseRef = useRef<ConversationPhase>("idle");
   const sessionIdRef = useRef<string | undefined>(undefined);
   const intentionalEndRef = useRef(false);
+
+  useEffect(() => {
+    onActivityChange?.(
+      ["requesting", "connecting", "active", "stopping", "saving"].includes(
+        phase,
+      ),
+    );
+    return () => onActivityChange?.(false);
+  }, [phase, onActivityChange]);
 
   const setPhase = useCallback((nextPhase: ConversationPhase) => {
     phaseRef.current = nextPhase;
@@ -265,6 +279,7 @@ export function VoiceTest({
           voiceAppointment={voiceAppointment}
           setVoiceAppointment={setVoiceAppointment}
           voiceBookingRef={voiceBookingRef}
+          presentation={presentation}
         />
       )}
     </ConfiguredConversationAdapter>
@@ -294,6 +309,7 @@ type ExperienceProperties = Readonly<{
   voiceAppointment: VoiceAppointment | undefined;
   setVoiceAppointment: Dispatch<SetStateAction<VoiceAppointment | undefined>>;
   voiceBookingRef: MutableRefObject<VoiceBookingSession | undefined>;
+  presentation: "workspace" | "customer";
 }>;
 
 function VoiceTestExperience({
@@ -317,6 +333,7 @@ function VoiceTestExperience({
   voiceAppointment,
   setVoiceAppointment,
   voiceBookingRef,
+  presentation,
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
@@ -552,72 +569,127 @@ function VoiceTestExperience({
     phase,
   );
   const canStart = phase === "idle" || phase === "error";
+  const customerView = presentation === "customer";
 
   return (
-    <div className="voice-grid">
-      <section className="voice-card" aria-labelledby="voice-controls-title">
-        <p className="eyebrow">{receptionistSettings.publicName}</p>
-        <h1 id="voice-controls-title">Talk to our AI receptionist</h1>
-        <p className="summary">
-          {receptionistSettings.greeting} It can collect contact details and
-          HVAC service needs, but cannot diagnose faults, give repair
-          instructions, or promise a technician before a booking is confirmed.
+    <div className={`voice-grid ${customerView ? "line-experience" : ""}`}>
+      <section
+        className="voice-card voice-control-card"
+        aria-labelledby="voice-controls-title"
+      >
+        {customerView && (
+          <div className="line-session-identity">
+            <span>LINE</span>
+            <span className="voice-ai-badge">AI booking assistant</span>
+          </div>
+        )}
+        <p className="eyebrow">
+          {customerView
+            ? `Booking with ${receptionistSettings.publicName}`
+            : receptionistSettings.publicName}
         </p>
-        <div className="receptionist-context">
-          <p>
-            <strong>Supported interests:</strong>{" "}
-            {receptionistSettings.supportedServiceCategories.join(", ")}
-          </p>
-          <p>
-            <strong>Human follow-up:</strong>{" "}
-            {receptionistSettings.escalationMessage}
-          </p>
+        {customerView ? (
+          <>
+            <div
+              className={`customer-voice-orb ${phase === "active" ? "is-connected" : ""}`}
+            >
+              <VoiceSymbol active={phase === "active" && !client.isMuted} />
+            </div>
+            <h2 id="voice-controls-title">
+              {phase === "active"
+                ? client.isMuted
+                  ? "Take your time."
+                  : client.mode === "speaking"
+                    ? "Line is speaking."
+                    : "You have our attention."
+                : savedIntake
+                  ? "One less thing on your list."
+                  : "Let’s talk about your home."}
+            </h2>
+          </>
+        ) : (
+          <h1 id="voice-controls-title">Talk to our AI receptionist</h1>
+        )}
+        <p className="summary">
+          {customerView ? (
+            "Tell Line what you need. Find a time that works. Nothing is booked until you say yes."
+          ) : (
+            <>
+              {receptionistSettings.greeting} It can collect contact details and
+              HVAC service needs, but cannot diagnose faults, give repair
+              instructions, or promise a technician before a booking is
+              confirmed.
+            </>
+          )}
+        </p>
+        {!customerView && (
+          <div className="receptionist-context">
+            <p>
+              <strong>Supported interests:</strong>{" "}
+              {receptionistSettings.supportedServiceCategories.join(", ")}
+            </p>
+            <p>
+              <strong>Human follow-up:</strong>{" "}
+              {receptionistSettings.escalationMessage}
+            </p>
+          </div>
+        )}
+        <div
+          className={`voice-permissions ${customerView && !canStart ? "permissions-complete" : ""}`}
+        >
+          {customerView && <h3>Before we begin</h3>}
+          <div className="disclosure" role="note">
+            You are interacting with an AI, not a human. Your microphone audio
+            and conversation are recorded during the session and may be shared
+            with ElevenLabs and third-party AI/LLM providers for processing. Use
+            fictional test data only—never real customer or sensitive
+            information. This app does not retain raw audio or a live draft
+            transcript. Intake details and transcript text are saved only after
+            you confirm the full spoken readback or explicitly confirm the
+            on-screen review. An appointment requires a separate confirmation of
+            its date and time.
+          </div>
+          <label className="consent-row">
+            <input
+              checked={disclosureAccepted}
+              disabled={!canStart}
+              onChange={(event) => setDisclosureAccepted(event.target.checked)}
+              type="checkbox"
+            />
+            I agree to the AI, recording, sharing, and provider-processing
+            disclosure above.
+          </label>
+          <label className="consent-row">
+            <input
+              checked={microphoneConsent}
+              disabled={!canStart}
+              onChange={(event) => setMicrophoneConsent(event.target.checked)}
+              type="checkbox"
+            />
+            I consent to live microphone access for this conversation.
+          </label>
+          <label className="consent-row">
+            <input
+              checked={syntheticDataAcknowledged}
+              disabled={!canStart}
+              onChange={(event) =>
+                setSyntheticDataAcknowledged(event.target.checked)
+              }
+              type="checkbox"
+            />
+            I will use fictional test details only, never real customer or
+            sensitive data.
+          </label>
         </div>
-        <div className="disclosure" role="note">
-          You are interacting with an AI, not a human. Your microphone audio and
-          conversation are recorded during the session and may be shared with
-          ElevenLabs and third-party AI/LLM providers for processing. Use
-          fictional test data only—never real customer or sensitive information.
-          This app does not retain raw audio or a live draft transcript. Intake
-          details and transcript text are saved only after you confirm the full
-          spoken readback or explicitly confirm the on-screen review. An
-          appointment requires a separate confirmation of its date and time.
-        </div>
-        <label className="consent-row">
-          <input
-            checked={disclosureAccepted}
-            disabled={!canStart}
-            onChange={(event) => setDisclosureAccepted(event.target.checked)}
-            type="checkbox"
-          />
-          I agree to the AI, recording, sharing, and provider-processing
-          disclosure above.
-        </label>
-        <label className="consent-row">
-          <input
-            checked={microphoneConsent}
-            disabled={!canStart}
-            onChange={(event) => setMicrophoneConsent(event.target.checked)}
-            type="checkbox"
-          />
-          I consent to live microphone access for this conversation.
-        </label>
-        <label className="consent-row">
-          <input
-            checked={syntheticDataAcknowledged}
-            disabled={!canStart}
-            onChange={(event) =>
-              setSyntheticDataAcknowledged(event.target.checked)
-            }
-            type="checkbox"
-          />
-          I will use fictional test details only, never real customer or
-          sensitive data.
-        </label>
+        {customerView && !canStart && (
+          <p className="line-permissions-status">
+            <ProductIcon name="shield" /> Your permissions are confirmed.
+          </p>
+        )}
         <div className="voice-actions">
           {canStart && (
             <button
-              className="primary-button"
+              className={customerView ? "product-button" : "primary-button"}
               disabled={
                 !disclosureAccepted ||
                 !microphoneConsent ||
@@ -627,7 +699,12 @@ function VoiceTestExperience({
               onClick={() => void startConversation()}
               type="button"
             >
-              {phase === "error" ? "Try a new session" : "Start conversation"}
+              {customerView && <ProductIcon name="mic" />}
+              {phase === "error"
+                ? "Try a new conversation"
+                : customerView
+                  ? "Start talking to Line"
+                  : "Start conversation"}
             </button>
           )}
           {phase === "active" && (
@@ -677,41 +754,95 @@ function VoiceTestExperience({
         )}
       </section>
 
-      <section className="voice-card" aria-labelledby="transcript-title">
-        <h2 id="transcript-title">Conversation transcript</h2>
+      <section
+        className="voice-card voice-conversation-card"
+        aria-labelledby="transcript-title"
+      >
+        <div className="line-conversation-heading">
+          <h2 id="transcript-title">
+            {customerView ? "Your conversation" : "Conversation transcript"}
+          </h2>
+          {customerView && <span>JUST YOU & LINE</span>}
+        </div>
         <p className="section-help">
           Live text remains in this browser until you explicitly confirm it.
         </p>
         {transcript.length === 0 ? (
-          <p className="empty-state">No transcript yet.</p>
+          <div className="empty-state">
+            {customerView ? (
+              <div className="conversation-empty">
+                <span>
+                  <ProductIcon name="mic" />
+                </span>
+                <h3>A conversation beats a long form.</h3>
+                <p>
+                  Start with what’s going on. Line will ask for the details and
+                  help you find your next appointment.
+                </p>
+                <div className="conversation-example">
+                  <span>You could start with…</span>
+                  <p>
+                    “My AC isn’t cooling, and I’d like someone to take a look.”
+                  </p>
+                </div>
+                <ol>
+                  <li>
+                    <span>1</span> Tell us what you need
+                  </li>
+                  <li>
+                    <span>2</span> Choose an available time
+                  </li>
+                  <li>
+                    <span>3</span> Confirm your appointment
+                  </li>
+                </ol>
+              </div>
+            ) : (
+              "No transcript yet."
+            )}
+          </div>
         ) : (
           <ol className="transcript-list">
             {transcript.map((turn, index) => (
               <li key={`${turn.speaker}-${index}`}>
-                <label>
-                  {turn.speaker === "USER" ? "Customer" : "AI assistant"}
-                  <textarea
-                    aria-label={`Transcript turn ${index + 1}`}
-                    disabled={
-                      phase === "connecting" ||
-                      phase === "active" ||
-                      phase === "stopping" ||
-                      phase === "saving" ||
-                      phase === "saved" ||
-                      confirmationLocked
-                    }
-                    maxLength={2_000}
-                    onChange={(event) => {
-                      const text = event.target.value;
-                      setTranscript((current) =>
-                        current.map((item, itemIndex) =>
-                          itemIndex === index ? { ...item, text } : item,
-                        ),
-                      );
-                    }}
-                    value={turn.text}
-                  />
-                </label>
+                <div
+                  className={`transcript-turn ${turn.speaker === "USER" ? "turn-user" : "turn-line"}`}
+                >
+                  <span>
+                    {turn.speaker === "USER"
+                      ? customerView
+                        ? "You"
+                        : "Customer"
+                      : customerView
+                        ? "Line · AI"
+                        : "AI assistant"}
+                  </span>
+                  {customerView && phase !== "review" ? (
+                    <p className="conversation-bubble">{turn.text}</p>
+                  ) : (
+                    <textarea
+                      aria-label={`Transcript turn ${index + 1}`}
+                      disabled={
+                        phase === "connecting" ||
+                        phase === "active" ||
+                        phase === "stopping" ||
+                        phase === "saving" ||
+                        phase === "saved" ||
+                        confirmationLocked
+                      }
+                      maxLength={2_000}
+                      onChange={(event) => {
+                        const text = event.target.value;
+                        setTranscript((current) =>
+                          current.map((item, itemIndex) =>
+                            itemIndex === index ? { ...item, text } : item,
+                          ),
+                        );
+                      }}
+                      value={turn.text}
+                    />
+                  )}
+                </div>
               </li>
             ))}
           </ol>
@@ -720,7 +851,9 @@ function VoiceTestExperience({
 
       {savedIntake && phase === "active" && (
         <section className="voice-card" aria-live="polite">
-          <h2>Service request saved</h2>
+          <h2>
+            {customerView ? "Your details are saved." : "Service request saved"}
+          </h2>
           <p>Your spoken confirmation saved your details and transcript.</p>
           {voiceAppointment?.appointment.status === "CONFIRMED" ? (
             <p>
@@ -747,10 +880,13 @@ function VoiceTestExperience({
           className="voice-card review-card"
           aria-labelledby="review-title"
         >
-          <h2 id="review-title">Review and confirm</h2>
+          <h2 id="review-title">
+            {customerView ? "Make sure we got it right." : "Review and confirm"}
+          </h2>
           <p className="section-help">
-            Correct every field before saving. Confirmation creates one customer
-            and an immutable intake record, plus an HVAC service request.
+            {customerView
+              ? "Check your contact and service details before you continue. We’ll save them only when you confirm."
+              : "Correct every field before saving. Confirmation creates one customer and an immutable intake record, plus an HVAC service request."}
           </p>
           <div className="form-grid">
             <FormField
@@ -867,8 +1003,14 @@ function VoiceTestExperience({
           )}
           {savedIntake && (
             <p className="success-message" aria-live="polite">
-              Saved customer {savedIntake.customerName}. Intake ID:{" "}
-              <code>{savedIntake.conversationIntakeId}</code>
+              {customerView ? (
+                `Your service details are saved, ${savedIntake.customerName}. Only a confirmed appointment is booked.`
+              ) : (
+                <>
+                  Saved customer {savedIntake.customerName}. Intake ID:{" "}
+                  <code>{savedIntake.conversationIntakeId}</code>
+                </>
+              )}
             </p>
           )}
         </section>

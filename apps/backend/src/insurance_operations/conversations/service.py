@@ -352,6 +352,7 @@ class ConversationService:
             if request.service is not None:
                 service_request = HvacServiceRequest(
                     agency_id=actor.agency_id,
+                    conversation_session_id=conversation_session.id,
                     customer_details=request.customer.model_dump(mode="json"),
                     service_details=request.service.model_dump(mode="json"),
                     status="HANDOFF_REQUESTED"

@@ -12,6 +12,11 @@ from insurance_operations.database.models.conversation import (
     ConversationSession,
 )
 from insurance_operations.database.models.customer import Customer
+from insurance_operations.database.models.customer_account import (
+    CustomerAccount,
+    CustomerAuthLimit,
+    CustomerLoginSession,
+)
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -55,6 +60,9 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "customer_accounts": TableOwnership(module="customer_access", agency_column="agency_id"),
+    "customer_login_sessions": TableOwnership(module="customer_access", agency_column=None),
+    "customer_auth_limits": TableOwnership(module="customer_access", agency_column=None),
     "business_schedules": TableOwnership(module="hvac", agency_column="agency_id"),
     "hvac_service_requests": TableOwnership(module="hvac", agency_column="agency_id"),
     "hvac_appointments": TableOwnership(module="hvac", agency_column="agency_id"),
@@ -133,6 +141,9 @@ __all__ = [
     "ConversationIntakeConfirmationReceipt",
     "ConversationSession",
     "Customer",
+    "CustomerAccount",
+    "CustomerAuthLimit",
+    "CustomerLoginSession",
     "HandoffContactMethod",
     "HandoffRequestKind",
     "HandoffStatus",

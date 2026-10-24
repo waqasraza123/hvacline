@@ -4,6 +4,9 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "customer_accounts": ("customer_access", "agency_id"),
+    "customer_login_sessions": ("customer_access", None),
+    "customer_auth_limits": ("customer_access", None),
     "business_schedules": ("hvac", "agency_id"),
     "hvac_service_requests": ("hvac", "agency_id"),
     "hvac_appointments": ("hvac", "agency_id"),
@@ -63,6 +66,9 @@ def test_foundation_relationships_match_available_parent_tables(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_relationships: dict[str, set[tuple[tuple[str, ...], str]]] = {
+        "customer_accounts": {(("agency_id",), "agencies"), (("app_user_id",), "app_users")},
+        "customer_login_sessions": {(("account_id",), "customer_accounts")},
+        "customer_auth_limits": set(),
         "agencies": set(),
         "app_users": set(),
         "agency_memberships": {

@@ -8,9 +8,13 @@ import { VoiceTest } from "./voice-test";
 export function BrowserVoicePanel({
   apiBaseUrl,
   adminToken,
+  presentation,
+  onActivityChange,
 }: {
   apiBaseUrl: string;
-  adminToken: string;
+  adminToken?: string;
+  presentation?: "workspace" | "customer";
+  onActivityChange?: (active: boolean) => void;
 }) {
   const [settings, setSettings] = useState<ReceptionistSettings>();
   const [error, setError] = useState("");
@@ -31,13 +35,27 @@ export function BrowserVoicePanel({
       active = false;
     };
   }, [apiBaseUrl, adminToken]);
-  if (error) return <p role="alert">{error}</p>;
-  if (!settings) return <p role="status">Loading browser receptionist…</p>;
+  if (error)
+    return (
+      <div className="customer-empty">
+        <h2>Line couldn’t connect.</h2>
+        <p role="alert">Please refresh the page and try again.</p>
+      </div>
+    );
+  if (!settings)
+    return (
+      <div className="customer-empty" role="status">
+        <span className="customer-loading" />
+        <p>Getting Line ready for you…</p>
+      </div>
+    );
   return (
     <VoiceTest
       apiBaseUrl={apiBaseUrl}
       adminToken={adminToken}
       receptionistSettings={settings}
+      presentation={presentation}
+      onActivityChange={onActivityChange}
     />
   );
 }

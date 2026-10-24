@@ -150,7 +150,7 @@ export function BrowserBooking({
         <div role="status">
           <p>
             {time(appointment.starts_at)} · {timezone ?? "UTC"} ·{" "}
-            {appointment.status}
+            {({ HELD: "On hold — awaiting your confirmation", CONFIRMED: "Confirmed", CANCELLED: "Cancelled", EXPIRED: "Hold expired" }[appointment.status] ?? "Needs attention")}
           </p>
           {appointment.status === "HELD" && (
             <>

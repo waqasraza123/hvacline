@@ -3,15 +3,15 @@ import type { ReactNode } from "react";
 import "./styles.css";
 export const metadata: Metadata = {
   title: {
-    default: "HVACLine AI — AI Phone Receptionist & Appointment Booking",
+    default: "HVACLine — Less waiting. More comfort.",
     template: "%s | HVACLine AI",
   },
   description:
-    "An AI phone receptionist for U.S. HVAC service companies. Capture repair requests, check technician availability, book appointments, and route urgent calls.",
+    "Book your heating, cooling, installation or maintenance appointment with Line, your AI booking assistant. One conversation. A time that works for you.",
   openGraph: {
     title: "HVACLine AI",
     description:
-      "The next job starts with a call. AI phone reception and scheduling for heating and air businesses.",
+      "Less waiting. More comfort. Your next HVAC appointment is a conversation away.",
     type: "website",
   },
   icons: { icon: "/icon.svg" },

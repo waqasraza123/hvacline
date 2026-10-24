@@ -32,6 +32,9 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "customer_accounts",
+    "customer_login_sessions",
+    "customer_auth_limits",
     "business_schedules",
     "hvac_service_requests",
     "hvac_appointments",
@@ -55,11 +58,15 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "customer_accounts": {"id", "agency_id", "app_user_id", "email", "password_hash", "created_at"},
+    "customer_login_sessions": {"id", "account_id", "token_hash", "expires_at", "revoked_at"},
+    "customer_auth_limits": {"key", "attempts", "window_started_at"},
     "business_schedules": {"agency_id", "version", "configuration"},
     "hvac_service_requests": {
         "id",
         "agency_id",
         "inbound_call_id",
+        "conversation_session_id",
         "customer_details",
         "service_details",
         "status",

@@ -49,6 +49,7 @@ from insurance_operations.conversations.schemas import (
     ConversationSessionResponse,
 )
 from insurance_operations.conversations.service import ConversationService
+from insurance_operations.customer_access.routes import create_customer_router
 from insurance_operations.database.connection import (
     DatabaseReadinessError,
     check_database_readiness,
@@ -781,6 +782,7 @@ def create_app(
     application.include_router(
         create_browser_booking_router(session_factory, conversation_actor)
     )
+    application.include_router(create_customer_router(settings, session_factory, conversation_service))
 
     return application
 
