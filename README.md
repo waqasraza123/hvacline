@@ -1,332 +1,87 @@
-# CoverOps — Insurance Voice AI SaaS Starter Kit
+# HVACLine AI
 
-A development-ready foundation for building an insurance agency Voice AI SaaS
-with browser and telephone agents, approved knowledge, confirmed lead intake,
-and human handoff.
+**AI Phone Receptionist & Appointment Booking for U.S. HVAC Businesses.**
 
-CoverOps combines a **Next.js frontend**, **FastAPI backend**, **PostgreSQL**,
-**ElevenLabs Voice AI**, and **Twilio telephony** behind provider-neutral
-application services.
+An HVAC company should receive a useful service request when it cannot answer the phone. HVACLine AI connects Twilio telephone calls to an ElevenLabs receptionist, with FastAPI controlling approved information, service intake, technician availability, reservations, and confirmed appointments. Next.js provides the service workspace. Neon PostgreSQL remains the only application database.
 
-<p align="center">
-  <sub>VOICE AI POWERED BY</sub><br><br>
-  <a href="https://elevenlabs.io/">
-    <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://11labs-nonprd-15f22c1d.s3.eu-west-3.amazonaws.com/0b9cd3e1-9fad-4a5b-b3a0-c96b0a1f1d2b/elevenlabs-logo-white.svg">
-      <source media="(prefers-color-scheme: light)" srcset="https://11labs-nonprd-15f22c1d.s3.eu-west-3.amazonaws.com/0b9cd3e1-9fad-4a5b-b3a0-c96b0a1f1d2b/elevenlabs-logo-black.svg">
-      <img alt="ElevenLabs" src="https://11labs-nonprd-15f22c1d.s3.eu-west-3.amazonaws.com/0b9cd3e1-9fad-4a5b-b3a0-c96b0a1f1d2b/elevenlabs-logo-black.svg" width="260">
-    </picture>
-  </a>
-</p>
+**Development implementation, not a production launch.** Real carrier calling has not been verified. Production sign-in, tenant onboarding, billing, notification delivery, retention automation, and external calendar synchronization remain launch blockers. Use fictional data only. No raw audio is stored by the application.
 
-> **Important:** CoverOps is a starter architecture and synthetic-data
-> demonstration. It is not a production-ready insurance SaaS and must not be
-> used with real customer data without completing the production work described
-> below.
+## Implemented workflow
 
-## What ships
+1. A configured Twilio number routes a signed inbound webhook to the backend.
+2. The existing ElevenLabs register-call adapter starts a two-way telephone conversation.
+3. The caller accepts AI disclosure, the existing development consent gates, and explicit readback of their details.
+4. Authenticated tools save an HVAC service request, including contact, service address, equipment issue, requested service, preferred window, and hazard flag.
+5. The backend checks the business's configured ZIP codes, timezone, opening hours, technician schedules, time off, notice period, and existing appointments.
+6. A five-minute reservation holds capacity. An explicit confirmation commits the appointment before the tool returns `CONFIRMED`.
+7. The operations workspace shows persistent requests, appointments, calls, callbacks, and handoffs. A signed post-call event finalizes the existing confirmed customer/intake/lead flow; structured HVAC addresses are retained in that customer.
 
-The current starter foundation includes:
+Unconfigured scheduling returns no slots. Hazardous conditions require human attention and cannot be self-booked. The agent must not diagnose equipment hazards, provide repair instructions, invent pricing, or promise an emergency response time.
 
-- Browser Voice AI using authenticated ElevenLabs WebRTC.
-- Inbound telephone AI through Twilio and a separate ElevenLabs phone agent.
-- Agency-approved FAQ retrieval with source references.
-- AI disclosure and consent gates.
-- Structured insurance-interest intake.
-- Explicit browser review and confirmation.
-- Explicit verbal phone readback confirmation.
-- Transactional customer, confirmed intake, and lead creation.
-- Callback and live-transfer handoff foundations.
-- Provider-neutral application state.
-- Agency ownership foundations.
-- Audit records and idempotency protections.
-- Conversation and call quotas.
-- Alembic-managed PostgreSQL migrations.
-- Synthetic Harborline Insurance demo data.
+## Stack and compatibility
 
-## What you still add before production
+Next.js / React / TypeScript; FastAPI / Python 3.13; SQLAlchemy 2 / psycopg 3 / Alembic; Neon PostgreSQL; Twilio; ElevenLabs. No Supabase or second runtime database.
 
-This repository intentionally does not claim to be a finished production SaaS.
+Internal `insurance_operations`, `@insurance-operations/web`, CLI names, existing migration revisions, and `agency_id` ownership are retained to protect deployment and schema compatibility. The database's legacy `supported_insurance_categories` column is mapped to the HVAC API field `supported_service_categories`. These identifiers do not define the public product.
 
-A production implementation still requires:
+## Setup
 
-- Production authentication and agency onboarding.
-- Roles and permissions.
-- Billing, plans, and entitlements.
-- Final lead and operations dashboards.
-- Durable notification delivery.
-- CRM and agency-management-system integrations.
-- Usage and cost metering.
-- Retention, export, and deletion workflows.
-- Production observability and incident response.
-- Deployment and operational hardening.
-- Security, privacy, regulatory, and compliance review for the intended use.
-
-## Safety boundaries
-
-The receptionist is designed as a front-desk assistant.
-
-It must not:
-
-- quote insurance
-- recommend coverage
-- choose limits
-- bind coverage
-- verify coverage
-- make underwriting decisions
-- make claims decisions
-- improvise answers outside approved agency knowledge
-
-Unsupported or regulated requests should be handed to agency staff.
-
-Raw audio is not retained by the application.
-
-## Demo identity
-
-**CoverOps** is the starter-kit product.
-
-**Harborline Insurance** is the fictional agency used in demonstrations and
-seed data.
-
-The internal Python namespace remains `insurance_operations` to avoid
-unnecessary code and migration churn.
-
-See the [branding guide](docs/branding.md).
-
-## Architecture
-
-```text
-Browser
-   |
-   | WebRTC
-   v
-ElevenLabs Voice AI
-   |
-   | approved application tools
-   v
-FastAPI ---------------- PostgreSQL
-   |
-   +---- FAQ / intake / lead / handoff services
-
-
-Telephone caller
-   |
-   v
-Twilio
-   |
-   v
-ElevenLabs phone agent
-   |
-   | authenticated tools + signed callbacks
-   v
-FastAPI ---------------- PostgreSQL
-```
-
-FastAPI remains authoritative for business rules, ownership, validation,
-confirmation, idempotency, quotas, audit records, and persistence.
-
-Provider-specific behavior remains isolated inside adapters.
-
-## Technology stack
-
-### Web
-
-- Next.js
-- React
-- TypeScript
-- ElevenLabs React SDK
-
-### Backend
-
-- Python 3.13
-- FastAPI
-- SQLAlchemy 2
-- Pydantic
-- Alembic
-
-### Data
-
-- PostgreSQL
-- Neon
-
-### Voice and telephony
-
-- ElevenLabs Voice AI
-- WebRTC
-- Twilio Voice
-
-## Quickstart
-
-Requirements:
-
-- Node.js 26
-- Python 3.13
-- PostgreSQL-compatible Neon development database
-
-Create local environment files:
+Requires Node.js 26 and Python 3.13.
 
 ```bash
 cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-```
-
-Install dependencies:
-
-```bash
+cp apps/web/.env.example apps/web/.env.local
 npm ci
-
-python3 -m venv .venv
+python3.13 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
 ```
 
-Load backend environment variables:
+Configure a development Neon branch with a pooled `DATABASE_URL` and a direct `DIRECT_DATABASE_URL`. Keep `TEST_DATABASE_URL` separate and disposable. See [database setup](docs/database-setup.md). Never commit credentials.
 
 ```bash
 set -a
 source .env
 set +a
-```
-
-Apply the development database:
-
-```bash
 alembic upgrade head
 insurance-operations-seed-development
 ```
 
-The seed creates the fictional Harborline Insurance agency and deterministic
-development records.
-
-Never use real customer information in the development environment.
-
-## Run locally
-
-Start the web application:
+For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` plus the existing demo telephone fields. The `/operations` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
 
 ```bash
 npm run dev:web
+uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
 ```
 
-Start FastAPI in another configured shell:
+Open `/operations`, connect to the development workspace, and configure **Scheduling**. Add business hours, ZIP codes, a timezone, and real technician capacity for the fictional test scenario. Add each team's hours and unavailable dates. Scheduling starts disabled and is never seeded with pretend appointments.
 
-```bash
-source .venv/bin/activate
-set -a
-source .env
-set +a
+The internal calendar is authoritative only for teams whose availability is maintained here. Google Calendar's HTTP adapter and provider-neutral contract are implemented and testable, but OAuth account connection, runtime synchronization, external-event reconciliation, and live provider authorization are not complete. The UI does not offer Google Calendar as connected.
 
-uvicorn insurance_operations.api:app \
-  --host "$API_HOST" \
-  --port "$API_PORT" \
-  --reload
-```
+## Telephone setup and live validation
 
-Start the worker separately when required:
-
-```bash
-insurance-operations-worker
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-## Setup tracks
-
-### Foundation only
-
-Keep Voice AI and telephone features disabled.
-
-This lets you inspect the frontend, backend, database model, agency
-configuration, FAQ system, lead foundations, and application architecture
-without configuring a voice provider.
-
-### Browser Voice AI
-
-Follow:
-
-[ElevenLabs browser agent setup](docs/elevenlabs-agent-setup.md)
-
-The browser receives a short-lived WebRTC credential from FastAPI. The
-ElevenLabs API key remains server-side.
-
-### Inbound telephone AI
-
-Follow:
-
-- [ElevenLabs phone agent setup](docs/elevenlabs-phone-agent-setup.md)
-- [Telephony provider setup](docs/telephony-provider-setup.md)
-- [Client phone demo runbook](docs/client-phone-demo-runbook.md)
-
-Telephone mode uses a separate ElevenLabs phone agent while Twilio retains
-carrier and transfer responsibility.
-
-Do not advertise the telephone demo as live until the provider dashboard and
-synthetic carrier-call checklist have been completed.
-
-## Environment configuration
-
-The root `.env` contains backend, database, provider, and secret configuration.
-
-`apps/web/.env` contains only browser-safe `NEXT_PUBLIC_*` configuration.
-
-Never expose:
-
-- database credentials
-- ElevenLabs API keys
-- Twilio credentials
-- provider webhook secrets
-- demo administrator secrets
-
-Never commit `.env` files.
-
-See [database setup](docs/database-setup.md).
+Follow [the HVAC live-validation runbook](docs/hvacline-live-validation.md), [Twilio provider setup](docs/telephony-provider-setup.md), and [ElevenLabs phone setup](docs/elevenlabs-phone-agent-setup.md). Provider feature flags stay disabled until credentials, privacy settings, tool configuration, and routing are verified. Do not purchase numbers or activate billing as part of setup without owner approval.
 
 ## Verification
 
-Before running database tests, confirm that `TEST_DATABASE_URL` points to a
-separate disposable database.
-
 ```bash
 npm run verify:web
-
 ruff format --check .
 ruff check .
 mypy apps/backend/src tests
-
-APP_ENVIRONMENT=test alembic upgrade head
-APP_ENVIRONMENT=test alembic current
-APP_ENVIRONMENT=test alembic check
-APP_ENVIRONMENT=test pytest
-
+APP_ENVIRONMENT=test pytest tests --ignore=tests/database
 insurance-operations-worker --check
 ```
 
-Database downgrade or rebuild operations must only be run against a database
-that has been explicitly confirmed as disposable.
+Database tests rebuild the selected database. Run them only when `TEST_DATABASE_URL` is confirmed isolated and disposable. CI provisions its own PostgreSQL service.
 
-## Current limitations
+```bash
+APP_ENVIRONMENT=test pytest tests/database
+APP_ENVIRONMENT=test alembic upgrade head
+APP_ENVIRONMENT=test alembic current
+APP_ENVIRONMENT=test alembic check
+```
 
-Production authentication, billing, real-customer-data operation, final
-operations UI, durable notifications, CRM integrations, detailed usage
-metering, retention/deletion workflows, and full production hardening remain
-outside the current starter foundation.
+Automated provider fixtures do not prove a live telephone call. The first live acceptance gate is a synthetic caller reaching the configured number, completing consent and intake, receiving a database-confirmed appointment, and the operator seeing the request and booking in `/operations`.
 
-The hosted and local demonstrations are intended for fictional data only.
-
-## Project documentation
-
-- [Brand identity](docs/branding.md)
-- [Database setup](docs/database-setup.md)
-- [Browser Voice AI setup](docs/elevenlabs-agent-setup.md)
-- [Phone agent setup](docs/elevenlabs-phone-agent-setup.md)
-- [Telephony provider setup](docs/telephony-provider-setup.md)
-- [Lead and handoff API](docs/lead-handoff-api.md)
-- [Client phone demo runbook](docs/client-phone-demo-runbook.md)
-
-Additional architecture, customization, deployment, demo, and
-production-readiness documentation will be added as part of the starter-kit
-presentation pass.
+See [architecture](docs/hvacline-architecture.md), [current project state](docs/project-state.md), and [remaining product work](docs/ai-receptionist-product-plan.md). Historical insurance-era continuation notes are archived; they are not current requirements.

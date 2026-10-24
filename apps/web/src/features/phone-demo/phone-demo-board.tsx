@@ -87,7 +87,7 @@ export function PhoneDemoBoard({
 
       <section className="phone-demo-hero" aria-labelledby="phone-demo-title">
         <div>
-          <p className="eyebrow">Harborline Insurance showcase</p>
+          <p className="eyebrow">Harborline Heating & Air showcase</p>
           <h1 id="phone-demo-title">Call the AI front desk.</h1>
           <p className="summary">
             Hear disclosure, approved FAQ answers, structured intake, verbal
@@ -97,8 +97,8 @@ export function PhoneDemoBoard({
             {phoneNumber}
           </a>
           <p className="demo-notice">
-            Use fictional information only. This agent cannot quote, advise,
-            bind coverage, or handle real insurance business.
+            Use fictional information only. This agent cannot diagnose hazards,
+            give repair instructions, or promise an unconfirmed appointment.
           </p>
         </div>
 
@@ -136,7 +136,7 @@ export function PhoneDemoBoard({
           <li>Agree to the AI and fictional-data disclosure.</li>
           <li>Ask: “What are your office hours?”</li>
           <li>Use the fictional name “Taylor Morgan.”</li>
-          <li>Ask about a fictional auto-insurance callback.</li>
+          <li>Ask about a fictional AC repair callback.</li>
           <li>Confirm the details after the agent reads them back.</li>
           <li>Request a callback or live transfer.</li>
         </ol>

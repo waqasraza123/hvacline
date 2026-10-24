@@ -1,3 +1,5 @@
+> HVACLine AI: read [the current live-validation runbook](hvacline-live-validation.md) first. This adapter reference predates HVAC scheduling; its old product restrictions and status notes are historical.
+
 # Telephony Provider Setup
 
 ## Provider

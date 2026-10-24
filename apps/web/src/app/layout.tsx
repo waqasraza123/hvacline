@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-
 import "./styles.css";
-
 export const metadata: Metadata = {
-  title: "CoverOps — Insurance Voice AI SaaS Starter Kit",
+  title: {
+    default: "HVACLine AI — AI Phone Receptionist & Appointment Booking",
+    template: "%s | HVACLine AI",
+  },
   description:
-    "A Next.js and FastAPI starter for guarded browser and phone Voice AI, approved FAQs, confirmed lead intake, and human handoff.",
+    "An AI phone receptionist for U.S. HVAC service companies. Capture repair requests, check technician availability, book appointments, and route urgent calls.",
+  openGraph: {
+    title: "HVACLine AI",
+    description:
+      "The next job starts with a call. AI phone reception and scheduling for heating and air businesses.",
+    type: "website",
+  },
+  icons: { icon: "/icon.svg" },
 };
-
-type RootLayoutProperties = Readonly<{
-  children: ReactNode;
-}>;
-
-export default function RootLayout({ children }: RootLayoutProperties) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
       <body>{children}</body>

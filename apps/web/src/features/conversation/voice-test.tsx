@@ -425,13 +425,13 @@ function VoiceTestExperience({
         <h1 id="voice-controls-title">Talk to our AI receptionist</h1>
         <p className="summary">
           {receptionistSettings.greeting} It can collect contact details and
-          insurance interest, but cannot quote, advise, bind coverage, verify
-          coverage, or make decisions.
+          HVAC service needs, but cannot diagnose faults, give repair
+          instructions, or promise a technician before a booking is confirmed.
         </p>
         <div className="receptionist-context">
           <p>
             <strong>Supported interests:</strong>{" "}
-            {receptionistSettings.supportedInsuranceCategories.join(", ")}
+            {receptionistSettings.supportedServiceCategories.join(", ")}
           </p>
           <p>
             <strong>Human follow-up:</strong>{" "}
@@ -618,7 +618,7 @@ function VoiceTestExperience({
               value={form.phone}
             />
             <label className="wide-field">
-              Insurance intake intent
+              HVAC service request
               <textarea
                 disabled={phase !== "review" || confirmationLocked}
                 maxLength={2_000}

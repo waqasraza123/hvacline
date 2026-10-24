@@ -1,3 +1,5 @@
+> HVACLine AI: read [the current live-validation runbook](hvacline-live-validation.md) first. This adapter reference predates HVAC scheduling; its old product restrictions and status notes are historical.
+
 # ElevenLabs Agent Setup
 
 Configure one private development agent in the ElevenLabs dashboard. Do not place the API key or agent ID in this document. Keep both Voice AI feature flags disabled until every privacy and billing item below is complete.

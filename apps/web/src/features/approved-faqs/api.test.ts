@@ -17,7 +17,7 @@ describe("approved FAQ API parsing", () => {
     const lookup = parseApprovedFaqLookup({
       matched: true,
       answer: faq.approvedAnswer,
-      fallback_message: "A licensed team member will follow up.",
+      fallback_message: "A service team member will follow up.",
       source: {
         faq_id: faq.id,
         question: faq.question,

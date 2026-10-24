@@ -26,7 +26,7 @@ const EMPTY_DRAFT: ReceptionistSettingsDraft = {
   officeHours: "",
   contactEmail: "",
   contactPhone: "",
-  supportedInsuranceCategories: "",
+  supportedServiceCategories: "",
   escalationMessage: "",
 };
 
@@ -153,12 +153,12 @@ export function ReceptionistSettingsEditor({
             />
             <SettingsTextarea
               help="Enter one category per line."
-              label="Supported insurance categories"
+              label="Supported HVAC services"
               maxLength={1_600}
-              onChange={(supportedInsuranceCategories) =>
-                setDraft({ ...draft, supportedInsuranceCategories })
+              onChange={(supportedServiceCategories) =>
+                setDraft({ ...draft, supportedServiceCategories })
               }
-              value={draft.supportedInsuranceCategories}
+              value={draft.supportedServiceCategories}
             />
             <SettingsTextarea
               className="wide-field"

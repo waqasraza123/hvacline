@@ -12,8 +12,7 @@ export function settingsDraft(
     officeHours: settings.officeHours,
     contactEmail: settings.contactEmail ?? "",
     contactPhone: settings.contactPhone ?? "",
-    supportedInsuranceCategories:
-      settings.supportedInsuranceCategories.join("\n"),
+    supportedServiceCategories: settings.supportedServiceCategories.join("\n"),
     escalationMessage: settings.escalationMessage,
   };
 }
@@ -40,15 +39,15 @@ export function validateSettingsDraft(
   if (!draft.contactEmail.trim() && !draft.contactPhone.trim()) {
     return "Add a public email address or phone number.";
   }
-  const categories = categoriesFromDraft(draft.supportedInsuranceCategories);
+  const categories = categoriesFromDraft(draft.supportedServiceCategories);
   if (categories.length === 0) {
-    return "Add at least one supported insurance category.";
+    return "Add at least one supported HVAC service.";
   }
   if (
     new Set(categories.map((category) => category.toLowerCase())).size !==
     categories.length
   ) {
-    return "Supported insurance categories must be unique.";
+    return "Supported HVAC services must be unique.";
   }
   if (!draft.escalationMessage.trim()) {
     return "Human escalation message is required.";
