@@ -6,6 +6,8 @@ HVACLine AI is an AI phone receptionist and appointment-booking product for U.S.
 
 ## Architecture
 
+GitHub redirected the authorized feature-branch push to `waqasraza123/hvacline` on October 25, 2026; the former `insurance-operations-ai` URL still redirected successfully at that time. Render's repository binding and deployed revision have not been verified.
+
 Next.js/TypeScript web, FastAPI/Python 3.13 backend, separate worker, SQLAlchemy 2/psycopg 3/Alembic, and Neon PostgreSQL only. Keep established Python/workspace/CLI names, agency ownership keys, and migration history for compatibility. Public receptionist categories are exposed as `supported_service_categories`, mapped to the legacy storage column.
 
 Existing signed Twilio ingress, ElevenLabs register-call voice connection, secret-authenticated tools, HMAC post-call verification, consent/readback receipts, approved FAQs, leads, callbacks, transfer commands, quotas, and audits are reused. No raw audio is stored. Transcript/customer/lead finalization stays in the signed post-call flow.

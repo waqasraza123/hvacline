@@ -64,6 +64,16 @@ Configure Scheduling first if appointments are needed. Unconfigured hours or ser
 
 ## Owner verification (not run for this change)
 
+The isolated implementation checkout is `/private/tmp/hvacline-browser-demo`, branch `fix/browser-demo-setup`. The original working directory has older uncommitted work and was preserved. Use the implementation checkout or another clean checkout of this branch, configure its environment privately, and install its dependencies before running checks. An existing editable Python installation may still point at the old checkout.
+
+```bash
+cd /private/tmp/hvacline-browser-demo
+python3.13 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
+npm ci
+```
+
 ```bash
 APP_ENVIRONMENT=test pytest tests/test_settings.py tests/test_conversation_provider.py tests/test_browser_spoken_confirmation.py
 npm run test --workspace @insurance-operations/web -- src/features/conversation/voice-booking.test.ts src/features/conversation/api.test.ts
