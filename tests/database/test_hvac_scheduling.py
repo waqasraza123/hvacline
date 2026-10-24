@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -194,3 +195,23 @@ def test_phone_request_rejects_unresolved_call_context(
     with pytest.raises(ApiError) as error:
         service.create_request(agency_id, service_request(), uuid4(), call_id=uuid4())
     assert error.value.status_code == 404
+
+
+def test_active_hold_preserves_notice_period_until_confirmation(
+    migrated_database: Engine,
+) -> None:
+    service, agency_id, request = configure(migrated_database)
+    configuration = ScheduleInput.model_validate(
+        service.configuration(agency_id)["configuration"]
+    )
+    configuration.expected_version = 1
+    configuration.notice_minutes = 120
+    service.configure(agency_id, configuration, uuid4())
+    reserved_at = request.starts_at - timedelta(minutes=120)
+    with patch("insurance_operations.hvac.service.datetime", wraps=datetime) as clock:
+        clock.now.return_value = reserved_at
+        reserved = service.reserve(agency_id, request, uuid4())
+        clock.now.return_value = reserved_at + timedelta(minutes=4)
+        assert (
+            service.confirm(agency_id, reserved.id, True, uuid4()).status == "CONFIRMED"
+        )

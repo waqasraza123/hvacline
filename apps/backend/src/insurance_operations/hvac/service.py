@@ -320,9 +320,10 @@ class SchedulingService:
                     "RESERVATION_EXPIRED",
                 )
             day = row.starts_at.astimezone(ZoneInfo(configuration.timezone)).date()
-            if not any(
+            reserved_at = row.hold_expires_at - timedelta(minutes=5)
+            if row.starts_at <= now or not any(
                 slot.team_key == row.team_key and slot.starts_at == row.starts_at
-                for slot in candidate_slots(configuration, day, now)
+                for slot in candidate_slots(configuration, day, reserved_at)
             ):
                 raise unavailable(
                     "Availability changed. Request a new appointment.",
