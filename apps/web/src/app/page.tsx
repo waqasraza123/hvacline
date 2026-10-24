@@ -206,7 +206,7 @@ export default function Home() {
                 <VoiceSymbol />
               </div>
               <span className="feature-art-label">
-                A CONVERSATION, NOT A CHORE.
+                A BETTER FIRST CONVERSATION.
               </span>
             </div>
             <div>

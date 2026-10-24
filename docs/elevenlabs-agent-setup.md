@@ -105,7 +105,7 @@ Manual acceptance, using fictional data only:
 9. Report a hazard before or after saving. No new booking may proceed; an existing unconfirmed hold is released when the hazard is persisted. Existing confirmed appointments require human handling. No transfer, emergency alert or callback delivery is promised.
 10. Disconnect before confirmation, after saving, and after booking. Unconfirmed drafts stay unsaved, saved records survive, and an abandoned hold expires. Finish without saving by voice and exercise the existing on-screen review fallback.
 
-No tests, builds, lint, type checks, migrations, services, provider configuration calls or live conversations were run for this implementation. Agent settings, effective deployment variables and end-to-end success remain owner-unverified. Keep this change on its feature branch until owner verification/deployment: pushing `main` starts the configured Render build automatically.
+No tests, builds, lint, type checks, migrations, services, provider configuration calls or live conversations were run for this implementation. Agent settings, effective deployment variables and end-to-end success remain owner-unverified. Do not treat publication to `main` as verification: pushing `main` starts the configured Render build automatically, and real customer use remains out of scope.
 
 ## Privacy Checklist
 
