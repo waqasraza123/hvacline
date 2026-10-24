@@ -20,7 +20,9 @@ The Google Calendar HTTP adapter and provider-neutral contract are implemented w
 
 ## Verification during this execution
 
-Python Ruff and mypy pass. The 39 non-database Python tests pass. Web formatting, lint, type checking, and all 23 tests pass. Local production build cannot complete because this execution environment lacks the OS memory-statistics interface (`uv_resident_set_memory` ENOENT). The GitHub CI Python job at commit `15649b8` passed all 81 tests, including isolated PostgreSQL migration, booking concurrency, tenant isolation, and phone-tool booking tests; worker readiness passed. No shared or production Neon database was touched. The CI web build is still pending at this checkpoint.
+GitHub CI at implementation commit `0cbbe8f` passed both jobs: 83 Python tests, 24 web tests, Ruff format/lint, mypy, the production web build, migration upgrade/current/no-drift checks at `20261024_0009`, and worker readiness. Database tests used CI's isolated PostgreSQL 17 service. No shared or production Neon database was touched. All 177 tracked branch files were compared against local source and matched before the final reservation-notice fix; that fix also passed CI.
+
+The local host cannot complete Next build because its OS memory-statistics interface is unavailable (`uv_resident_set_memory` ENOENT); the GitHub production build independently passed. No live carrier call, provider dashboard/privacy validation, or Google authorization has been verified. See `docs/verification.md` for evidence.
 
 ## Remaining launch blockers
 
