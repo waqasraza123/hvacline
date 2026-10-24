@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Brand } from "@/components/brand";
 import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
 import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
+import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import { ScheduleForm } from "./schedule-form";
 import { requestApi } from "./api";
 import type {
@@ -16,7 +17,13 @@ import type {
   Slot,
 } from "./api";
 
-export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
+export function OperationsWorkspace({
+  apiBaseUrl,
+  conversationAiEnabled,
+}: {
+  apiBaseUrl: string;
+  conversationAiEnabled: boolean;
+}) {
   const [token, setToken] = useState("");
   const [data, setData] = useState<Operations | null>(null);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
@@ -183,6 +190,7 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
               "scheduling",
               "receptionist",
               "knowledge",
+              ...(conversationAiEnabled ? ["browser voice"] : []),
             ].map((name) => (
               <button
                 role="tab"
@@ -429,6 +437,9 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
               adminToken={token}
               embedded
             />
+          )}
+          {tab === "browser voice" && (
+            <BrowserVoicePanel apiBaseUrl={apiBaseUrl} adminToken={token} />
           )}
           {tab === "knowledge" && (
             <ApprovedFaqManager

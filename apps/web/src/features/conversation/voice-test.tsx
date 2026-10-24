@@ -9,6 +9,7 @@ import {
   endConversationSession,
 } from "./api";
 import { lookupConversationApprovedFaq } from "../approved-faqs/api";
+import { BrowserBooking } from "./browser-booking";
 import { ConfiguredConversationAdapter } from "./configured-adapter";
 import type {
   ConfirmedConversationIntake,
@@ -28,6 +29,7 @@ import type { ReceptionistSettings } from "../receptionist/contracts";
 
 type VoiceTestProperties = Readonly<{
   apiBaseUrl: string;
+  adminToken?: string;
   receptionistSettings: ReceptionistSettings;
 }>;
 
@@ -36,6 +38,13 @@ type IntakeForm = {
   email: string;
   phone: string;
   intakeIntent: string;
+  addressLine1: string;
+  city: string;
+  stateCode: string;
+  postalCode: string;
+  serviceKind: string;
+  preferredWindow: string;
+  hazardousCondition: boolean;
 };
 
 const EMPTY_FORM: IntakeForm = {
@@ -43,10 +52,18 @@ const EMPTY_FORM: IntakeForm = {
   email: "",
   phone: "",
   intakeIntent: "",
+  addressLine1: "",
+  city: "",
+  stateCode: "",
+  postalCode: "",
+  serviceKind: "AC_REPAIR",
+  preferredWindow: "",
+  hazardousCondition: false,
 };
 
 export function VoiceTest({
   apiBaseUrl,
+  adminToken,
   receptionistSettings,
 }: VoiceTestProperties) {
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
@@ -81,6 +98,14 @@ export function VoiceTest({
       email: draft.email ?? current.email,
       phone: draft.phone ?? current.phone,
       intakeIntent: draft.intakeIntent ?? current.intakeIntent,
+      addressLine1: draft.addressLine1 ?? current.addressLine1,
+      city: draft.city ?? current.city,
+      stateCode: draft.stateCode ?? current.stateCode,
+      postalCode: draft.postalCode ?? current.postalCode,
+      serviceKind: draft.serviceKind ?? current.serviceKind,
+      preferredWindow: draft.preferredWindow ?? current.preferredWindow,
+      hazardousCondition:
+        draft.hazardousCondition ?? current.hazardousCondition,
     }));
   }, []);
 
@@ -100,6 +125,7 @@ export function VoiceTest({
           apiBaseUrl,
           conversationSessionId,
           query,
+          adminToken,
         );
       } catch {
         return {
@@ -110,7 +136,7 @@ export function VoiceTest({
         };
       }
     },
-    [apiBaseUrl, receptionistSettings.escalationMessage],
+    [apiBaseUrl, adminToken, receptionistSettings.escalationMessage],
   );
 
   const handleConnectionFailure = useCallback(
@@ -133,6 +159,7 @@ export function VoiceTest({
         apiBaseUrl,
         failure.sessionId,
         failure.outcome,
+        adminToken,
       )
         .catch(() => undefined)
         .finally(() => {
@@ -141,7 +168,7 @@ export function VoiceTest({
           }
         });
     },
-    [apiBaseUrl, setPhase],
+    [apiBaseUrl, adminToken, setPhase],
   );
 
   const handleDisconnect = useCallback(() => {
@@ -168,8 +195,9 @@ export function VoiceTest({
       apiBaseUrl,
       failure.sessionId,
       failure.outcome,
+      adminToken,
     ).catch(() => undefined);
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, adminToken]);
 
   useEffect(() => {
     return cleanupActiveSession;
@@ -186,6 +214,7 @@ export function VoiceTest({
       {(client) => (
         <VoiceTestExperience
           apiBaseUrl={apiBaseUrl}
+          adminToken={adminToken}
           client={client}
           errorMessage={errorMessage}
           form={form}
@@ -207,6 +236,7 @@ export function VoiceTest({
 
 type ExperienceProperties = Readonly<{
   apiBaseUrl: string;
+  adminToken?: string;
   client: ConversationClient;
   errorMessage: string | undefined;
   form: IntakeForm;
@@ -224,6 +254,7 @@ type ExperienceProperties = Readonly<{
 
 function VoiceTestExperience({
   apiBaseUrl,
+  adminToken,
   client,
   errorMessage,
   form,
@@ -267,6 +298,7 @@ function VoiceTestExperience({
         apiBaseUrl,
         sessionId,
         "COMPLETED",
+        adminToken,
       );
       if (!reviewAvailable) {
         setErrorMessage(
@@ -288,6 +320,7 @@ function VoiceTestExperience({
     }
   }, [
     apiBaseUrl,
+    adminToken,
     client,
     intentionalEndRef,
     sessionIdRef,
@@ -338,7 +371,10 @@ function VoiceTestExperience({
         audio: true,
       });
       permissionStream.getTracks().forEach((track) => track.stop());
-      const authorization = await authorizeConversationSession(apiBaseUrl);
+      const authorization = await authorizeConversationSession(
+        apiBaseUrl,
+        adminToken,
+      );
       sessionIdRef.current = authorization.sessionId;
       setMaximumDuration(authorization.maximumDurationSeconds);
       setRemainingSeconds(authorization.maximumDurationSeconds);
@@ -355,9 +391,12 @@ function VoiceTestExperience({
       const sessionId = sessionIdRef.current;
       if (sessionId !== undefined) {
         setPhase("stopping");
-        await endConversationSession(apiBaseUrl, sessionId, "FAILED").catch(
-          () => undefined,
-        );
+        await endConversationSession(
+          apiBaseUrl,
+          sessionId,
+          "FAILED",
+          adminToken,
+        ).catch(() => undefined);
       }
       setErrorMessage(startFailureMessage(error));
       setPhase("error");
@@ -375,20 +414,44 @@ function VoiceTestExperience({
       setErrorMessage(validationMessage);
       return;
     }
+    if (
+      !form.phone.trim() ||
+      !form.addressLine1.trim() ||
+      !form.city.trim() ||
+      !/^[A-Za-z]{2}$/.test(form.stateCode) ||
+      !/^[0-9]{5}$/.test(form.postalCode) ||
+      !form.preferredWindow.trim()
+    ) {
+      setErrorMessage(
+        "Complete the callback number, U.S. service address, and preferred window.",
+      );
+      return;
+    }
     setErrorMessage(undefined);
     setPhase("saving");
     setConfirmationLocked(true);
     confirmationKeyRef.current ??= crypto.randomUUID();
     try {
-      const result = await confirmConversationIntake(apiBaseUrl, {
-        sessionId,
-        fullName: form.fullName.trim(),
-        email: form.email.trim(),
-        phone: form.phone.trim(),
-        intakeIntent: form.intakeIntent.trim(),
-        transcript,
-        idempotencyKey: confirmationKeyRef.current,
-      });
+      const result = await confirmConversationIntake(
+        apiBaseUrl,
+        {
+          sessionId,
+          fullName: form.fullName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          intakeIntent: form.intakeIntent.trim(),
+          transcript,
+          idempotencyKey: confirmationKeyRef.current,
+          addressLine1: form.addressLine1.trim(),
+          city: form.city.trim(),
+          stateCode: form.stateCode.toUpperCase(),
+          postalCode: form.postalCode,
+          serviceKind: form.serviceKind,
+          preferredWindow: form.preferredWindow.trim(),
+          hazardousCondition: form.hazardousCondition,
+        },
+        adminToken,
+      );
       setSavedIntake(result);
       setPhase("saved");
     } catch (error) {
@@ -590,7 +653,7 @@ function VoiceTestExperience({
           <h2 id="review-title">Review and confirm</h2>
           <p className="section-help">
             Correct every field before saving. Confirmation creates one customer
-            and an immutable intake record.
+            and an immutable intake record, plus an HVAC service request.
           </p>
           <div className="form-grid">
             <FormField
@@ -617,6 +680,53 @@ function VoiceTestExperience({
               type="tel"
               value={form.phone}
             />
+            {(
+              [
+                ["addressLine1", "Street address"],
+                ["city", "City"],
+                ["stateCode", "State (two letters)"],
+                ["postalCode", "ZIP code"],
+                ["preferredWindow", "Preferred date or window"],
+              ] as const
+            ).map(([name, label]) => (
+              <FormField
+                key={name}
+                name={name}
+                label={label}
+                disabled={phase !== "review" || confirmationLocked}
+                value={form[name]}
+                required
+                onChange={(value) => setForm({ ...form, [name]: value })}
+              />
+            ))}
+            <label>
+              Service type
+              <select
+                value={form.serviceKind}
+                disabled={phase !== "review" || confirmationLocked}
+                onChange={(event) =>
+                  setForm({ ...form, serviceKind: event.target.value })
+                }
+              >
+                <option value="AC_REPAIR">AC repair</option>
+                <option value="HEATING_REPAIR">Heating repair</option>
+                <option value="INSTALLATION">Installation</option>
+                <option value="MAINTENANCE">Maintenance</option>
+              </select>
+            </label>
+            <label className="consent-row">
+              <input
+                type="checkbox"
+                checked={form.hazardousCondition}
+                disabled={phase !== "review" || confirmationLocked}
+                onChange={(event) =>
+                  setForm({ ...form, hazardousCondition: event.target.checked })
+                }
+              />
+              Gas odor, smoke, carbon monoxide alarm, or electrical danger
+              reported. Leave immediate danger and contact emergency services.
+              Do not wait for an appointment.
+            </label>
             <label className="wide-field">
               HVAC service request
               <textarea
@@ -638,10 +748,19 @@ function VoiceTestExperience({
             >
               {confirmationLocked
                 ? "Retry confirmation"
-                : "Confirm and create customer"}
+                : "Confirm and save service request"}
             </button>
           )}
           {phase === "saving" && <p aria-live="polite">Saving confirmation…</p>}
+          {savedIntake?.serviceRequestId && (
+            <BrowserBooking
+              apiBaseUrl={apiBaseUrl}
+              adminToken={adminToken}
+              serviceRequestId={savedIntake.serviceRequestId}
+              postalCode={form.postalCode}
+              hazardous={form.hazardousCondition}
+            />
+          )}
           {savedIntake && (
             <p className="success-message" aria-live="polite">
               Saved customer {savedIntake.customerName}. Intake ID:{" "}

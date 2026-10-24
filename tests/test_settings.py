@@ -139,3 +139,31 @@ def test_demo_sandbox_accepts_complete_development_configuration() -> None:
 
     assert settings.demo_sandbox_enabled is True
     assert settings.demo_result_ttl_minutes == 15
+
+
+@pytest.mark.parametrize("number", [None, "", "   "])
+def test_browser_sandbox_does_not_require_phone_numbers(number: str | None) -> None:
+    settings = ApiSettings(
+        app_environment=RuntimeEnvironment.DEVELOPMENT,
+        api_host="127.0.0.1",
+        api_port=8000,
+        database_url="postgresql://user:password@localhost/development",
+        development_actor_user_id="00000000-0000-4000-8000-000000000002",
+        demo_sandbox_enabled=True,
+        demo_admin_token="synthetic-demo-admin-token-32-chars",
+        demo_inbound_number_e164=number,
+        demo_transfer_destination_e164=number,
+    )
+    assert settings.demo_inbound_number_e164 is None
+    assert settings.demo_transfer_destination_e164 is None
+
+
+def test_invalid_configured_phone_number_is_rejected() -> None:
+    with pytest.raises(ValidationError, match="E.164"):
+        ApiSettings(
+            app_environment=RuntimeEnvironment.DEVELOPMENT,
+            api_host="127.0.0.1",
+            api_port=8000,
+            database_url="postgresql://user:password@localhost/development",
+            demo_inbound_number_e164="not-a-number",
+        )

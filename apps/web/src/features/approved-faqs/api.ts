@@ -119,6 +119,7 @@ export async function lookupConversationApprovedFaq(
       method: "POST",
       body: JSON.stringify({ query }),
     },
+    adminToken,
   );
   return parseApprovedFaqLookup(body);
 }

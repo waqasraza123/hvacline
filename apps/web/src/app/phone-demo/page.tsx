@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 
 export default function PhoneDemoPage() {
   const environment = parsePublicEnvironment(process.env);
-  if (!environment.demoSandboxEnabled) {
+  if (
+    !environment.demoSandboxEnabled ||
+    !process.env.NEXT_PUBLIC_DEMO_PHONE_NUMBER?.trim()
+  ) {
     notFound();
   }
   const phoneNumber = parseDemoPhoneNumber(process.env);

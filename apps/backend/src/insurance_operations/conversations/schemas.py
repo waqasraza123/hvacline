@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from insurance_operations.customers import CustomerInput, CustomerView
 from insurance_operations.database.models.lead import LeadUrgency
+from insurance_operations.hvac.schemas import ServiceDetails, ServiceRequestInput
 
 
 class ConversationSessionCreateInput(BaseModel):
@@ -55,6 +56,7 @@ class ConversationIntakeConfirmationInput(BaseModel):
     conversation_session_id: UUID
     customer: CustomerInput
     intake_intent: str = Field(min_length=1, max_length=2_000)
+    service: ServiceDetails | None = None
     urgency: LeadUrgency = LeadUrgency.NORMAL
     transcript: list[ConversationTurn] = Field(min_length=2, max_length=60)
 
@@ -67,6 +69,12 @@ class ConversationIntakeConfirmationInput(BaseModel):
             raise ValueError("transcript requires user and agent turns")
         if sum(len(turn.text) for turn in self.transcript) > 30_000:
             raise ValueError("transcript cannot exceed 30000 characters")
+        if self.service is not None:
+            ServiceRequestInput(
+                customer=self.customer,
+                service=self.service,
+                explicit_confirmation=True,
+            )
         return self
 
 
@@ -76,3 +84,4 @@ class ConversationIntakeResponse(BaseModel):
     customer: CustomerView
     confirmed_at: datetime
     lead_id: UUID | None = None
+    service_request_id: UUID | None = None

@@ -27,6 +27,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSession,
     ConversationSessionStatus,
 )
+from insurance_operations.database.models.hvac import HvacServiceRequest
 from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.lead import AgencyLead, LeadStatus
 from insurance_operations.database.models.operations import (
@@ -331,12 +332,42 @@ class ConversationService:
             session.add(lead)
             session.flush()
 
+            service_request = None
+            if request.service is not None:
+                service_request = HvacServiceRequest(
+                    agency_id=actor.agency_id,
+                    customer_details=request.customer.model_dump(mode="json"),
+                    service_details=request.service.model_dump(mode="json"),
+                    status="HANDOFF_REQUESTED"
+                    if request.service.hazardous_condition
+                    else "OPEN",
+                    fingerprint=fingerprint,
+                    confirmed_at=now,
+                )
+                session.add(service_request)
+                session.flush()
+                session.add(
+                    AuditEvent(
+                        agency_id=actor.agency_id,
+                        actor_type=AuditActorType.STAFF.value,
+                        actor_user_id=actor.app_user_id,
+                        event_type="HVAC_SERVICE_REQUEST_CONFIRMED",
+                        occurred_at=now,
+                        customer_id=customer.id,
+                        summary="Browser customer confirmed HVAC service details",
+                        details={"service_request_id": str(service_request.id)},
+                        correlation_id=correlation_id,
+                        event_version=1,
+                    )
+                )
+
             response = ConversationIntakeResponse(
                 conversation_intake_id=conversation_intake.id,
                 conversation_session_id=conversation_session.id,
                 customer=customer_view(customer),
                 confirmed_at=now,
                 lead_id=lead.id,
+                service_request_id=service_request.id if service_request else None,
             )
             session.add_all(
                 [
@@ -535,7 +566,9 @@ def replay_intake_confirmation(
 
 def request_fingerprint(request: ConversationIntakeConfirmationInput) -> str:
     canonical_request = json.dumps(
-        request.model_dump(mode="json"),
+        request.model_dump(
+            mode="json", exclude={"service"} if request.service is None else set()
+        ),
         sort_keys=True,
         separators=(",", ":"),
     )

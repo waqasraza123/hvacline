@@ -72,7 +72,7 @@ class DatabaseSettings(CommonSettings):
     )
     @classmethod
     def validate_demo_phone_number(cls, value: str | None) -> str | None:
-        if value is None:
+        if value is None or not value.strip():
             return None
         normalized = value.strip()
         if re.fullmatch(r"\+[1-9][0-9]{7,14}", normalized) is None:
@@ -223,14 +223,6 @@ class ApiSettings(DatabaseSettings):
             or len(self.demo_admin_token.get_secret_value()) < 32
         ):
             raise ValueError("DEMO_ADMIN_TOKEN must contain at least 32 characters")
-        if self.demo_inbound_number_e164 is None:
-            raise ValueError(
-                "DEMO_INBOUND_NUMBER_E164 is required for the demo sandbox"
-            )
-        if self.demo_transfer_destination_e164 is None:
-            raise ValueError(
-                "DEMO_TRANSFER_DESTINATION_E164 is required for the demo sandbox"
-            )
         return self
 
 

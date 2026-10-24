@@ -10,6 +10,13 @@ export type ConversationDraft = Readonly<{
   email?: string;
   phone?: string;
   intakeIntent?: string;
+  addressLine1?: string;
+  city?: string;
+  stateCode?: string;
+  postalCode?: string;
+  serviceKind?: string;
+  preferredWindow?: string;
+  hazardousCondition?: boolean;
 }>;
 
 export type ApprovedFaqToolResult = Readonly<{
@@ -49,6 +56,7 @@ export type ConversationSessionAuthorization = Readonly<{
 }>;
 
 export type ConfirmedConversationIntake = Readonly<{
+  serviceRequestId?: string;
   conversationIntakeId: string;
   customerId: string;
   customerName: string;
