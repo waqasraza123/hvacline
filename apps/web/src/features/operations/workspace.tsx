@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Brand } from "@/components/brand";
+import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
+import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
 import { ScheduleForm } from "./schedule-form";
 import { requestApi } from "./api";
 import type {
@@ -77,8 +79,6 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
         <Brand />
         <div className="nav-links">
           <Link href="/phone-demo">Phone sandbox</Link>
-          <Link href="/receptionist-settings">Receptionist</Link>
-          <Link href="/approved-faqs">Knowledge</Link>
         </div>
       </nav>
       <div className="ops-heading">
@@ -175,18 +175,24 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
             role="tablist"
             aria-label="Workspace sections"
           >
-            {["requests", "bookings", "calls", "handoffs", "scheduling"].map(
-              (name) => (
-                <button
-                  role="tab"
-                  aria-selected={tab === name}
-                  key={name}
-                  onClick={() => setTab(name)}
-                >
-                  {name}
-                </button>
-              ),
-            )}
+            {[
+              "requests",
+              "bookings",
+              "calls",
+              "handoffs",
+              "scheduling",
+              "receptionist",
+              "knowledge",
+            ].map((name) => (
+              <button
+                role="tab"
+                aria-selected={tab === name}
+                key={name}
+                onClick={() => setTab(name)}
+              >
+                {name}
+              </button>
+            ))}
           </div>
           {tab === "requests" && (
             <section className="ops-card">
@@ -305,6 +311,8 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
                           "POST",
                           { explicit_confirmation: true },
                         );
+                        if (result.status !== "CONFIRMED")
+                          throw new Error("The appointment was not confirmed.");
                         setReservation(result);
                         await load();
                         setMessage("Appointment confirmed and saved.");
@@ -414,6 +422,20 @@ export function OperationsWorkspace({ apiBaseUrl }: { apiBaseUrl: string }) {
                 ))
               )}
             </section>
+          )}
+          {tab === "receptionist" && (
+            <ReceptionistSettingsEditor
+              apiBaseUrl={apiBaseUrl}
+              adminToken={token}
+              embedded
+            />
+          )}
+          {tab === "knowledge" && (
+            <ApprovedFaqManager
+              apiBaseUrl={apiBaseUrl}
+              adminToken={token}
+              embedded
+            />
           )}
           {tab === "scheduling" && schedule && (
             <ScheduleForm

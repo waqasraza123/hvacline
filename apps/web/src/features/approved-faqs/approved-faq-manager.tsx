@@ -17,7 +17,15 @@ import type { ApprovedFaq, ApprovedFaqDraft } from "./contracts";
 
 const EMPTY_DRAFT: ApprovedFaqDraft = { question: "", approvedAnswer: "" };
 
-export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
+export function ApprovedFaqManager({
+  apiBaseUrl,
+  adminToken,
+  embedded = false,
+}: {
+  apiBaseUrl: string;
+  adminToken?: string;
+  embedded?: boolean;
+}) {
   const [faqs, setFaqs] = useState<ApprovedFaq[]>([]);
   const [draft, setDraft] = useState<ApprovedFaqDraft>(EMPTY_DRAFT);
   const [lookupQuery, setLookupQuery] = useState("");
@@ -27,13 +35,13 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
 
   useEffect(() => {
     let active = true;
-    void listApprovedFaqs(apiBaseUrl)
+    void listApprovedFaqs(apiBaseUrl, adminToken)
       .then((result) => active && setFaqs(result))
       .catch((error: unknown) => active && setMessage(faqErrorMessage(error)));
     return () => {
       active = false;
     };
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, adminToken]);
 
   async function createFaq() {
     if (!draft.question.trim() || !draft.approvedAnswer.trim()) {
@@ -43,7 +51,7 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
     setBusy(true);
     setMessage(undefined);
     try {
-      const created = await createApprovedFaq(apiBaseUrl, draft);
+      const created = await createApprovedFaq(apiBaseUrl, draft, adminToken);
       setFaqs((current) => [...current, created]);
       setDraft(EMPTY_DRAFT);
       setMessage("FAQ saved as inactive. Review it, then activate it.");
@@ -59,7 +67,11 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
     setBusy(true);
     setLookupMessage(undefined);
     try {
-      const result = await previewApprovedFaqLookup(apiBaseUrl, lookupQuery);
+      const result = await previewApprovedFaqLookup(
+        apiBaseUrl,
+        lookupQuery,
+        adminToken,
+      );
       setLookupMessage(
         result.matched && result.source
           ? `${result.answer} — Source: ${result.source.question} (v${result.source.rowVersion})`
@@ -78,19 +90,22 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
     );
   }
 
+  const Container = embedded ? "section" : "main";
   return (
-    <main className="settings-shell">
-      <nav className="top-nav" aria-label="Primary navigation">
-        <Brand />
-        <div className="nav-links">
-          <Link className="text-link" href="/receptionist-settings">
-            Agency profile
-          </Link>
-          <Link className="text-link" href="/voice-test">
-            Open receptionist
-          </Link>
-        </div>
-      </nav>
+    <Container className="settings-shell">
+      {!embedded && (
+        <nav className="top-nav" aria-label="Primary navigation">
+          <Brand />
+          <div className="nav-links">
+            <Link className="text-link" href="/receptionist-settings">
+              Business profile
+            </Link>
+            <Link className="text-link" href="/voice-test">
+              Open receptionist
+            </Link>
+          </div>
+        </nav>
+      )}
       <header className="page-header">
         <p className="eyebrow">Approved knowledge</p>
         <h1>Control what the receptionist can answer</h1>
@@ -134,6 +149,7 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
             faqs.map((faq) => (
               <FaqEditor
                 apiBaseUrl={apiBaseUrl}
+                adminToken={adminToken}
                 faq={faq}
                 key={faq.id}
                 onReplace={replaceFaq}
@@ -167,16 +183,18 @@ export function ApprovedFaqManager({ apiBaseUrl }: { apiBaseUrl: string }) {
         </div>
         {lookupMessage && <p className="lookup-result">{lookupMessage}</p>}
       </section>
-    </main>
+    </Container>
   );
 }
 
 function FaqEditor({
   apiBaseUrl,
+  adminToken,
   faq,
   onReplace,
 }: {
   apiBaseUrl: string;
+  adminToken?: string;
   faq: ApprovedFaq;
   onReplace: (faq: ApprovedFaq) => void;
 }) {
@@ -191,7 +209,12 @@ function FaqEditor({
     setBusy(true);
     setMessage(undefined);
     try {
-      const updated = await updateApprovedFaq(apiBaseUrl, faq, draft);
+      const updated = await updateApprovedFaq(
+        apiBaseUrl,
+        faq,
+        draft,
+        adminToken,
+      );
       onReplace(updated);
       setMessage("Saved and audited.");
     } catch (error) {
@@ -209,6 +232,7 @@ function FaqEditor({
         apiBaseUrl,
         faq,
         faq.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+        adminToken,
       );
       onReplace(updated);
       setMessage(

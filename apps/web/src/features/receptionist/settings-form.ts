@@ -28,7 +28,7 @@ export function validateSettingsDraft(
   draft: ReceptionistSettingsDraft,
 ): string | undefined {
   if (!draft.publicName.trim()) {
-    return "Agency public name is required.";
+    return "Business public name is required.";
   }
   if (!draft.greeting.trim()) {
     return "Greeting is required.";

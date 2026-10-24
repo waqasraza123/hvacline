@@ -14,13 +14,13 @@ Existing signed Twilio ingress, ElevenLabs register-call voice connection, secre
 
 Forward migration `20261024_0009` adds business schedules, confirmed HVAC service requests, and appointments. Scheduling uses per-business ZIP codes, IANA timezone, hours, team calendars/time off, duration, notice and horizon. Mutations lock the tenant schedule row; payload-bound booking keys prevent conflicting retries; appointments have a composite tenant/request foreign key. Reservations expire after five minutes. Confirmation, cancellation, and atomic rescheduling persist before returning success.
 
-Authenticated phone tools verify active session/call ownership and expiry. HVAC service intake requires the existing contact-readback receipt and explicit structured confirmation. Hazardous requests enter human attention and cannot self-book. The operations projection excludes transcripts and shows real stored requests, bookings, calls and open handoffs. `/operations` uses existing development identity and hosted-sandbox token gates; this is not production login.
+Authenticated phone tools verify active session/call ownership and expiry. HVAC service intake requires the existing contact-readback receipt and explicit structured confirmation. Hazardous requests enter human attention and cannot self-book. The operations projection excludes transcripts and shows real stored requests, bookings, calls and open handoffs. Existing receptionist and knowledge editors are reused inside the protected workspace, forwarding the in-memory admin token in headers. `/operations` uses existing development identity and hosted-sandbox token gates; this is not production login.
 
 The Google Calendar HTTP adapter and provider-neutral contract are implemented with failure-closed availability and deterministic event verification. OAuth, runtime calendar connection/sync and reconciliation are incomplete; Google is not exposed as connected. The current calendar is explicitly internal and requires accurate operator-maintained availability.
 
 ## Verification during this execution
 
-Python Ruff and mypy pass. The 39 non-database Python tests pass. Web formatting, lint, type checking, and all 23 tests pass. Local production build cannot complete because this execution environment lacks the OS memory-statistics interface (`uv_resident_set_memory` ENOENT). Database verification is delegated to the repository's isolated PostgreSQL CI service; no shared or production Neon database was touched. Final CI status belongs in the PR and verification ledger.
+Python Ruff and mypy pass. The 39 non-database Python tests pass. Web formatting, lint, type checking, and all 23 tests pass. Local production build cannot complete because this execution environment lacks the OS memory-statistics interface (`uv_resident_set_memory` ENOENT). The GitHub CI Python job at commit `15649b8` passed all 81 tests, including isolated PostgreSQL migration, booking concurrency, tenant isolation, and phone-tool booking tests; worker readiness passed. No shared or production Neon database was touched. The CI web build is still pending at this checkpoint.
 
 ## Remaining launch blockers
 

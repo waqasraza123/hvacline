@@ -18,6 +18,8 @@ import { settingsDraft, validateSettingsDraft } from "./settings-form";
 
 type ReceptionistSettingsProperties = Readonly<{
   apiBaseUrl: string;
+  adminToken?: string;
+  embedded?: boolean;
 }>;
 
 const EMPTY_DRAFT: ReceptionistSettingsDraft = {
@@ -32,6 +34,8 @@ const EMPTY_DRAFT: ReceptionistSettingsDraft = {
 
 export function ReceptionistSettingsEditor({
   apiBaseUrl,
+  adminToken,
+  embedded = false,
 }: ReceptionistSettingsProperties) {
   const [settings, setSettings] = useState<ReceptionistSettings>();
   const [draft, setDraft] = useState<ReceptionistSettingsDraft>(EMPTY_DRAFT);
@@ -42,7 +46,7 @@ export function ReceptionistSettingsEditor({
 
   useEffect(() => {
     let active = true;
-    void getReceptionistSettings(apiBaseUrl)
+    void getReceptionistSettings(apiBaseUrl, adminToken)
       .then((result) => {
         if (!active) return;
         setSettings(result);
@@ -57,7 +61,7 @@ export function ReceptionistSettingsEditor({
     return () => {
       active = false;
     };
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, adminToken]);
 
   async function save() {
     const validationMessage = validateSettingsDraft(draft);
@@ -72,6 +76,7 @@ export function ReceptionistSettingsEditor({
         apiBaseUrl,
         draft,
         settings?.rowVersion ?? 0,
+        adminToken,
       );
       setSettings(result);
       setDraft(settingsDraft(result));
@@ -83,31 +88,34 @@ export function ReceptionistSettingsEditor({
     }
   }
 
+  const Container = embedded ? "section" : "main";
   return (
-    <main className="settings-shell">
-      <nav className="top-nav" aria-label="Primary navigation">
-        <Brand />
-        <div className="nav-links">
-          <Link className="text-link" href="/approved-faqs">
-            Approved FAQs
-          </Link>
-          <Link className="text-link" href="/voice-test">
-            Open receptionist
-          </Link>
-        </div>
-      </nav>
+    <Container className="settings-shell">
+      {!embedded && (
+        <nav className="top-nav" aria-label="Primary navigation">
+          <Brand />
+          <div className="nav-links">
+            <Link className="text-link" href="/approved-faqs">
+              Approved FAQs
+            </Link>
+            <Link className="text-link" href="/voice-test">
+              Open receptionist
+            </Link>
+          </div>
+        </nav>
+      )}
       <header className="page-header">
         <p className="eyebrow">Development workspace</p>
         <h1>Configure your AI receptionist</h1>
         <p className="summary">
-          These backend-owned settings define the public agency identity and
+          These backend-owned settings define the public business identity and
           safe handoff language used across the receptionist experience.
         </p>
       </header>
       <section className="settings-card" aria-labelledby="agency-profile-title">
         <div className="section-heading-row">
           <div>
-            <p className="section-kicker">Agency profile</p>
+            <p className="section-kicker">Business profile</p>
             <h2 id="agency-profile-title">Public receptionist settings</h2>
           </div>
           {settings && (
@@ -119,7 +127,7 @@ export function ReceptionistSettingsEditor({
         ) : (
           <div className="settings-grid">
             <SettingsField
-              label="Agency public name"
+              label="Business public name"
               maxLength={160}
               onChange={(publicName) => setDraft({ ...draft, publicName })}
               value={draft.publicName}
@@ -181,7 +189,7 @@ export function ReceptionistSettingsEditor({
             {status === "saving" ? "Saving…" : "Save configuration"}
           </button>
           <p className="settings-note">
-            Updates use optimistic concurrency and create an agency audit event.
+            Updates use optimistic concurrency and save an audit record.
           </p>
         </div>
         {message && (
@@ -195,7 +203,7 @@ export function ReceptionistSettingsEditor({
           </p>
         )}
       </section>
-    </main>
+    </Container>
   );
 }
 
