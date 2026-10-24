@@ -50,15 +50,25 @@ Use these tools only in HVACLine's embedded browser conversation. The standalone
 
 ## Deployment
 
-Backend: `APP_ENVIRONMENT=development`, `DEMO_SANDBOX_ENABLED=true`, a strong server-only `DEMO_ADMIN_TOKEN`, the seeded `DEVELOPMENT_ACTOR_USER_ID`, `CONVERSATION_AI_ENABLED=true`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_API_KEY`, and verified `ELEVENLABS_PRIVACY_CONFIRMED=true`. Set `WEB_ORIGIN` to the exact frontend origin. Retain the existing development Neon URLs.
+Backend: `APP_ENVIRONMENT=development`, `DEMO_SANDBOX_ENABLED=true`, a strong server-only `DEMO_ADMIN_TOKEN`, the seeded `DEVELOPMENT_ACTOR_USER_ID`, `CONVERSATION_AI_ENABLED=true`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_API_KEY`, and verified `ELEVENLABS_PRIVACY_CONFIRMED=true`. For the customer `/book` path, also set `CUSTOMER_PORTAL_ENABLED=true` and a different strong server-only `CUSTOMER_PORTAL_SECRET` of at least 32 characters. Set `WEB_ORIGIN` to the exact frontend origin. Retain the existing development Neon URLs. Keep the admin and portal secrets separate and never share either with clients.
 
-Frontend: `NEXT_PUBLIC_API_BASE_URL` points to the backend; `NEXT_PUBLIC_CONVERSATION_AI_ENABLED=true` and `NEXT_PUBLIC_DEMO_SANDBOX_ENABLED=true`. Rebuild only when the owner authorizes final verification/deployment. No secret belongs in a `NEXT_PUBLIC_*` variable.
+Frontend: `NEXT_PUBLIC_API_BASE_URL` points to the backend; `NEXT_PUBLIC_CONVERSATION_AI_ENABLED=true` and `NEXT_PUBLIC_DEMO_SANDBOX_ENABLED=true`. Set the same `CUSTOMER_PORTAL_SECRET` as a server-only Next.js environment value; do not add the backend-only `CUSTOMER_PORTAL_ENABLED` flag to the frontend. Rebuild only when the owner authorizes final verification/deployment. No secret belongs in a `NEXT_PUBLIC_*` variable.
+
+The customer account path requires migration `20261025_0010_customer_access`. After reviewing the configured development database target, the owner applies all pending migrations, including that customer-access revision:
+
+```bash
+APP_ENVIRONMENT=development alembic upgrade head
+```
+
+No migration was run for this implementation. Use fictional account and service details only; the customer draft is not production authentication.
 
 Delete unused `DEMO_INBOUND_NUMBER_E164` and `DEMO_TRANSFER_DESTINATION_E164` from Render, or leave them empty. Nonempty invalid values still fail validation. Keep `TELEPHONY_PROVIDER_ENABLED=false` without a telephone setup. A configured inbound number without a transfer destination seeds a callback-only call policy. Browser-only setup does not alter an existing phone policy or number.
 
-Open `/operations`, enter the demo admin token privately, and choose **browser voice**. Accept the three consent checks. Speak the fictional service details, listen to the full readback, and say yes to save the request and transcript. Select an offered slot by voice, listen to the appointment readback, and say yes again to book. The on-screen receipt updates from the persisted backend response. No Finish/review click is required to book during the conversation. The existing on-screen review/booking path remains available if the conversation ends before spoken confirmation.
+For client acceptance, open `/signup`, create a fictional account, and continue to `/book`. Signed-out visitors are sent to `/login`; no administrator token enters the browser. Accept the three consent checks, speak the fictional service details, listen to the full readback, and say yes to save the request and transcript. Select an offered slot by voice, listen to the appointment readback, and say yes again to book. The on-screen receipt updates from the persisted backend response. No Finish/review click is required to book during the conversation. The existing on-screen review/booking path remains available if the conversation ends before spoken confirmation.
 
-Request confirmation saves customer, lead, intake, service request and audit records in one idempotent transaction. Browser booking resolves that request from the persisted intake-confirmation response and enforces session/actor/agency ownership, active duration, service ZIP, hazards, schedule rules and conflicts. No schema migration is added. A saved intake keeps its live-session concurrency slot until the voice session ends or expires. Disconnecting never deletes a saved request or confirmed appointment; unconfirmed holds expire after five minutes.
+For the separate operator path, open `/operations`, enter the demo admin token privately, and choose **browser voice**. Never substitute this administrator flow for customer account acceptance.
+
+Request confirmation saves customer, lead, intake, service request and audit records in one idempotent transaction. Browser booking resolves that request from the persisted intake-confirmation response and enforces session/actor/agency ownership, active duration, service ZIP, hazards, schedule rules and conflicts. Spoken booking reuses the existing schema; customer accounts separately require the migration above. A saved intake keeps its live-session concurrency slot until the voice session ends or expires. Disconnecting never deletes a saved request or confirmed appointment; unconfirmed holds expire after five minutes.
 
 Configure Scheduling first if appointments are needed. Unconfigured hours or service areas produce no available slots. Google Calendar sync remains incomplete. Refresh the workspace to see browser service requests and bookings; browser sessions are not carrier calls.
 
@@ -75,8 +85,8 @@ npm ci
 ```
 
 ```bash
-APP_ENVIRONMENT=test pytest tests/test_settings.py tests/test_conversation_provider.py tests/test_browser_spoken_confirmation.py
-npm run test --workspace @insurance-operations/web -- src/features/conversation/voice-booking.test.ts src/features/conversation/api.test.ts
+APP_ENVIRONMENT=test pytest tests/test_settings.py tests/test_conversation_provider.py tests/test_browser_spoken_confirmation.py tests/test_customer_passwords.py
+npm run test --workspace @insurance-operations/web -- src/features/conversation/voice-booking.test.ts src/features/conversation/api.test.ts src/features/customer/server.test.ts 'src/app/api/account/[action]/route.test.ts'
 npm run verify:web
 ruff format --check .
 ruff check .
@@ -86,7 +96,7 @@ mypy apps/backend/src tests
 Only after confirming TEST_DATABASE_URL is isolated and disposable:
 
 ```bash
-APP_ENVIRONMENT=test pytest tests/database/test_conversation_api.py tests/database/test_hvac_scheduling.py
+APP_ENVIRONMENT=test pytest tests/database/test_conversation_api.py tests/database/test_hvac_scheduling.py tests/database/test_migrations.py tests/database/test_table_ownership.py
 APP_ENVIRONMENT=test alembic upgrade head
 ```
 
@@ -94,16 +104,18 @@ Run database tests only against the confirmed isolated disposable database: the 
 
 Manual acceptance, using fictional data only:
 
-1. Configure internal Scheduling (timezone, enabled hours, service ZIPs and technicians); configure all eight browser client tools, the prompt above, private authentication and the privacy checklist below. Set both deployments' environment variables and deploy when ready.
-2. Refuse each consent checkbox; the microphone session must not start. Confirm unauthenticated hosted API requests return 401.
-3. Start voice, ask an approved FAQ and an unmatched question, and correct a name, number or address before saving. Only source-backed FAQ answers may be spoken. The connection stays Connecting until the SDK reports an actual connection.
-4. Say no or give a correction after the first readback. Nothing should be saved. After a new accurate readback, say yes; exactly one customer, lead, intake and HVAC request should appear.
-5. Request a date, choose a returned slot by voice, decline the hold, and choose another. Verify displayed times use the business timezone. A hold alone must never be called booked.
-6. Say yes after the appointment readback. Check that the voice response, on-screen CONFIRMED receipt and refreshed operations dashboard show the same persisted booking, without using on-screen booking buttons.
-7. Retry identical save/reservation/confirmation requests after a simulated lost response. They must return the same records and never duplicate a booking. A second active browser session must remain blocked even after the first saves its intake.
-8. Exercise unavailable dates, outside-area ZIPs, a competing reservation and an expired hold. The agent must use the returned failure and never invent availability or success.
-9. Report a hazard before or after saving. No new booking may proceed; an existing unconfirmed hold is released when the hazard is persisted. Existing confirmed appointments require human handling. No transfer, emergency alert or callback delivery is promised.
-10. Disconnect before confirmation, after saving, and after booking. Unconfirmed drafts stay unsaved, saved records survive, and an abandoned hold expires. Finish without saving by voice and exercise the existing on-screen review fallback.
+1. Configure internal Scheduling (timezone, enabled hours, service ZIPs and technicians); configure all eight browser client tools, the prompt above, private authentication and the privacy checklist below. Set both deployments' environment variables, apply the reviewed customer-access migration and deploy when ready.
+2. Open `/book` while signed out and confirm it reaches `/login`. Create and sign into a fictional account, then sign out and back in. No admin or portal secret may appear in browser source, requests or responses; the session token must not be exposed to JavaScript.
+3. Refuse each consent checkbox; the microphone session must not start. Confirm customer proxy requests without a session return 401 and the administrator API remains separately gated.
+4. Start voice, ask an approved FAQ and an unmatched question, and correct a name, number or address before saving. Only source-backed FAQ answers may be spoken. The connection stays Connecting until the SDK reports an actual connection.
+5. Say no or give a correction after the first readback. Nothing should be saved. After a new accurate readback, say yes; exactly one customer, lead, intake and HVAC request should appear.
+6. Request a date, choose a returned slot by voice, decline the hold, and choose another. Verify displayed times use the business timezone. A hold alone must never be called booked.
+7. Say yes after the appointment readback. Check that the voice response, on-screen CONFIRMED receipt and refreshed operations dashboard show the same persisted booking, without using on-screen booking buttons.
+8. Sign into a second fictional account and confirm it cannot see the first account's request or appointment. Expire or revoke a session and confirm appointment history prompts sign-in on its initial load as well as on retry.
+9. Retry identical save/reservation/confirmation requests after a simulated lost response. They must return the same records and never duplicate a booking. A second active browser session must remain blocked even after the first saves its intake.
+10. Exercise unavailable dates, outside-area ZIPs, a competing reservation and an expired hold. The agent must use the returned failure and never invent availability or success.
+11. Report a hazard before or after saving. No new booking may proceed; an existing unconfirmed hold is released when the hazard is persisted. Existing confirmed appointments require human handling. No transfer, emergency alert or callback delivery is promised.
+12. Disconnect before confirmation, after saving, and after booking. Unconfirmed drafts stay unsaved, saved records survive, and an abandoned hold expires. Finish without saving by voice and exercise the existing on-screen review fallback.
 
 No tests, builds, lint, type checks, migrations, services, provider configuration calls or live conversations were run for this implementation. Agent settings, effective deployment variables and end-to-end success remain owner-unverified. Do not treat publication to `main` as verification: pushing `main` starts the configured Render build automatically, and real customer use remains out of scope.
 

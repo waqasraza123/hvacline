@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  CUSTOMER_COOKIE,
   CustomerBackendError,
   completeCustomerLogout,
   customerBackend,
@@ -50,8 +51,11 @@ async function handle(request: NextRequest, context: Context) {
       !("session_token" in data) ||
       typeof data.session_token !== "string" ||
       data.session_token.length < 32 ||
+      data.session_token.length > 128 ||
+      /[^A-Za-z0-9_-]/.test(data.session_token) ||
       !("expires_in" in data) ||
       typeof data.expires_in !== "number" ||
+      !Number.isInteger(data.expires_in) ||
       data.expires_in < 1 ||
       data.expires_in > 28800
     )
