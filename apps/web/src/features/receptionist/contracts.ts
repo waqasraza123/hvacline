@@ -6,7 +6,7 @@ export type ReceptionistSettings = Readonly<{
   officeHours: string;
   contactEmail: string | null;
   contactPhone: string | null;
-  supportedInsuranceCategories: readonly string[];
+  supportedServiceCategories: readonly string[];
   escalationMessage: string;
   rowVersion: number;
   createdAt: string;
@@ -19,6 +19,6 @@ export type ReceptionistSettingsDraft = Readonly<{
   officeHours: string;
   contactEmail: string;
   contactPhone: string;
-  supportedInsuranceCategories: string;
+  supportedServiceCategories: string;
   escalationMessage: string;
 }>;

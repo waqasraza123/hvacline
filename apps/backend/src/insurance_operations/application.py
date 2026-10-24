@@ -57,6 +57,7 @@ from insurance_operations.database.models.lead import LeadStatus
 from insurance_operations.database.models.telephony import InboundCallStatus
 from insurance_operations.demo_security import require_demo_admin_token
 from insurance_operations.errors import ApiError, api_error_handler
+from insurance_operations.hvac.routes import create_hvac_router
 from insurance_operations.leads import (
     HandoffRequestCreateInput,
     HandoffRequestResponse,
@@ -147,7 +148,7 @@ def create_app(
         database_engine.dispose()
 
     application = FastAPI(
-        title="CoverOps API",
+        title="HVACLine AI API",
         version="0.1.0",
         docs_url=None,
         redoc_url=None,
@@ -157,7 +158,7 @@ def create_app(
         CORSMiddleware,
         allow_origins=[settings.web_origin],
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PUT"],
+        allow_methods=["GET", "POST", "PUT", "PATCH"],
         allow_headers=[
             "Content-Type",
             "Idempotency-Key",
@@ -774,6 +775,8 @@ def create_app(
         if replayed:
             response.headers["Idempotent-Replayed"] = "true"
         return result
+
+    application.include_router(create_hvac_router(session_factory, development_actor))
 
     return application
 

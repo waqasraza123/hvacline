@@ -103,7 +103,7 @@ def valid_settings(*, expected_row_version: int) -> JsonObject:
         "office_hours": "Monday through Friday, 9 AM to 5 PM Eastern",
         "contact_email": "receptionist@example.com",
         "contact_phone": None,
-        "supported_insurance_categories": ["Auto", "Homeowners"],
+        "supported_service_categories": ["Auto", "Homeowners"],
         "escalation_message": "A licensed team member will follow up.",
         "expected_row_version": expected_row_version,
     }
@@ -203,7 +203,7 @@ def test_settings_validation_requires_contact_and_unique_categories(
     request = valid_settings(expected_row_version=0)
     request["contact_email"] = None
     request["contact_phone"] = None
-    request["supported_insurance_categories"] = ["Auto", "auto"]
+    request["supported_service_categories"] = ["Auto", "auto"]
 
     status_code, body = asyncio.run(
         request_json(

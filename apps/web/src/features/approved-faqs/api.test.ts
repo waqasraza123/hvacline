@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { parseApprovedFaq, parseApprovedFaqLookup } from "./api";
+import {
+  listApprovedFaqs,
+  parseApprovedFaq,
+  parseApprovedFaqLookup,
+} from "./api";
 
 describe("approved FAQ API parsing", () => {
   it("parses versioned FAQ and source-backed lookup responses", () => {
@@ -17,7 +21,7 @@ describe("approved FAQ API parsing", () => {
     const lookup = parseApprovedFaqLookup({
       matched: true,
       answer: faq.approvedAnswer,
-      fallback_message: "A licensed team member will follow up.",
+      fallback_message: "A service team member will follow up.",
       source: {
         faq_id: faq.id,
         question: faq.question,
@@ -40,4 +44,21 @@ describe("approved FAQ API parsing", () => {
       }),
     ).toThrow("invalid data");
   });
+});
+
+afterEach(() => vi.unstubAllGlobals());
+
+it("sends the hosted admin token in a header for embedded knowledge editing", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValue(new Response("[]", { status: 200 }));
+  vi.stubGlobal("fetch", fetcher);
+  await listApprovedFaqs("https://api.example.com", "synthetic-admin-token");
+  expect(fetcher).toHaveBeenCalledWith(
+    "https://api.example.com/api/v1/development/approved-faqs",
+    expect.objectContaining({
+      headers: { "X-Demo-Admin-Token": "synthetic-admin-token" },
+      cache: "no-store",
+    }),
+  );
 });

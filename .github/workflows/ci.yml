@@ -61,4 +61,7 @@ jobs:
       - run: ruff check .
       - run: mypy apps/backend/src tests
       - run: pytest
+      - run: alembic upgrade head
+      - run: alembic current
+      - run: alembic check
       - run: insurance-operations-worker --check

@@ -1,11 +1,14 @@
+import asyncio
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from insurance_operations.application import create_app
 from insurance_operations.customers import CustomerInput
 from insurance_operations.database.models.conversation import (
     ConversationIntake,
@@ -13,6 +16,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSession,
     ConversationSessionStatus,
 )
+from insurance_operations.database.models.customer import Customer
 from insurance_operations.database.models.identity import (
     Agency,
     AgencyEnvironment,
@@ -26,12 +30,17 @@ from insurance_operations.database.models.telephony import (
     InboundCall,
     InboundNumberStatus,
 )
+from insurance_operations.hvac.phone import create_hvac_phone_router
+from insurance_operations.hvac.schemas import ScheduleInput
+from insurance_operations.hvac.service import SchedulingService
+from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.contracts import (
     TransferInstruction,
     VerifiedInboundCall,
     VerifiedTransferResult,
 )
 from insurance_operations.telephony.demo import PhoneDemoService, PhoneDemoState
+from insurance_operations.telephony.ingress import TelephonyIngressService
 from insurance_operations.telephony.phone_schemas import (
     PhoneConsentInput,
     PhoneIntakeConfirmationInput,
@@ -171,7 +180,7 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             full_name="Synthetic Phone Caller",
             phone=CALLER_NUMBER,
         ),
-        intake_intent="Request a synthetic auto-policy callback.",
+        intake_intent="Request a synthetic AC repair visit.",
         urgency=LeadUrgency.NORMAL,
         explicit_verbal_confirmation=True,
     )
@@ -185,6 +194,100 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
     )
 
     assert confirmation_replay.replayed is True
+
+    scheduling = SchedulingService(factory)
+    day = (now + timedelta(days=2)).date()
+    windows = [{"weekday": day.weekday(), "start": "08:00", "end": "17:00"}]
+    scheduling.configure(
+        agency_id,
+        ScheduleInput(
+            expected_version=0,
+            enabled=True,
+            timezone="America/New_York",
+            postal_codes=["10001"],
+            windows=windows,
+            teams=[{"key": "team-a", "name": "Service team", "windows": windows}],
+            notice_minutes=0,
+        ),
+        uuid4(),
+    )
+    application = create_app(ApiSettings(), migrated_database)
+    ingress = TelephonyIngressService(
+        adapter=NoopTelephonyAdapter(),
+        telephony_service=telephony,
+        phone_tool_secret="synthetic-phone-tool-secret",
+    )
+    application.include_router(
+        create_hvac_phone_router(factory, ingress.verify_phone_tool)
+    )
+
+    async def book() -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            context = {
+                "inbound_call_id": str(received.call.id),
+                "conversation_id": conversation_id,
+            }
+            prefix = "/api/v1/providers/elevenlabs/tools/"
+            body = {**context, "postal_code": "10001", "day": day.isoformat()}
+            rejected = await client.post(prefix + "availability", json=body)
+            assert rejected.status_code == 401
+            headers = {"Authorization": "Bearer synthetic-phone-tool-secret"}
+            submitted = await client.post(
+                prefix + "service-request",
+                headers=headers,
+                json={
+                    **context,
+                    "customer": {
+                        "full_name": "Synthetic Phone Caller",
+                        "phone": CALLER_NUMBER,
+                        "address": {
+                            "line1": "123 Example St",
+                            "city": "New York",
+                            "state_code": "NY",
+                            "postal_code": "10001",
+                        },
+                    },
+                    "service": {
+                        "kind": "AC_REPAIR",
+                        "equipment_issue": "AC stopped cooling",
+                        "preferred_window": "Morning",
+                        "hazardous_condition": False,
+                    },
+                    "explicit_confirmation": True,
+                },
+            )
+            assert submitted.status_code == 200, submitted.text
+            available = await client.post(
+                prefix + "availability", headers=headers, json=body
+            )
+            slot = available.json()["slots"][0]
+            reservation = await client.post(
+                prefix + "reserve-appointment",
+                headers=headers,
+                json={
+                    **context,
+                    "service_request_id": submitted.json()["service_request_id"],
+                    "team_key": slot["team_key"],
+                    "starts_at": slot["starts_at"],
+                    "idempotency_key": str(uuid4()),
+                },
+            )
+            assert reservation.status_code == 200, reservation.text
+            confirmed = await client.post(
+                prefix + "confirm-appointment",
+                headers=headers,
+                json={
+                    **context,
+                    "appointment_id": reservation.json()["id"],
+                    "explicit_confirmation": True,
+                },
+            )
+            assert confirmed.status_code == 200, confirmed.text
+            assert confirmed.json()["status"] == "CONFIRMED"
+
+    asyncio.run(book())
 
     with Session(migrated_database) as session:
         assert (
@@ -253,6 +356,12 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
     assert conversation_session.status == ConversationSessionStatus.CONFIRMED.value
     assert inbound_call is not None
     assert inbound_call.lead_id is not None
+    with Session(migrated_database) as session:
+        customer = session.scalar(
+            select(Customer).where(Customer.agency_id == agency_id)
+        )
+        assert customer is not None
+        assert customer.address_line1 == "123 Example St"
     assert intake is not None
     assert intake.confirmed_transcript[-1]["text"] == "Yes, I confirm."
     assert lead_count == 1

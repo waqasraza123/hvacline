@@ -1,3 +1,5 @@
+> HVACLine AI: read [the current live-validation runbook](hvacline-live-validation.md) first. This adapter reference predates HVAC scheduling; its old product restrictions and status notes are historical.
+
 # Lead and Handoff Backend
 
 This backend-only slice turns each newly confirmed conversation intake into one agency-owned lead and provides the shared human-handoff workflow required by browser and telephone channels. All routes currently use the deterministic development actor; production authentication remains deferred.

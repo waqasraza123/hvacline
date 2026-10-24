@@ -1,3 +1,5 @@
+> HVACLine AI: read [the current live-validation runbook](hvacline-live-validation.md) first. This adapter reference predates HVAC scheduling; its old product restrictions and status notes are historical.
+
 # ElevenLabs Phone Agent Setup
 
 Create a private development-only phone agent separate from the browser agent. Use

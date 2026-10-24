@@ -1,178 +1,137 @@
 import Link from "next/link";
-
 import { Brand } from "@/components/brand";
-import { getReceptionistSettings } from "@/features/receptionist/api";
-import type { ReceptionistSettings } from "@/features/receptionist/contracts";
-import { getBackendStatus } from "@/lib/backend-health";
-import { parsePublicEnvironment } from "@/lib/environment";
-
-export default async function Home() {
-  const environment = parsePublicEnvironment(process.env);
-  const [backendStatus, receptionistSettings] = await Promise.all([
-    getBackendStatus(),
-    environment.demoSandboxEnabled
-      ? Promise.resolve(undefined)
-      : loadReceptionistSettings(environment.apiBaseUrl),
-  ]);
-  const agencyName =
-    receptionistSettings?.publicName ??
-    (environment.demoSandboxEnabled
-      ? "Harborline Insurance"
-      : "Your insurance agency");
-
+export default function Home() {
   return (
-    <main className="site-shell">
+    <main className="site-shell hvac-home">
       <nav className="top-nav" aria-label="Primary navigation">
         <Brand />
-        {(environment.conversationAiEnabled ||
-          environment.demoSandboxEnabled) && (
-          <div className="nav-links">
-            {environment.demoSandboxEnabled ? (
-              <Link className="text-link" href="/phone-demo">
-                Phone demo
-              </Link>
-            ) : (
-              <>
-                <Link className="text-link" href="/receptionist-settings">
-                  Agency profile
-                </Link>
-                <Link className="text-link" href="/approved-faqs">
-                  Approved FAQs
-                </Link>
-              </>
-            )}
-          </div>
-        )}
+        <div className="nav-links">
+          <Link href="/phone-demo">Phone sandbox</Link>
+          <Link className="primary-link" href="/operations">
+            Open workspace ↗
+          </Link>
+        </div>
       </nav>
-
-      <section className="hero" aria-labelledby="hero-title">
-        <div className="hero-copy">
-          <p className="eyebrow">Insurance Voice AI SaaS starter kit</p>
-          <h1 id="hero-title">Build a guarded AI front desk for insurance agencies.</h1>
-          <p className="summary hero-summary">
-            A development-ready Next.js and FastAPI foundation for browser and
-            phone agents, approved agency answers, confirmed lead intake, and
-            human handoff.
+      <section className="hvac-hero">
+        <div>
+          <p className="eyebrow">THE FRONT DESK FOR HEATING & AIR</p>
+          <h1>
+            The next job
+            <br />
+            starts with
+            <br />
+            <span>a call.</span>
+          </h1>
+          <p className="summary">
+            Keep the conversation moving while your team keeps homes
+            comfortable. An AI phone receptionist built around HVAC service
+            requests, real scheduling, and human backup.
           </p>
           <div className="hero-actions">
-            {environment.demoSandboxEnabled ? (
-              <Link className="primary-link" href="/phone-demo">
-                Call the phone agent
-              </Link>
-            ) : environment.conversationAiEnabled ? (
-              <Link className="primary-link" href="/voice-test">
-                Talk to the receptionist
-              </Link>
-            ) : (
-              <p className="feature-disabled">
-                Voice AI is disabled in this environment.
-              </p>
-            )}
-            <a className="secondary-link" href="#workflow">
-              See the workflow
-            </a>
+            <Link className="primary-link" href="/operations">
+              Your service workspace ↗
+            </Link>
+            <Link className="secondary-link" href="/phone-demo">
+              Explore the phone sandbox
+            </Link>
           </div>
           <p className="demo-notice">
-            Starter-kit showcase · fictional information only · no quotes,
-            advice, binding, or coverage decisions
+            Development preview · fictional data only · live telephone
+            validation pending
           </p>
         </div>
-
-        <aside className="receptionist-preview" aria-label="Configured agency">
-          <div className="preview-status">
-            <span className="status-dot" />{" "}
-            {environment.demoSandboxEnabled
-              ? "Phone receptionist ready"
-              : "Browser receptionist configured"}
+        <aside className="hvac-call-card" aria-label="Example HVAC workflow">
+          <div className="call-card-top">
+            <span>AN EVERYDAY HVAC CALL</span>
+            <span className="sample-badge">Example</span>
           </div>
-          <p className="preview-label">Now representing</p>
-          <h2>{agencyName}</h2>
-          {receptionistSettings ? (
-            <>
-              <blockquote>{receptionistSettings.greeting}</blockquote>
-              <p className="preview-detail">
-                <strong>Office hours</strong>
-                {receptionistSettings.officeHours}
-              </p>
-              <div className="category-list" aria-label="Supported categories">
-                {receptionistSettings.supportedInsuranceCategories.map(
-                  (category) => (
-                    <span key={category}>{category}</span>
-                  ),
-                )}
+          <p className="call-number">01 / INCOMING</p>
+          <h2>
+            “The AC stopped.
+            <br />
+            Can someone come out?”
+          </h2>
+          <div className="call-wave" aria-hidden="true">
+            {[
+              14, 28, 42, 24, 56, 34, 64, 36, 50, 22, 44, 60, 30, 48, 18, 32,
+              54, 26, 42, 16,
+            ].map((height, index) => (
+              <i key={index} style={{ height }} />
+            ))}
+          </div>
+          <ol className="call-steps">
+            <li>
+              <span>01</span>
+              <div>
+                <strong>Understand the problem</strong>
+                <p>Capture the issue, callback number, and service address.</p>
               </div>
-            </>
-          ) : (
-            <p className="section-help">
-              Run the development migration and seed to load the agency profile.
-            </p>
-          )}
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <strong>Check the actual schedule</strong>
+                <p>Use configured service areas and technician availability.</p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <strong>Give your team a clear next step</strong>
+                <p>A confirmed booking or an actionable follow-up request.</p>
+              </div>
+            </li>
+          </ol>
+          <p className="call-card-foot">
+            No booking is promised before it is saved.
+          </p>
         </aside>
       </section>
-
-      <section id="workflow" className="workflow-section">
-        <div className="section-intro">
-          <p className="eyebrow">One guarded workflow</p>
-          <h2>Useful at the front desk. Clear at the boundary.</h2>
-        </div>
+      <section className="hvac-services" aria-label="HVAC services">
+        <span>Air conditioning repair</span>
+        <span>Heating repair</span>
+        <span>New installations</span>
+        <span>Maintenance visits</span>
+      </section>
+      <section className="workflow-section">
+        <p className="eyebrow">A SMALLER GAP BETWEEN A CALL AND A JOB</p>
+        <h2>
+          Built for the calls
+          <br />
+          your team cannot get to.
+        </h2>
         <div className="capability-grid">
           <article>
-            <span>01</span>
-            <h3>Welcome and understand</h3>
+            <span>01 / RECEPTION</span>
+            <h3>A useful first conversation.</h3>
             <p>
-              The receptionist discloses that it is AI, listens in real time,
-              and identifies why the prospect contacted the agency.
+              The receptionist introduces itself as AI, collects service
+              details, and answers from approved business information.
             </p>
           </article>
           <article>
-            <span>02</span>
-            <h3>Capture an actionable intake</h3>
+            <span>02 / SCHEDULING</span>
+            <h3>A slot your team can honor.</h3>
             <p>
-              Contact information and insurance interest remain editable until
-              the user explicitly confirms the transcript and details.
+              Business hours, ZIP codes, technician calendars, and existing
+              reservations determine what can be booked.
             </p>
           </article>
           <article>
-            <span>03</span>
-            <h3>Escalate licensed work</h3>
+            <span>03 / HUMAN BACKUP</span>
+            <h3>Urgency reaches a person.</h3>
             <p>
-              Quotes, recommendations, binding, claims, and uncertain requests
-              are reserved for agency staff instead of improvised by AI.
+              Hazards and requests that need a technician move to human
+              attention. The agent never provides equipment repair instructions.
             </p>
           </article>
         </div>
       </section>
-
-      <section className="runtime-panel" aria-labelledby="runtime-status">
-        <div>
-          <p className="section-kicker">Development environment</p>
-          <h2 id="runtime-status">Runtime status</h2>
-        </div>
-        <dl>
-          <div>
-            <dt>Frontend</dt>
-            <dd data-status="ready">Ready</dd>
-          </div>
-          <div>
-            <dt>Backend</dt>
-            <dd data-status={backendStatus.status}>{backendStatus.label}</dd>
-          </div>
-          <div>
-            <dt>Worker</dt>
-            <dd>Readiness checked separately</dd>
-          </div>
-        </dl>
-      </section>
+      <footer className="hvac-footer">
+        <Brand />
+        <p>One front desk. One trade. Every call matters.</p>
+        <Link href="/operations">Open workspace ↗</Link>
+      </footer>
     </main>
   );
-}
-
-async function loadReceptionistSettings(
-  apiBaseUrl: string,
-): Promise<ReceptionistSettings | undefined> {
-  try {
-    return await getReceptionistSettings(apiBaseUrl);
-  } catch {
-    return undefined;
-  }
 }

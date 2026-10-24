@@ -20,8 +20,13 @@ export class ApprovedFaqApiError extends Error {
 
 export async function listApprovedFaqs(
   apiBaseUrl: string,
+  adminToken?: string,
 ): Promise<ApprovedFaq[]> {
-  const body = await requestJson(`${apiBaseUrl}${FAQ_PATH}`);
+  const body = await requestJson(
+    `${apiBaseUrl}${FAQ_PATH}`,
+    undefined,
+    adminToken,
+  );
   if (!Array.isArray(body)) throw invalidResponse();
   return body.map(parseApprovedFaq);
 }
@@ -29,15 +34,20 @@ export async function listApprovedFaqs(
 export async function createApprovedFaq(
   apiBaseUrl: string,
   draft: ApprovedFaqDraft,
+  adminToken?: string,
 ): Promise<ApprovedFaq> {
-  const body = await requestJson(`${apiBaseUrl}${FAQ_PATH}`, {
-    method: "POST",
-    body: JSON.stringify({
-      question: draft.question.trim(),
-      approved_answer: draft.approvedAnswer.trim(),
-      status: "INACTIVE",
-    }),
-  });
+  const body = await requestJson(
+    `${apiBaseUrl}${FAQ_PATH}`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        question: draft.question.trim(),
+        approved_answer: draft.approvedAnswer.trim(),
+        status: "INACTIVE",
+      }),
+    },
+    adminToken,
+  );
   return parseApprovedFaq(body);
 }
 
@@ -45,15 +55,20 @@ export async function updateApprovedFaq(
   apiBaseUrl: string,
   faq: ApprovedFaq,
   draft: ApprovedFaqDraft,
+  adminToken?: string,
 ): Promise<ApprovedFaq> {
-  const body = await requestJson(`${apiBaseUrl}${FAQ_PATH}/${faq.id}`, {
-    method: "PUT",
-    body: JSON.stringify({
-      question: draft.question.trim(),
-      approved_answer: draft.approvedAnswer.trim(),
-      expected_row_version: faq.rowVersion,
-    }),
-  });
+  const body = await requestJson(
+    `${apiBaseUrl}${FAQ_PATH}/${faq.id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        question: draft.question.trim(),
+        approved_answer: draft.approvedAnswer.trim(),
+        expected_row_version: faq.rowVersion,
+      }),
+    },
+    adminToken,
+  );
   return parseApprovedFaq(body);
 }
 
@@ -61,6 +76,7 @@ export async function setApprovedFaqStatus(
   apiBaseUrl: string,
   faq: ApprovedFaq,
   status: ApprovedFaqStatus,
+  adminToken?: string,
 ): Promise<ApprovedFaq> {
   const action = status === "ACTIVE" ? "activate" : "deactivate";
   const body = await requestJson(
@@ -69,6 +85,7 @@ export async function setApprovedFaqStatus(
       method: "POST",
       body: JSON.stringify({ expected_row_version: faq.rowVersion }),
     },
+    adminToken,
   );
   return parseApprovedFaq(body);
 }
@@ -76,11 +93,16 @@ export async function setApprovedFaqStatus(
 export async function previewApprovedFaqLookup(
   apiBaseUrl: string,
   query: string,
+  adminToken?: string,
 ): Promise<ApprovedFaqLookup> {
-  const body = await requestJson(`${apiBaseUrl}${FAQ_PATH}/lookup`, {
-    method: "POST",
-    body: JSON.stringify({ query }),
-  });
+  const body = await requestJson(
+    `${apiBaseUrl}${FAQ_PATH}/lookup`,
+    {
+      method: "POST",
+      body: JSON.stringify({ query }),
+    },
+    adminToken,
+  );
   return parseApprovedFaqLookup(body);
 }
 
@@ -88,6 +110,7 @@ export async function lookupConversationApprovedFaq(
   apiBaseUrl: string,
   conversationSessionId: string,
   query: string,
+  adminToken?: string,
 ): Promise<ApprovedFaqLookup> {
   const body = await requestJson(
     `${apiBaseUrl}/api/v1/development/conversation-sessions/` +
@@ -164,11 +187,18 @@ export function parseApprovedFaqLookup(body: unknown): ApprovedFaqLookup {
   return { matched: body.matched, answer, fallbackMessage, source };
 }
 
-async function requestJson(url: string, init?: RequestInit): Promise<unknown> {
+async function requestJson(
+  url: string,
+  init?: RequestInit,
+  adminToken?: string,
+): Promise<unknown> {
   const response = await fetch(url, {
     ...init,
     cache: "no-store",
-    headers: init?.body ? { "Content-Type": "application/json" } : undefined,
+    headers: {
+      ...(init?.body ? { "Content-Type": "application/json" } : {}),
+      ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
+    },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
   });
   let body: unknown;

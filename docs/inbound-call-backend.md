@@ -1,3 +1,5 @@
+> HVACLine AI: read [the current live-validation runbook](hvacline-live-validation.md) first. This adapter reference predates HVAC scheduling; its old product restrictions and status notes are historical.
+
 # Inbound Call Backend
 
 This backend-only slice establishes provider-neutral telephone orchestration. It does not connect a real telephone vendor yet. A concrete adapter, signed webhook endpoint, and provider account configuration remain required before real calls can enter the system.

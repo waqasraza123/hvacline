@@ -103,7 +103,7 @@ def settings_values(request: ReceptionistSettingsInput) -> dict[str, object]:
             str(request.contact_email) if request.contact_email is not None else None
         ),
         "contact_phone": request.contact_phone,
-        "supported_insurance_categories": request.supported_insurance_categories,
+        "supported_insurance_categories": request.supported_service_categories,
         "escalation_message": request.escalation_message,
     }
 
@@ -130,7 +130,7 @@ def settings_response(
         office_hours=settings.office_hours,
         contact_email=settings.contact_email,
         contact_phone=settings.contact_phone,
-        supported_insurance_categories=settings.supported_insurance_categories,
+        supported_service_categories=settings.supported_insurance_categories,
         escalation_message=settings.escalation_message,
         row_version=settings.row_version,
         created_at=settings.created_at,

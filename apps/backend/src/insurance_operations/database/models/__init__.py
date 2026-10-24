@@ -12,6 +12,11 @@ from insurance_operations.database.models.conversation import (
     ConversationSession,
 )
 from insurance_operations.database.models.customer import Customer
+from insurance_operations.database.models.hvac import (
+    Appointment,
+    BusinessSchedule,
+    HvacServiceRequest,
+)
 from insurance_operations.database.models.identity import (
     Agency,
     AgencyMembership,
@@ -50,6 +55,9 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "business_schedules": TableOwnership(module="hvac", agency_column="agency_id"),
+    "hvac_service_requests": TableOwnership(module="hvac", agency_column="agency_id"),
+    "hvac_appointments": TableOwnership(module="hvac", agency_column="agency_id"),
     "agencies": TableOwnership(module="identity", agency_column=None),
     "app_users": TableOwnership(module="identity", agency_column=None),
     "agency_memberships": TableOwnership(
@@ -115,9 +123,11 @@ __all__ = [
     "AgencyMembership",
     "AgencyReceptionistSettings",
     "AppUser",
+    "Appointment",
     "ApprovedFaqStatus",
     "AuditEvent",
     "Base",
+    "BusinessSchedule",
     "ConversationChannel",
     "ConversationIntake",
     "ConversationIntakeConfirmationReceipt",
@@ -126,6 +136,7 @@ __all__ = [
     "HandoffContactMethod",
     "HandoffRequestKind",
     "HandoffStatus",
+    "HvacServiceRequest",
     "IdempotencyRecord",
     "InboundCall",
     "InboundCallEvent",

@@ -37,7 +37,7 @@ export default async function VoiceTestPage() {
         <Brand />
         <div className="nav-links">
           <Link className="text-link" href="/receptionist-settings">
-            Agency profile
+            Business profile
           </Link>
           <Link className="text-link" href="/approved-faqs">
             Approved FAQs

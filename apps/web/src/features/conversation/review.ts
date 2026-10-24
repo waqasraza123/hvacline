@@ -39,7 +39,7 @@ export function validateConfirmation(
     return "Email or phone is required.";
   }
   if (!form.intakeIntent.trim()) {
-    return "Insurance intake intent is required.";
+    return "HVAC service request is required.";
   }
   const speakers = new Set(transcript.map((turn) => turn.speaker));
   if (!speakers.has("USER") || !speakers.has("AGENT")) {

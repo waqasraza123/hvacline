@@ -19,9 +19,11 @@ export class ReceptionistSettingsApiError extends Error {
 
 export async function getReceptionistSettings(
   apiBaseUrl: string,
+  adminToken?: string,
 ): Promise<ReceptionistSettings> {
   const response = await fetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
     cache: "no-store",
+    headers: adminToken ? { "X-Demo-Admin-Token": adminToken } : undefined,
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
   });
   const body: unknown = await readJson(response);
@@ -35,10 +37,14 @@ export async function replaceReceptionistSettings(
   apiBaseUrl: string,
   draft: ReceptionistSettingsDraft,
   expectedRowVersion: number,
+  adminToken?: string,
 ): Promise<ReceptionistSettings> {
   const response = await fetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
+    },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
     body: JSON.stringify({
       public_name: draft.publicName.trim(),
@@ -46,8 +52,8 @@ export async function replaceReceptionistSettings(
       office_hours: draft.officeHours.trim(),
       contact_email: draft.contactEmail.trim() || null,
       contact_phone: draft.contactPhone.trim() || null,
-      supported_insurance_categories: categoriesFromDraft(
-        draft.supportedInsuranceCategories,
+      supported_service_categories: categoriesFromDraft(
+        draft.supportedServiceCategories,
       ),
       escalation_message: draft.escalationMessage.trim(),
       expected_row_version: expectedRowVersion,
@@ -64,7 +70,7 @@ export function parseReceptionistSettings(body: unknown): ReceptionistSettings {
   if (!isRecord(body)) {
     throw invalidResponse();
   }
-  const categories = body.supported_insurance_categories;
+  const categories = body.supported_service_categories;
   if (
     !Array.isArray(categories) ||
     categories.length === 0 ||
@@ -103,7 +109,7 @@ export function parseReceptionistSettings(body: unknown): ReceptionistSettings {
     officeHours,
     contactEmail: body.contact_email,
     contactPhone: body.contact_phone,
-    supportedInsuranceCategories: categories as string[],
+    supportedServiceCategories: categories as string[],
     escalationMessage,
     rowVersion: body.row_version,
     createdAt,
