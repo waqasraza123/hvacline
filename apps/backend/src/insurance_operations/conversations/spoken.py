@@ -29,10 +29,14 @@ def require_spoken_confirmation(
         "yes thats correct",
         "yes that s correct",
         "yes correct",
+        "confirm",
+        "confirmed",
+        "i confirm",
+        "yes i confirm",
         f"yes {action}",
     }
     if normalized_speech(turns[-1].text) not in accepted:
-        raise ValueError("A clear yes after the full readback is required")
+        raise ValueError("A clear yes or confirm after the full readback is required")
     agent_turns: list[str] = []
     for turn in reversed(turns[:-1]):
         if turn.speaker != "AGENT":

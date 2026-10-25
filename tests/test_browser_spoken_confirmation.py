@@ -37,7 +37,10 @@ def fictional_request() -> ServiceRequestInput:
     )
 
 
-@pytest.mark.parametrize("answer", ["Yes, save my request.", "Yes, that's correct."])
+@pytest.mark.parametrize(
+    "answer",
+    ["Yes, save my request.", "Yes, that's correct.", "Confirm", "I confirm."],
+)
 def test_spoken_intake_requires_readback_of_the_current_snapshot(answer: str) -> None:
     request = fictional_request()
     transcript = [
@@ -62,7 +65,7 @@ def test_spoken_intake_requires_readback_of_the_current_snapshot(answer: str) ->
 
 @pytest.mark.parametrize(
     "answer",
-    ["No", "Maybe", "Yes, but change my address", "Do not save this", ""],
+    ["No", "Maybe", "Yes, but change my address", "Confirm but change my address", "Do not confirm", "Do not save this", ""],
 )
 def test_ambiguous_or_negative_answers_cannot_confirm(answer: str) -> None:
     readback = intake_readback(fictional_request())

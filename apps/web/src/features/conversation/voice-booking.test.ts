@@ -89,6 +89,56 @@ it("does not query slots or reserve appointments before intake confirmation", as
   expect(fetcher).not.toHaveBeenCalled();
 });
 
+it("returns the exact readback after a rejected confirmation and uses the fresh reply", async () => {
+  const readback =
+    "Please confirm all fictional details exactly. Reply yes to save my request.";
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(Response.json({ readback }))
+    .mockResolvedValueOnce(
+      Response.json(
+        { error: { message: "Full readback required" } },
+        { status: 422 },
+      ),
+    )
+    .mockResolvedValueOnce(
+      Response.json({
+        conversation_intake_id: "intake-1",
+        service_request_id: "request-1",
+        customer: { id: "customer-1", full_name: draft.fullName },
+        confirmed_at: "2026-10-25T12:00:00Z",
+      }),
+    );
+  vi.stubGlobal("fetch", fetcher);
+  const booking = session();
+  await booking.updateDraft(draft);
+  await booking.execute("prepare_intake_confirmation", {});
+  booking.recordTurn("AGENT", "Shortened details. Is this correct?");
+  booking.recordTurn("USER", "Yes");
+  expect(
+    await booking.execute("confirm_service_request", {
+      explicit_confirmation: true,
+    }),
+  ).toMatchObject({
+    ok: false,
+    request_saved: false,
+    code: "INTAKE_CONFIRMATION_REQUIRED",
+    readback,
+  });
+  booking.recordTurn("AGENT", readback);
+  booking.recordTurn("USER", "Confirm");
+  expect(
+    await booking.execute("confirm_service_request", {
+      explicit_confirmation: true,
+    }),
+  ).toMatchObject({ ok: true, persisted: true });
+  const retry = JSON.parse(fetcher.mock.calls[2][1].body);
+  expect(retry.transcript.slice(-2)).toEqual([
+    { speaker: "AGENT", text: readback },
+    { speaker: "USER", text: "Confirm" },
+  ]);
+});
+
 it("requires collecting the hazard flag and invalidates prepared details on corrections", async () => {
   const fetcher = vi
     .fn()

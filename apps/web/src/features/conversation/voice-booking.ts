@@ -41,6 +41,7 @@ export class VoiceBookingSession {
   private draft: ConversationDraft = {};
   private turns: ConversationTurn[] = [];
   private prepared?: ConfirmationInput;
+  private preparedReadback?: string;
   private confirmationAttempt?: ConfirmationInput;
   private intake?: ConfirmedConversationIntake;
   private availability?: Availability;
@@ -85,6 +86,7 @@ export class VoiceBookingSession {
     };
     this.draftVersion += 1;
     this.prepared = undefined;
+    this.preparedReadback = undefined;
     return "Draft updated in this browser. Nothing has been saved. Prepare a readback before asking for confirmation.";
   }
 
@@ -115,6 +117,23 @@ export class VoiceBookingSession {
           return await this.release();
       }
     } catch (failure) {
+      if (
+        tool === "confirm_service_request" &&
+        failure instanceof ConversationApiError &&
+        failure.status === 422 &&
+        this.preparedReadback
+      ) {
+        return {
+          ok: false,
+          request_saved: false,
+          code: "INTAKE_CONFIRMATION_REQUIRED",
+          readback: this.preparedReadback,
+          message:
+            "The request is unsaved. A complete current readback and explicit confirmation are required.",
+          instruction:
+            "Present readback exactly, without shortening it or adding another question. Wait for a clear yes or confirm, then retry confirm_service_request. Corrections require submit_intake_draft and prepare_intake_confirmation again. Describe this as a confirmation requirement; do not call it a technical outage or claim a save or booking.",
+        };
+      }
       return {
         ok: false,
         request_saved: this.intake !== undefined,
@@ -194,6 +213,7 @@ export class VoiceBookingSession {
         "The details changed. Prepare and read a new confirmation.",
       );
     this.prepared = input;
+    this.preparedReadback = result.readback;
     return {
       ok: true,
       persisted: false,
