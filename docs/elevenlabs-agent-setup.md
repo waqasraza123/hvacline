@@ -4,7 +4,13 @@ This is a protected, fictional-data development flow. Production customer access
 
 ## Agent
 
-Create a separate private browser agent. Keep the existing phone agent separate: its phone-consent and server tools do not implement the browser review contract. Set the browser agent ID as server-only `ELEVENLABS_AGENT_ID`, and configure `ELEVENLABS_API_KEY` privately. Select the owner-approved voice, language and LLM explicitly.
+The separate private `HVACLine AI — Browser` agent was created on October 25, 2026 with ID `agent_0301m5r65kr7ey5amcdx08yxe5ht`. Reuse it; its eight blocking client tools are already attached. Keep the existing phone agent separate: its phone-consent and server tools do not implement the browser review contract. Set this browser agent ID as server-only `ELEVENLABS_AGENT_ID`, and configure `ELEVENLABS_API_KEY` privately.
+
+Saved configuration readback confirmed GPT-4.1 Mini, the selected Eric voice, Scribe Realtime, ElevenLabs TTS, required authentication, a 180-second maximum, one concurrent conversation, ten daily conversations, disabled bursting and disabled backup LLM. Audio recording is off, zero-day scheduled deletion is configured and audio/transcript deletion is enabled. ElevenLabs rejected Zero Retention Mode for this selected LLM, so ZRM remains disabled. These saved settings do not verify live voice behavior, account-wide training preferences, region or billing controls. The fictional-only development boundary remains required.
+
+This configuration does **not** require an OpenAI API key. The backend calls ElevenLabs and the agent uses ElevenLabs' built-in GPT-4.1 Mini selection. ElevenLabs handles that provider connection and passes through the model usage charges; this is separate from a custom LLM integration. See [ElevenLabs model configuration](https://elevenlabs.io/docs/eleven-agents/customization/llm). Do not add `OPENAI_API_KEY` to Render or Vercel for this flow.
+
+The following prompt and tool definitions document the saved configuration and can be used when deliberately recreating it.
 
 Suggested first message:
 
@@ -50,17 +56,56 @@ Use these tools only in HVACLine's embedded browser conversation. The standalone
 
 ## Deployment
 
-Backend: `APP_ENVIRONMENT=development`, `DEMO_SANDBOX_ENABLED=true`, a strong server-only `DEMO_ADMIN_TOKEN`, the seeded `DEVELOPMENT_ACTOR_USER_ID`, `CONVERSATION_AI_ENABLED=true`, `ELEVENLABS_AGENT_ID`, `ELEVENLABS_API_KEY`, and verified `ELEVENLABS_PRIVACY_CONFIRMED=true`. For the customer `/book` path, also set `CUSTOMER_PORTAL_ENABLED=true` and a different strong server-only `CUSTOMER_PORTAL_SECRET` of at least 32 characters. Set `WEB_ORIGIN` to the exact frontend origin. Retain the existing development Neon URLs. Keep the admin and portal secrets separate and never share either with clients.
+The owner manages Render and Vercel. Codex has not changed hosted environment variables, run migrations or triggered these deployments. Replace every angle-bracket placeholder below privately before saving; keep the admin and portal secrets separate. Existing Neon connection strings should stay configured on Render.
 
-Frontend: `NEXT_PUBLIC_API_BASE_URL` points to the backend; `NEXT_PUBLIC_CONVERSATION_AI_ENABLED=true` and `NEXT_PUBLIC_DEMO_SANDBOX_ENABLED=true`. Set the same `CUSTOMER_PORTAL_SECRET` as a server-only Next.js environment value; do not add the backend-only `CUSTOMER_PORTAL_ENABLED` flag to the frontend. Rebuild only when the owner authorizes final verification/deployment. No secret belongs in a `NEXT_PUBLIC_*` variable.
+1. Open Render → backend service `hvacline` → **Environment** and set:
 
-The customer account path requires migration `20261025_0010_customer_access`. After reviewing the configured development database target, the owner applies all pending migrations, including that customer-access revision:
+   ```dotenv
+   APP_ENVIRONMENT=development
+   DEMO_SANDBOX_ENABLED=true
+   CONVERSATION_AI_ENABLED=true
+   CUSTOMER_PORTAL_ENABLED=true
+   ELEVENLABS_AGENT_ID=agent_0301m5r65kr7ey5amcdx08yxe5ht
+   ELEVENLABS_API_KEY=<private ElevenLabs key>
+   CUSTOMER_PORTAL_SECRET=<random private secret of at least 32 characters>
+   DEMO_ADMIN_TOKEN=<separate private admin token of at least 32 characters>
+   DEVELOPMENT_ACTOR_USER_ID=00000000-0000-4000-8000-000000000002
+   WEB_ORIGIN=<exact https frontend origin with no path or trailing slash>
+   TELEPHONY_PROVIDER_ENABLED=false
+   ```
 
-```bash
-APP_ENVIRONMENT=development alembic upgrade head
-```
+   Use the actor ID above with the repository's development seed. Keep an already verified different actor ID only if that actor has the required active development membership. Keep the existing `DATABASE_URL`, `DIRECT_DATABASE_URL`, `DATABASE_SSL_MODE`, host and port settings. Set `ELEVENLABS_PRIVACY_CONFIRMED=true` only after completing the privacy/billing checklist below; enabling voice without it will fail backend configuration validation. The development environment value is required by current application gates even though the site is hosted.
 
-No migration was run for this implementation. Use fictional account and service details only; the customer draft is not production authentication.
+2. Review the database target before deploying. The checked-in Render Blueprint's pre-deploy command is `alembic upgrade head && insurance-operations-seed-development`; it runs schema changes and the fictional development seed. Confirm the effective service command and target before choosing **Save, rebuild, and deploy**. The customer account path requires migration `20261025_0010_customer_access`. If the service has no migration pre-deploy command, the owner applies pending migrations in Render Shell:
+
+   ```bash
+   APP_ENVIRONMENT=development alembic upgrade head
+   ```
+
+   If the development foundation was never seeded, the owner also runs:
+
+   ```bash
+   APP_ENVIRONMENT=development insurance-operations-seed-development
+   ```
+
+   Do not run a database downgrade. Wait for the backend deployment to become live; a pushed Git commit does not establish deployment success.
+
+3. Open Vercel → the HVACLine project → **Settings → Environment Variables**. For the **Production** environment, set:
+
+   ```dotenv
+   NEXT_PUBLIC_API_BASE_URL=https://api.hvacline.online
+   NEXT_PUBLIC_CONVERSATION_AI_ENABLED=true
+   NEXT_PUBLIC_DEMO_SANDBOX_ENABLED=true
+   CUSTOMER_PORTAL_SECRET=<exactly the same private portal secret as Render>
+   ```
+
+   The API URL above is the owner-reported backend domain; replace it if that domain no longer points to the intended backend. `CUSTOMER_PORTAL_SECRET` is server-only. Do not prefix it with `NEXT_PUBLIC_`; never put the ElevenLabs key, admin token or database credentials in public variables. The backend-only `CUSTOMER_PORTAL_ENABLED` flag is not needed on Vercel. Confirm the project root directory is `apps/web`, uses the Next.js preset, and deploys `main`. Redeploy the latest main commit after saving variables. Hosted Vercel Production and backend `APP_ENVIRONMENT=development` are separate settings.
+
+4. Open `/operations` privately with the admin token and choose **Scheduling**. The updated development seed creates a missing calendar for the fictional business: booking enabled, ZIP 10001, America/New_York, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice and one Test Team. Existing calendars are preserved, including disabled ones. Review these persisted values before testing and edit them as needed; other businesses receive no automatic calendar. See [development calendar defaults](development-calendar-defaults.md) for owner commands and verification. Use the business's U.S. timezone rather than the developer's local timezone. No appointments are seeded.
+
+5. After both deployments succeed, open `/signup`, create a fictional account and continue to `/book`. Accept disclosure, microphone consent and fictional-data acknowledgement, then start Line. Use one configured service ZIP, confirm the full intake readback, select a returned slot and confirm the appointment readback. Only the backend's `CONFIRMED` receipt means booked. Exercise the full manual acceptance checklist below before calling the flow verified.
+
+These are owner instructions; no migrations, seeds, deployments or live conversations were run while preparing them. The customer draft is not production authentication. Platform steps are based on the [Render environment documentation](https://render.com/docs/configure-environment-variables) and [Vercel environment documentation](https://vercel.com/docs/environment-variables).
 
 Delete unused `DEMO_INBOUND_NUMBER_E164` and `DEMO_TRANSFER_DESTINATION_E164` from Render, or leave them empty. Nonempty invalid values still fail validation. Keep `TELEPHONY_PROVIDER_ENABLED=false` without a telephone setup. A configured inbound number without a transfer destination seeds a callback-only call policy. Browser-only setup does not alter an existing phone policy or number.
 
@@ -117,7 +162,7 @@ Manual acceptance, using fictional data only:
 11. Report a hazard before or after saving. No new booking may proceed; an existing unconfirmed hold is released when the hazard is persisted. Existing confirmed appointments require human handling. No transfer, emergency alert or callback delivery is promised.
 12. Disconnect before confirmation, after saving, and after booking. Unconfirmed drafts stay unsaved, saved records survive, and an abandoned hold expires. Finish without saving by voice and exercise the existing on-screen review fallback.
 
-No tests, builds, lint, type checks, migrations, services, provider configuration calls or live conversations were run for this implementation. Agent settings, effective deployment variables and end-to-end success remain owner-unverified. Do not treat publication to `main` as verification: pushing `main` starts the configured Render build automatically, and real customer use remains out of scope.
+No tests, builds, lint, type checks, migrations, seeds, services or live conversations were run for this implementation. Provider configuration creation and saved-setting reads are recorded in the Agent section above; effective hosting variables, remaining account privacy/billing controls and end-to-end success remain unverified. Do not treat publication to `main` as verification: pushing `main` can start the configured Render build automatically, and real customer use remains out of scope.
 
 ## Privacy Checklist
 

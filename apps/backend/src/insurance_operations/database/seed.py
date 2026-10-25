@@ -1,6 +1,7 @@
 import argparse
 from dataclasses import dataclass
-from uuid import UUID
+from datetime import time
+from uuid import UUID, uuid4
 
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -17,10 +18,13 @@ from insurance_operations.database.models import (
     AgencyMembership,
     AgencyReceptionistSettings,
     AppUser,
+    BusinessSchedule,
     InboundNumberStatus,
 )
 from insurance_operations.database.models.identity import AgencyEnvironment
+from insurance_operations.hvac.schemas import ScheduleInput, Team, WorkingWindow
 from insurance_operations.settings import DatabaseSettings, RuntimeEnvironment
+from insurance_operations.telephony.phone_service import system_audit
 
 DEVELOPMENT_AGENCY_ID = UUID("00000000-0000-4000-8000-000000000001")
 DEVELOPMENT_AGENCY_NAME = "Harborline Heating & Air"
@@ -72,6 +76,7 @@ class DevelopmentSeedResult:
     membership_created: bool
     receptionist_settings_created: bool
     approved_faqs_created: int
+    business_schedule_created: bool = False
     call_policy_configured: bool = False
     inbound_number_configured: bool = False
 
@@ -235,6 +240,7 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                 connection.scalar(statement) is not None
                 for statement in approved_faq_statements
             )
+        business_schedule_created = configure_development_schedule(database_engine)
         call_policy_configured, inbound_number_configured = configure_demo_telephony(
             database_engine, settings
         )
@@ -244,11 +250,65 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
             membership_created=membership_created,
             receptionist_settings_created=receptionist_settings_created,
             approved_faqs_created=approved_faqs_created,
+            business_schedule_created=business_schedule_created,
             call_policy_configured=call_policy_configured,
             inbound_number_configured=inbound_number_configured,
         )
     finally:
         database_engine.dispose()
+
+
+def configure_development_schedule(database_engine: Engine) -> bool:
+    with Session(database_engine) as session, session.begin():
+        agency = session.scalar(
+            select(Agency)
+            .where(Agency.id == DEVELOPMENT_AGENCY_ID)
+            .with_for_update()
+        )
+        if (
+            agency is None
+            or agency.environment_kind != AgencyEnvironment.DEVELOPMENT.value
+            or agency.archived_at is not None
+        ):
+            raise ValueError(
+                "default scheduling requires the active development business"
+            )
+        if session.get(BusinessSchedule, DEVELOPMENT_AGENCY_ID) is not None:
+            return False
+
+        windows = [
+            WorkingWindow(weekday=weekday, start=time(9), end=time(17))
+            for weekday in range(5)
+        ]
+        configuration = ScheduleInput(
+            expected_version=0,
+            enabled=True,
+            timezone="America/New_York",
+            postal_codes=["10001"],
+            windows=windows,
+            teams=[Team(key="test-team", name="Test Team", windows=windows)],
+            duration_minutes=60,
+            notice_minutes=120,
+            cancellation_notice_minutes=120,
+            horizon_days=30,
+        )
+        session.add(
+            BusinessSchedule(
+                agency_id=DEVELOPMENT_AGENCY_ID,
+                version=1,
+                configuration=configuration.model_dump(mode="json"),
+            )
+        )
+        session.add(
+            system_audit(
+                agency_id=DEVELOPMENT_AGENCY_ID,
+                event_type="HVAC_SCHEDULE_CONFIGURED",
+                summary="Fictional development booking calendar initialized",
+                details={"version": 1, "source": "development_seed"},
+                correlation_id=uuid4(),
+            )
+        )
+        return True
 
 
 def configure_demo_telephony(
@@ -361,6 +421,7 @@ def main() -> None:
                 result.actor_created,
                 result.membership_created,
                 result.receptionist_settings_created,
+                result.business_schedule_created,
             )
         )
         + result.approved_faqs_created

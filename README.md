@@ -54,7 +54,7 @@ npm run dev:web
 uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
 ```
 
-Open `/operations`, connect to the development workspace, and configure **Scheduling**. Add business hours, ZIP codes, a timezone, and real technician capacity for the fictional test scenario. Add each team's hours and unavailable dates. Scheduling starts disabled and is never seeded with pretend appointments.
+The development seed initializes a missing fictional-business calendar in `business_schedules`: booking enabled, America/New_York, ZIP 10001, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice, and one Test Team. It preserves existing calendars, including deliberately disabled ones, and creates no appointments. Open `/operations` → **Scheduling** to review or edit the persisted values. Other businesses require their own configuration. See [development calendar defaults](docs/development-calendar-defaults.md) for owner commands and checks; this change is unverified.
 
 The internal calendar is authoritative only for teams whose availability is maintained here. Google Calendar's HTTP adapter and provider-neutral contract are implemented and testable, but OAuth account connection, runtime synchronization, external-event reconciliation, and live provider authorization are not complete. The UI does not offer Google Calendar as connected.
 

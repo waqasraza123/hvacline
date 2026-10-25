@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy import func, insert, inspect, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.database.models import (
     Agency,
@@ -14,6 +14,8 @@ from insurance_operations.database.models import (
     AgencyMembership,
     AgencyReceptionistSettings,
     AppUser,
+    AuditEvent,
+    BusinessSchedule,
 )
 from insurance_operations.database.seed import (
     DEVELOPMENT_ACTOR_USER_ID,
@@ -26,6 +28,8 @@ from insurance_operations.database.seed import (
     DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
     seed_development_foundation,
 )
+from insurance_operations.hvac.schemas import ScheduleInput
+from insurance_operations.hvac.service import SchedulingService
 from insurance_operations.settings import (
     DatabaseSettings,
     RuntimeEnvironment,
@@ -762,11 +766,13 @@ def test_development_seed_is_idempotent(
     assert first_result.membership_created is True
     assert first_result.receptionist_settings_created is True
     assert first_result.approved_faqs_created == 3
+    assert first_result.business_schedule_created is True
     assert second_result.agency_created is False
     assert second_result.actor_created is False
     assert second_result.membership_created is False
     assert second_result.receptionist_settings_created is False
     assert second_result.approved_faqs_created == 0
+    assert second_result.business_schedule_created is False
 
     with Session(migrated_database) as session:
         receptionist_settings = session.get(
@@ -778,9 +784,36 @@ def test_development_seed_is_idempotent(
             .select_from(AgencyApprovedFaq)
             .where(AgencyApprovedFaq.id.in_(DEVELOPMENT_APPROVED_FAQ_IDS))
         )
+        schedule = session.get(BusinessSchedule, DEVELOPMENT_AGENCY_ID)
+        schedule_audit_count = session.scalar(
+            select(func.count())
+            .select_from(AuditEvent)
+            .where(
+                AuditEvent.agency_id == DEVELOPMENT_AGENCY_ID,
+                AuditEvent.event_type == "HVAC_SCHEDULE_CONFIGURED",
+            )
+        )
 
     assert receptionist_settings is not None
     assert approved_faq_count == 3
+    assert schedule is not None
+    assert schedule.version == 1
+    configuration = ScheduleInput.model_validate(schedule.configuration)
+    assert configuration.enabled is True
+    assert configuration.timezone == "America/New_York"
+    assert configuration.postal_codes == ["10001"]
+    assert configuration.duration_minutes == 60
+    assert configuration.notice_minutes == 120
+    assert configuration.cancellation_notice_minutes == 120
+    assert {window.weekday for window in configuration.windows} == set(range(5))
+    assert all(
+        window.start.isoformat() == "09:00:00"
+        and window.end.isoformat() == "17:00:00"
+        for window in configuration.windows
+    )
+    assert len(configuration.teams) == 1
+    assert configuration.teams[0].windows == configuration.windows
+    assert schedule_audit_count == 1
 
     with migrated_database.connect() as connection:
         seeded_agency = connection.execute(
@@ -809,6 +842,75 @@ def test_development_seed_is_idempotent(
     assert membership_count == 1
     assert seeded_agency.slug == DEVELOPMENT_AGENCY_SLUG
     assert seeded_agency.environment_kind == "DEVELOPMENT"
+
+
+def test_development_seed_preserves_custom_schedule_and_other_businesses(
+    migrated_database: Engine,
+    database_settings: DatabaseSettings,
+) -> None:
+    settings = database_settings.model_copy(
+        update={
+            "app_environment": RuntimeEnvironment.DEVELOPMENT,
+            "database_url": database_settings.runtime_database_url,
+            "direct_database_url": None,
+            "test_database_url": None,
+        }
+    )
+    seed_development_foundation(settings)
+    scheduling = SchedulingService(
+        sessionmaker(bind=migrated_database, expire_on_commit=False)
+    )
+    current = scheduling.configuration(DEVELOPMENT_AGENCY_ID)
+    configuration = ScheduleInput.model_validate(current["configuration"])
+    updated = scheduling.configure(
+        DEVELOPMENT_AGENCY_ID,
+        ScheduleInput.model_validate(
+            {
+                **configuration.model_dump(mode="json"),
+                "expected_version": current["version"],
+                "enabled": False,
+                "timezone": "America/Chicago",
+                "postal_codes": ["60601"],
+            }
+        ),
+        uuid4(),
+    )
+    with Session(migrated_database) as session, session.begin():
+        other_business = Agency(
+            name="Fictional business without a booking calendar",
+            slug=f"unconfigured-calendar-{uuid4()}",
+            environment_kind="DEVELOPMENT",
+        )
+        session.add(other_business)
+        session.flush()
+        other_business_id = other_business.id
+        audit_count = session.scalar(
+            select(func.count())
+            .select_from(AuditEvent)
+            .where(
+                AuditEvent.agency_id == DEVELOPMENT_AGENCY_ID,
+                AuditEvent.event_type == "HVAC_SCHEDULE_CONFIGURED",
+            )
+        )
+
+    result = seed_development_foundation(settings)
+
+    assert result.business_schedule_created is False
+    assert scheduling.configuration(DEVELOPMENT_AGENCY_ID) == updated
+    assert scheduling.configuration(other_business_id) == {
+        "version": 0,
+        "configuration": None,
+    }
+    with Session(migrated_database) as session:
+        current_audit_count = session.scalar(
+            select(func.count())
+            .select_from(AuditEvent)
+            .where(
+                AuditEvent.agency_id == DEVELOPMENT_AGENCY_ID,
+                AuditEvent.event_type == "HVAC_SCHEDULE_CONFIGURED",
+            )
+        )
+    assert current_audit_count == audit_count
 
 
 def test_development_seed_configures_demo_telephony_idempotently(
