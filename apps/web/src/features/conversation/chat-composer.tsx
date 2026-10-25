@@ -78,7 +78,7 @@ export function ChatComposer({
       </div>
       <p className={styles.help} id={`${id}-help`}>
         {!connected
-          ? "Your unsent message stays here. Connect before sending."
+          ? "Start a conversation above to enable Send. Your unsent message stays here."
           : textOnly
             ? "Chat is silent. Your microphone stays off."
             : "You can type while using voice. Line will still speak its replies."}{" "}

@@ -294,8 +294,8 @@ def test_confirmed_intake_is_owned_audited_transactional_and_idempotent(
 def test_active_session_concurrency_is_limited_to_one(
     development_conversation_api: DevelopmentConversationApi,
 ) -> None:
-    first_status, _body, _headers = authorize_session(development_conversation_api)
-    second_status, second_body, _headers = authorize_session(
+    first_status, first_body, _headers = authorize_session(development_conversation_api)
+    second_status, second_body, headers = authorize_session(
         development_conversation_api
     )
 
@@ -304,6 +304,24 @@ def test_active_session_concurrency_is_limited_to_one(
     error = second_body["error"]
     assert isinstance(error, dict)
     assert error["code"] == "CONVERSATION_ALREADY_ACTIVE"
+    details = error["details"]
+    assert isinstance(details, dict)
+    assert details["previous_session_id"] == first_body["session_id"]
+    assert int(headers["retry-after"]) > 0
+
+
+def test_repeated_failed_session_cleanup_releases_the_slot(
+    development_conversation_api: DevelopmentConversationApi,
+) -> None:
+    api = development_conversation_api
+    status_code, body, _ = authorize_session(api)
+    assert status_code == 201
+    path = f"/api/v1/development/conversation-sessions/{body['session_id']}/end"
+    for outcome in ["FAILED", "INTERRUPTED", "FAILED"]:
+        status_code, ended, _ = asyncio.run(post_json(api.application, path, {"outcome": outcome}))
+        assert status_code == 200
+        assert ended["status"] == "FAILED"
+    assert authorize_session(api)[0] == 201
 
 
 def test_text_session_has_no_microphone_consent_and_shares_voice_quota(
@@ -884,6 +902,16 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     assert authorized == 201
     session_id = grant["session_id"]
     assert isinstance(session_id, str)
+    blocked_status, blocked = asyncio.run(send("conversation-sessions", {
+        "ai_disclosure_accepted": True, "microphone_consent_granted": True,
+        "synthetic_data_acknowledged": True,
+    }, second))
+    assert blocked_status == 409
+    blocked_error = blocked["error"]
+    assert isinstance(blocked_error, dict)
+    blocked_details = blocked_error["details"]
+    assert isinstance(blocked_details, dict)
+    assert "previous_session_id" not in blocked_details
     assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, second))[0] == 404
     assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, first))[0] == 200
     saved_status, saved = asyncio.run(send("conversation-intakes", {

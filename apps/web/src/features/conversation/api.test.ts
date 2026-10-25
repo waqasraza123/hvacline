@@ -8,6 +8,60 @@ import { lookupConversationApprovedFaq } from "../approved-faqs/api";
 
 afterEach(() => vi.unstubAllGlobals());
 
+it("preserves owned-session recovery details without creating another session", async () => {
+  const previousSessionId = "00000000-0000-4000-8000-000000000099";
+  const fetcher = vi.fn().mockResolvedValueOnce(
+    Response.json(
+      {
+        error: {
+          code: "CONVERSATION_ALREADY_ACTIVE",
+          message: "Another conversation is already active",
+          details: {
+            previous_session_id: previousSessionId,
+            retry_after_seconds: 120,
+          },
+        },
+      },
+      { status: 409 },
+    ),
+  );
+  vi.stubGlobal("fetch", fetcher);
+  await expect(
+    authorizeConversationSession("", undefined, "TEXT"),
+  ).rejects.toMatchObject({
+    status: 409,
+    previousSessionId,
+    retryAfterSeconds: 120,
+  });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
+it("releases a grant rejected because its transport does not match Chat", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json({
+        session_id: "00000000-0000-4000-8000-000000000099",
+        input_mode: "TEXT",
+        connection: { transport: "webrtc", credential: "test-token" },
+        maximum_duration_seconds: 180,
+        confirmation_expires_at: "2026-10-25T00:00:00Z",
+      }),
+    )
+    .mockResolvedValueOnce(Response.json({ review_available: false }));
+  vi.stubGlobal("fetch", fetcher);
+  await expect(
+    authorizeConversationSession("", undefined, "TEXT"),
+  ).rejects.toBeInstanceOf(ConversationApiError);
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(fetcher.mock.calls[1][0]).toContain(
+    "/00000000-0000-4000-8000-000000000099/end",
+  );
+  expect(JSON.parse(fetcher.mock.calls[1][1].body)).toEqual({
+    outcome: "FAILED",
+  });
+});
+
 it("preserves hosted authorization for browser session, FAQ and end requests", async () => {
   const fetcher = vi
     .fn()

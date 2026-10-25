@@ -13,6 +13,12 @@ export function startFailureMessage(
   error: unknown,
   inputMode: ConversationInputMode = "VOICE",
 ): string {
+  if (error instanceof ConversationApiError && error.status === 409) {
+    if (error.previousSessionId !== undefined)
+      return "Your earlier conversation is still active. Release it below before starting again.";
+    if (error.retryAfterSeconds !== undefined)
+      return `Another conversation is active. Close it in your other tab, or wait ${error.retryAfterSeconds} seconds and try again.`;
+  }
   if (inputMode === "TEXT") {
     if (error instanceof ConversationApiError && error.status === 409)
       return "Another conversation is still active. Finish it before starting chat.";

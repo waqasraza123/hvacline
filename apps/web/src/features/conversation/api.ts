@@ -8,6 +8,8 @@ import type {
 type ErrorBody = Readonly<{
   error?: Readonly<{
     message?: unknown;
+    code?: unknown;
+    details?: unknown;
   }>;
 }>;
 
@@ -15,11 +17,25 @@ const REQUEST_TIMEOUT_MILLISECONDS = 15_000;
 
 export class ConversationApiError extends Error {
   readonly status: number;
+  readonly code?: string;
+  readonly previousSessionId?: string;
+  readonly retryAfterSeconds?: number;
 
-  constructor(status: number, message: string) {
+  constructor(
+    status: number,
+    message: string,
+    recovery: {
+      code?: string;
+      previousSessionId?: string;
+      retryAfterSeconds?: number;
+    } = {},
+  ) {
     super(message);
     this.name = "ConversationApiError";
     this.status = status;
+    this.code = recovery.code;
+    this.previousSessionId = recovery.previousSessionId;
+    this.retryAfterSeconds = recovery.retryAfterSeconds;
   }
 }
 
@@ -70,6 +86,14 @@ export async function authorizeConversationSession(
     confirmationExpiresAt === undefined ||
     typeof maximumDurationSeconds !== "number"
   ) {
+    if (sessionId !== undefined) {
+      await endConversationSession(
+        apiBaseUrl,
+        sessionId,
+        "FAILED",
+        adminToken,
+      ).catch(() => undefined);
+    }
     throw new ConversationApiError(
       502,
       "The conversation service returned invalid data",
@@ -225,11 +249,32 @@ async function readJson(response: Response): Promise<unknown> {
 function apiError(response: Response, body: unknown): ConversationApiError {
   const errorBody = isRecord(body) ? (body as ErrorBody) : undefined;
   const message = errorBody?.error?.message;
+  const code = requiredString(errorBody?.error?.code);
+  const details = errorBody?.error?.details;
+  const recovery =
+    isRecord(details) && code === "CONVERSATION_ALREADY_ACTIVE" ? details : {};
+  const previousSessionId = requiredString(recovery.previous_session_id);
+  const seconds = recovery.retry_after_seconds;
   return new ConversationApiError(
     response.status,
     typeof message === "string" && message.trim()
       ? message
       : "The request could not be completed",
+    {
+      code,
+      previousSessionId:
+        previousSessionId !== undefined &&
+        /^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(previousSessionId)
+          ? previousSessionId
+          : undefined,
+      retryAfterSeconds:
+        typeof seconds === "number" &&
+        Number.isInteger(seconds) &&
+        seconds > 0 &&
+        seconds <= 86_400
+          ? seconds
+          : undefined,
+    },
   );
 }
 

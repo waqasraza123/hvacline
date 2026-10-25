@@ -18,6 +18,12 @@ Chat now uses a private signed WebSocket URL; Voice retains its existing WebRTC 
 
 ## Owner deployment steps
 
+The active-session recovery repair adds no migration. Deploy its updated backend on Render, then frontend on Vercel. A 409 `CONVERSATION_ALREADY_ACTIVE` means a previous session still occupies the configured slot; Send stays disabled until a new connection succeeds. For an already-stuck session on older code, close other booking tabs and wait the configured maximum duration (180 seconds in this setup) after the last start attempt before retrying.
+
+With the repair deployed, an owned browser-session conflict offers **Release previous session**. Close other booking tabs, release it, then choose **Try a new conversation**. This ends backend intake access for that earlier session and preserves saved requests/appointments. It does not remotely close another browser's provider connection; closing the other tabs releases those connections. Other accounts' sessions and phone sessions cannot be released through this recovery action. Conflicts include a bounded retry delay. Daily and concurrency limits remain enforced.
+
+Retries clean up the last known session before discarding its identifier. Repeated failed/interrupted cleanup is idempotent, and a late provider authorization cannot revive a session already released. Mode/transport-rejected grants also receive a best-effort cleanup request. If an authorization response is entirely lost, the owned-conflict recovery path handles the orphaned backend slot.
+
 1. Use updated `main` containing migration `20261025_0011_browser_text_sessions`. Review the intended development database target privately. From that updated checkout or its pre-deploy environment, apply:
 
    ```bash
@@ -36,7 +42,7 @@ Use an updated checkout with its own installed dependencies; an editable Python 
 
 ```bash
 APP_ENVIRONMENT=test pytest tests/test_browser_spoken_confirmation.py tests/test_conversation_provider.py
-npm run test --workspace @insurance-operations/web -- src/features/conversation/connection.test.ts src/features/conversation/text-messages.test.ts src/features/conversation/api.test.ts src/features/conversation/voice-booking.test.ts src/features/conversation/lifecycle.test.ts
+npm run test --workspace @insurance-operations/web -- src/features/conversation/connection.test.ts src/features/conversation/text-messages.test.ts src/features/conversation/api.test.ts src/features/conversation/failures.test.ts src/features/conversation/voice-booking.test.ts src/features/conversation/lifecycle.test.ts
 npm run verify:web
 ruff format --check .
 ruff check .
@@ -62,3 +68,4 @@ Manual acceptance, using fictional information:
 5. Choose a future configured weekday for ZIP 10001. Select only a returned slot, decline a hold, reserve another, then type yes after its full date/time/timezone readback. Confirm the final `CONFIRMED` receipt, account history and operations workspace agree. A hold alone must remain unbooked. Check unavailable dates, competing/expired holds and hazards fail safely.
 6. Finish and start a new conversation in Voice. Confirm microphone consent/permission is required and speech works. Type during Voice and confirm replies can still be spoken; starting a fresh Chat must restore silence. Both modes must share existing concurrency and daily limits.
 7. Check signed-out access, expired sessions and a second fictional account cannot access the first account's records. Disconnect before saving, after saving and after booking; only confirmed outcomes should persist.
+8. Leave an owned browser session active and try starting from a second tab. Confirm recovery offers only that account's earlier browser session. Close the first tab, release the earlier session, start again and verify Send enables only after connection. Repeat after a failed cleanup or reload. Another account must receive no recoverable session ID, and cannot end the first account's session. Saved bookings must survive recovery. Test a lost or incompatible authorization response and confirm no indefinite slot lock or automatic repeated starts.

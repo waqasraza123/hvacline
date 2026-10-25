@@ -4,6 +4,22 @@ import { ConversationApiError } from "./api";
 import { classifyConfirmationFailure, startFailureMessage } from "./failures";
 
 describe("conversation failure recovery", () => {
+  it("offers owned-session release or a bounded wait for an active conversation", () => {
+    expect(
+      startFailureMessage(
+        new ConversationApiError(409, "conflict", {
+          previousSessionId: "owned-session",
+        }),
+        "TEXT",
+      ),
+    ).toContain("Release it below");
+    expect(
+      startFailureMessage(
+        new ConversationApiError(409, "conflict", { retryAfterSeconds: 60 }),
+        "TEXT",
+      ),
+    ).toContain("60 seconds");
+  });
   it("gives actionable authorization guidance for bounded limits", () => {
     expect(startFailureMessage(new ConversationApiError(409, "conflict"))).toBe(
       "Another voice session is still active. Wait briefly and try again.",

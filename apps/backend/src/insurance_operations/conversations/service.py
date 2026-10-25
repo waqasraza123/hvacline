@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import UTC, datetime, time, timedelta
+from math import ceil
 from uuid import UUID
 
 from sqlalchemy import func, or_, select, update
@@ -100,8 +101,8 @@ class ConversationService:
         with self._session_factory() as session, session.begin():
             self._lock_agency(session, actor.agency_id)
             self._expire_stale_sessions(session, actor.agency_id, now)
+            self._enforce_concurrency_limit(session, actor, now)
             self._enforce_daily_limit(session, actor.agency_id, now)
-            self._enforce_concurrency_limit(session, actor.agency_id, now)
             conversation_session = ConversationSession(
                 agency_id=actor.agency_id,
                 initiated_by=actor.app_user_id,
@@ -150,6 +151,15 @@ class ConversationService:
             )
             if authorized_session is None:
                 raise RuntimeError("conversation session was not persisted")
+            if (
+                authorized_session.status != ConversationSessionStatus.REQUESTING.value
+                or authorized_session.authorization_expires_at <= authorized_at
+            ):
+                raise ApiError(
+                    status_code=409,
+                    code="CONVERSATION_SESSION_NOT_ACTIVE",
+                    message="The conversation was closed before authorization completed",
+                )
             authorized_session.status = ConversationSessionStatus.AUTHORIZED.value
             authorized_session.authorized_at = authorized_at
             authorized_session.provider_metadata = grant.metadata.as_storage_value()
@@ -230,12 +240,14 @@ class ConversationService:
                     conversation_session.status = ConversationSessionStatus.FAILED.value
                     conversation_session.failure_code = expected_code
                     conversation_session.ended_at = now
+                elif conversation_session.status == ConversationSessionStatus.EXPIRED.value:
+                    conversation_session.ended_at = conversation_session.ended_at or now
                 elif conversation_session.status != (
                     ConversationSessionStatus.CONFIRMED.value
                 ) and not (
                     conversation_session.status
                     == ConversationSessionStatus.FAILED.value
-                    and conversation_session.failure_code == expected_code
+                    and conversation_session.ended_at is not None
                 ):
                     raise self._session_state_conflict()
 
@@ -523,12 +535,13 @@ class ConversationService:
     @staticmethod
     def _enforce_concurrency_limit(
         session: Session,
-        agency_id: UUID,
+        actor: ActorContext,
         now: datetime,
     ) -> None:
-        active_session_id = session.scalar(
-            select(ConversationSession.id).where(
-                ConversationSession.agency_id == agency_id,
+        active_session = session.scalar(
+            select(ConversationSession)
+            .where(
+                ConversationSession.agency_id == actor.agency_id,
                 or_(
                     ConversationSession.status.in_(ACTIVE_SESSION_STATUSES),
                     (
@@ -539,12 +552,25 @@ class ConversationService:
                 ),
                 ConversationSession.authorization_expires_at > now,
             )
+            .order_by(ConversationSession.authorization_expires_at.desc())
+            .limit(1)
         )
-        if active_session_id is not None:
+        if active_session is not None:
+            retry_after = max(
+                1, ceil((active_session.authorization_expires_at - now).total_seconds())
+            )
+            details: dict[str, object] = {"retry_after_seconds": retry_after}
+            if (
+                active_session.initiated_by == actor.app_user_id
+                and active_session.channel == ConversationChannel.BROWSER.value
+            ):
+                details["previous_session_id"] = str(active_session.id)
             raise ApiError(
                 status_code=409,
                 code="CONVERSATION_ALREADY_ACTIVE",
                 message="Another conversation is already active",
+                details=details,
+                headers={"Retry-After": str(retry_after)},
             )
 
     @staticmethod

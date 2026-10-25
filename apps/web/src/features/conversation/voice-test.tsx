@@ -5,6 +5,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 
 import {
   authorizeConversationSession,
+  ConversationApiError,
   confirmConversationIntake,
   endConversationSession,
 } from "./api";
@@ -346,6 +347,7 @@ function VoiceTestExperience({
   const [remainingSeconds, setRemainingSeconds] = useState(180);
   const [maximumDuration, setMaximumDuration] = useState(180);
   const [confirmationLocked, setConfirmationLocked] = useState(false);
+  const [blockedSessionId, setBlockedSessionId] = useState<string>();
   const [inputMode, setInputMode] = useState<ConversationInputMode>(
     presentation === "customer" ? "TEXT" : "VOICE",
   );
@@ -426,6 +428,7 @@ function VoiceTestExperience({
 
   async function startConversation() {
     if (!["idle", "error"].includes(phaseRef.current)) return;
+    if (blockedSessionId !== undefined) return;
     if (
       !disclosureAccepted ||
       (!textOnly && !microphoneConsent) ||
@@ -433,6 +436,33 @@ function VoiceTestExperience({
     ) {
       setErrorMessage("Accept the required conversation permissions first.");
       return;
+    }
+    setPhase("requesting");
+    const previousSessionId = sessionIdRef.current;
+    if (previousSessionId !== undefined) {
+      try {
+        await client.end();
+        await endConversationSession(
+          apiBaseUrl,
+          previousSessionId,
+          "INTERRUPTED",
+          adminToken,
+        );
+        sessionIdRef.current = undefined;
+      } catch (error) {
+        if (
+          error instanceof ConversationApiError &&
+          [404, 410].includes(error.status)
+        ) {
+          sessionIdRef.current = undefined;
+        } else {
+          setErrorMessage(
+            "The previous session could not be released. Check your connection and retry; your unsent message is kept.",
+          );
+          setPhase("error");
+          return;
+        }
+      }
     }
     setErrorMessage(undefined);
     setSavedIntake(undefined);
@@ -443,7 +473,6 @@ function VoiceTestExperience({
     confirmationKeyRef.current = undefined;
     setConfirmationLocked(false);
     sessionIdRef.current = undefined;
-    setPhase("requesting");
     try {
       if (!textOnly) {
         const permissionStream = await navigator.mediaDevices.getUserMedia({
@@ -498,6 +527,47 @@ function VoiceTestExperience({
         ).catch(() => undefined);
       }
       setErrorMessage(startFailureMessage(error, inputMode));
+      if (error instanceof ConversationApiError)
+        setBlockedSessionId(error.previousSessionId);
+      setPhase("error");
+    }
+  }
+
+  async function releaseBlockedSession() {
+    if (phaseRef.current !== "error" || blockedSessionId === undefined) return;
+    const previousSessionId = blockedSessionId;
+    setPhase("stopping");
+    intentionalEndRef.current = true;
+    try {
+      await client.end();
+      await endConversationSession(
+        apiBaseUrl,
+        previousSessionId,
+        "INTERRUPTED",
+        adminToken,
+      );
+      setBlockedSessionId(undefined);
+      if (sessionIdRef.current === previousSessionId)
+        sessionIdRef.current = undefined;
+      setErrorMessage(
+        "Your previous session was released. Start a new conversation above.",
+      );
+    } catch (error) {
+      if (
+        error instanceof ConversationApiError &&
+        [404, 410].includes(error.status)
+      ) {
+        setBlockedSessionId(undefined);
+        setErrorMessage(
+          "The earlier session is no longer active. Start a new conversation above.",
+        );
+      } else {
+        setErrorMessage(
+          "The previous session could not be released. Close other booking tabs and retry.",
+        );
+      }
+    } finally {
+      intentionalEndRef.current = false;
       setPhase("error");
     }
   }
@@ -568,6 +638,7 @@ function VoiceTestExperience({
     sessionIdRef.current = undefined;
     confirmationKeyRef.current = undefined;
     setConfirmationLocked(false);
+    setBlockedSessionId(undefined);
     setTranscript([]);
     setForm(EMPTY_FORM);
     setSavedIntake(undefined);
@@ -742,6 +813,7 @@ function VoiceTestExperience({
                 !disclosureAccepted ||
                 (!textOnly && !microphoneConsent) ||
                 !syntheticDataAcknowledged ||
+                blockedSessionId !== undefined ||
                 isBusy
               }
               onClick={() => void startConversation()}
@@ -756,6 +828,21 @@ function VoiceTestExperience({
                     : "Start talking to Line"
                   : "Start conversation"}
             </button>
+          )}
+          {blockedSessionId !== undefined && phase === "error" && (
+            <div>
+              <p className="section-help">
+                Close other booking tabs first. Release your earlier session to
+                start again. Saved requests and appointments are kept.
+              </p>
+              <button
+                className="secondary-button"
+                onClick={() => void releaseBlockedSession()}
+                type="button"
+              >
+                Release previous session
+              </button>
+            </div>
           )}
           {phase === "active" && (
             <>
