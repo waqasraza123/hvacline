@@ -5,6 +5,10 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from insurance_operations.conversations.contracts import (
+    ConversationInputMode,
+    ConversationTransport,
+)
 from insurance_operations.conversations.spoken import (
     intake_readback,
     require_spoken_confirmation,
@@ -15,20 +19,20 @@ from insurance_operations.hvac.schemas import ServiceDetails, ServiceRequestInpu
 
 
 class ConversationSessionCreateInput(BaseModel):
-    input_mode: Literal["VOICE", "TEXT"] = "VOICE"
+    input_mode: ConversationInputMode = "VOICE"
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
     synthetic_data_acknowledged: bool
 
 
 class ConversationConnection(BaseModel):
-    transport: Literal["webrtc"]
+    transport: ConversationTransport
     credential: str
 
 
 class ConversationSessionResponse(BaseModel):
     session_id: UUID
-    input_mode: Literal["VOICE", "TEXT"] = "VOICE"
+    input_mode: ConversationInputMode = "VOICE"
     connection: ConversationConnection
     maximum_duration_seconds: int
     confirmation_expires_at: datetime

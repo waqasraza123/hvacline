@@ -93,8 +93,9 @@ export function VoiceTest({
         phase,
       ),
     );
-    return () => onActivityChange?.(false);
   }, [phase, onActivityChange]);
+
+  useEffect(() => () => onActivityChange?.(false), [onActivityChange]);
 
   const setPhase = useCallback((nextPhase: ConversationPhase) => {
     phaseRef.current = nextPhase;
@@ -477,7 +478,7 @@ function VoiceTestExperience({
       setMaximumDuration(authorization.maximumDurationSeconds);
       setRemainingSeconds(authorization.maximumDurationSeconds);
       setPhase("connecting");
-      await client.start(authorization.credential, authorization.inputMode);
+      await client.start(authorization);
       if (phaseRef.current === "stopping" || phaseRef.current === "error") {
         throw new Error("conversation connection failed during startup");
       }
@@ -902,9 +903,10 @@ function VoiceTestExperience({
             ))}
           </ol>
         )}
-        {phase === "active" && (
+        {phase !== "idle" && (
           <ChatComposer
-            disabled={client.status !== "connected"}
+            connected={phase === "active" && client.status === "connected"}
+            onTyping={client.notifyTyping}
             send={client.sendText}
             textOnly={textOnly}
           />

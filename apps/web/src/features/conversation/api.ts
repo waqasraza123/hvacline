@@ -57,12 +57,15 @@ export async function authorizeConversationSession(
   }
   const sessionId = requiredString(body.session_id);
   const authorizedInputMode = body.input_mode ?? "VOICE";
+  const transport = body.connection.transport;
   const credential = requiredString(body.connection.credential);
   const maximumDurationSeconds = body.maximum_duration_seconds;
   const confirmationExpiresAt = requiredString(body.confirmation_expires_at);
   if (
     sessionId === undefined ||
     authorizedInputMode !== inputMode ||
+    (transport !== "webrtc" && transport !== "websocket") ||
+    transport !== (inputMode === "TEXT" ? "websocket" : "webrtc") ||
     credential === undefined ||
     confirmationExpiresAt === undefined ||
     typeof maximumDurationSeconds !== "number"
@@ -75,6 +78,7 @@ export async function authorizeConversationSession(
   return {
     sessionId,
     inputMode,
+    transport,
     credential,
     maximumDurationSeconds,
     confirmationExpiresAt,

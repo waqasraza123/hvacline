@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from insurance_operations.application import create_app
 from insurance_operations.conversations.contracts import (
     ConnectionGrant,
+    ConversationInputMode,
     ProviderSessionMetadata,
 )
 from insurance_operations.database.models.identity import (
@@ -38,9 +39,11 @@ type JsonObject = dict[str, JsonValue]
 
 
 class FakeConversationProvider:
-    def authorize_session(self) -> ConnectionGrant:
+    def authorize_session(
+        self, *, input_mode: ConversationInputMode = "VOICE"
+    ) -> ConnectionGrant:
         return ConnectionGrant(
-            transport="webrtc",
+            transport="websocket" if input_mode == "TEXT" else "webrtc",
             credential="faq-test-credential",
             metadata=ProviderSessionMetadata(
                 adapter="test_adapter",

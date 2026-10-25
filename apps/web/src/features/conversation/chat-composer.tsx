@@ -8,11 +8,13 @@ import styles from "./conversation-chat.module.css";
 
 export function ChatComposer({
   send,
-  disabled,
+  connected,
+  onTyping,
   textOnly,
 }: {
   send: (text: string) => void;
-  disabled: boolean;
+  connected: boolean;
+  onTyping: () => void;
   textOnly: boolean;
 }) {
   const id = useId();
@@ -21,7 +23,7 @@ export function ChatComposer({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (disabled) return;
+    if (!connected) return;
     try {
       send(customerMessage(message));
       setMessage("");
@@ -45,9 +47,11 @@ export function ChatComposer({
           id={id}
           aria-describedby={`${id}-help`}
           className={styles.input}
-          disabled={disabled}
           maxLength={MAX_MESSAGE_CHARACTERS}
-          onChange={(event) => setMessage(event.target.value)}
+          onChange={(event) => {
+            setMessage(event.target.value);
+            if (connected) onTyping();
+          }}
           onKeyDown={(event) => {
             if (
               event.key === "Enter" &&
@@ -65,7 +69,7 @@ export function ChatComposer({
         <button
           aria-label="Send message"
           className={styles.send}
-          disabled={disabled || !message.trim()}
+          disabled={!connected || !message.trim()}
           type="submit"
         >
           <ProductIcon name="arrow" />
@@ -73,9 +77,11 @@ export function ChatComposer({
         </button>
       </div>
       <p className={styles.help} id={`${id}-help`}>
-        {textOnly
-          ? "Chat is silent. Your microphone stays off."
-          : "You can type while using voice. Line will still speak its replies."}{" "}
+        {!connected
+          ? "Your unsent message stays here. Connect before sending."
+          : textOnly
+            ? "Chat is silent. Your microphone stays off."
+            : "You can type while using voice. Line will still speak its replies."}{" "}
         Shift + Enter adds a new line.
       </p>
       {error && (

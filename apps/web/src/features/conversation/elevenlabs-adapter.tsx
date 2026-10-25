@@ -7,6 +7,7 @@ import {
 } from "@elevenlabs/react";
 import { useRef } from "react";
 import type { ReactNode } from "react";
+import { sessionConnection } from "./connection";
 import { customerMessage, PendingTextEchoes } from "./text-messages";
 import type { VoiceBookingTool } from "./voice-booking";
 
@@ -164,8 +165,9 @@ function AdapterBridge({
       conversation.status === "error" ? "disconnected" : conversation.status,
     mode: conversation.mode,
     isMuted: conversation.isMuted,
-    start: async (credential, inputMode) => {
+    start: async (authorization) => {
       pendingTextEchoes.current.clear();
+      const connection = sessionConnection(authorization);
       await new Promise<void>((resolve, reject) => {
         const timer = window.setTimeout(() => {
           controls.endSession();
@@ -181,9 +183,7 @@ function AdapterBridge({
         };
         try {
           conversation.startSession({
-            conversationToken: credential,
-            connectionType: "webrtc",
-            textOnly: inputMode === "TEXT",
+            ...connection,
             onConnect: () => {
               window.clearTimeout(timer);
               resolve();
@@ -213,6 +213,15 @@ function AdapterBridge({
         throw error;
       }
       onTranscript("USER", text);
+    },
+    notifyTyping: () => {
+      if (conversation.status === "connected") {
+        try {
+          controls.sendUserActivity();
+        } catch {
+          // A typing signal must not discard the customer's draft on disconnect.
+        }
+      }
     },
     setMuted: conversation.setMuted,
   };

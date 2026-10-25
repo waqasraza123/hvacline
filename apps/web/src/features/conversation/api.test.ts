@@ -14,7 +14,7 @@ it("preserves hosted authorization for browser session, FAQ and end requests", a
     .mockResolvedValueOnce(
       Response.json({
         session_id: "session-1",
-        connection: { credential: "short-lived-token" },
+        connection: { transport: "webrtc", credential: "short-lived-token" },
         maximum_duration_seconds: 180,
         confirmation_expires_at: "2026-10-25T00:00:00Z",
       }),
@@ -55,7 +55,11 @@ it("authorizes text chat without asserting microphone consent", async () => {
     Response.json({
       session_id: "text-session",
       input_mode: "TEXT",
-      connection: { credential: "short-lived-text-token" },
+      connection: {
+        transport: "websocket",
+        credential:
+          "wss://api.elevenlabs.io/v1/convai/conversation?conversation_signature=fictional",
+      },
       maximum_duration_seconds: 180,
       confirmation_expires_at: "2026-10-25T00:00:00Z",
     }),
@@ -65,6 +69,7 @@ it("authorizes text chat without asserting microphone consent", async () => {
   const result = await authorizeConversationSession("", undefined, "TEXT");
 
   expect(result.inputMode).toBe("TEXT");
+  expect(result.transport).toBe("websocket");
   expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({
     input_mode: "TEXT",
     ai_disclosure_accepted: true,
@@ -80,7 +85,7 @@ it("refuses a voice authorization returned for a text-only request", async () =>
       Response.json({
         session_id: "incorrect-mode",
         input_mode: "VOICE",
-        connection: { credential: "short-lived-token" },
+        connection: { transport: "webrtc", credential: "short-lived-token" },
         maximum_duration_seconds: 180,
         confirmation_expires_at: "2026-10-25T00:00:00Z",
       }),
@@ -91,3 +96,28 @@ it("refuses a voice authorization returned for a text-only request", async () =>
     authorizeConversationSession("", undefined, "TEXT"),
   ).rejects.toBeInstanceOf(ConversationApiError);
 });
+
+it.each([
+  ["TEXT", "webrtc"],
+  ["VOICE", "websocket"],
+  ["TEXT", undefined],
+] as const)(
+  "refuses %s with an incompatible %s connection",
+  async (inputMode, transport) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        Response.json({
+          session_id: "wrong-transport",
+          input_mode: inputMode,
+          connection: { transport, credential: "short-lived-credential" },
+          maximum_duration_seconds: 180,
+          confirmation_expires_at: "2026-10-25T00:00:00Z",
+        }),
+      ),
+    );
+    await expect(
+      authorizeConversationSession("", undefined, inputMode),
+    ).rejects.toBeInstanceOf(ConversationApiError);
+  },
+);

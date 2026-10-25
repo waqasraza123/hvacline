@@ -123,7 +123,7 @@ class ConversationService:
             conversation_session_id = conversation_session.id
 
         try:
-            grant = self._provider.authorize_session()
+            grant = self._provider.authorize_session(input_mode=request.input_mode)
         except ConversationProviderError as error:
             with self._session_factory() as session, session.begin():
                 failed_session = session.get(
@@ -138,7 +138,7 @@ class ConversationService:
             raise ApiError(
                 status_code=503,
                 code="CONVERSATION_PROVIDER_UNAVAILABLE",
-                message="The voice service is temporarily unavailable",
+                message="The conversation service is temporarily unavailable",
             ) from error
 
         authorized_at = datetime.now(UTC)

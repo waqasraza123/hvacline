@@ -12,6 +12,8 @@ This configuration does **not** require an OpenAI API key. The backend calls Ele
 
 The owner subsequently reported voice working; appointment booking remains untested. The browser agent now allows the conversation `text_only` override and includes the channel guidance below. Its default remains voice so existing clients keep working. Customer `/book` defaults to silent Chat in the updated frontend; Voice also accepts typed messages while retaining spoken replies. See [customer chat](customer-chat.md) for migration `20261025_0011`, deployment order and deferred acceptance checks. No new environment variables are required.
 
+After the owner reported early Chat disconnects, the application was changed to use signed WebSocket grants for Chat and existing WebRTC tokens for Voice. The composer now sends typing-activity signals and preserves unsent text through connection failure/retry. The updated frontend validates the returned transport and does not fall back to another mode. This repair requires both deployments, backend first, but no additional migration or agent change. Its runtime result remains unverified; use the focused owner checks in [customer chat](customer-chat.md).
+
 The following prompt and tool definitions document the saved configuration and can be used when deliberately recreating it.
 
 Suggested first message:
@@ -141,7 +143,7 @@ npm ci
 
 ```bash
 APP_ENVIRONMENT=test pytest tests/test_settings.py tests/test_conversation_provider.py tests/test_browser_spoken_confirmation.py tests/test_customer_passwords.py
-npm run test --workspace @insurance-operations/web -- src/features/conversation/voice-booking.test.ts src/features/conversation/api.test.ts src/features/conversation/text-messages.test.ts src/features/customer/server.test.ts 'src/app/api/account/[action]/route.test.ts'
+npm run test --workspace @insurance-operations/web -- src/features/conversation/voice-booking.test.ts src/features/conversation/api.test.ts src/features/conversation/connection.test.ts src/features/conversation/text-messages.test.ts src/features/conversation/lifecycle.test.ts src/features/customer/server.test.ts 'src/app/api/account/[action]/route.test.ts'
 npm run verify:web
 ruff format --check .
 ruff check .

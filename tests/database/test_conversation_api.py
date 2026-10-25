@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from insurance_operations.application import create_app
 from insurance_operations.conversations.contracts import (
     ConnectionGrant,
+    ConversationInputMode,
     ProviderSessionMetadata,
 )
 from insurance_operations.database.models.conversation import (
@@ -45,9 +46,11 @@ type JsonObject = dict[str, JsonValue]
 
 
 class FakeConversationProvider:
-    def authorize_session(self) -> ConnectionGrant:
+    def authorize_session(
+        self, *, input_mode: ConversationInputMode = "VOICE"
+    ) -> ConnectionGrant:
         return ConnectionGrant(
-            transport="webrtc",
+            transport="websocket" if input_mode == "TEXT" else "webrtc",
             credential="short-lived-test-credential",
             metadata=ProviderSessionMetadata(
                 adapter="test_adapter",
@@ -323,6 +326,9 @@ def test_text_session_has_no_microphone_consent_and_shares_voice_quota(
         )
         assert status_code == 201
         assert body["input_mode"] == "TEXT"
+        connection = body["connection"]
+        assert isinstance(connection, dict)
+        assert connection["transport"] == "websocket"
         with Session(migrated_database) as session:
             row = session.get(ConversationSession, UUID(str(body["session_id"])))
             assert row is not None

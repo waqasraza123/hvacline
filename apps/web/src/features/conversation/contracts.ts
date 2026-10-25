@@ -39,16 +39,15 @@ export type ConversationConnectionStatus =
 
 export type ConversationMode = "speaking" | "listening" | undefined;
 export type ConversationInputMode = "VOICE" | "TEXT";
+export type ConversationTransport = "webrtc" | "websocket";
 
 export type ConversationClient = Readonly<{
   status: ConversationConnectionStatus;
   mode: ConversationMode;
   isMuted: boolean;
-  start: (
-    credential: string,
-    inputMode: ConversationInputMode,
-  ) => Promise<void>;
+  start: (authorization: ConversationSessionAuthorization) => Promise<void>;
   sendText: (text: string) => void;
+  notifyTyping: () => void;
   end: () => Promise<void>;
   setMuted: (muted: boolean) => void;
 }>;
@@ -56,6 +55,7 @@ export type ConversationClient = Readonly<{
 export type ConversationSessionAuthorization = Readonly<{
   sessionId: string;
   inputMode: ConversationInputMode;
+  transport: ConversationTransport;
   credential: string;
   maximumDurationSeconds: number;
   confirmationExpiresAt: string;
