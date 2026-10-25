@@ -74,7 +74,7 @@ export function CustomerBooking({
             <p>Book your next service, or pick up where you left off.</p>
           </div>
           <span className="customer-voice-label">
-            <VoiceSymbol /> Powered by Line <span>VOICE AI</span>
+            <VoiceSymbol /> Powered by Line <span>VOICE & CHAT</span>
           </span>
         </div>
         <nav className="customer-tabs" aria-label="Your booking workspace">
@@ -116,8 +116,8 @@ export function CustomerBooking({
               <VoiceSymbol />
               <h2>Line is taking a short break.</h2>
               <p>
-                Voice booking is not available right now. Please check back
-                shortly.
+                Chat and voice booking are not available right now. Please check
+                back shortly.
               </p>
               <Link className="product-text-link" href="/">
                 Return home <ProductIcon name="arrow" />

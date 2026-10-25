@@ -90,7 +90,7 @@ export class VoiceBookingSession {
 
   async execute(tool: VoiceBookingTool, parameters: Record<string, unknown>) {
     if (!this.options.isActive()) {
-      return { ok: false, message: "The voice session is no longer active." };
+      return { ok: false, message: "The conversation is no longer active." };
     }
     if (this.busy) {
       return {

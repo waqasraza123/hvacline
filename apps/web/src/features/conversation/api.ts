@@ -1,5 +1,6 @@
 import type {
   ConfirmedConversationIntake,
+  ConversationInputMode,
   ConversationSessionAuthorization,
   ConversationTurn,
 } from "./contracts";
@@ -25,6 +26,7 @@ export class ConversationApiError extends Error {
 export async function authorizeConversationSession(
   apiBaseUrl: string,
   adminToken?: string,
+  inputMode: ConversationInputMode = "VOICE",
 ): Promise<ConversationSessionAuthorization> {
   const response = await fetch(
     `${apiBaseUrl}/api/v1/development/conversation-sessions`,
@@ -36,8 +38,9 @@ export async function authorizeConversationSession(
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({
+        input_mode: inputMode,
         ai_disclosure_accepted: true,
-        microphone_consent_granted: true,
+        microphone_consent_granted: inputMode === "VOICE",
         synthetic_data_acknowledged: true,
       }),
     },
@@ -49,26 +52,29 @@ export async function authorizeConversationSession(
   if (!isRecord(body) || !isRecord(body.connection)) {
     throw new ConversationApiError(
       502,
-      "The voice service returned invalid data",
+      "The conversation service returned invalid data",
     );
   }
   const sessionId = requiredString(body.session_id);
+  const authorizedInputMode = body.input_mode ?? "VOICE";
   const credential = requiredString(body.connection.credential);
   const maximumDurationSeconds = body.maximum_duration_seconds;
   const confirmationExpiresAt = requiredString(body.confirmation_expires_at);
   if (
     sessionId === undefined ||
+    authorizedInputMode !== inputMode ||
     credential === undefined ||
     confirmationExpiresAt === undefined ||
     typeof maximumDurationSeconds !== "number"
   ) {
     throw new ConversationApiError(
       502,
-      "The voice service returned invalid data",
+      "The conversation service returned invalid data",
     );
   }
   return {
     sessionId,
+    inputMode,
     credential,
     maximumDurationSeconds,
     confirmationExpiresAt,
@@ -101,7 +107,7 @@ export async function endConversationSession(
   if (!isRecord(body) || typeof body.review_available !== "boolean") {
     throw new ConversationApiError(
       502,
-      "The voice service returned invalid data",
+      "The conversation service returned invalid data",
     );
   }
   return body.review_available;

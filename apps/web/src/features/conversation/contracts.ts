@@ -38,18 +38,24 @@ export type ConversationConnectionStatus =
   "disconnected" | "connecting" | "connected";
 
 export type ConversationMode = "speaking" | "listening" | undefined;
+export type ConversationInputMode = "VOICE" | "TEXT";
 
 export type ConversationClient = Readonly<{
   status: ConversationConnectionStatus;
   mode: ConversationMode;
   isMuted: boolean;
-  start: (credential: string) => Promise<void>;
+  start: (
+    credential: string,
+    inputMode: ConversationInputMode,
+  ) => Promise<void>;
+  sendText: (text: string) => void;
   end: () => Promise<void>;
   setMuted: (muted: boolean) => void;
 }>;
 
 export type ConversationSessionAuthorization = Readonly<{
   sessionId: string;
+  inputMode: ConversationInputMode;
   credential: string;
   maximumDurationSeconds: number;
   confirmationExpiresAt: string;

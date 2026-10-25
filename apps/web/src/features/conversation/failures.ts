@@ -1,4 +1,5 @@
 import { ConversationApiError } from "./api";
+import type { ConversationInputMode } from "./contracts";
 
 export type ConfirmationFailureAction =
   "correct_input" | "retry_confirmation" | "start_new_session";
@@ -8,7 +9,17 @@ export type ConfirmationFailure = Readonly<{
   message: string;
 }>;
 
-export function startFailureMessage(error: unknown): string {
+export function startFailureMessage(
+  error: unknown,
+  inputMode: ConversationInputMode = "VOICE",
+): string {
+  if (inputMode === "TEXT") {
+    if (error instanceof ConversationApiError && error.status === 409)
+      return "Another conversation is still active. Finish it before starting chat.";
+    if (error instanceof ConversationApiError && error.status === 429)
+      return "The daily conversation limit has been reached. Try again tomorrow.";
+    return "Chat is temporarily unavailable. Please try again shortly.";
+  }
   if (!(error instanceof ConversationApiError)) {
     return "The microphone or voice service is unavailable. Check access and try again.";
   }

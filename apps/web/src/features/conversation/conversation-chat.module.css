@@ -1,0 +1,114 @@
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.modes button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #a8b7cd;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #14233d;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.modes button[aria-pressed="true"] {
+  border-color: #2458eb;
+  background: #2458eb;
+  color: #fff;
+}
+
+.modes button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.composer {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #dce3ed;
+}
+
+.label {
+  color: #14233d;
+  font-weight: 650;
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.65rem;
+}
+
+.input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  max-height: 200px;
+  padding: 0.8rem;
+  resize: vertical;
+  border: 1px solid #a8b7cd;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #14233d;
+  font: inherit;
+}
+
+.send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #2458eb;
+  color: #fff;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.send:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.help {
+  margin: 0;
+  color: #4b5d76;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  color: #a02332;
+}
+
+.modes button:focus-visible,
+.input:focus-visible,
+.send:focus-visible {
+  outline: 3px solid #2458eb;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .inputRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

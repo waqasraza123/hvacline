@@ -71,11 +71,17 @@ class ConversationService:
                 code="AI_DISCLOSURE_REQUIRED",
                 message="AI disclosure acceptance is required",
             )
-        if not request.microphone_consent_granted:
+        if request.input_mode == "VOICE" and not request.microphone_consent_granted:
             raise ApiError(
                 status_code=422,
                 code="MICROPHONE_CONSENT_REQUIRED",
                 message="Microphone consent is required",
+            )
+        if request.input_mode == "TEXT" and request.microphone_consent_granted:
+            raise ApiError(
+                status_code=422,
+                code="TEXT_SESSION_MICROPHONE_CONSENT_INVALID",
+                message="Text-only chat does not request microphone access",
             )
         if not request.synthetic_data_acknowledged:
             raise ApiError(
@@ -100,8 +106,11 @@ class ConversationService:
                 agency_id=actor.agency_id,
                 initiated_by=actor.app_user_id,
                 status=ConversationSessionStatus.REQUESTING.value,
+                input_mode=request.input_mode,
                 disclosure_accepted_at=now,
-                microphone_consent_at=now,
+                microphone_consent_at=(
+                    now if request.microphone_consent_granted else None
+                ),
                 synthetic_data_acknowledged_at=now,
                 maximum_duration_seconds=(
                     self._settings.conversation_max_duration_seconds
@@ -147,6 +156,7 @@ class ConversationService:
 
         return ConversationSessionResponse(
             session_id=conversation_session_id,
+            input_mode=request.input_mode,
             connection=ConversationConnection(
                 transport=grant.transport,
                 credential=grant.credential,

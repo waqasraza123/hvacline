@@ -59,6 +59,16 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
             name="channel_valid",
         ),
         CheckConstraint(
+            "input_mode IN ('VOICE', 'TEXT')",
+            name="input_mode_valid",
+        ),
+        CheckConstraint(
+            "(input_mode = 'VOICE' AND microphone_consent_at IS NOT NULL) OR "
+            "(input_mode = 'TEXT' AND channel = 'BROWSER' "
+            "AND microphone_consent_at IS NULL)",
+            name="input_mode_consent_consistent",
+        ),
+        CheckConstraint(
             "(channel = 'BROWSER' AND inbound_call_id IS NULL) OR "
             "(channel = 'PHONE' AND inbound_call_id IS NOT NULL)",
             name="channel_call_consistent",
@@ -113,6 +123,9 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
         ),
         nullable=True,
     )
+    input_mode: Mapped[str] = mapped_column(
+        Text, nullable=False, default="VOICE", server_default="VOICE"
+    )
     status: Mapped[str] = mapped_column(
         Text,
         nullable=False,
@@ -129,9 +142,9 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
         DateTime(timezone=True),
         nullable=False,
     )
-    microphone_consent_at: Mapped[datetime] = mapped_column(
+    microphone_consent_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
     synthetic_data_acknowledged_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

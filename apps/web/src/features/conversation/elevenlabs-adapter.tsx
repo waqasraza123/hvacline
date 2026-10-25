@@ -5,7 +5,9 @@ import {
   useConversation,
   useConversationControls,
 } from "@elevenlabs/react";
+import { useRef } from "react";
 import type { ReactNode } from "react";
+import { customerMessage, PendingTextEchoes } from "./text-messages";
 import type { VoiceBookingTool } from "./voice-booking";
 
 import type {
@@ -64,6 +66,7 @@ function AdapterBridge({
   onBookingTool,
 }: AdapterProperties) {
   const controls = useConversationControls();
+  const pendingTextEchoes = useRef(new PendingTextEchoes());
   const conversation = useConversation({
     clientTools: {
       lookup_approved_faq: async (parameters: ApprovedFaqToolParameters) => {
@@ -133,10 +136,15 @@ function AdapterBridge({
       release_appointment_hold: (parameters: Record<string, unknown>) =>
         onBookingTool("release_appointment_hold", parameters),
     },
-    onDisconnect,
+    onDisconnect: () => {
+      pendingTextEchoes.current.clear();
+      onDisconnect();
+    },
     onError: (message) => {
       onError(
-        typeof message === "string" ? message : "Voice connection failed",
+        typeof message === "string"
+          ? message
+          : "Conversation connection failed",
       );
       controls.endSession();
     },
@@ -144,6 +152,8 @@ function AdapterBridge({
       const speaker = message.source === "user" ? "USER" : "AGENT";
       const text = message.message.trim();
       if (text) {
+        if (speaker === "USER" && pendingTextEchoes.current.consume(text))
+          return;
         onTranscript(speaker, text);
       }
     },
@@ -154,20 +164,26 @@ function AdapterBridge({
       conversation.status === "error" ? "disconnected" : conversation.status,
     mode: conversation.mode,
     isMuted: conversation.isMuted,
-    start: async (credential) => {
+    start: async (credential, inputMode) => {
+      pendingTextEchoes.current.clear();
       await new Promise<void>((resolve, reject) => {
         const timer = window.setTimeout(() => {
           controls.endSession();
-          reject(new Error("Voice connection timed out. Try a new session."));
+          reject(
+            new Error("Conversation connection timed out. Try a new session."),
+          );
         }, 20_000);
         const fail = () => {
           window.clearTimeout(timer);
-          reject(new Error("Voice connection could not be established."));
+          reject(
+            new Error("Conversation connection could not be established."),
+          );
         };
         try {
           conversation.startSession({
             conversationToken: credential,
             connectionType: "webrtc",
+            textOnly: inputMode === "TEXT",
             onConnect: () => {
               window.clearTimeout(timer);
               resolve();
@@ -182,7 +198,21 @@ function AdapterBridge({
       });
     },
     end: async () => {
+      pendingTextEchoes.current.clear();
       await conversation.endSession();
+    },
+    sendText: (value) => {
+      if (conversation.status !== "connected")
+        throw new Error("Connect to Line before sending a message.");
+      const text = customerMessage(value);
+      pendingTextEchoes.current.add(text);
+      try {
+        conversation.sendUserMessage(text);
+      } catch (error) {
+        pendingTextEchoes.current.consume(text);
+        throw error;
+      }
+      onTranscript("USER", text);
     },
     setMuted: conversation.setMuted,
   };

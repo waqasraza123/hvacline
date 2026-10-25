@@ -10,11 +10,14 @@ import {
 } from "./api";
 import { lookupConversationApprovedFaq } from "../approved-faqs/api";
 import { BrowserBooking } from "./browser-booking";
+import { ChatComposer } from "./chat-composer";
+import chatStyles from "./conversation-chat.module.css";
 import { ConfiguredConversationAdapter } from "./configured-adapter";
 import type {
   ConfirmedConversationIntake,
   ConversationClient,
   ConversationDraft,
+  ConversationInputMode,
   ConversationSpeaker,
   ConversationTurn,
 } from "./contracts";
@@ -111,7 +114,7 @@ export function VoiceTest({
 
   const handleDraft = useCallback(async (draft: ConversationDraft) => {
     if (!isLiveConversationPhase(phaseRef.current)) {
-      return "The voice session is no longer active.";
+      return "The conversation is no longer active.";
     }
     if (draft.hazardousCondition) {
       setForm((current) => ({ ...current, hazardousCondition: true }));
@@ -145,7 +148,7 @@ export function VoiceTest({
       if (!booking)
         return JSON.stringify({
           ok: false,
-          message: "Start a voice session first.",
+          message: "Start a conversation first.",
         });
       return JSON.stringify(await booking.execute(tool, parameters));
     },
@@ -196,8 +199,8 @@ export function VoiceTest({
 
       setErrorMessage(
         voiceBookingRef.current?.savedIntake
-          ? "The voice connection ended. Your saved request and any confirmed booking are kept."
-          : "The live voice connection ended unexpectedly. Start a new session.",
+          ? "The connection ended. Your saved request and any confirmed booking are kept."
+          : "The live connection ended unexpectedly. Start a new session.",
       );
       setPhase("stopping");
       void endConversationSession(
@@ -342,6 +345,10 @@ function VoiceTestExperience({
   const [remainingSeconds, setRemainingSeconds] = useState(180);
   const [maximumDuration, setMaximumDuration] = useState(180);
   const [confirmationLocked, setConfirmationLocked] = useState(false);
+  const [inputMode, setInputMode] = useState<ConversationInputMode>(
+    presentation === "customer" ? "TEXT" : "VOICE",
+  );
+  const textOnly = inputMode === "TEXT";
   const confirmationKeyRef = useRef<string | undefined>(undefined);
   const finishConversationRef = useRef<() => Promise<void>>(
     async () => undefined,
@@ -377,7 +384,7 @@ function VoiceTestExperience({
     } catch {
       setErrorMessage(
         voiceBookingRef.current?.savedIntake
-          ? "The voice session ended. Your saved request and any confirmed appointment are kept."
+          ? "The conversation ended. Your saved request and any confirmed appointment are kept."
           : "The conversation ended, but the review could not be prepared. Start a new session.",
       );
       setPhase(voiceBookingRef.current?.savedIntake ? "saved" : "review_error");
@@ -417,12 +424,13 @@ function VoiceTestExperience({
   }, [maximumDuration, phase]);
 
   async function startConversation() {
+    if (!["idle", "error"].includes(phaseRef.current)) return;
     if (
       !disclosureAccepted ||
-      !microphoneConsent ||
+      (!textOnly && !microphoneConsent) ||
       !syntheticDataAcknowledged
     ) {
-      setErrorMessage("Accept the disclosure and microphone consent first.");
+      setErrorMessage("Accept the required conversation permissions first.");
       return;
     }
     setErrorMessage(undefined);
@@ -436,13 +444,16 @@ function VoiceTestExperience({
     sessionIdRef.current = undefined;
     setPhase("requesting");
     try {
-      const permissionStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-      permissionStream.getTracks().forEach((track) => track.stop());
+      if (!textOnly) {
+        const permissionStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        permissionStream.getTracks().forEach((track) => track.stop());
+      }
       const authorization = await authorizeConversationSession(
         apiBaseUrl,
         adminToken,
+        inputMode,
       );
       sessionIdRef.current = authorization.sessionId;
       voiceBookingRef.current = new VoiceBookingSession({
@@ -466,9 +477,9 @@ function VoiceTestExperience({
       setMaximumDuration(authorization.maximumDurationSeconds);
       setRemainingSeconds(authorization.maximumDurationSeconds);
       setPhase("connecting");
-      await client.start(authorization.credential);
+      await client.start(authorization.credential, authorization.inputMode);
       if (phaseRef.current === "stopping" || phaseRef.current === "error") {
-        throw new Error("voice connection failed during startup");
+        throw new Error("conversation connection failed during startup");
       }
       setPhase("active");
     } catch (error) {
@@ -485,7 +496,7 @@ function VoiceTestExperience({
           adminToken,
         ).catch(() => undefined);
       }
-      setErrorMessage(startFailureMessage(error));
+      setErrorMessage(startFailureMessage(error, inputMode));
       setPhase("error");
     }
   }
@@ -588,31 +599,65 @@ function VoiceTestExperience({
             ? `Booking with ${receptionistSettings.publicName}`
             : receptionistSettings.publicName}
         </p>
+        <div
+          className={chatStyles.modes}
+          role="group"
+          aria-label="Conversation mode"
+        >
+          <button
+            aria-pressed={textOnly}
+            disabled={!canStart || isBusy}
+            onClick={() => setInputMode("TEXT")}
+            type="button"
+          >
+            <ProductIcon name="chat" /> Chat
+          </button>
+          <button
+            aria-pressed={!textOnly}
+            disabled={!canStart || isBusy}
+            onClick={() => setInputMode("VOICE")}
+            type="button"
+          >
+            <ProductIcon name="mic" /> Voice
+          </button>
+        </div>
+        <p className="section-help">
+          {textOnly
+            ? "Type to Line. No sound or microphone access."
+            : "Speak with Line, or type while voice is connected."}
+          {!canStart && " Start a new conversation to switch modes."}
+        </p>
         {customerView ? (
           <>
             <div
               className={`customer-voice-orb ${phase === "active" ? "is-connected" : ""}`}
             >
-              <VoiceSymbol active={phase === "active" && !client.isMuted} />
+              {textOnly ? (
+                <ProductIcon name="chat" />
+              ) : (
+                <VoiceSymbol active={phase === "active" && !client.isMuted} />
+              )}
             </div>
             <h2 id="voice-controls-title">
               {phase === "active"
-                ? client.isMuted
-                  ? "Take your time."
-                  : client.mode === "speaking"
-                    ? "Line is speaking."
-                    : "You have our attention."
+                ? textOnly
+                  ? "You’re chatting with Line."
+                  : client.isMuted
+                    ? "Take your time."
+                    : client.mode === "speaking"
+                      ? "Line is speaking."
+                      : "You have our attention."
                 : savedIntake
                   ? "One less thing on your list."
                   : "Let’s talk about your home."}
             </h2>
           </>
         ) : (
-          <h1 id="voice-controls-title">Talk to our AI receptionist</h1>
+          <h1 id="voice-controls-title">Chat or talk to our AI receptionist</h1>
         )}
         <p className="summary">
           {customerView ? (
-            "Tell Line what you need. Find a time that works. Nothing is booked until you say yes."
+            "Tell Line what you need. Find a time that works. Nothing is booked until you confirm."
           ) : (
             <>
               {receptionistSettings.greeting} It can collect contact details and
@@ -639,15 +684,16 @@ function VoiceTestExperience({
         >
           {customerView && <h3>Before we begin</h3>}
           <div className="disclosure" role="note">
-            You are interacting with an AI, not a human. Your microphone audio
-            and conversation are recorded during the session and may be shared
-            with ElevenLabs and third-party AI/LLM providers for processing. Use
-            fictional test data only—never real customer or sensitive
-            information. This app does not retain raw audio or a live draft
-            transcript. Intake details and transcript text are saved only after
-            you confirm the full spoken readback or explicitly confirm the
-            on-screen review. An appointment requires a separate confirmation of
-            its date and time.
+            You are interacting with an AI, not a human. Your messages
+            {textOnly ? "" : " and microphone audio"} are processed by
+            ElevenLabs and its AI/LLM providers. Chat mode does not access your
+            microphone or play audio. The configured agent has audio recording
+            disabled and zero-day scheduled deletion; provider Zero Retention
+            Mode is not enabled. Use fictional details only. This app keeps live
+            drafts in this browser and does not store raw audio. Intake details
+            and transcript text are saved only after you confirm the full
+            readback or the on-screen review. Booking requires a separate
+            confirmation of the appointment date and time.
           </div>
           <label className="consent-row">
             <input
@@ -656,18 +702,19 @@ function VoiceTestExperience({
               onChange={(event) => setDisclosureAccepted(event.target.checked)}
               type="checkbox"
             />
-            I agree to the AI, recording, sharing, and provider-processing
-            disclosure above.
+            I agree to the AI and provider-processing disclosure above.
           </label>
-          <label className="consent-row">
-            <input
-              checked={microphoneConsent}
-              disabled={!canStart}
-              onChange={(event) => setMicrophoneConsent(event.target.checked)}
-              type="checkbox"
-            />
-            I consent to live microphone access for this conversation.
-          </label>
+          {!textOnly && (
+            <label className="consent-row">
+              <input
+                checked={microphoneConsent}
+                disabled={!canStart}
+                onChange={(event) => setMicrophoneConsent(event.target.checked)}
+                type="checkbox"
+              />
+              I consent to live microphone access for this conversation.
+            </label>
+          )}
           <label className="consent-row">
             <input
               checked={syntheticDataAcknowledged}
@@ -692,30 +739,34 @@ function VoiceTestExperience({
               className={customerView ? "product-button" : "primary-button"}
               disabled={
                 !disclosureAccepted ||
-                !microphoneConsent ||
+                (!textOnly && !microphoneConsent) ||
                 !syntheticDataAcknowledged ||
                 isBusy
               }
               onClick={() => void startConversation()}
               type="button"
             >
-              {customerView && <ProductIcon name="mic" />}
+              {customerView && <ProductIcon name={textOnly ? "chat" : "mic"} />}
               {phase === "error"
                 ? "Try a new conversation"
                 : customerView
-                  ? "Start talking to Line"
+                  ? textOnly
+                    ? "Start chatting with Line"
+                    : "Start talking to Line"
                   : "Start conversation"}
             </button>
           )}
           {phase === "active" && (
             <>
-              <button
-                className="secondary-button"
-                onClick={() => client.setMuted(!client.isMuted)}
-                type="button"
-              >
-                {client.isMuted ? "Unmute" : "Mute"}
-              </button>
+              {!textOnly && (
+                <button
+                  className="secondary-button"
+                  onClick={() => client.setMuted(!client.isMuted)}
+                  type="button"
+                >
+                  {client.isMuted ? "Unmute" : "Mute"}
+                </button>
+              )}
               <button
                 className="secondary-button"
                 onClick={() => void finishConversation()}
@@ -745,7 +796,7 @@ function VoiceTestExperience({
           )}
         </div>
         <p className="voice-status" aria-live="polite">
-          {statusLabel(phase, client.mode, remainingSeconds)}
+          {statusLabel(phase, client.mode, remainingSeconds, textOnly)}
         </p>
         {errorMessage && (
           <p className="error-message" role="alert">
@@ -802,7 +853,11 @@ function VoiceTestExperience({
             )}
           </div>
         ) : (
-          <ol className="transcript-list">
+          <ol
+            className="transcript-list"
+            aria-live="polite"
+            aria-relevant="additions text"
+          >
             {transcript.map((turn, index) => (
               <li key={`${turn.speaker}-${index}`}>
                 <div
@@ -847,6 +902,13 @@ function VoiceTestExperience({
             ))}
           </ol>
         )}
+        {phase === "active" && (
+          <ChatComposer
+            disabled={client.status !== "connected"}
+            send={client.sendText}
+            textOnly={textOnly}
+          />
+        )}
       </section>
 
       {savedIntake && phase === "active" && (
@@ -854,7 +916,7 @@ function VoiceTestExperience({
           <h2>
             {customerView ? "Your details are saved." : "Service request saved"}
           </h2>
-          <p>Your spoken confirmation saved your details and transcript.</p>
+          <p>Your confirmation saved your details and transcript.</p>
           {voiceAppointment?.appointment.status === "CONFIRMED" ? (
             <p>
               Appointment confirmed:{" "}
@@ -869,7 +931,7 @@ function VoiceTestExperience({
             <p>
               {voiceAppointment
                 ? "An appointment is temporarily held. Confirm the date and time with the receptionist to book it."
-                : "No appointment is booked yet. Continue speaking to choose a time."}
+                : "No appointment is booked yet. Continue your conversation to choose a time."}
             </p>
           )}
         </section>
@@ -1057,14 +1119,23 @@ function statusLabel(
   phase: ConversationPhase,
   mode: "speaking" | "listening" | undefined,
   remainingSeconds: number,
+  textOnly: boolean,
 ): string {
   if (phase === "active") {
-    const activity = mode === "speaking" ? "AI is speaking" : "AI is listening";
+    const activity = textOnly
+      ? "Chat active · microphone off"
+      : mode === "speaking"
+        ? "AI is speaking"
+        : "AI is listening";
     return `${activity} · ${formatDuration(remainingSeconds)} remaining`;
   }
   const labels: Record<ConversationPhase, string> = {
-    idle: "Ready to request microphone access",
-    requesting: "Requesting microphone access and authorization…",
+    idle: textOnly
+      ? "Ready to chat · microphone off"
+      : "Ready to request microphone access",
+    requesting: textOnly
+      ? "Authorizing chat…"
+      : "Requesting microphone access and authorization…",
     connecting: "Connecting securely…",
     active: "Conversation active",
     stopping: "Ending the conversation securely…",

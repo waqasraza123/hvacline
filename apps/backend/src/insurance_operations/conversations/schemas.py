@@ -15,6 +15,7 @@ from insurance_operations.hvac.schemas import ServiceDetails, ServiceRequestInpu
 
 
 class ConversationSessionCreateInput(BaseModel):
+    input_mode: Literal["VOICE", "TEXT"] = "VOICE"
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
     synthetic_data_acknowledged: bool
@@ -27,6 +28,7 @@ class ConversationConnection(BaseModel):
 
 class ConversationSessionResponse(BaseModel):
     session_id: UUID
+    input_mode: Literal["VOICE", "TEXT"] = "VOICE"
     connection: ConversationConnection
     maximum_duration_seconds: int
     confirmation_expires_at: datetime

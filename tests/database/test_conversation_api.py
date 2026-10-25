@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -161,16 +161,19 @@ def authorize_session(
     )
 
 
+@pytest.mark.parametrize("input_mode", ["VOICE", "TEXT"])
 def test_session_authorization_requires_all_acknowledgements(
     development_conversation_api: DevelopmentConversationApi,
+    input_mode: str,
 ) -> None:
     status_code, body, _headers = asyncio.run(
         post_json(
             development_conversation_api.application,
             "/api/v1/development/conversation-sessions",
             {
+                "input_mode": input_mode,
                 "ai_disclosure_accepted": True,
-                "microphone_consent_granted": True,
+                "microphone_consent_granted": input_mode == "VOICE",
                 "synthetic_data_acknowledged": False,
             },
         )
@@ -298,6 +301,103 @@ def test_active_session_concurrency_is_limited_to_one(
     error = second_body["error"]
     assert isinstance(error, dict)
     assert error["code"] == "CONVERSATION_ALREADY_ACTIVE"
+
+
+def test_text_session_has_no_microphone_consent_and_shares_voice_quota(
+    development_conversation_api: DevelopmentConversationApi,
+    migrated_database: Engine,
+) -> None:
+    api = development_conversation_api
+    try:
+        status_code, body, _ = asyncio.run(
+            post_json(
+                api.application,
+                "/api/v1/development/conversation-sessions",
+                {
+                    "input_mode": "TEXT",
+                    "ai_disclosure_accepted": True,
+                    "microphone_consent_granted": False,
+                    "synthetic_data_acknowledged": True,
+                },
+            )
+        )
+        assert status_code == 201
+        assert body["input_mode"] == "TEXT"
+        with Session(migrated_database) as session:
+            row = session.get(ConversationSession, UUID(str(body["session_id"])))
+            assert row is not None
+            assert row.input_mode == "TEXT"
+            assert row.microphone_consent_at is None
+            assert row.disclosure_accepted_at is not None
+        assert authorize_session(api)[0] == 409
+        with pytest.raises(DBAPIError), migrated_database.begin() as connection:
+            connection.execute(
+                update(ConversationSession)
+                .where(ConversationSession.id == UUID(str(body["session_id"])))
+                .values(microphone_consent_at=datetime.now(UTC))
+            )
+    finally:
+        with migrated_database.begin() as connection:
+            connection.execute(
+                delete(ConversationSession).where(
+                    ConversationSession.agency_id == api.agency_id,
+                    ConversationSession.input_mode == "TEXT",
+                )
+            )
+
+
+@pytest.mark.parametrize("input_mode", ["TEXT", "VOICE"])
+def test_browser_modes_still_require_ai_disclosure(
+    development_conversation_api: DevelopmentConversationApi,
+    input_mode: str,
+) -> None:
+    status_code, body, _ = asyncio.run(
+        post_json(
+            development_conversation_api.application,
+            "/api/v1/development/conversation-sessions",
+            {
+                "input_mode": input_mode,
+                "ai_disclosure_accepted": False,
+                "microphone_consent_granted": input_mode == "VOICE",
+                "synthetic_data_acknowledged": True,
+            },
+        )
+    )
+    assert status_code == 422
+    error = body["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "AI_DISCLOSURE_REQUIRED"
+
+
+@pytest.mark.parametrize(
+    ("input_mode", "microphone_consent", "error_code"),
+    [
+        ("VOICE", False, "MICROPHONE_CONSENT_REQUIRED"),
+        ("TEXT", True, "TEXT_SESSION_MICROPHONE_CONSENT_INVALID"),
+    ],
+)
+def test_browser_modes_require_accurate_microphone_consent(
+    development_conversation_api: DevelopmentConversationApi,
+    input_mode: str,
+    microphone_consent: bool,
+    error_code: str,
+) -> None:
+    status_code, body, _ = asyncio.run(
+        post_json(
+            development_conversation_api.application,
+            "/api/v1/development/conversation-sessions",
+            {
+                "input_mode": input_mode,
+                "ai_disclosure_accepted": True,
+                "microphone_consent_granted": microphone_consent,
+                "synthetic_data_acknowledged": True,
+            },
+        )
+    )
+    assert status_code == 422
+    error = body["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == error_code
 
 
 def test_session_over_duration_limit_cannot_enter_review(

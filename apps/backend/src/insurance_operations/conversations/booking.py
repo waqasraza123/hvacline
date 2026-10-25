@@ -75,7 +75,7 @@ def appointment_readback(appointment: AppointmentView, timezone: str) -> str:
         f"Your appointment is temporarily held for {spoken_time}, "
         f"in the {timezone} timezone. "
         "It is not booked yet. May I confirm this appointment? "
-        "Say yes to confirm my appointment, or say no."
+        "Reply yes to confirm my appointment, or reply no."
     )
 
 

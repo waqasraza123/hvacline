@@ -63,7 +63,7 @@ def intake_readback(request: ServiceRequestInput) -> str:
         f"Preferred appointment window: {service.preferred_window}. "
         f"Hazardous condition: {hazard}. "
         "May I save these details and the conversation transcript? "
-        "Say yes to save my request, or tell me what to correct."
+        "Reply yes to save my request, or tell me what to correct."
     )
     if len(readback) > 1800:
         raise ValueError("Shorten the issue description before reading back the request")
