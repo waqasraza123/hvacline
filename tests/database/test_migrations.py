@@ -1,3 +1,4 @@
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -23,6 +24,7 @@ from insurance_operations.database.seed import (
     DEVELOPMENT_AGENCY_SLUG,
     DEVELOPMENT_APPROVED_FAQ_IDS,
     DEVELOPMENT_CALL_POLICY_ID,
+    DEVELOPMENT_FAQ_CONTENT,
     DEVELOPMENT_INBOUND_NUMBER_ID,
     DEVELOPMENT_MEMBERSHIP_ID,
     DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
@@ -765,7 +767,7 @@ def test_development_seed_is_idempotent(
     assert first_result.actor_created is True
     assert first_result.membership_created is True
     assert first_result.receptionist_settings_created is True
-    assert first_result.approved_faqs_created == 3
+    assert first_result.approved_faqs_created == len(DEVELOPMENT_FAQ_CONTENT)
     assert first_result.business_schedule_created is True
     assert second_result.agency_created is False
     assert second_result.actor_created is False
@@ -782,7 +784,19 @@ def test_development_seed_is_idempotent(
         approved_faq_count = session.scalar(
             select(func.count())
             .select_from(AgencyApprovedFaq)
-            .where(AgencyApprovedFaq.id.in_(DEVELOPMENT_APPROVED_FAQ_IDS))
+            .where(
+                AgencyApprovedFaq.id.in_(
+                    tuple(content[0] for content in DEVELOPMENT_FAQ_CONTENT)
+                )
+            )
+        )
+        faq_audit_count = session.scalar(
+            select(func.count())
+            .select_from(AuditEvent)
+            .where(
+                AuditEvent.agency_id == DEVELOPMENT_AGENCY_ID,
+                AuditEvent.event_type == "AGENCY_APPROVED_FAQ_CREATED",
+            )
         )
         schedule = session.get(BusinessSchedule, DEVELOPMENT_AGENCY_ID)
         schedule_audit_count = session.scalar(
@@ -795,7 +809,8 @@ def test_development_seed_is_idempotent(
         )
 
     assert receptionist_settings is not None
-    assert approved_faq_count == 3
+    assert approved_faq_count == len(DEVELOPMENT_FAQ_CONTENT)
+    assert faq_audit_count == len(DEVELOPMENT_FAQ_CONTENT)
     assert schedule is not None
     assert schedule.version == 1
     configuration = ScheduleInput.model_validate(schedule.configuration)
@@ -911,6 +926,63 @@ def test_development_seed_preserves_custom_schedule_and_other_businesses(
             )
         )
     assert current_audit_count == audit_count
+
+
+def test_development_seed_preserves_edited_and_inactive_faqs(
+    migrated_database: Engine,
+    database_settings: DatabaseSettings,
+) -> None:
+    settings = database_settings.model_copy(
+        update={
+            "app_environment": RuntimeEnvironment.DEVELOPMENT,
+            "database_url": database_settings.runtime_database_url,
+            "direct_database_url": None,
+            "test_database_url": None,
+        }
+    )
+    seed_development_foundation(settings, include_telephony=False)
+    faq_id = DEVELOPMENT_APPROVED_FAQ_IDS[0]
+    with Session(migrated_database) as session, session.begin():
+        faq = session.get(AgencyApprovedFaq, faq_id)
+        assert faq is not None
+        faq.question = "What are the operator-approved office hours?"
+        faq.normalized_question = "what are the operator approved office hours"
+        faq.approved_answer = "Staff must confirm the current office hours."
+        faq.status = "INACTIVE"
+        receptionist = session.get(
+            AgencyReceptionistSettings, DEVELOPMENT_RECEPTIONIST_SETTINGS_ID
+        )
+        assert receptionist is not None
+        receptionist.escalation_message = (
+            "Please ask the fictional staff for assistance."
+        )
+        session.flush()
+        session.refresh(faq)
+        edited_version = faq.row_version
+
+    with patch(
+        "insurance_operations.database.seed.configure_demo_telephony"
+    ) as telephony:
+        result = seed_development_foundation(settings, include_telephony=False)
+
+    telephony.assert_not_called()
+    assert result.approved_faqs_created == 0
+    with Session(migrated_database) as session:
+        preserved = session.get(AgencyApprovedFaq, faq_id)
+        assert preserved is not None
+        assert preserved.question == "What are the operator-approved office hours?"
+        assert preserved.approved_answer == (
+            "Staff must confirm the current office hours."
+        )
+        assert preserved.status == "INACTIVE"
+        assert preserved.row_version == edited_version
+        receptionist = session.get(
+            AgencyReceptionistSettings, DEVELOPMENT_RECEPTIONIST_SETTINGS_ID
+        )
+        assert receptionist is not None
+        assert receptionist.escalation_message == (
+            "Please ask the fictional staff for assistance."
+        )
 
 
 def test_development_seed_configures_demo_telephony_idempotently(

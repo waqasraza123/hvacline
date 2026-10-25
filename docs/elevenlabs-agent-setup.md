@@ -54,6 +54,8 @@ Configure all eight tools as **Client** tools with **Wait for response** enabled
 
 Use these tools only in HVACLine's embedded browser conversation. The standalone ElevenLabs dashboard preview has no HVACLine client handlers. Keep the phone agent and its tools unchanged.
 
+Approved FAQ answers come from the application database through `lookup_approved_faq`, not from a separate provider Knowledge Base. The development seed includes 28 fictional-business FAQs and a conservative fallback. See [development business content](development-business-content.md) for the scoped content command and owner checks; it preserves edited/inactive entries and can skip phone routing.
+
 ## Deployment
 
 The owner manages Render and Vercel. Codex has not changed hosted environment variables, run migrations or triggered these deployments. Replace every angle-bracket placeholder below privately before saving; keep the admin and portal secrets separate. Existing Neon connection strings should stay configured on Render.

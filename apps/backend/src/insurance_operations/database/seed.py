@@ -1,7 +1,7 @@
 import argparse
 from dataclasses import dataclass
-from datetime import time
-from uuid import UUID, uuid4
+from datetime import UTC, datetime, time
+from uuid import UUID, uuid4, uuid5
 
 from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert
@@ -9,7 +9,12 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from insurance_operations.approved_faqs.schemas import ApprovedFaqContent
+from insurance_operations.approved_faqs.service import normalize_faq_question
 from insurance_operations.database.connection import create_database_engine
+from insurance_operations.database.development_content import (
+    DEVELOPMENT_ADDITIONAL_FAQS,
+)
 from insurance_operations.database.models import (
     Agency,
     AgencyApprovedFaq,
@@ -18,6 +23,7 @@ from insurance_operations.database.models import (
     AgencyMembership,
     AgencyReceptionistSettings,
     AppUser,
+    AuditEvent,
     BusinessSchedule,
     InboundNumberStatus,
 )
@@ -42,9 +48,18 @@ DEVELOPMENT_CALL_POLICY_ID = UUID("00000000-0000-4000-8000-000000000009")
 DEVELOPMENT_INBOUND_NUMBER_ID = UUID("00000000-0000-4000-8000-000000000010")
 DEVELOPMENT_ACTOR_DISPLAY_NAME = "Synthetic Voice AI Tester"
 DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME = "Harborline Heating & Air"
+DEVELOPMENT_GREETING = (
+    "Thanks for contacting Harborline Heating & Air. I'm Line, "
+    "the AI booking assistant. Please use fictional details only."
+)
+DEVELOPMENT_ESCALATION_MESSAGE = (
+    "I do not have an approved answer for that request. "
+    "Staff assistance is needed. I cannot promise a transfer, "
+    "callback time or delivered urgent alert."
+)
 
 
-DEVELOPMENT_FAQ_CONTENT = (
+DEVELOPMENT_FAQ_CONTENT: tuple[tuple[UUID, str, str, str], ...] = (
     (
         DEVELOPMENT_APPROVED_FAQ_IDS[0],
         "What are your office hours?",
@@ -66,6 +81,14 @@ DEVELOPMENT_FAQ_CONTENT = (
         "I can collect your contact details and HVAC service needs. "
         "A service team member must provide estimates and pricing.",
     ),
+) + tuple(
+    (
+        uuid5(DEVELOPMENT_AGENCY_ID, f"approved-faq:{key}"),
+        question,
+        normalize_faq_question(question),
+        answer,
+    )
+    for key, question, answer in DEVELOPMENT_ADDITIONAL_FAQS
 )
 
 
@@ -81,7 +104,9 @@ class DevelopmentSeedResult:
     inbound_number_configured: bool = False
 
 
-def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedResult:
+def seed_development_foundation(
+    settings: DatabaseSettings, *, include_telephony: bool = True
+) -> DevelopmentSeedResult:
     if settings.app_environment is not RuntimeEnvironment.DEVELOPMENT:
         raise ValueError("development seed requires APP_ENVIRONMENT=development")
 
@@ -124,10 +149,7 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                 id=DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
                 agency_id=DEVELOPMENT_AGENCY_ID,
                 public_name=DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME,
-                greeting=(
-                    "Thanks for contacting Harborline Heating & Air. I'm the AI "
-                    "receptionist for this synthetic demonstration."
-                ),
+                greeting=DEVELOPMENT_GREETING,
                 office_hours=("Monday through Friday, 9:00 AM to 5:00 PM Eastern Time"),
                 contact_email="receptionist@example.com",
                 contact_phone="+1 555 010 0142",
@@ -137,40 +159,47 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                     "Installation",
                     "Maintenance",
                 ],
-                escalation_message=(
-                    "A service team member will follow up for urgent requests, "
-                    "hazards, estimates, or any request I cannot safely answer."
-                ),
+                escalation_message=DEVELOPMENT_ESCALATION_MESSAGE,
                 created_by=DEVELOPMENT_ACTOR_USER_ID,
                 updated_by=DEVELOPMENT_ACTOR_USER_ID,
             )
             .on_conflict_do_nothing(constraint="uq_agency_receptionist_settings_agency")
             .returning(AgencyReceptionistSettings.id)
         )
-        approved_faq_statements = [
-            insert(AgencyApprovedFaq)
-            .values(
-                id=faq_id,
-                agency_id=DEVELOPMENT_AGENCY_ID,
-                question=question,
-                normalized_question=normalized_question,
-                approved_answer=approved_answer,
-                status="ACTIVE",
-                created_by=DEVELOPMENT_ACTOR_USER_ID,
-                updated_by=DEVELOPMENT_ACTOR_USER_ID,
+        approved_faq_statements = []
+        for faq_id, question, _, approved_answer in DEVELOPMENT_FAQ_CONTENT:
+            content = ApprovedFaqContent(
+                question=question, approved_answer=approved_answer
             )
-            .on_conflict_do_nothing(
-                constraint="uq_agency_approved_faqs_agency_question"
+            approved_faq_statements.append(
+                insert(AgencyApprovedFaq)
+                .values(
+                    id=faq_id,
+                    agency_id=DEVELOPMENT_AGENCY_ID,
+                    question=content.question,
+                    normalized_question=normalize_faq_question(content.question),
+                    approved_answer=content.approved_answer,
+                    status="ACTIVE",
+                    created_by=DEVELOPMENT_ACTOR_USER_ID,
+                    updated_by=DEVELOPMENT_ACTOR_USER_ID,
+                )
+                .on_conflict_do_nothing()
+                .returning(AgencyApprovedFaq.id)
             )
-            .returning(AgencyApprovedFaq.id)
-            for (
-                faq_id,
-                question,
-                normalized_question,
-                approved_answer,
-            ) in DEVELOPMENT_FAQ_CONTENT
-        ]
         with database_engine.begin() as connection:
+            agency_created = connection.scalar(agency_statement) is not None
+            agency = connection.execute(
+                select(Agency.environment_kind, Agency.archived_at)
+                .where(Agency.id == DEVELOPMENT_AGENCY_ID)
+                .with_for_update()
+            ).one()
+            if (
+                agency.environment_kind != AgencyEnvironment.DEVELOPMENT.value
+                or agency.archived_at is not None
+            ):
+                raise ValueError(
+                    "business content requires the active development business"
+                )
             connection.execute(
                 update(Agency)
                 .where(
@@ -187,24 +216,18 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                     == DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
                     AgencyReceptionistSettings.agency_id == DEVELOPMENT_AGENCY_ID,
                     AgencyReceptionistSettings.public_name == "Harborline Insurance",
+                    AgencyReceptionistSettings.row_version == 1,
                 )
                 .values(
                     public_name=DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME,
-                    greeting=(
-                        "Thanks for calling Harborline Heating & Air. "
-                        "I am the AI receptionist for this "
-                        "fictional-data demonstration."
-                    ),
+                    greeting=DEVELOPMENT_GREETING,
                     supported_insurance_categories=[
                         "AC repair",
                         "Heating repair",
                         "Installation",
                         "Maintenance",
                     ],
-                    escalation_message=(
-                        "A service team member will follow up for urgent requests, "
-                        "hazards, estimates, or questions I cannot safely answer."
-                    ),
+                    escalation_message=DEVELOPMENT_ESCALATION_MESSAGE,
                 )
             )
             for faq_id, old_question in (
@@ -223,6 +246,7 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                         AgencyApprovedFaq.id == faq_id,
                         AgencyApprovedFaq.agency_id == DEVELOPMENT_AGENCY_ID,
                         AgencyApprovedFaq.normalized_question == old_question,
+                        AgencyApprovedFaq.row_version == 1,
                     )
                     .values(
                         question=question,
@@ -230,20 +254,77 @@ def seed_development_foundation(settings: DatabaseSettings) -> DevelopmentSeedRe
                         approved_answer=answer,
                     )
                 )
-            agency_created = connection.scalar(agency_statement) is not None
             actor_created = connection.scalar(actor_statement) is not None
             membership_created = connection.scalar(membership_statement) is not None
             receptionist_settings_created = (
                 connection.scalar(receptionist_settings_statement) is not None
             )
-            approved_faqs_created = sum(
-                connection.scalar(statement) is not None
-                for statement in approved_faq_statements
+            fallback_updated = connection.scalar(
+                update(AgencyReceptionistSettings)
+                .where(
+                    AgencyReceptionistSettings.id
+                    == DEVELOPMENT_RECEPTIONIST_SETTINGS_ID,
+                    AgencyReceptionistSettings.agency_id == DEVELOPMENT_AGENCY_ID,
+                    AgencyReceptionistSettings.escalation_message.in_(
+                        (
+                            "A service team member will follow up for urgent requests, "
+                            "hazards, estimates, or any request I cannot safely answer.",
+                            "A service team member will follow up for urgent requests, "
+                            "hazards, estimates, or questions I cannot safely answer.",
+                        )
+                    ),
+                )
+                .values(escalation_message=DEVELOPMENT_ESCALATION_MESSAGE)
+                .returning(AgencyReceptionistSettings.id)
             )
+            if fallback_updated is not None:
+                connection.execute(
+                    insert(AuditEvent).values(
+                        agency_id=DEVELOPMENT_AGENCY_ID,
+                        actor_type="SYSTEM",
+                        event_type="AGENCY_RECEPTIONIST_SETTINGS_UPDATED",
+                        occurred_at=datetime.now(UTC),
+                        summary="Development fallback promise removed",
+                        details={"source": "development_seed"},
+                        correlation_id=uuid4(),
+                        event_version=1,
+                    )
+                )
+            created_faq_ids = [
+                faq_id
+                for statement in approved_faq_statements
+                if (faq_id := connection.scalar(statement)) is not None
+            ]
+            approved_faqs_created = len(created_faq_ids)
+            if created_faq_ids:
+                correlation_id = uuid4()
+                connection.execute(
+                    insert(AuditEvent),
+                    [
+                        {
+                            "agency_id": DEVELOPMENT_AGENCY_ID,
+                            "actor_type": "SYSTEM",
+                            "event_type": "AGENCY_APPROVED_FAQ_CREATED",
+                            "occurred_at": datetime.now(UTC),
+                            "summary": "Fictional development FAQ initialized",
+                            "details": {
+                                "faq_id": str(faq_id),
+                                "faq_status": "ACTIVE",
+                                "faq_row_version": 1,
+                                "source": "development_seed",
+                            },
+                            "correlation_id": correlation_id,
+                            "event_version": 1,
+                        }
+                        for faq_id in created_faq_ids
+                    ],
+                )
         business_schedule_created = configure_development_schedule(database_engine)
-        call_policy_configured, inbound_number_configured = configure_demo_telephony(
-            database_engine, settings
-        )
+        call_policy_configured, inbound_number_configured = False, False
+        if include_telephony:
+            call_policy_configured, inbound_number_configured = configure_demo_telephony(
+                database_engine, settings
+            )
         return DevelopmentSeedResult(
             agency_created=agency_created,
             actor_created=actor_created,
@@ -409,8 +490,16 @@ def configure_demo_telephony(
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="insurance-operations-seed-development")
+    parser.add_argument(
+        "--skip-telephony",
+        action="store_true",
+        help="Initialize development business content without changing phone routing.",
+    )
+    arguments = parser.parse_args()
     try:
-        result = seed_development_foundation(DatabaseSettings())
+        result = seed_development_foundation(
+            DatabaseSettings(), include_telephony=not arguments.skip_telephony
+        )
     except (ValueError, SQLAlchemyError) as error:
         parser.exit(1, f"development seed failed: {type(error).__name__}\n")
 
