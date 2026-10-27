@@ -5,6 +5,13 @@ from insurance_operations.database.models.approved_faq import (
     ApprovedFaqStatus,
 )
 from insurance_operations.database.models.base import Base
+from insurance_operations.database.models.booking_integrations import (
+    BookingEmailEvent,
+    BookingNotification,
+    CalendarAuthorization,
+    CalendarBooking,
+    CalendarConnection,
+)
 from insurance_operations.database.models.conversation import (
     ConversationChannel,
     ConversationIntake,
@@ -60,9 +67,22 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
-    "customer_accounts": TableOwnership(module="customer_access", agency_column="agency_id"),
-    "customer_login_sessions": TableOwnership(module="customer_access", agency_column=None),
-    "customer_auth_limits": TableOwnership(module="customer_access", agency_column=None),
+    "booking_email_events": TableOwnership(module="notifications", agency_column=None),
+    "calendar_connections": TableOwnership(module="hvac", agency_column="agency_id"),
+    "calendar_authorizations": TableOwnership(module="hvac", agency_column="agency_id"),
+    "calendar_bookings": TableOwnership(module="hvac", agency_column="agency_id"),
+    "booking_notifications": TableOwnership(
+        module="notifications", agency_column="agency_id"
+    ),
+    "customer_accounts": TableOwnership(
+        module="customer_access", agency_column="agency_id"
+    ),
+    "customer_login_sessions": TableOwnership(
+        module="customer_access", agency_column=None
+    ),
+    "customer_auth_limits": TableOwnership(
+        module="customer_access", agency_column=None
+    ),
     "business_schedules": TableOwnership(module="hvac", agency_column="agency_id"),
     "hvac_service_requests": TableOwnership(module="hvac", agency_column="agency_id"),
     "hvac_appointments": TableOwnership(module="hvac", agency_column="agency_id"),
@@ -135,6 +155,11 @@ __all__ = [
     "ApprovedFaqStatus",
     "AuditEvent",
     "Base",
+    "BookingEmailEvent",
+    "BookingNotification",
+    "CalendarAuthorization",
+    "CalendarBooking",
+    "CalendarConnection",
     "BusinessSchedule",
     "ConversationChannel",
     "ConversationIntake",

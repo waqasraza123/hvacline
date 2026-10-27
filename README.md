@@ -4,7 +4,7 @@
 
 An HVAC company should receive a useful service request when it cannot answer the phone. HVACLine AI connects Twilio telephone calls to an ElevenLabs receptionist, with FastAPI controlling approved information, service intake, technician availability, reservations, and confirmed appointments. Next.js provides the service workspace. Neon PostgreSQL remains the only application database.
 
-**Development implementation, not a production launch.** Real carrier calling has not been verified. Production sign-in, tenant onboarding, billing, notification delivery, retention automation, and external calendar synchronization remain launch blockers. Use fictional data only. No raw audio is stored by the application.
+**Development implementation, not a production launch.** Real carrier calling has not been verified. Production sign-in, tenant onboarding, billing, retention automation and owner acceptance of the new calendar/message integrations remain launch blockers. Use fictional data only. No raw audio is stored by the application.
 
 ## Implemented workflow
 
@@ -56,7 +56,7 @@ uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
 
 The development seed initializes a missing fictional-business calendar in `business_schedules`: booking enabled, America/New_York, ZIP 10001, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice, and one Test Team. It preserves existing calendars, including deliberately disabled ones, and creates no appointments. Open `/operations` → **Scheduling** to review or edit the persisted values. Other businesses require their own configuration. See [development calendar defaults](docs/development-calendar-defaults.md) for owner commands and checks; this change is unverified.
 
-The internal calendar is authoritative only for teams whose availability is maintained here. Google Calendar's HTTP adapter and provider-neutral contract are implemented and testable, but OAuth account connection, runtime synchronization, external-event reconciliation, and live provider authorization are not complete. The UI does not offer Google Calendar as connected.
+Teams without an external connection use the maintained internal schedule. Google Calendar connection, live conflict checks, durable event recovery/reconciliation and queued booking emails/reminders are now implemented behind opt-in development settings, but remain owner-unverified. Migration `20261027_0012`, OAuth/Resend setup and a persistent worker are required. See [calendar and booking messages](docs/calendar-and-booking-messages.md) for behavior, limitations, exact commands and manual acceptance.
 
 The development seed also supplies 28 approved fictional-business FAQs and missing receptionist settings. To initialize this content without changing phone routing, use `insurance-operations-seed-development --skip-telephony` in the reviewed development environment. Existing edited or inactive FAQs and calendars are preserved. No prices, warranties, financing terms or callback promises are invented. See [development business content](docs/development-business-content.md) for scope, exact owner checks and application instructions.
 

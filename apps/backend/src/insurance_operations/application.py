@@ -59,6 +59,9 @@ from insurance_operations.database.models.lead import LeadStatus
 from insurance_operations.database.models.telephony import InboundCallStatus
 from insurance_operations.demo_security import require_demo_admin_token
 from insurance_operations.errors import ApiError, api_error_handler
+from insurance_operations.hvac.integration_routes import (
+    create_booking_integration_router,
+)
 from insurance_operations.hvac.routes import create_hvac_router
 from insurance_operations.leads import (
     HandoffRequestCreateInput,
@@ -70,6 +73,7 @@ from insurance_operations.leads import (
     LeadStatusInput,
     LeadUpdateInput,
 )
+from insurance_operations.notifications.email_events import create_email_event_router
 from insurance_operations.receptionist import (
     ReceptionistSettingsInput,
     ReceptionistSettingsResponse,
@@ -116,6 +120,7 @@ def create_app(
         bind=database_engine,
         class_=Session,
         expire_on_commit=False,
+        info={"integration_settings": settings},
     )
     provider = conversation_provider or default_conversation_provider(settings)
     conversation_service = (
@@ -156,6 +161,8 @@ def create_app(
         redoc_url=None,
         lifespan=lifespan,
     )
+    application.state.integration_settings = settings
+    application.include_router(create_email_event_router(settings, session_factory))
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.web_origin],
@@ -780,9 +787,14 @@ def create_app(
 
     application.include_router(create_hvac_router(session_factory, development_actor))
     application.include_router(
+        create_booking_integration_router(settings, session_factory, development_actor)
+    )
+    application.include_router(
         create_browser_booking_router(session_factory, conversation_actor)
     )
-    application.include_router(create_customer_router(settings, session_factory, conversation_service))
+    application.include_router(
+        create_customer_router(settings, session_factory, conversation_service)
+    )
 
     return application
 

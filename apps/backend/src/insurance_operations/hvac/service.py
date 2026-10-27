@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from insurance_operations.database.models.booking_integrations import CalendarConnection
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -16,6 +17,17 @@ from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.availability import candidate_slots, overlaps
+from insurance_operations.hvac.calendar import CalendarUnavailable
+from insurance_operations.hvac.calendar_sync import (
+    bind_reservation,
+    calendar_error,
+    check_external_slot,
+    connection_for_team,
+    publish_confirmation,
+    request_cleanup,
+)
+from insurance_operations.hvac.google_connection import calendar_adapter
+from insurance_operations.hvac.locking import lock_business_schedule
 from insurance_operations.hvac.schemas import (
     AppointmentView,
     AvailabilityInput,
@@ -23,6 +35,10 @@ from insurance_operations.hvac.schemas import (
     ReservationInput,
     ScheduleInput,
     ServiceRequestInput,
+)
+from insurance_operations.notifications.booking import (
+    enqueue_booking_notifications,
+    suppress_booking_notifications,
 )
 from insurance_operations.telephony.phone_service import system_audit
 
@@ -71,6 +87,17 @@ class SchedulingService:
                 )
                 session.add(schedule)
             else:
+                connected_teams = set(
+                    session.scalars(
+                        select(CalendarConnection.team_key).where(
+                            CalendarConnection.agency_id == agency_id
+                        )
+                    )
+                )
+                if not connected_teams.issubset({team.key for team in request.teams}):
+                    raise unavailable(
+                        "Keep teams with calendar connections in the schedule."
+                    )
                 schedule.configuration = content
                 schedule.version += 1
             session.add(
@@ -154,7 +181,7 @@ class SchedulingService:
     def availability(
         self, agency_id: UUID, request: AvailabilityInput
     ) -> AvailabilityResponse:
-        with self.sessions() as session:
+        with self.sessions() as session, session.begin():
             schedule = session.get(BusinessSchedule, agency_id)
             if schedule is None:
                 return AvailabilityResponse(
@@ -178,6 +205,36 @@ class SchedulingService:
                     for row in busy
                 )
             ]
+            if free:
+                try:
+                    for team_key in {slot.team_key for slot in free}:
+                        connection = connection_for_team(session, agency_id, team_key)
+                        if connection is None:
+                            continue
+                        team_slots = [
+                            slot for slot in free if slot.team_key == team_key
+                        ]
+                        with calendar_adapter(session, connection) as adapter:
+                            periods = adapter.busy_events(
+                                min(slot.starts_at for slot in team_slots),
+                                max(slot.ends_at for slot in team_slots),
+                            )
+                        free = [
+                            slot
+                            for slot in free
+                            if slot.team_key != team_key
+                            or not any(
+                                overlaps(
+                                    slot.starts_at,
+                                    slot.ends_at,
+                                    period.starts_at,
+                                    period.ends_at,
+                                )
+                                for period in periods
+                            )
+                        ]
+                except CalendarUnavailable as error:
+                    raise calendar_error(error) from error
             return AvailabilityResponse(
                 configured=configuration.enabled,
                 in_service_area=in_area,
@@ -284,6 +341,9 @@ class SchedulingService:
                     "The appointment or technician is already reserved.",
                     "SLOT_CONFLICT",
                 )
+        check_external_slot(
+            session, agency_id, slot.team_key, slot.starts_at, slot.ends_at, replace_id
+        )
         row = Appointment(
             agency_id=agency_id,
             service_request_id=service_request.id,
@@ -296,6 +356,8 @@ class SchedulingService:
             fingerprint=digest,
         )
         session.add(row)
+        session.flush()
+        bind_reservation(session, row)
         session.flush()
         return row
 
@@ -312,7 +374,10 @@ class SchedulingService:
             configuration = self._lock_schedule(session, agency_id)
             row = self._appointment(session, agency_id, appointment_id)
             service_request = self._request(session, agency_id, row.service_request_id)
-            if service_request.service_details.get("hazardous_condition"):
+            if (
+                service_request.service_details.get("hazardous_condition")
+                or service_request.status == "CLOSED"
+            ):
                 raise unavailable(
                     "This service request requires human attention.",
                     "HUMAN_ATTENTION_REQUIRED",
@@ -328,15 +393,20 @@ class SchedulingService:
             day = row.starts_at.astimezone(ZoneInfo(configuration.timezone)).date()
             reserved_at = row.hold_expires_at - timedelta(minutes=5)
             if row.starts_at <= now or not any(
-                slot.team_key == row.team_key and slot.starts_at == row.starts_at
+                slot.team_key == row.team_key
+                and slot.starts_at == row.starts_at
+                and slot.ends_at == row.ends_at
                 for slot in candidate_slots(configuration, day, reserved_at)
             ):
                 raise unavailable(
                     "Availability changed. Request a new appointment.",
                     "SLOT_UNAVAILABLE",
                 )
+            self._ensure_capacity(session, row, now)
+            publish_confirmation(session, row)
             row.status = "CONFIRMED"
             self._request(session, agency_id, row.service_request_id).status = "BOOKED"
+            enqueue_booking_notifications(session, row)
             session.add(
                 system_audit(
                     agency_id=agency_id,
@@ -352,11 +422,7 @@ class SchedulingService:
         self, agency_id: UUID, request_id: UUID, correlation_id: UUID
     ) -> None:
         with self.sessions() as session, session.begin():
-            session.scalar(
-                select(BusinessSchedule)
-                .where(BusinessSchedule.agency_id == agency_id)
-                .with_for_update()
-            )
+            lock_business_schedule(session, agency_id)
             row = self._request(session, agency_id, request_id)
             row.service_details = {**row.service_details, "hazardous_condition": True}
             row.status = "HANDOFF_REQUESTED"
@@ -368,6 +434,7 @@ class SchedulingService:
                 )
             ):
                 appointment.status = "CANCELLED"
+                request_cleanup(session, appointment)
             session.add(
                 system_audit(
                     agency_id=agency_id,
@@ -389,6 +456,8 @@ class SchedulingService:
             if row.status != "HELD":
                 raise unavailable("Only an unconfirmed hold can be released.")
             row.status = "CANCELLED"
+            request_cleanup(session, row)
+            suppress_booking_notifications(session, row.id)
             session.add(
                 system_audit(
                     agency_id=agency_id,
@@ -409,7 +478,12 @@ class SchedulingService:
             if row.status == "CANCELLED":
                 return AppointmentView.model_validate(row)
             self._allow_change(row, configuration, datetime.now(UTC))
+            was_confirmed = row.status == "CONFIRMED"
             row.status = "CANCELLED"
+            request_cleanup(session, row)
+            suppress_booking_notifications(session, row.id)
+            if was_confirmed:
+                enqueue_booking_notifications(session, row, "CANCELLATION")
             self._request(session, agency_id, row.service_request_id).status = "OPEN"
             session.add(
                 system_audit(
@@ -445,6 +519,7 @@ class SchedulingService:
             if (
                 old.status == "CANCELLED"
                 and replacement
+                and replacement.status == "CONFIRMED"
                 and replacement.fingerprint
                 == fingerprint(
                     request.model_dump(
@@ -464,8 +539,47 @@ class SchedulingService:
             )
             if new.id == old.id or new.status != "HELD":
                 raise unavailable("Use a fresh booking key to reschedule.")
+            new_id = new.id
+        with self.sessions() as session, session.begin():
+            configuration = self._lock_schedule(session, agency_id)
+            old = self._appointment(session, agency_id, appointment_id)
+            new = self._appointment(session, agency_id, new_id)
+            if old.status == "CANCELLED" and new.status == "CONFIRMED":
+                return AppointmentView.model_validate(new)
+            now = datetime.now(UTC)
+            self._allow_change(old, configuration, now)
+            if new.status != "HELD" or new.hold_expires_at <= now:
+                raise unavailable(
+                    "The replacement reservation expired. Use a fresh booking key.",
+                    "RESERVATION_EXPIRED",
+                )
+            day = new.starts_at.astimezone(ZoneInfo(configuration.timezone)).date()
+            reserved_at = new.hold_expires_at - timedelta(minutes=5)
+            if not any(
+                slot.team_key == new.team_key
+                and slot.starts_at == new.starts_at
+                and slot.ends_at == new.ends_at
+                for slot in candidate_slots(configuration, day, reserved_at)
+            ):
+                raise unavailable(
+                    "Availability changed. Request a new appointment.",
+                    "SLOT_UNAVAILABLE",
+                )
+            service_request = self._request(session, agency_id, new.service_request_id)
+            if (
+                service_request.service_details.get("hazardous_condition")
+                or service_request.status == "CLOSED"
+            ):
+                raise unavailable(
+                    "This request requires human attention.", "HUMAN_ATTENTION_REQUIRED"
+                )
+            self._ensure_capacity(session, new, now, old.id)
+            publish_confirmation(session, new, old.id)
             old.status = "CANCELLED"
             new.status = "CONFIRMED"
+            request_cleanup(session, old)
+            suppress_booking_notifications(session, old.id)
+            enqueue_booking_notifications(session, new, "RESCHEDULED")
             self._request(session, agency_id, old.service_request_id).status = "BOOKED"
             session.add(
                 system_audit(
@@ -481,6 +595,30 @@ class SchedulingService:
             )
             return AppointmentView.model_validate(new)
 
+    def _ensure_capacity(
+        self,
+        session: Session,
+        appointment: Appointment,
+        now: datetime,
+        replace_id: UUID | None = None,
+    ) -> None:
+        for other in self._busy(session, appointment.agency_id, now):
+            if other.id in {appointment.id, replace_id}:
+                continue
+            if other.service_request_id == appointment.service_request_id or (
+                other.team_key == appointment.team_key
+                and overlaps(
+                    appointment.starts_at,
+                    appointment.ends_at,
+                    other.starts_at,
+                    other.ends_at,
+                )
+            ):
+                raise unavailable(
+                    "The appointment or technician is already reserved.",
+                    "SLOT_CONFLICT",
+                )
+
     @staticmethod
     def _allow_change(
         row: Appointment, configuration: ScheduleInput, now: datetime
@@ -495,11 +633,7 @@ class SchedulingService:
 
     @staticmethod
     def _lock_schedule(session: Session, agency_id: UUID) -> ScheduleInput:
-        schedule = session.scalar(
-            select(BusinessSchedule)
-            .where(BusinessSchedule.agency_id == agency_id)
-            .with_for_update()
-        )
+        schedule = lock_business_schedule(session, agency_id)
         if schedule is None:
             raise unavailable("Scheduling is not configured. Offer a callback.")
         return ScheduleInput.model_validate(schedule.configuration)

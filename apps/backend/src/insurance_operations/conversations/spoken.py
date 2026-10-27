@@ -54,7 +54,11 @@ def intake_readback(request: ServiceRequestInput) -> str:
     if address is None:
         raise ValueError("A complete service address is required")
     service = request.service
-    email = f" Email: {customer.email}." if customer.email else ""
+    email = (
+        f" Email for booking confirmations and reminders: {customer.email}."
+        if customer.email
+        else ""
+    )
     hazard = "reported" if service.hazardous_condition else "not reported"
     street = f"{address.line1}, {address.line2}" if address.line2 else address.line1
     readback = (
@@ -70,5 +74,7 @@ def intake_readback(request: ServiceRequestInput) -> str:
         "Reply yes to save my request, or tell me what to correct."
     )
     if len(readback) > 1800:
-        raise ValueError("Shorten the issue description before reading back the request")
+        raise ValueError(
+            "Shorten the issue description before reading back the request"
+        )
     return readback

@@ -67,11 +67,11 @@ export function ScheduleForm({
           <p className="eyebrow">DISPATCH RULES</p>
           <h2>Your booking calendar</h2>
         </div>
-        <span className="sample-badge">Internal calendar</span>
+        <span className="sample-badge">Team scheduling rules</span>
       </div>
       <p className="section-help">
         Only enable booking when this workspace reflects your technicians’
-        actual availability. External calendar sync is not active.
+        actual availability. Connected Google calendars also block busy times.
       </p>
       <label className="ops-checkbox">
         <input

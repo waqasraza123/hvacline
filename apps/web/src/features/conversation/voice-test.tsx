@@ -1083,7 +1083,7 @@ function VoiceTestExperience({
             />
             <FormField
               disabled={phase !== "review" || confirmationLocked}
-              label="Email"
+              label="Email for booking updates (optional)"
               name="email"
               onChange={(value) => setForm({ ...form, email: value })}
               type="email"

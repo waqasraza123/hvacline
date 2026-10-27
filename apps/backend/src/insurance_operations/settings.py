@@ -1,10 +1,12 @@
+import base64
+import binascii
 import re
 from enum import StrEnum
 from typing import Self
 from urllib.parse import urlsplit
 from uuid import UUID
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import EmailStr, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -35,6 +37,98 @@ class CommonSettings(BaseSettings):
 
 
 class DatabaseSettings(CommonSettings):
+    google_calendar_enabled: bool = False
+    google_client_id: str | None = None
+    google_client_secret: SecretStr | None = None
+    google_redirect_uri: str | None = None
+    calendar_token_encryption_key: SecretStr | None = None
+    booking_email_enabled: bool = False
+    resend_api_key: SecretStr | None = None
+    resend_webhook_secret: SecretStr | None = None
+    booking_email_from: EmailStr | None = None
+    booking_reminder_hours: int = Field(default=24, ge=1, le=168)
+    worker_poll_seconds: int = Field(default=30, ge=5, le=60)
+
+    @field_validator("booking_email_from", mode="before")
+    @classmethod
+    def normalize_email_sender(cls, value: object) -> object:
+        return None if isinstance(value, str) and not value.strip() else value
+
+    @model_validator(mode="after")
+    def validate_booking_integrations(self) -> Self:
+        if (self.google_calendar_enabled or self.booking_email_enabled) and (
+            self.app_environment is RuntimeEnvironment.PRODUCTION
+        ):
+            raise ValueError(
+                "booking integrations require the development identity gates"
+            )
+        if self.google_calendar_enabled:
+            from cryptography.fernet import Fernet
+
+            if not all(
+                (
+                    self.google_client_id and self.google_client_id.strip(),
+                    self.google_client_secret
+                    and self.google_client_secret.get_secret_value().strip(),
+                    self.google_redirect_uri,
+                    self.calendar_token_encryption_key,
+                )
+            ):
+                raise ValueError(
+                    "Google OAuth and calendar encryption configuration are required"
+                )
+            assert self.calendar_token_encryption_key is not None
+            try:
+                Fernet(self.calendar_token_encryption_key.get_secret_value().encode())
+            except (ValueError, TypeError) as error:
+                raise ValueError(
+                    "CALENDAR_TOKEN_ENCRYPTION_KEY must be a Fernet key"
+                ) from error
+            uri = urlsplit(self.google_redirect_uri or "")
+            if (
+                (
+                    uri.scheme != "https"
+                    and not (
+                        uri.scheme == "http"
+                        and uri.hostname in {"localhost", "127.0.0.1"}
+                    )
+                )
+                or not uri.hostname
+                or uri.username
+                or uri.password
+                or uri.query
+                or uri.fragment
+                or uri.path != "/api/v1/development/hvac/integrations/google/callback"
+            ):
+                raise ValueError(
+                    "GOOGLE_REDIRECT_URI must be an HTTPS callback URL (HTTP loopback is allowed)"
+                )
+        if self.booking_email_enabled and not (
+            self.resend_api_key
+            and self.resend_api_key.get_secret_value().strip()
+            and self.resend_webhook_secret
+            and self.resend_webhook_secret.get_secret_value().startswith("whsec_")
+            and self.booking_email_from
+            and "@" in self.booking_email_from
+            and "\n" not in self.booking_email_from
+            and "\r" not in self.booking_email_from
+        ):
+            raise ValueError(
+                "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and BOOKING_EMAIL_FROM are required"
+            )
+        if self.booking_email_enabled and self.resend_webhook_secret:
+            try:
+                key = base64.b64decode(
+                    self.resend_webhook_secret.get_secret_value()[6:], validate=True
+                )
+                if len(key) < 16:
+                    raise ValueError("signing secret too short")
+            except (ValueError, binascii.Error) as error:
+                raise ValueError(
+                    "RESEND_WEBHOOK_SECRET must be a valid webhook signing secret"
+                ) from error
+        return self
+
     database_url: str
     direct_database_url: str | None = None
     test_database_url: str | None = None
@@ -219,9 +313,16 @@ class ApiSettings(DatabaseSettings):
             or not self.demo_sandbox_enabled
             or not self.conversation_ai_enabled
         ):
-            raise ValueError("customer portal requires the protected development voice environment")
-        if self.customer_portal_secret is None or len(self.customer_portal_secret.get_secret_value()) < 32:
-            raise ValueError("CUSTOMER_PORTAL_SECRET must contain at least 32 characters")
+            raise ValueError(
+                "customer portal requires the protected development voice environment"
+            )
+        if (
+            self.customer_portal_secret is None
+            or len(self.customer_portal_secret.get_secret_value()) < 32
+        ):
+            raise ValueError(
+                "CUSTOMER_PORTAL_SECRET must contain at least 32 characters"
+            )
         return self
 
     @model_validator(mode="after")

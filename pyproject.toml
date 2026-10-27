@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "AI phone receptionist and appointment booking for U.S. HVAC businesses"
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "cryptography>=46,<47",
     "alembic>=1.18.0,<2",
     "fastapi==0.141.1",
     "email-validator>=2.3.0,<3",

@@ -88,12 +88,16 @@ def create_hvac_phone_router(
                 receipt is None
                 or receipt.full_name != data.customer.full_name
                 or receipt.phone != data.customer.phone
+                or (
+                    data.customer.email is not None
+                    and receipt.email != str(data.customer.email)
+                )
             ):
                 raise ApiError(
                     status_code=409,
                     code="READBACK_REQUIRED",
                     message=(
-                        "Confirm the caller name and callback number "
+                        "Confirm the caller name, callback number and any email "
                         "with confirm-intake first"
                     ),
                 )

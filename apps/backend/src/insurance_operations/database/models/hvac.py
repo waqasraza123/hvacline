@@ -31,7 +31,9 @@ class HvacServiceRequest(UuidPrimaryKeyMixin, Base):
     __table_args__ = (
         UniqueConstraint("agency_id", "id", name="uq_hvac_requests_agency_id"),
         UniqueConstraint("inbound_call_id", name="uq_hvac_requests_call"),
-        UniqueConstraint("conversation_session_id", name="uq_hvac_requests_conversation"),
+        UniqueConstraint(
+            "conversation_session_id", name="uq_hvac_requests_conversation"
+        ),
         CheckConstraint(
             "status IN ('OPEN', 'BOOKED', 'CALLBACK_REQUESTED', "
             "'HANDOFF_REQUESTED', 'CLOSED')",
@@ -47,7 +49,11 @@ class HvacServiceRequest(UuidPrimaryKeyMixin, Base):
     )
     customer_details: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     conversation_session_id: Mapped[UUID | None] = mapped_column(
-        ForeignKey("conversation_sessions.id", name="fk_hvac_requests_browser_session", ondelete="RESTRICT")
+        ForeignKey(
+            "conversation_sessions.id",
+            name="fk_hvac_requests_browser_session",
+            ondelete="RESTRICT",
+        )
     )
     service_details: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     status: Mapped[str] = mapped_column(Text, nullable=False, default="OPEN")
@@ -60,6 +66,7 @@ class HvacServiceRequest(UuidPrimaryKeyMixin, Base):
 class Appointment(UuidPrimaryKeyMixin, Base):
     __tablename__ = "hvac_appointments"
     __table_args__ = (
+        UniqueConstraint("agency_id", "id", name="uq_hvac_appointments_agency_id"),
         ForeignKeyConstraint(
             ["agency_id", "service_request_id"],
             ["hvac_service_requests.agency_id", "hvac_service_requests.id"],

@@ -6,6 +6,7 @@ import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manage
 import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import { ScheduleForm } from "./schedule-form";
+import { CalendarConnections } from "./calendar-connections";
 import { requestApi } from "./api";
 import type {
   Appointment,
@@ -449,21 +450,28 @@ export function OperationsWorkspace({
             />
           )}
           {tab === "scheduling" && schedule && (
-            <ScheduleForm
-              key={schedule.version}
-              value={schedule}
-              busy={busy}
-              save={async (configuration: Schedule) => {
-                setBusy(true);
-                try {
-                  await api("hvac/schedule", "PUT", configuration);
-                  await load();
-                  setMessage("Scheduling rules saved.");
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            />
+            <>
+              <CalendarConnections
+                baseUrl={apiBaseUrl}
+                token={token}
+                schedule={schedule}
+              />
+              <ScheduleForm
+                key={schedule.version}
+                value={schedule}
+                busy={busy}
+                save={async (configuration: Schedule) => {
+                  setBusy(true);
+                  try {
+                    await api("hvac/schedule", "PUT", configuration);
+                    await load();
+                    setMessage("Scheduling rules saved.");
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
+            </>
           )}
         </>
       )}

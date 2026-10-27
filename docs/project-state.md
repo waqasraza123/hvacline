@@ -1,5 +1,11 @@
 # Project State
 
+## Google Calendar and booking messages — implementation unverified
+
+The October 27 implementation adds per-team Google OAuth/PKCE with encrypted offline credentials and browser-bound single-use state, live paginated conflict checks, deterministic event writes with durable reservation bindings, and worker reconciliation/owned-event cleanup. External edits/overlaps enter staff attention; they do not silently rewrite or cancel local bookings. Google has no atomic insert-if-free, so concurrent external writers remain a reconciled risk.
+
+Confirmation/cancellation/reschedule emails and reminders use a transactional outbox with frozen payloads, bounded idempotent Resend retries, conservative unknown-outcome handling and signed delivery receipts. Missing confirmed email addresses are skipped; SMS is not implemented. Operations exposes connection, sync and delivery status. Migration `20261027_0012`, Google/Resend settings and a persistent worker are required before use. Features default off and retain development-only gates. No tests, builds, linters, type checks, migrations, services, provider calls or deployment ran. Exact owner setup, commands and acceptance: `docs/calendar-and-booking-messages.md`.
+
 ## Browser booking progress — owner verification pending
 
 The owner reports successful full appointment booking as of October 27, 2026; this is owner evidence, not an independently repeated acceptance run. A subsequent frontend slice adds tool-driven booking stages, pending operations, confirmation guidance, hold countdown/expiry, stage-local failures and persistent CONFIRMED receipts to customer/operator browser conversations and the on-screen fallback. Activity labels respect connection and mute state. Unknown write results preserve retry context; the fallback can recheck an earlier confirmation after the displayed hold deadline. No backend API, migration or provider configuration changed. Regression specifications were added; no tests or hosted deployment ran. Exact owner commands and manual acceptance are in `docs/booking-progress.md`; implementation/runtime remain unverified.
@@ -22,7 +28,7 @@ Forward migration `20261024_0009` adds business schedules, confirmed HVAC servic
 
 Authenticated phone tools verify active session/call ownership and expiry. HVAC service intake requires the existing contact-readback receipt and explicit structured confirmation. Hazardous requests enter human attention and cannot self-book. The operations projection excludes transcripts and shows real stored requests, bookings, calls and open handoffs. Existing receptionist and knowledge editors are reused inside the protected workspace, forwarding the in-memory admin token in headers. `/operations` uses existing development identity and hosted-sandbox token gates; this is not production login.
 
-The Google Calendar HTTP adapter and provider-neutral contract are implemented with failure-closed availability and deterministic event verification. OAuth, runtime calendar connection/sync and reconciliation are incomplete; Google is not exposed as connected. The current calendar is explicitly internal and requires accurate operator-maintained availability.
+The opt-in Google Calendar connection/sync and booking-email slice is implemented but unverified; see the current section above. Unconnected teams retain operator-maintained internal scheduling.
 
 ## Verification during this execution
 
@@ -34,9 +40,9 @@ The local host cannot complete Next build because its OS memory-statistics inter
 
 - Live synthetic Twilio → ElevenLabs → backend → database → dashboard call and transfer validation.
 - Production identity, roles, account onboarding, tenant/provider credential and agent provisioning.
-- Google OAuth, token vault, runtime sync, external conflict and failure reconciliation.
+- Owner acceptance of Google authorization, encrypted credentials, external conflict recovery and worker reconciliation.
 - Caller verification before existing-customer lookup or telephone appointment changes.
-- Durable notifications, reminders, callback completion workflows and urgent alert delivery.
+- Owner acceptance of booking email/reminder delivery; callback completion workflows and urgent alert delivery remain incomplete.
 - Billing, detailed usage/cost tracking, production limits, observability/recovery, and retention automation.
 - Production deployment and acceptance tests. Current development-only gates remain intentional.
 

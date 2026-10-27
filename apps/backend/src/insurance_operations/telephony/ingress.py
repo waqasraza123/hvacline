@@ -435,6 +435,11 @@ def configure_twilio_ingress(
         bind=database_engine,
         class_=Session,
         expire_on_commit=False,
+        info={
+            "integration_settings": getattr(
+                application.state, "integration_settings", None
+            )
+        },
     )
 
     adapter = TwilioTelephonyAdapter(

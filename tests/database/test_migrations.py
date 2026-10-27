@@ -38,6 +38,11 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "calendar_connections",
+    "calendar_authorizations",
+    "calendar_bookings",
+    "booking_notifications",
+    "booking_email_events",
     "customer_accounts",
     "customer_login_sessions",
     "customer_auth_limits",
@@ -64,8 +69,65 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
-    "customer_accounts": {"id", "agency_id", "app_user_id", "email", "password_hash", "created_at"},
-    "customer_login_sessions": {"id", "account_id", "token_hash", "expires_at", "revoked_at"},
+    "calendar_connections": {
+        "id",
+        "agency_id",
+        "team_key",
+        "calendar_id",
+        "refresh_token_ciphertext",
+        "status",
+        "last_checked_at",
+        "last_error",
+    },
+    "calendar_authorizations": {
+        "id",
+        "agency_id",
+        "actor_id",
+        "state_digest",
+        "browser_digest",
+        "verifier_ciphertext",
+        "team_key",
+        "calendar_id",
+        "expires_at",
+    },
+    "calendar_bookings": {
+        "appointment_id",
+        "agency_id",
+        "connection_id",
+        "status",
+        "next_attempt_at",
+        "last_error",
+    },
+    "booking_notifications": {
+        "id",
+        "agency_id",
+        "appointment_id",
+        "kind",
+        "status",
+        "due_at",
+        "attempts",
+        "first_attempt_at",
+        "payload",
+        "provider_reference",
+        "last_error",
+        "delivery_status",
+    },
+    "booking_email_events": {"id", "provider_reference", "status", "occurred_at"},
+    "customer_accounts": {
+        "id",
+        "agency_id",
+        "app_user_id",
+        "email",
+        "password_hash",
+        "created_at",
+    },
+    "customer_login_sessions": {
+        "id",
+        "account_id",
+        "token_hash",
+        "expires_at",
+        "revoked_at",
+    },
     "customer_auth_limits": {"key", "attempts", "window_started_at"},
     "business_schedules": {"agency_id", "version", "configuration"},
     "hvac_service_requests": {
@@ -825,8 +887,7 @@ def test_development_seed_is_idempotent(
     assert configuration.cancellation_notice_minutes == 120
     assert {window.weekday for window in configuration.windows} == set(range(5))
     assert all(
-        window.start.isoformat() == "09:00:00"
-        and window.end.isoformat() == "17:00:00"
+        window.start.isoformat() == "09:00:00" and window.end.isoformat() == "17:00:00"
         for window in configuration.windows
     )
     assert len(configuration.teams) == 1
