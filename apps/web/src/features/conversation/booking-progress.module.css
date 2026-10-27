@@ -1,0 +1,128 @@
+.panel {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #dce3ed;
+  color: #14233d;
+  text-align: left;
+}
+
+.heading h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.activity {
+  display: block;
+  color: #4b5d76;
+  font-size: 0.85rem;
+}
+
+.steps {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1.25rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #53627a;
+  font-size: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.stageNote {
+  color: #84202c;
+}
+
+.steps li span {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid #a8b7cd;
+  border-radius: 50%;
+}
+
+.steps .reached {
+  color: #14233d;
+}
+
+.steps .reached span {
+  border-color: #2458eb;
+  background: #eef3ff;
+  color: #2458eb;
+}
+
+.steps li[aria-current="step"] {
+  font-weight: 700;
+}
+
+.message,
+.warning {
+  margin: 0.75rem 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.warning {
+  padding: 0.75rem;
+  border-left: 3px solid #a02332;
+  background: #fff3f3;
+  color: #84202c;
+}
+
+.selection,
+.receipt {
+  padding: 1rem;
+  border: 1px solid #a8b7cd;
+  border-radius: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.receipt {
+  border-color: #21704c;
+  background: #f0faf4;
+}
+
+.selection h3,
+.receipt h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.selection p,
+.receipt p {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.receipt button,
+.historyButton {
+  min-height: 44px;
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #2458eb;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.receipt button:disabled,
+.historyButton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.receipt button:focus-visible,
+.historyButton:focus-visible {
+  outline: 3px solid #2458eb;
+  outline-offset: 3px;
+}

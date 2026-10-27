@@ -110,6 +110,7 @@ export function CustomerBooking({
               apiBaseUrl=""
               presentation="customer"
               onActivityChange={setVoiceActive}
+              onViewAppointments={() => setTab("appointments")}
             />
           ) : (
             <section className="customer-empty">

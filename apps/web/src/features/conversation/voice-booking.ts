@@ -13,6 +13,8 @@ import type {
 import { appendTranscript } from "./review";
 import { OperationsApiError, requestApi } from "../operations/api";
 import type { Appointment, Availability, Slot } from "../operations/api";
+import { bookingFailure } from "./booking-progress";
+import type { BookingFailure, BookingProgress } from "./booking-progress";
 
 export type VoiceBookingTool =
   | "prepare_intake_confirmation"
@@ -35,6 +37,7 @@ type SessionOptions = Readonly<{
   isActive: () => boolean;
   onSaved: (intake: ConfirmedConversationIntake) => void;
   onAppointment: (value: VoiceAppointment | undefined) => void;
+  onProgress?: (value: BookingProgress) => void;
 }>;
 
 export class VoiceBookingSession {
@@ -51,8 +54,23 @@ export class VoiceBookingSession {
   private busy = false;
   private hazardReported = false;
   private draftVersion = 0;
+  private pending?: VoiceBookingTool;
+  private failure?: BookingFailure;
+  private requestStarted = false;
 
   constructor(private readonly options: SessionOptions) {}
+
+  private publishProgress() {
+    this.options.onProgress?.({
+      requestSaved: this.intake !== undefined,
+      awaitingIntakeConfirmation: this.prepared !== undefined && !this.intake,
+      hazardous: this.hazardReported,
+      serviceKind: this.prepared?.serviceKind ?? this.draft.serviceKind,
+      availability: this.availability,
+      pending: this.pending,
+      failure: this.failure,
+    });
+  }
 
   get savedIntake() {
     return this.intake;
@@ -64,12 +82,14 @@ export class VoiceBookingSession {
 
   async updateDraft(draft: ConversationDraft): Promise<string> {
     this.hazardReported ||= draft.hazardousCondition === true;
+    this.publishProgress();
     if (this.intake && this.hazardReported) {
       await this.api("hazard", {});
       if (this.held?.appointment.status !== "CONFIRMED") {
         this.held = undefined;
         this.options.onAppointment(undefined);
       }
+      this.publishProgress();
       return "Hazard flagged for human attention. No new appointment can be booked. Leave immediate danger and contact emergency services. Do not promise a transfer or an alert delivery.";
     }
     if (this.intake || this.confirmationAttempt) {
@@ -87,6 +107,8 @@ export class VoiceBookingSession {
     this.draftVersion += 1;
     this.prepared = undefined;
     this.preparedReadback = undefined;
+    if (!this.failure?.uncertain) this.failure = undefined;
+    this.publishProgress();
     return "Draft updated in this browser. Nothing has been saved. Prepare a readback before asking for confirmation.";
   }
 
@@ -100,7 +122,13 @@ export class VoiceBookingSession {
         message: "Wait for the previous booking tool to finish.",
       };
     }
+    const previousFailure = this.failure;
     this.busy = true;
+    this.pending = tool;
+    if (!this.failure?.uncertain || this.failure.operation === tool)
+      this.failure = undefined;
+    this.requestStarted = false;
+    this.publishProgress();
     try {
       switch (tool) {
         case "prepare_intake_confirmation":
@@ -117,6 +145,10 @@ export class VoiceBookingSession {
           return await this.release();
       }
     } catch (failure) {
+      if (previousFailure?.uncertain && !this.requestStarted)
+        this.failure = previousFailure;
+      else if (!this.failure?.uncertain)
+        this.failure = bookingFailure(tool, failure, this.requestStarted);
       if (
         tool === "confirm_service_request" &&
         failure instanceof ConversationApiError &&
@@ -147,10 +179,13 @@ export class VoiceBookingSession {
       };
     } finally {
       this.busy = false;
+      this.pending = undefined;
+      this.publishProgress();
     }
   }
 
   private api<T>(path: string, body: unknown): Promise<T> {
+    this.requestStarted = true;
     return requestApi<T>(
       this.options.apiBaseUrl,
       this.options.adminToken ?? "",
@@ -243,6 +278,7 @@ export class VoiceBookingSession {
       transcript: [...this.turns],
     };
     try {
+      this.requestStarted = true;
       this.intake = await confirmConversationIntake(
         this.options.apiBaseUrl,
         this.confirmationAttempt,
@@ -284,6 +320,7 @@ export class VoiceBookingSession {
       throw new Error(
         "Ask for an exact calendar date and send day as YYYY-MM-DD.",
       );
+    this.availability = undefined;
     this.availability = await this.api<Availability>("availability", { day });
     return {
       ok: true,

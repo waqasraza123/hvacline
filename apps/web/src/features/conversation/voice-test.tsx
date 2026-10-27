@@ -11,6 +11,13 @@ import {
 } from "./api";
 import { lookupConversationApprovedFaq } from "../approved-faqs/api";
 import { BrowserBooking } from "./browser-booking";
+import { BookingProgressPanel } from "./booking-progress-panel";
+import {
+  INITIAL_BOOKING_PROGRESS,
+  conversationActivity,
+  bookingFailure,
+} from "./booking-progress";
+import type { BookingProgress } from "./booking-progress";
 import { ChatComposer } from "./chat-composer";
 import chatStyles from "./conversation-chat.module.css";
 import { ConfiguredConversationAdapter } from "./configured-adapter";
@@ -40,6 +47,7 @@ type VoiceTestProperties = Readonly<{
   receptionistSettings: ReceptionistSettings;
   presentation?: "workspace" | "customer";
   onActivityChange?: (active: boolean) => void;
+  onViewAppointments?: () => void;
 }>;
 
 type IntakeForm = {
@@ -76,6 +84,7 @@ export function VoiceTest({
   receptionistSettings,
   presentation = "workspace",
   onActivityChange,
+  onViewAppointments,
 }: VoiceTestProperties) {
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [form, setForm] = useState<IntakeForm>(EMPTY_FORM);
@@ -83,6 +92,9 @@ export function VoiceTest({
   const [errorMessage, setErrorMessage] = useState<string>();
   const [savedIntake, setSavedIntake] = useState<ConfirmedConversationIntake>();
   const [voiceAppointment, setVoiceAppointment] = useState<VoiceAppointment>();
+  const [bookingProgress, setBookingProgress] = useState<BookingProgress>(
+    INITIAL_BOOKING_PROGRESS,
+  );
   const voiceBookingRef = useRef<VoiceBookingSession | undefined>(undefined);
   const phaseRef = useRef<ConversationPhase>("idle");
   const sessionIdRef = useRef<string | undefined>(undefined);
@@ -121,7 +133,10 @@ export function VoiceTest({
     if (draft.hazardousCondition) {
       setForm((current) => ({ ...current, hazardousCondition: true }));
     }
-    const result = await voiceBookingRef.current?.updateDraft(draft);
+    const booking = voiceBookingRef.current;
+    const result = await booking?.updateDraft(draft);
+    if (voiceBookingRef.current !== booking)
+      return "The conversation is no longer current.";
     if (voiceBookingRef.current?.savedIntake) {
       if (draft.hazardousCondition)
         setForm((current) => ({ ...current, hazardousCondition: true }));
@@ -285,6 +300,9 @@ export function VoiceTest({
           setVoiceAppointment={setVoiceAppointment}
           voiceBookingRef={voiceBookingRef}
           presentation={presentation}
+          bookingProgress={bookingProgress}
+          setBookingProgress={setBookingProgress}
+          onViewAppointments={onViewAppointments}
         />
       )}
     </ConfiguredConversationAdapter>
@@ -315,6 +333,9 @@ type ExperienceProperties = Readonly<{
   setVoiceAppointment: Dispatch<SetStateAction<VoiceAppointment | undefined>>;
   voiceBookingRef: MutableRefObject<VoiceBookingSession | undefined>;
   presentation: "workspace" | "customer";
+  bookingProgress: BookingProgress;
+  setBookingProgress: Dispatch<SetStateAction<BookingProgress>>;
+  onViewAppointments?: () => void;
 }>;
 
 function VoiceTestExperience({
@@ -339,6 +360,9 @@ function VoiceTestExperience({
   setVoiceAppointment,
   voiceBookingRef,
   presentation,
+  bookingProgress,
+  setBookingProgress,
+  onViewAppointments,
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
@@ -467,6 +491,7 @@ function VoiceTestExperience({
     setErrorMessage(undefined);
     setSavedIntake(undefined);
     setVoiceAppointment(undefined);
+    setBookingProgress(INITIAL_BOOKING_PROGRESS);
     voiceBookingRef.current = undefined;
     setTranscript([]);
     setForm(EMPTY_FORM);
@@ -502,6 +527,10 @@ function VoiceTestExperience({
         onAppointment: (appointment) => {
           if (sessionIdRef.current === authorization.sessionId)
             setVoiceAppointment(appointment);
+        },
+        onProgress: (progress) => {
+          if (sessionIdRef.current === authorization.sessionId)
+            setBookingProgress(progress);
         },
       });
       setMaximumDuration(authorization.maximumDurationSeconds);
@@ -598,6 +627,11 @@ function VoiceTestExperience({
     }
     setErrorMessage(undefined);
     setPhase("saving");
+    setBookingProgress((current) => ({
+      ...current,
+      pending: "confirm_service_request",
+      failure: undefined,
+    }));
     setConfirmationLocked(true);
     confirmationKeyRef.current ??= crypto.randomUUID();
     try {
@@ -622,6 +656,12 @@ function VoiceTestExperience({
         adminToken,
       );
       setSavedIntake(result);
+      setBookingProgress({
+        requestSaved: true,
+        awaitingIntakeConfirmation: false,
+        hazardous: form.hazardousCondition,
+        serviceKind: form.serviceKind,
+      });
       setPhase("saved");
     } catch (error) {
       const failure = classifyConfirmationFailure(error);
@@ -630,6 +670,11 @@ function VoiceTestExperience({
         setConfirmationLocked(false);
       }
       setErrorMessage(failure.message);
+      setBookingProgress((current) => ({
+        ...current,
+        pending: undefined,
+        failure: bookingFailure("confirm_service_request", error),
+      }));
       setPhase(failure.action === "start_new_session" ? "error" : "review");
     }
   }
@@ -643,6 +688,7 @@ function VoiceTestExperience({
     setForm(EMPTY_FORM);
     setSavedIntake(undefined);
     setVoiceAppointment(undefined);
+    setBookingProgress(INITIAL_BOOKING_PROGRESS);
     voiceBookingRef.current = undefined;
     setErrorMessage(undefined);
     setPhase("idle");
@@ -653,6 +699,7 @@ function VoiceTestExperience({
   );
   const canStart = phase === "idle" || phase === "error";
   const customerView = presentation === "customer";
+  const experienceSessionId = sessionIdRef.current;
 
   return (
     <div className={`voice-grid ${customerView ? "line-experience" : ""}`}>
@@ -712,13 +759,7 @@ function VoiceTestExperience({
             </div>
             <h2 id="voice-controls-title">
               {phase === "active"
-                ? textOnly
-                  ? "You’re chatting with Line."
-                  : client.isMuted
-                    ? "Take your time."
-                    : client.mode === "speaking"
-                      ? "Line is speaking."
-                      : "You have our attention."
+                ? conversationActivity(phase, client, inputMode)
                 : savedIntake
                   ? "One less thing on your list."
                   : "Let’s talk about your home."}
@@ -883,14 +924,32 @@ function VoiceTestExperience({
             </button>
           )}
         </div>
-        <p className="voice-status" aria-live="polite">
-          {statusLabel(phase, client.mode, remainingSeconds, textOnly)}
+        <p className="voice-status">
+          {conversationActivity(phase, client, inputMode)}
+          {phase === "active" &&
+            ` · ${formatDuration(remainingSeconds)} remaining`}
         </p>
         {errorMessage && (
           <p className="error-message" role="alert">
             {errorMessage}
           </p>
         )}
+        <BookingProgressPanel
+          progress={{
+            ...bookingProgress,
+            hazardous: bookingProgress.hazardous || form.hazardousCondition,
+          }}
+          appointment={voiceAppointment}
+          activity={conversationActivity(phase, client, inputMode)}
+          conversationBusy={isBusy || phase === "active"}
+          conversationEnded={[
+            "review",
+            "review_error",
+            "saved",
+            "error",
+          ].includes(phase)}
+          onViewAppointments={onViewAppointments}
+        />
       </section>
 
       <section
@@ -999,32 +1058,6 @@ function VoiceTestExperience({
           />
         )}
       </section>
-
-      {savedIntake && phase === "active" && (
-        <section className="voice-card" aria-live="polite">
-          <h2>
-            {customerView ? "Your details are saved." : "Service request saved"}
-          </h2>
-          <p>Your confirmation saved your details and transcript.</p>
-          {voiceAppointment?.appointment.status === "CONFIRMED" ? (
-            <p>
-              Appointment confirmed:{" "}
-              {new Intl.DateTimeFormat("en-US", {
-                dateStyle: "full",
-                timeStyle: "short",
-                timeZone: voiceAppointment.timezone,
-              }).format(new Date(voiceAppointment.appointment.starts_at))}{" "}
-              · {voiceAppointment.timezone}
-            </p>
-          ) : (
-            <p>
-              {voiceAppointment
-                ? "An appointment is temporarily held. Confirm the date and time with the receptionist to book it."
-                : "No appointment is booked yet. Continue your conversation to choose a time."}
-            </p>
-          )}
-        </section>
-      )}
 
       {(phase === "review" || phase === "saving" || phase === "saved") && (
         <section
@@ -1138,18 +1171,23 @@ function VoiceTestExperience({
           {phase === "saving" && <p aria-live="polite">Saving confirmation…</p>}
           {savedIntake?.serviceRequestId && (
             <BrowserBooking
-              key={
-                voiceAppointment
-                  ? `${voiceAppointment.appointment.id}:${voiceAppointment.appointment.status}`
-                  : savedIntake.serviceRequestId
-              }
+              key={savedIntake.serviceRequestId}
               apiBaseUrl={apiBaseUrl}
               adminToken={adminToken}
               serviceRequestId={savedIntake.serviceRequestId}
               postalCode={form.postalCode}
-              hazardous={form.hazardousCondition}
+              hazardous={bookingProgress.hazardous || form.hazardousCondition}
               initialAppointment={voiceAppointment?.appointment}
               initialTimezone={voiceAppointment?.timezone}
+              initialFailure={bookingProgress.failure}
+              onProgress={(update) => {
+                if (sessionIdRef.current === experienceSessionId)
+                  setBookingProgress(update);
+              }}
+              onAppointment={(appointment) => {
+                if (sessionIdRef.current === experienceSessionId)
+                  setVoiceAppointment(appointment);
+              }}
             />
           )}
           {savedIntake && (
@@ -1202,39 +1240,6 @@ function FormField({
       />
     </label>
   );
-}
-
-function statusLabel(
-  phase: ConversationPhase,
-  mode: "speaking" | "listening" | undefined,
-  remainingSeconds: number,
-  textOnly: boolean,
-): string {
-  if (phase === "active") {
-    const activity = textOnly
-      ? "Chat active · microphone off"
-      : mode === "speaking"
-        ? "AI is speaking"
-        : "AI is listening";
-    return `${activity} · ${formatDuration(remainingSeconds)} remaining`;
-  }
-  const labels: Record<ConversationPhase, string> = {
-    idle: textOnly
-      ? "Ready to chat · microphone off"
-      : "Ready to request microphone access",
-    requesting: textOnly
-      ? "Authorizing chat…"
-      : "Requesting microphone access and authorization…",
-    connecting: "Connecting securely…",
-    active: "Conversation active",
-    stopping: "Ending the conversation securely…",
-    review_error: "Conversation ended · review preparation needs a retry",
-    review: "Conversation ended · review required before saving",
-    saving: "Saving confirmed intake…",
-    saved: "Confirmed intake saved",
-    error: "Session unavailable",
-  };
-  return labels[phase];
 }
 
 function formatDuration(totalSeconds: number): string {

@@ -1,5 +1,9 @@
 # Project State
 
+## Browser booking progress — owner verification pending
+
+The owner reports successful full appointment booking as of October 27, 2026; this is owner evidence, not an independently repeated acceptance run. A subsequent frontend slice adds tool-driven booking stages, pending operations, confirmation guidance, hold countdown/expiry, stage-local failures and persistent CONFIRMED receipts to customer/operator browser conversations and the on-screen fallback. Activity labels respect connection and mute state. Unknown write results preserve retry context; the fallback can recheck an earlier confirmation after the displayed hold deadline. No backend API, migration or provider configuration changed. Regression specifications were added; no tests or hosted deployment ran. Exact owner commands and manual acceptance are in `docs/booking-progress.md`; implementation/runtime remain unverified.
+
 ## Product and scope
 
 HVACLine AI is an AI phone receptionist and appointment-booking product for U.S. HVAC service businesses only. The October 24, 2026 owner mission supersedes the insurance roadmap, frontend freeze, and earlier restrictions against running the named verification commands. Development remains synthetic-only; live carrier success and production readiness must not be claimed without evidence.
