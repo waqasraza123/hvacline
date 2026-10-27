@@ -27,6 +27,17 @@ export default function Home() {
           <a href="#services">Services</a>
         </nav>
         <div className="product-header-actions">
+          <svg
+            className="product-elevenlabs-logo"
+            role="img"
+            aria-label="ElevenLabs"
+            width="16"
+            height="20"
+            viewBox="0 0 16 20"
+            fill="currentColor"
+          >
+            <path d="M2 0h4v20H2zM10 0h4v20h-4z" />
+          </svg>
           <Link className="product-login" href="/login">
             Sign in
           </Link>

@@ -146,6 +146,11 @@
   letter-spacing: 0.04em;
   margin-left: 0.5rem;
 }
+.product-elevenlabs-logo {
+  flex-shrink: 0;
+  color: var(--customer-muted);
+  opacity: 0.65;
+}
 .product-nav,
 .product-header-actions {
   display: flex;
