@@ -17,6 +17,7 @@ from insurance_operations.hvac.calendar import (
     CalendarUnavailable,
     GoogleCalendarAdapter,
 )
+from insurance_operations.job_execution import provider_client
 from insurance_operations.settings import DatabaseSettings
 
 SCOPES = (
@@ -158,7 +159,7 @@ def calendar_adapter(
             "Reconnect this team's Google Calendar before booking"
         )
     settings = integration_settings(session)
-    with httpx.Client() as client:
+    with provider_client() as client:
         oauth = GoogleOAuth(settings, client)
         context = f"{connection.agency_id}:{connection.team_key}"
         refresh_token = oauth.vault.decrypt(

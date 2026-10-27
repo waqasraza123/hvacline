@@ -19,6 +19,7 @@ from insurance_operations.hvac.calendar_sync import reconcile_booking
 from insurance_operations.hvac.google_connection import integration_settings
 from insurance_operations.hvac.locking import lock_business_schedule
 from insurance_operations.hvac.schemas import ScheduleInput
+from insurance_operations.job_execution import provider_client
 from insurance_operations.settings import DatabaseSettings
 
 
@@ -195,7 +196,7 @@ def deliver_notification(
         if not ready_for_delivery(session, row):
             return
         row.attempts += 1
-        with httpx.Client() as client:
+        with provider_client() as client:
             outcome, detail = ResendBookingEmail(
                 integration_settings(session), client
             ).send(row)

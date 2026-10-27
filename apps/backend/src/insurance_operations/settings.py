@@ -349,6 +349,20 @@ class WorkerSettings(DatabaseSettings):
     worker_name: str = Field(min_length=1, max_length=100)
 
 
+class JobRunnerSettings(WorkerSettings):
+    booking_jobs_secret: SecretStr
+
+    @field_validator("booking_jobs_secret")
+    @classmethod
+    def validate_booking_jobs_secret(cls, value: SecretStr) -> SecretStr:
+        secret = value.get_secret_value()
+        if len(secret) < 32 or any(character.isspace() for character in secret):
+            raise ValueError(
+                "BOOKING_JOBS_SECRET must contain at least 32 characters without whitespace"
+            )
+        return value
+
+
 def database_target(value: str) -> tuple[str | None, int, str | None]:
     parsed_url = make_url(value)
     host = parsed_url.host.lower() if parsed_url.host is not None else None
