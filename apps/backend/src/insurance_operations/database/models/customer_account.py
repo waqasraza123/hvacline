@@ -1,7 +1,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from insurance_operations.database.models.base import Base, UuidPrimaryKeyMixin
@@ -20,11 +20,18 @@ class CustomerAccount(UuidPrimaryKeyMixin, Base):
 
 class CustomerLoginSession(UuidPrimaryKeyMixin, Base):
     __tablename__ = "customer_login_sessions"
+    __table_args__ = (CheckConstraint(
+        "(mfa_verified_at IS NULL AND mfa_version IS NULL) OR "
+        "(mfa_verified_at IS NOT NULL AND mfa_version IS NOT NULL AND mfa_version > 0)",
+        name="mfa_consistent",
+    ),)
 
     account_id: Mapped[UUID] = mapped_column(ForeignKey("customer_accounts.id", ondelete="RESTRICT"), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    mfa_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    mfa_version: Mapped[int | None] = mapped_column(Integer)
 
 
 class CustomerAuthLimit(Base):

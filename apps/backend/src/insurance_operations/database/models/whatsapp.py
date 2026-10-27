@@ -35,3 +35,6 @@ class WhatsAppConversation(UuidPrimaryKeyMixin, Base):
         DateTime(timezone=True), nullable=False
     )
     finalized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    customer_account_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("customer_accounts.id", ondelete="RESTRICT")
+    )

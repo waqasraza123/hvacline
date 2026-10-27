@@ -146,10 +146,36 @@
   letter-spacing: 0.04em;
   margin-left: 0.5rem;
 }
-.product-elevenlabs-logo {
+.product-provider-logos {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   flex-shrink: 0;
   color: var(--customer-muted);
   opacity: 0.65;
+}
+.product-provider-logos > svg {
+  display: block;
+  flex-shrink: 0;
+}
+.product-github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  color: var(--customer-muted);
+  opacity: 0.65;
+  border-radius: 6px;
+}
+.product-github-link:hover,
+.product-github-link:focus-visible {
+  opacity: 1;
+}
+.product-github-link:focus-visible {
+  outline: 2px solid var(--customer-accent-ink);
+  outline-offset: 3px;
 }
 .product-nav,
 .product-header-actions {
@@ -1004,6 +1030,8 @@
   .product-header {
     gap: 1rem;
     min-height: 78px;
+    flex-wrap: wrap;
+    padding-block: 1rem;
   }
   .product-site .brand-link,
   .customer-shell .brand-link {

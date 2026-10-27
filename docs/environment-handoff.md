@@ -1,5 +1,9 @@
 # Environment handoff
 
+Mandatory customer MFA requires API-only `CUSTOMER_MFA_ENCRYPTION_KEY` and forward migration `20261028_0015` after pending memory `0014`. **UNVERIFIED**. [Customer MFA setup and owner checks](customer-mfa.md) covers stable key generation/backup, existing-session revocation, mandatory enrollment and backup-code replacement. No staff/Operations or provider configuration change. Never expose this key to the frontend.
+
+Optional customer memory adds API-only `CUSTOMER_MEMORY_ENABLED`, `CUSTOMER_MEMORY_RETENTION_DAYS`, `CUSTOMER_MEMORY_CONTEXT_CHARACTERS` and forward migration `20261028_0014`. **UNVERIFIED**. See [customer memory setup and owner checks](customer-memory.md) for agent tools, explicit WhatsApp account linking and bounded retention cleanup. No new provider credentials or external memory service.
+
 Direct inbound WhatsApp voice adds API-only configuration and forward migration `20261028_0013`. Status: **UNVERIFIED**. Follow [WhatsApp setup and owner checks](whatsapp-inbound-calling.md); preserve existing browser, Calendar and notification settings. Twilio remains optional.
 
 The current source is `/private/tmp/hvacline-browser-demo`. Deployment and runtime remain owner-unverified. No environment values, secrets, services, migrations, tests or hosting settings were changed during this handoff.

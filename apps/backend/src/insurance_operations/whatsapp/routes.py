@@ -20,8 +20,11 @@ from insurance_operations.conversations.booking import (
 from insurance_operations.conversations.schemas import (
     ConversationIntakeConfirmationInput,
     ConversationIntakeResponse,
+    ConversationTurn,
 )
 from insurance_operations.conversations.spoken import require_spoken_confirmation
+from insurance_operations.customer_memory.service import redact_pairing_codes
+from insurance_operations.customer_memory.whatsapp import create_whatsapp_memory_router
 from insurance_operations.customers import CustomerInput
 from insurance_operations.database.models.conversation import (
     ConversationChannel,
@@ -177,6 +180,9 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
 
     Actor = Annotated[ActorContext, Depends(session_actor)]
 
+    def authorized_history(value: str) -> list[ConversationTurn]:
+        return redact_pairing_codes(spoken_history(value))
+
     @router.post("/initialize")
     async def initialize(
         request: Request, authorization: Annotated[str | None, Header()] = None
@@ -249,7 +255,7 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
                 intake_intent=data.service.equipment_issue,
                 service=data.service,
                 spoken_confirmation=True,
-                transcript=spoken_history(data.provider_history),
+                transcript=authorized_history(data.provider_history),
             )
         except ValueError as error:
             raise ApiError(
@@ -302,7 +308,7 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
                     conversation_session_id=session_id,
                     customer=data.customer,
                     intake_intent="Caller requested human assistance by callback",
-                    transcript=spoken_history(data.provider_history),
+                    transcript=authorized_history(data.provider_history),
                 ),
                 allow_live_contact_confirmation=True,
                 idempotency_key=f"whatsapp-intake:{session_id}",
@@ -358,6 +364,7 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
             confirmation_history=lambda data: spoken_history(data.provider_history),
         )
     )
+    router.include_router(create_whatsapp_memory_router(service, tool_context))
     return router
 
 

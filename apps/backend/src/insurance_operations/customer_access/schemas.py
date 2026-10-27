@@ -1,3 +1,5 @@
+from datetime import datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, SecretStr, field_validator
@@ -32,5 +34,34 @@ class AccountView(BaseModel):
 
 class LoginResponse(BaseModel):
     user: AccountView
-    session_token: str
+    session_token: str = Field(repr=False)
     expires_in: int
+    mfa_verified: Literal[True] = True
+    recovery_codes: list[str] | None = Field(default=None, repr=False)
+
+
+class MfaChallengeResponse(BaseModel):
+    mfa_required: Literal[True] = True
+    next_action: Literal["enroll", "verify"]
+    challenge_token: str = Field(repr=False)
+    expires_in: int
+
+
+class MfaStatusResponse(BaseModel):
+    next_action: Literal["enroll", "verify"]
+    expires_at: datetime
+
+
+class MfaSetupResponse(BaseModel):
+    secret: str = Field(repr=False)
+    otpauth_uri: str = Field(repr=False)
+
+
+class MfaVerifyInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    code: str = Field(pattern=r"^[0-9]{6}$", repr=False)
+
+
+class MfaRecoveryInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
+    code: str = Field(pattern=r"^[A-Fa-f0-9]{8}(-[A-Fa-f0-9]{8}){3}$", repr=False)

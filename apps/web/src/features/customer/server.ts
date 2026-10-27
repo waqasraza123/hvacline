@@ -10,6 +10,8 @@ export const CUSTOMER_COOKIE =
   process.env.NODE_ENV === "production"
     ? "__Host-hvacline-session"
     : "hvacline-session";
+export const CUSTOMER_MFA_COOKIE =
+  process.env.NODE_ENV === "production" ? "__Host-hvacline-mfa" : "hvacline-mfa";
 
 export class CustomerBackendError extends Error {
   constructor(
@@ -35,6 +37,10 @@ export async function completeCustomerLogout(
     sameSite: "lax",
     path: "/",
     maxAge: 0,
+  });
+  response.cookies.set(CUSTOMER_MFA_COOKIE, "", {
+    httpOnly: true, secure: process.env.NODE_ENV === "production",
+    sameSite: "strict", path: "/", maxAge: 0,
   });
   return response;
 }
@@ -63,6 +69,7 @@ export async function customerBackend(
   method = "GET",
   body?: string,
   idempotencyKey?: string,
+  authScope: "session" | "mfa" = "session",
 ): Promise<Response> {
   const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL;
   const secret = process.env.CUSTOMER_PORTAL_SECRET;
@@ -84,7 +91,9 @@ export async function customerBackend(
       503,
       "Customer booking is temporarily unavailable.",
     );
-  const token = (await cookies()).get(CUSTOMER_COOKIE)?.value;
+  const token = (await cookies()).get(
+    authScope === "mfa" ? CUSTOMER_MFA_COOKIE : CUSTOMER_COOKIE,
+  )?.value;
   return fetch(
     `${base.toString().replace(/\/$/, "")}/api/v1/customer/${path}`,
     {

@@ -227,6 +227,9 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
 
 class ApiSettings(DatabaseSettings):
+    customer_memory_enabled: bool = False
+    customer_memory_retention_days: int = Field(default=90, ge=1, le=365)
+    customer_memory_context_characters: int = Field(default=1200, ge=300, le=2000)
     api_host: str = Field(min_length=1)
     api_port: int = Field(ge=1, le=65_535)
     web_origin: str = "http://localhost:3000"
@@ -244,6 +247,7 @@ class ApiSettings(DatabaseSettings):
     demo_result_ttl_minutes: int = Field(default=15, ge=5, le=60)
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
+    customer_mfa_encryption_key: SecretStr | None = None
 
     @field_validator("web_origin")
     @classmethod
@@ -317,8 +321,17 @@ class ApiSettings(DatabaseSettings):
 
     @model_validator(mode="after")
     def validate_customer_portal(self) -> Self:
+        if self.customer_mfa_encryption_key is not None:
+            from cryptography.fernet import Fernet
+
+            try:
+                Fernet(self.customer_mfa_encryption_key.get_secret_value().encode())
+            except (ValueError, TypeError) as error:
+                raise ValueError("CUSTOMER_MFA_ENCRYPTION_KEY must be a Fernet key") from error
         if not self.customer_portal_enabled:
             return self
+        if self.customer_mfa_encryption_key is None:
+            raise ValueError("CUSTOMER_MFA_ENCRYPTION_KEY is required for customer accounts")
         if (
             self.app_environment is not RuntimeEnvironment.DEVELOPMENT
             or not self.demo_sandbox_enabled
@@ -335,6 +348,15 @@ class ApiSettings(DatabaseSettings):
                 "CUSTOMER_PORTAL_SECRET must contain at least 32 characters"
             )
         return self
+
+    @field_validator("customer_mfa_encryption_key", mode="before")
+    @classmethod
+    def normalize_mfa_key(cls, value: object) -> object:
+        if isinstance(value, SecretStr):
+            value = value.get_secret_value()
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
 
     @model_validator(mode="after")
     def validate_demo_sandbox_configuration(self) -> Self:

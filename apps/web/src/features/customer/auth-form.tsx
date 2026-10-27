@@ -50,7 +50,12 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             : "We couldn’t finish that. Check your details and try again.";
         throw new Error(message);
       }
-      router.replace("/book");
+      const result: unknown = await response.json();
+      if (typeof result !== "object" || result === null ||
+          !("mfa_required" in result) || result.mfa_required !== true) {
+        throw new Error("Authenticator setup or verification is required to sign in.");
+      }
+      router.replace("/mfa");
       router.refresh();
     } catch (failure) {
       setError(
@@ -116,8 +121,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </h2>
           <p>
             {signup
-              ? "Create your account to book with Line."
-              : "Sign in to book or view your appointments."}
+              ? "Create your account, then set up your required authenticator."
+              : "Sign in with your password and authenticator to continue."}
           </p>
           <form onSubmit={(event) => void submit(event)} aria-busy={busy}>
             {signup && (
@@ -212,8 +217,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               {busy
                 ? "Just a moment…"
                 : signup
-                  ? "Create account & book"
-                  : "Sign in & continue"}
+                  ? "Create account & set up authenticator"
+                  : "Continue to authenticator"}
               {!busy && <ProductIcon name="arrow" />}
             </button>
           </form>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { CUSTOMER_COOKIE, completeCustomerLogout } from "./server";
+import { CUSTOMER_COOKIE, CUSTOMER_MFA_COOKIE, completeCustomerLogout } from "./server";
 
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 
@@ -13,6 +13,9 @@ describe("completeCustomerLogout", () => {
 
       expect(response.status).toBe(204);
       expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(response.cookies.get(CUSTOMER_MFA_COOKIE)).toMatchObject({
+        value: "", httpOnly: true, sameSite: "strict", maxAge: 0,
+      });
       expect(response.cookies.get(CUSTOMER_COOKIE)).toMatchObject({
         value: "",
         httpOnly: true,

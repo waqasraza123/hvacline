@@ -12,6 +12,10 @@ import {
 
 const identifier = "[a-fA-F0-9-]{36}";
 const postPaths = [
+  /^memory\/(consent|delete|facts)$/,
+  /^memory\/facts\/[a-z_]{1,40}\/delete$/,
+  /^memory\/whatsapp\/(link|unlink)$/,
+  new RegExp(`^conversation-sessions/${identifier}/memory/(context|readback|remember)$`),
   /^conversation-sessions$/,
   /^conversation-intakes$/,
   new RegExp(`^conversation-sessions/${identifier}/(end|approved-faq-lookup)$`),
@@ -33,7 +37,7 @@ async function handle(request: NextRequest, context: Context) {
     const path = (await context.params).path.join("/");
     const allowed =
       request.method === "GET"
-        ? ["receptionist-settings", "appointments", "booking-limits"].includes(
+        ? ["receptionist-settings", "appointments", "booking-limits", "memory"].includes(
             path,
           ) || new RegExp(`^appointments/${identifier}$`).test(path)
         : postPaths.some((pattern) => pattern.test(path));

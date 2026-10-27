@@ -9,6 +9,7 @@ import { useRef } from "react";
 import type { ReactNode } from "react";
 import { sessionConnection } from "./connection";
 import { customerMessage, PendingTextEchoes } from "./text-messages";
+import { appendTranscript } from "./review";
 import type { VoiceBookingTool } from "./voice-booking";
 
 import type {
@@ -16,6 +17,7 @@ import type {
   ConversationClient,
   ConversationDraft,
   ConversationSpeaker,
+  ConversationTurn,
 } from "./contracts";
 
 type AdapterProperties = Readonly<{
@@ -68,8 +70,43 @@ function AdapterBridge({
 }: AdapterProperties) {
   const controls = useConversationControls();
   const pendingTextEchoes = useRef(new PendingTextEchoes());
+  const memorySessionId = useRef<string | undefined>(undefined);
+  const memoryTurns = useRef<ConversationTurn[]>([]);
+  async function memoryTool(
+    action: "context" | "readback" | "remember",
+    parameters: Record<string, unknown> = {},
+  ): Promise<string> {
+    const sessionId = memorySessionId.current;
+    if (!sessionId) return JSON.stringify({ available: false });
+    try {
+      const response = await fetch(
+        `/api/v1/development/conversation-sessions/${encodeURIComponent(sessionId)}/memory/${action}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(15000),
+          body: JSON.stringify(action === "remember"
+            ? { ...parameters, transcript: memoryTurns.current }
+            : parameters),
+        },
+      );
+      if (!response.ok) return JSON.stringify({
+        available: false,
+        message: "Memory was not saved or retrieved. Continue booking or use Memory settings.",
+      });
+      return response.status === 204
+        ? JSON.stringify({ saved: true }) : await response.text();
+    } catch {
+      return JSON.stringify({ available: false });
+    }
+  }
   const conversation = useConversation({
     clientTools: {
+      retrieve_customer_memory: () => memoryTool("context"),
+      prepare_customer_memory: (parameters: Record<string, unknown>) =>
+        memoryTool("readback", parameters),
+      remember_customer_memory: (parameters: Record<string, unknown>) =>
+        memoryTool("remember", parameters),
       lookup_approved_faq: async (parameters: ApprovedFaqToolParameters) => {
         const query = optionalString(parameters.query);
         if (query === undefined) {
@@ -138,10 +175,14 @@ function AdapterBridge({
         onBookingTool("release_appointment_hold", parameters),
     },
     onDisconnect: () => {
+      memorySessionId.current = undefined;
+      memoryTurns.current = [];
       pendingTextEchoes.current.clear();
       onDisconnect();
     },
     onError: (message) => {
+      memorySessionId.current = undefined;
+      memoryTurns.current = [];
       onError(
         typeof message === "string"
           ? message
@@ -155,6 +196,7 @@ function AdapterBridge({
       if (text) {
         if (speaker === "USER" && pendingTextEchoes.current.consume(text))
           return;
+        memoryTurns.current = appendTranscript(memoryTurns.current, speaker, text).slice(-60);
         onTranscript(speaker, text);
       }
     },
@@ -166,6 +208,8 @@ function AdapterBridge({
     mode: conversation.mode,
     isMuted: conversation.isMuted,
     start: async (authorization) => {
+      memorySessionId.current = authorization.sessionId;
+      memoryTurns.current = [];
       pendingTextEchoes.current.clear();
       const connection = sessionConnection(authorization);
       await new Promise<void>((resolve, reject) => {
@@ -176,6 +220,8 @@ function AdapterBridge({
           );
         }, 20_000);
         const fail = () => {
+          memorySessionId.current = undefined;
+          memoryTurns.current = [];
           window.clearTimeout(timer);
           reject(
             new Error("Conversation connection could not be established."),
@@ -198,6 +244,8 @@ function AdapterBridge({
       });
     },
     end: async () => {
+      memorySessionId.current = undefined;
+      memoryTurns.current = [];
       pendingTextEchoes.current.clear();
       await conversation.endSession();
     },
@@ -212,6 +260,7 @@ function AdapterBridge({
         pendingTextEchoes.current.consume(text);
         throw error;
       }
+      memoryTurns.current = appendTranscript(memoryTurns.current, "USER", text).slice(-60);
       onTranscript("USER", text);
     },
     notifyTyping: () => {

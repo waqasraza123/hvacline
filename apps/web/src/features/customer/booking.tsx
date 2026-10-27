@@ -12,6 +12,7 @@ import type { Customer } from "./server";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingChange } from "./booking-details";
 import { BookingLimitsPanel } from "./booking-limits";
+import { CustomerMemory } from "./memory";
 
 type MyAppointments = { appointments: Appointment[]; timezone: string | null };
 
@@ -23,7 +24,7 @@ export function CustomerBooking({
   voiceEnabled: boolean;
 }) {
   const router = useRouter();
-  const [tab, setTab] = useState<"book" | "appointments">("book");
+  const [tab, setTab] = useState<"book" | "appointments" | "memory">("book");
   const [voiceActive, setVoiceActive] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
@@ -99,6 +100,9 @@ export function CustomerBooking({
           >
             <ProductIcon name="calendar" /> My appointments
           </button>
+          <button type="button" disabled={voiceActive}
+            aria-current={tab === "memory" ? "page" : undefined}
+            onClick={() => setTab("memory")}>Memory</button>
           <span>
             {voiceActive
               ? "Finish your conversation before leaving this page."
@@ -111,7 +115,7 @@ export function CustomerBooking({
             {error}
           </p>
         )}
-        {tab === "book" ? (
+        {tab === "memory" ? <CustomerMemory key={user.id} /> : tab === "book" ? (
           voiceEnabled ? (
             <BrowserVoicePanel
               apiBaseUrl=""

@@ -1,5 +1,26 @@
 # Project State
 
+## Publication authorized — UNVERIFIED
+
+The owner requested committing and pushing all current work to `main`: direct inbound WhatsApp voice, optional customer memory, customer-only authenticator MFA and the icon-only GitHub header link. Publication includes forward migrations `0013`–`0015`; migration execution, provider configuration, MFA key setup and runtime acceptance remain owner-managed. Existing remote header changes must be retained. CI/Render skip markers accompany publication; no tests, builds, linters, formatters, type checks, migrations, services or provider calls were authorized or run. Exact owner checks remain in `docs/whatsapp-inbound-calling.md`, `docs/customer-memory.md` and `docs/customer-mfa.md`; header acceptance requires `npm run verify:web` and desktop/mobile link/focus checks.
+
+## Mandatory customer MFA — UNVERIFIED
+
+Owner narrowed scope to customer accounts only; Operations/staff access is unchanged. Local branch `feat/mandatory-authenticator-mfa` adds password-bound, short-lived enrollment/verification challenges, required authenticator proof before any customer session, encrypted tenant/account-bound TOTP seeds, replay protection, persistent lockouts and one-use recovery codes requiring verified replacement. The MFA patterns were adapted from the owner's `stealth-trails` repository to Python/FastAPI/Neon. No read-only pre-MFA or email/password fallback is provided.
+
+Forward migration `20261028_0015` follows pending memory `0014`, adds three MFA tables and session evidence, revokes existing customer sessions and requires MFA-authenticated reapproval of WhatsApp memory links. API-only `CUSTOMER_MFA_ENCRYPTION_KEY` is required when the customer portal is enabled; retain a stable protected backup. Existing development/fictional-data gates and customer booking/Chat/Voice workflows remain. Recovery/reset invalidates earlier session and memory-link versions.
+
+Source and focused specifications are **UNVERIFIED**; no tests, formatters, checks, migrations, services, provider calls, installs, commits, pushes or deployments ran for MFA. Configuration, reference provenance, exact owner commands and new/existing-customer/recovery acceptance: `docs/customer-mfa.md`. Production onboarding, email verification, password recovery, key rotation and managed lost-factor recovery remain outside scope. Prior memory work and unrelated homepage/style changes are preserved.
+
+## Account-scoped customer memory — UNVERIFIED
+
+Local branch `feat/customer-memory`, based on WhatsApp foundation `7ece835`, adds optional Neon memory scoped to verified customer account and agency. New forward migration `20261028_0014` adds policy, categorical fact, authorized-intake summary, WhatsApp identity and pairing tables plus verified account provenance on WhatsApp bindings. Customer controls support opt-in, corrections, forgetting, erasure and unlinking. No contact matching authorizes memory. WhatsApp requires approval from the existing signed-in browser account; opaque caller digests/BSUIDs are not phone numbers.
+
+Memory references existing immutable confirmed intakes without transcript copies. Suggestions use customer-word evidence and facts require explicit selection/readback consent; no LLM extraction or free-text storage. Context is bounded; service/appointment references are read from owned authoritative records and never substitute for live availability/pricing/status. Consent revisions/erasure cutoffs prevent stale writes and old-history regeneration. Configurable expiry hides stale content immediately; a separate bounded owner-scheduled purge physically removes optional records. Booking, Calendar and notification transactions are unchanged; memory is independent of booking success.
+
+Implementation and all test specifications remain **UNVERIFIED**. No tests, builds, linters, formatters, type checks, migrations, seeds, services, provider calls, installs, commits, pushes or deployments ran. Exact tools, environment names, owner commands, retention scheduling and cross-session acceptance: `docs/customer-memory.md`. Existing development/fictional-data identity/privacy gates remain. Unrelated header/title/style edits are preserved.
+
+
 ## Direct inbound WhatsApp voice — UNVERIFIED
 
 Feature branch `feat/whatsapp-inbound-calling` implements direct ElevenLabs WhatsApp initialization, call-scoped authenticated tools and signed post-call finalization without Twilio credentials/IDs. The new forward migration `20261028_0013` adds agency-owned WhatsApp bindings and a WHATSAPP conversation channel. Initialization uses the documented empty call_sid, configured agent/Meta-number allowlist and opaque caller digest; consent creates the actual session. FAQs, confirmed intake/lead persistence, booking holds/readbacks, Google Calendar, notifications, audit and Operations reuse existing services. Callback-only contacts require a separate spoken readback; native transfer is not used. No messaging, outbound calls, voice notes or campaigns are implemented.
@@ -115,7 +136,7 @@ The owner explicitly requested adding approved FAQs and needed business content 
 
 ## Customer UI/account draft — owner verification pending
 
-The source includes a navy/blue customer homepage and prominent Line AI booking entry, plus signup/login before booking, scoped server-side proxies, fictional-only account/session services, owned appointment history and migration `20261025_0010_customer_access`. This remains an unfinished, unverified development draft. The migration and verification have not run; email verification, recovery, MFA, tenant onboarding and production account readiness remain incomplete. All existing privacy/development gates remain required. The owner directed publication without verification; publication does not establish runtime, security or deployment success. See ignored `docs/_local/chatgpt-handoff.md` for the continuation state and checks.
+The source includes a navy/blue customer homepage and prominent Line AI booking entry, plus signup/login before booking, scoped server-side proxies, fictional-only account/session services, owned appointment history and migration `20261025_0010_customer_access`. This remains an unfinished, unverified development draft. Mandatory customer MFA and backup-code replacement are now implemented locally but unverified; see `docs/customer-mfa.md`. Email verification, password recovery, tenant onboarding and production account readiness remain incomplete. All existing privacy/development gates remain required. The owner directed earlier publication without verification; publication does not establish runtime, security or deployment success. See ignored `docs/_local/chatgpt-handoff.md` for the continuation state and checks.
 
 ## Customer chat — implementation unverified
 

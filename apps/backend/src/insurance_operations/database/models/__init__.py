@@ -24,6 +24,13 @@ from insurance_operations.database.models.customer_account import (
     CustomerAuthLimit,
     CustomerLoginSession,
 )
+from insurance_operations.database.models.customer_mfa import (
+    CustomerMfaChallenge, CustomerMfaFactor, CustomerMfaRecoveryCode,
+)
+from insurance_operations.database.models.customer_memory import (
+    CustomerMemoryFact, CustomerMemoryPairing, CustomerMemoryPolicy,
+    CustomerMemorySummary, CustomerWhatsAppIdentity,
+)
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -68,6 +75,14 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "customer_mfa_factors": TableOwnership(module="customer_access", agency_column="agency_id"),
+    "customer_mfa_challenges": TableOwnership(module="customer_access", agency_column="agency_id"),
+    "customer_mfa_recovery_codes": TableOwnership(module="customer_access", agency_column="agency_id"),
+    "customer_memory_policies": TableOwnership(module="customer_memory", agency_column="agency_id"),
+    "customer_memory_facts": TableOwnership(module="customer_memory", agency_column="agency_id"),
+    "customer_memory_summaries": TableOwnership(module="customer_memory", agency_column="agency_id"),
+    "customer_whatsapp_identities": TableOwnership(module="customer_memory", agency_column="agency_id"),
+    "customer_memory_pairings": TableOwnership(module="customer_memory", agency_column="agency_id"),
     "whatsapp_conversations": TableOwnership(
         module="conversations", agency_column="agency_id"
     ),
@@ -171,6 +186,14 @@ __all__ = [
     "ConversationSession",
     "Customer",
     "CustomerAccount",
+    "CustomerMfaChallenge",
+    "CustomerMfaFactor",
+    "CustomerMfaRecoveryCode",
+    "CustomerMemoryFact",
+    "CustomerMemoryPairing",
+    "CustomerMemoryPolicy",
+    "CustomerMemorySummary",
+    "CustomerWhatsAppIdentity",
     "CustomerAuthLimit",
     "CustomerLoginSession",
     "HandoffContactMethod",

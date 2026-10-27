@@ -13,7 +13,11 @@ from insurance_operations.conversations.schemas import ConversationEndInput, Con
 from insurance_operations.conversations.service import ConversationService
 from insurance_operations.customer_access.bookings import create_customer_booking_router
 from insurance_operations.customer_access.schemas import AccountView, LoginInput, LoginResponse, SignupInput
+from insurance_operations.customer_access.schemas import (
+    MfaChallengeResponse, MfaRecoveryInput, MfaSetupResponse, MfaStatusResponse, MfaVerifyInput,
+)
 from insurance_operations.customer_access.service import CustomerAccessService, unauthorized
+from insurance_operations.customer_memory.routes import create_customer_memory_router
 from insurance_operations.database.models.conversation import ConversationSession
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.errors import ApiError
@@ -66,12 +70,14 @@ def create_customer_router(
             raise unauthorized()
         return conversations
 
-    @router.post("/auth/signup", response_model=LoginResponse, status_code=201)
-    def signup(data: SignupInput, _: Portal) -> LoginResponse:
+    @router.post("/auth/signup", response_model=MfaChallengeResponse, status_code=201)
+    def signup(data: SignupInput, _: Portal, response: Response) -> MfaChallengeResponse:
+        response.headers["Cache-Control"] = "no-store"
         return access.signup(data)
 
-    @router.post("/auth/login", response_model=LoginResponse)
-    def login(data: LoginInput, _: Portal) -> LoginResponse:
+    @router.post("/auth/login", response_model=MfaChallengeResponse)
+    def login(data: LoginInput, _: Portal, response: Response) -> MfaChallengeResponse:
+        response.headers["Cache-Control"] = "no-store"
         return access.login(data)
 
     @router.get("/auth/me", response_model=AccountView)
@@ -82,6 +88,31 @@ def create_customer_router(
     def logout(_: Portal, authorization: Annotated[str | None, Header()] = None) -> Response:
         access.logout(session_token(authorization))
         return Response(status_code=204)
+
+    @router.get("/auth/mfa/status", response_model=MfaStatusResponse)
+    def mfa_status(_: Portal, response: Response, authorization: Annotated[str | None, Header()] = None) -> MfaStatusResponse:
+        response.headers["Cache-Control"] = "no-store"
+        return access.mfa.status(session_token(authorization))
+
+    @router.post("/auth/mfa/setup", response_model=MfaSetupResponse)
+    def mfa_setup(_: Portal, response: Response, authorization: Annotated[str | None, Header()] = None) -> MfaSetupResponse:
+        response.headers["Cache-Control"] = "no-store"
+        return access.mfa.setup(session_token(authorization))
+
+    @router.post("/auth/mfa/verify", response_model=LoginResponse)
+    def mfa_verify(data: MfaVerifyInput, _: Portal, response: Response, authorization: Annotated[str | None, Header()] = None) -> LoginResponse:
+        response.headers["Cache-Control"] = "no-store"
+        return access.mfa.verify(session_token(authorization), data.code)
+
+    @router.post("/auth/mfa/recover", response_model=MfaChallengeResponse)
+    def mfa_recover(data: MfaRecoveryInput, _: Portal, response: Response, authorization: Annotated[str | None, Header()] = None) -> MfaChallengeResponse:
+        response.headers["Cache-Control"] = "no-store"
+        return access.mfa.recover(session_token(authorization), data.code)
+
+    @router.post("/auth/mfa/cancel", status_code=204)
+    def mfa_cancel(_: Portal, authorization: Annotated[str | None, Header()] = None) -> Response:
+        access.mfa.cancel(session_token(authorization))
+        return Response(status_code=204, headers={"Cache-Control": "no-store"})
 
     @router.get("/receptionist-settings", response_model=ReceptionistSettingsResponse)
     def profile(customer: Actor) -> ReceptionistSettingsResponse:
@@ -159,4 +190,5 @@ def create_customer_router(
 
     router.include_router(create_browser_booking_router(sessions, actor, prefix="/conversation-sessions/{session_id}/booking"))
     router.include_router(create_customer_booking_router(sessions, actor))
+    router.include_router(create_customer_memory_router(settings, sessions, actor))
     return router

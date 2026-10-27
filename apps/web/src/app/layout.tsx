@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import "./styles.css";
 export const metadata: Metadata = {
   title: {
-    default: "HVACLine | AI Voice Receptionist for HVAC Businesses",
+    default: "HVACLine | Turn Missed Calls into HVAC Bookings",
     template: "%s | HVACLine AI",
   },
   description:
     "Stop losing jobs to missed calls. HVACLine talks with homeowners, checks live appointment slots, and confirms HVAC bookings in one conversation.",
   openGraph: {
-    title: "HVACLine | AI Voice Receptionist for HVAC Businesses",
+    title: "HVACLine | Turn Missed Calls into HVAC Bookings",
     description:
       "Stop losing jobs to missed calls. HVACLine talks with homeowners, checks live appointment slots, and confirms HVAC bookings in one conversation.",
     type: "website",

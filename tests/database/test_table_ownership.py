@@ -4,6 +4,14 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "customer_mfa_factors": ("customer_access", "agency_id"),
+    "customer_mfa_challenges": ("customer_access", "agency_id"),
+    "customer_mfa_recovery_codes": ("customer_access", "agency_id"),
+    "customer_memory_policies": ("customer_memory", "agency_id"),
+    "customer_memory_facts": ("customer_memory", "agency_id"),
+    "customer_memory_summaries": ("customer_memory", "agency_id"),
+    "customer_whatsapp_identities": ("customer_memory", "agency_id"),
+    "customer_memory_pairings": ("customer_memory", "agency_id"),
     "whatsapp_conversations": ("conversations", "agency_id"),
     "calendar_connections": ("hvac", "agency_id"),
     "calendar_authorizations": ("hvac", "agency_id"),
@@ -72,9 +80,36 @@ def test_foundation_relationships_match_available_parent_tables(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_relationships: dict[str, set[tuple[tuple[str, ...], str]]] = {
+        "customer_mfa_factors": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+        },
+        "customer_mfa_challenges": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+        },
+        "customer_mfa_recovery_codes": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+        },
+        "customer_memory_policies": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+        },
+        "customer_memory_facts": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("source_intake_id",), "conversation_intakes"),
+        },
+        "customer_memory_summaries": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("intake_id",), "conversation_intakes"),
+        },
+        "customer_whatsapp_identities": {
+            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+        },
+        "customer_memory_pairings": {
+            (("agency_id",), "agencies"), (("binding_id",), "whatsapp_conversations"),
+        },
         "whatsapp_conversations": {
             (("agency_id",), "agencies"),
             (("session_id",), "conversation_sessions"),
+            (("customer_account_id",), "customer_accounts"),
         },
         "calendar_connections": {(("agency_id",), "agencies")},
         "calendar_authorizations": {

@@ -6,6 +6,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
+from cryptography.fernet import Fernet
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete, func, select, update
@@ -18,6 +19,11 @@ from insurance_operations.conversations.contracts import (
     ConnectionGrant,
     ConversationInputMode,
     ProviderSessionMetadata,
+)
+from insurance_operations.customer_access.mfa_crypto import hotp
+from insurance_operations.database.models.customer_account import CustomerAccount, CustomerLoginSession
+from insurance_operations.database.models.customer_mfa import (
+    CustomerMfaChallenge, CustomerMfaFactor, CustomerMfaRecoveryCode,
 )
 from insurance_operations.database.models.conversation import (
     ConversationIntake,
@@ -120,6 +126,10 @@ def development_conversation_api(
         agency_id,
         app_user_id,
     )
+    with Session(migrated_database) as session, session.begin():
+        accounts = select(CustomerAccount.id).where(CustomerAccount.agency_id == agency_id)
+        for model in (CustomerLoginSession, CustomerMfaRecoveryCode, CustomerMfaChallenge, CustomerMfaFactor):
+            session.execute(delete(model).where(model.account_id.in_(accounts)))
 
 
 async def post_json(
@@ -955,6 +965,7 @@ def test_customer_accounts_cannot_access_another_customers_booking(
         demo_admin_token="fictional-administrator-token-for-tests-only",
         customer_portal_enabled=True,
         customer_portal_secret="fictional-customer-portal-key-for-tests-only",
+        customer_mfa_encryption_key=Fernet.generate_key().decode(),
     )
     application = create_app(settings, migrated_database, FakeConversationProvider())
 
@@ -992,7 +1003,18 @@ def test_customer_accounts_cannot_access_another_customers_booking(
             )
         )
         assert status_code == 201
-        token = body["session_token"]
+        assert "session_token" not in body
+        challenge = body["challenge_token"]
+        assert isinstance(challenge, str)
+        assert asyncio.run(send("auth/me", token=challenge, method="GET"))[0] == 401
+        setup_status, setup = asyncio.run(send("auth/mfa/setup", {}, challenge))
+        assert setup_status == 200
+        assert isinstance(setup["secret"], str)
+        verified_status, verified = asyncio.run(send("auth/mfa/verify", {
+            "code": hotp(setup["secret"], int(datetime.now(UTC).timestamp() // 30)),
+        }, challenge))
+        assert verified_status == 200
+        token = verified["session_token"]
         assert isinstance(token, str)
         return token
 

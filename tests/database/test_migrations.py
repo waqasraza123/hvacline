@@ -38,6 +38,9 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "customer_mfa_factors", "customer_mfa_challenges", "customer_mfa_recovery_codes",
+    "customer_memory_policies", "customer_memory_facts", "customer_memory_summaries",
+    "customer_whatsapp_identities", "customer_memory_pairings",
     "whatsapp_conversations",
     "calendar_connections",
     "calendar_authorizations",
@@ -70,6 +73,35 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "customer_mfa_factors": {
+        "account_id", "agency_id", "secret_ciphertext", "enabled_at", "last_counter",
+        "version", "failed_attempts", "locked_until",
+    },
+    "customer_mfa_challenges": {
+        "id", "account_id", "agency_id", "token_hash", "purpose", "secret_ciphertext",
+        "factor_version", "attempts", "created_at", "expires_at", "consumed_at",
+    },
+    "customer_mfa_recovery_codes": {
+        "id", "account_id", "agency_id", "code_hash", "created_at", "used_at",
+    },
+    "customer_memory_policies": {
+        "account_id", "agency_id", "enabled", "revision", "history_after",
+        "updated_at", "last_request_id", "last_fingerprint", "retention_days",
+    },
+    "customer_memory_facts": {
+        "id", "agency_id", "account_id", "key", "value", "source_intake_id",
+        "source_kind", "created_at", "updated_at", "expires_at",
+    },
+    "customer_memory_summaries": {
+        "intake_id", "agency_id", "account_id", "summary", "created_at", "expires_at",
+    },
+    "customer_whatsapp_identities": {
+        "id", "agency_id", "account_id", "phone_number_id", "caller_digest",
+        "verified_at", "expires_at", "mfa_version",
+    },
+    "customer_memory_pairings": {
+        "id", "agency_id", "binding_id", "code_digest", "expires_at", "consumed_at",
+    },
     "whatsapp_conversations": {
         "id",
         "agency_id",
@@ -80,6 +112,7 @@ EXPECTED_COLUMNS = {
         "initialized_at",
         "expires_at",
         "finalized_at",
+        "customer_account_id",
     },
     "calendar_connections": {
         "id",
@@ -139,6 +172,8 @@ EXPECTED_COLUMNS = {
         "token_hash",
         "expires_at",
         "revoked_at",
+        "mfa_verified_at",
+        "mfa_version",
     },
     "customer_auth_limits": {"key", "attempts", "window_started_at"},
     "business_schedules": {"agency_id", "version", "configuration"},
@@ -568,6 +603,8 @@ def test_migration_unique_constraints_match_the_approved_scopes(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_unique_columns: dict[str, set[tuple[str, ...]]] = {
+        "customer_mfa_challenges": {("token_hash",)},
+        "customer_mfa_recovery_codes": {("code_hash",)},
         "whatsapp_conversations": {("conversation_id",), ("session_id",)},
         "agencies": {("slug",)},
         "app_users": {("auth_subject",)},
@@ -613,6 +650,19 @@ def test_migration_check_constraints_cover_approved_invariants(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_constraint_names = {
+        "customer_login_sessions": {"ck_customer_login_sessions_mfa_consistent"},
+        "customer_mfa_factors": {
+            "ck_customer_mfa_factors_version_valid",
+            "ck_customer_mfa_factors_counter_valid",
+            "ck_customer_mfa_factors_attempts_valid",
+            "ck_customer_mfa_factors_enrollment_consistent",
+        },
+        "customer_mfa_challenges": {
+            "ck_customer_mfa_challenges_purpose_valid",
+            "ck_customer_mfa_challenges_attempts_valid",
+            "ck_customer_mfa_challenges_version_valid",
+            "ck_customer_mfa_challenges_secret_consistent",
+        },
         "whatsapp_conversations": {
             "ck_whatsapp_conversations_caller_digest_valid",
             "ck_whatsapp_conversations_expiry_valid",
