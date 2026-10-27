@@ -36,7 +36,81 @@ class CommonSettings(BaseSettings):
     app_environment: RuntimeEnvironment
 
 
-class DatabaseSettings(CommonSettings):
+class DatabaseConnectionSettings(CommonSettings):
+    database_url: str
+    direct_database_url: str | None = None
+    test_database_url: str | None = None
+    database_ssl_mode: DatabaseSslMode = DatabaseSslMode.REQUIRE
+    database_pool_size: int = Field(default=5, ge=1, le=20)
+    database_max_overflow: int = Field(default=2, ge=0, le=20)
+    database_pool_timeout_seconds: int = Field(default=10, ge=1, le=60)
+    database_pool_recycle_seconds: int = Field(default=300, ge=30, le=3_600)
+
+    @field_validator(
+        "database_url",
+        "direct_database_url",
+        "test_database_url",
+    )
+    @classmethod
+    def validate_postgresql_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+
+        try:
+            parsed_url = make_url(value)
+        except ArgumentError as error:
+            raise ValueError("database URLs must be valid PostgreSQL URLs") from error
+        if parsed_url.drivername not in {"postgresql", "postgresql+psycopg"}:
+            raise ValueError("database URLs must use PostgreSQL with psycopg")
+        if not parsed_url.database:
+            raise ValueError("database URLs must include a database name")
+        return value
+
+    @model_validator(mode="after")
+    def validate_database_environment(self) -> Self:
+        if (
+            self.app_environment is RuntimeEnvironment.TEST
+            and self.test_database_url is None
+        ):
+            raise ValueError("TEST_DATABASE_URL is required in the test environment")
+        if (
+            self.app_environment is RuntimeEnvironment.TEST
+            and self.test_database_url is not None
+            and any(
+                database_target(self.test_database_url) == database_target(url)
+                for url in (self.database_url, self.direct_database_url)
+                if url is not None
+            )
+        ):
+            raise ValueError(
+                "TEST_DATABASE_URL must be isolated from database runtime and "
+                "migration URLs"
+            )
+        if (
+            self.app_environment is RuntimeEnvironment.PRODUCTION
+            and self.database_ssl_mode is DatabaseSslMode.DISABLE
+        ):
+            raise ValueError("database SSL cannot be disabled in production")
+        return self
+
+    @property
+    def runtime_database_url(self) -> str:
+        if self.app_environment is RuntimeEnvironment.TEST:
+            if self.test_database_url is None:
+                raise RuntimeError("test database configuration is unavailable")
+            return self.test_database_url
+        return self.database_url
+
+    @property
+    def migration_database_url(self) -> str:
+        if self.app_environment is RuntimeEnvironment.TEST:
+            return self.runtime_database_url
+        return self.direct_database_url or self.database_url
+
+
+class DatabaseSettings(DatabaseConnectionSettings):
+    demo_inbound_number_e164: str | None = None
+    demo_transfer_destination_e164: str | None = None
     google_calendar_enabled: bool = False
     google_client_id: str | None = None
     google_client_secret: SecretStr | None = None
@@ -48,6 +122,19 @@ class DatabaseSettings(CommonSettings):
     booking_email_from: EmailStr | None = None
     booking_reminder_hours: int = Field(default=24, ge=1, le=168)
     worker_poll_seconds: int = Field(default=30, ge=5, le=60)
+
+    @field_validator(
+        "demo_inbound_number_e164",
+        "demo_transfer_destination_e164",
+    )
+    @classmethod
+    def validate_demo_phone_number(cls, value: str | None) -> str | None:
+        if value is None or not value.strip():
+            return None
+        normalized = value.strip()
+        if re.fullmatch(r"\+[1-9][0-9]{7,14}", normalized) is None:
+            raise ValueError("demo phone numbers must use E.164 format")
+        return normalized
 
     @field_validator("booking_email_from", mode="before")
     @classmethod
@@ -128,91 +215,6 @@ class DatabaseSettings(CommonSettings):
                     "RESEND_WEBHOOK_SECRET must be a valid webhook signing secret"
                 ) from error
         return self
-
-    database_url: str
-    direct_database_url: str | None = None
-    test_database_url: str | None = None
-    database_ssl_mode: DatabaseSslMode = DatabaseSslMode.REQUIRE
-    database_pool_size: int = Field(default=5, ge=1, le=20)
-    database_max_overflow: int = Field(default=2, ge=0, le=20)
-    database_pool_timeout_seconds: int = Field(default=10, ge=1, le=60)
-    database_pool_recycle_seconds: int = Field(default=300, ge=30, le=3_600)
-    demo_inbound_number_e164: str | None = None
-    demo_transfer_destination_e164: str | None = None
-
-    @field_validator(
-        "database_url",
-        "direct_database_url",
-        "test_database_url",
-    )
-    @classmethod
-    def validate_postgresql_url(cls, value: str | None) -> str | None:
-        if value is None:
-            return None
-
-        try:
-            parsed_url = make_url(value)
-        except ArgumentError as error:
-            raise ValueError("database URLs must be valid PostgreSQL URLs") from error
-        if parsed_url.drivername not in {"postgresql", "postgresql+psycopg"}:
-            raise ValueError("database URLs must use PostgreSQL with psycopg")
-        if not parsed_url.database:
-            raise ValueError("database URLs must include a database name")
-        return value
-
-    @field_validator(
-        "demo_inbound_number_e164",
-        "demo_transfer_destination_e164",
-    )
-    @classmethod
-    def validate_demo_phone_number(cls, value: str | None) -> str | None:
-        if value is None or not value.strip():
-            return None
-        normalized = value.strip()
-        if re.fullmatch(r"\+[1-9][0-9]{7,14}", normalized) is None:
-            raise ValueError("demo phone numbers must use E.164 format")
-        return normalized
-
-    @model_validator(mode="after")
-    def validate_database_environment(self) -> Self:
-        if (
-            self.app_environment is RuntimeEnvironment.TEST
-            and self.test_database_url is None
-        ):
-            raise ValueError("TEST_DATABASE_URL is required in the test environment")
-        if (
-            self.app_environment is RuntimeEnvironment.TEST
-            and self.test_database_url is not None
-            and any(
-                database_target(self.test_database_url) == database_target(url)
-                for url in (self.database_url, self.direct_database_url)
-                if url is not None
-            )
-        ):
-            raise ValueError(
-                "TEST_DATABASE_URL must be isolated from database runtime and "
-                "migration URLs"
-            )
-        if (
-            self.app_environment is RuntimeEnvironment.PRODUCTION
-            and self.database_ssl_mode is DatabaseSslMode.DISABLE
-        ):
-            raise ValueError("database SSL cannot be disabled in production")
-        return self
-
-    @property
-    def runtime_database_url(self) -> str:
-        if self.app_environment is RuntimeEnvironment.TEST:
-            if self.test_database_url is None:
-                raise RuntimeError("test database configuration is unavailable")
-            return self.test_database_url
-        return self.database_url
-
-    @property
-    def migration_database_url(self) -> str:
-        if self.app_environment is RuntimeEnvironment.TEST:
-            return self.runtime_database_url
-        return self.direct_database_url or self.database_url
 
 
 class ApiSettings(DatabaseSettings):

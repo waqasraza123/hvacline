@@ -6,7 +6,7 @@ from sqlalchemy.engine import URL, Engine, make_url
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import NullPool
 
-from insurance_operations.settings import DatabaseSettings
+from insurance_operations.settings import DatabaseConnectionSettings
 
 
 class DatabasePurpose(StrEnum):
@@ -23,7 +23,7 @@ def psycopg_url(value: str) -> URL:
 
 
 def database_engine_options(
-    settings: DatabaseSettings,
+    settings: DatabaseConnectionSettings,
     *,
     service_name: str,
     purpose: DatabasePurpose = DatabasePurpose.RUNTIME,
@@ -51,7 +51,7 @@ def database_engine_options(
 
 
 def create_database_engine(
-    settings: DatabaseSettings,
+    settings: DatabaseConnectionSettings,
     *,
     service_name: str,
     purpose: DatabasePurpose = DatabasePurpose.RUNTIME,

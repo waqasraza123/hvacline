@@ -1,5 +1,9 @@
 # Project State
 
+## Migration settings repair — owner verification pending
+
+The owner supplied a Render build failure after package installation: Alembic loaded enabled Google Calendar runtime settings with incomplete OAuth/encryption configuration. Alembic now uses `DatabaseConnectionSettings`, retaining PostgreSQL URL, test-isolation and production SSL validation without loading integration settings. API/worker retain strict enabled-integration validation through `DatabaseSettings`. Incomplete integrations must remain disabled in the service environment until configured. Regression specifications and deployment instructions were added; no tests, builds, linters, type checks or migrations ran for this repair. Exact owner commands and manual acceptance are in `docs/calendar-and-booking-messages.md`.
+
 ## Google Calendar and booking messages — implementation unverified
 
 The October 27 implementation adds per-team Google OAuth/PKCE with encrypted offline credentials and browser-bound single-use state, live paginated conflict checks, deterministic event writes with durable reservation bindings, and worker reconciliation/owned-event cleanup. External edits/overlaps enter staff attention; they do not silently rewrite or cancel local bookings. Google has no atomic insert-if-free, so concurrent external writers remain a reconciled risk.

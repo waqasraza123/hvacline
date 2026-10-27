@@ -16,6 +16,8 @@ Google Calendar does not offer an atomic “insert only if free” operation. Co
 
 ## Owner setup
 
+If deployment fails with `Google OAuth and calendar encryption configuration are required`, `GOOGLE_CALENDAR_ENABLED` is enabled with incomplete credentials. Set it to `false` on the API and worker until all four Google settings below are configured. Keep `BOOKING_EMAIL_ENABLED=false` until the Resend settings are ready. Apply these flags to the service environment, not only the migration command: API and worker startup still validate enabled integrations. Alembic uses database-only settings so incomplete integration configuration does not block schema upgrades. This deployment repair is unverified.
+
 1. Review and apply forward migration `20261027_0012` to the intended database before deploying the new backend. It adds calendar connections/authorizations, durable event bindings, notification jobs and minimal email delivery receipts. It does not backfill or email historical appointments. Install the updated Python dependencies, including `cryptography`.
 2. In a Google Cloud project, enable Calendar API and create a Web application OAuth client. Configure its consent screen and test users. Register the exact callback `<API origin>/api/v1/development/hvac/integrations/google/callback`. Testing-mode grants may expire and require reconnecting; production Google verification remains a separate launch gate.
 3. Set the following on both API and worker, using secret storage rather than files committed to git:
@@ -47,8 +49,11 @@ python -m pip install -e '.[dev]'
 Focused non-database regression specifications:
 
 ```sh
+python -m pytest tests/test_settings.py
 APP_ENVIRONMENT=test pytest tests/test_booking_integrations.py tests/test_hvac_calendar.py tests/test_hvac_availability.py tests/test_worker.py
 ```
+
+For this deployment repair, also run `ruff check apps/backend/src/insurance_operations/settings.py apps/backend/src/insurance_operations/database/connection.py migrations/env.py tests/test_settings.py` and `mypy apps/backend/src tests`. Manually redeploy the intended commit with incomplete integrations disabled; confirm Alembic completes and the API starts. Enable Google or email only after configuring its required values on both services, then confirm their startup succeeds. These checks have not been executed.
 
 Use an explicitly isolated, disposable `TEST_DATABASE_URL` for the next commands. The database fixture downgrades/rebuilds its target. Never point it at a shared, development or production database.
 

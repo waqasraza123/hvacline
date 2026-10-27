@@ -3,10 +3,100 @@ from pydantic import ValidationError
 
 from insurance_operations.settings import (
     ApiSettings,
+    DatabaseConnectionSettings,
     DatabaseSslMode,
     RuntimeEnvironment,
     WorkerSettings,
 )
+
+
+@pytest.mark.parametrize(
+    "integration_environment",
+    [
+        {
+            "GOOGLE_CALENDAR_ENABLED": "true",
+            "GOOGLE_CLIENT_ID": "",
+            "GOOGLE_CLIENT_SECRET": "",
+            "GOOGLE_REDIRECT_URI": "",
+            "CALENDAR_TOKEN_ENCRYPTION_KEY": "",
+        },
+        {
+            "BOOKING_EMAIL_ENABLED": "true",
+            "RESEND_API_KEY": "",
+            "RESEND_WEBHOOK_SECRET": "",
+            "BOOKING_EMAIL_FROM": "invalid-sender",
+        },
+    ],
+)
+def test_migration_settings_ignore_incomplete_runtime_integrations(
+    monkeypatch: pytest.MonkeyPatch,
+    integration_environment: dict[str, str],
+) -> None:
+    for name, value in integration_environment.items():
+        monkeypatch.setenv(name, value)
+
+    settings = DatabaseConnectionSettings(
+        _env_file=None,
+        app_environment=RuntimeEnvironment.DEVELOPMENT,
+        database_url="postgresql://user:password@pooled.example/development",
+        direct_database_url="postgresql://user:password@direct.example/development",
+        test_database_url=None,
+    )
+
+    assert settings.migration_database_url == (
+        "postgresql://user:password@direct.example/development"
+    )
+
+
+@pytest.mark.parametrize("settings_class", [ApiSettings, WorkerSettings])
+@pytest.mark.parametrize(
+    ("integration_environment", "message"),
+    [
+        (
+            {
+                "GOOGLE_CALENDAR_ENABLED": "true",
+                "BOOKING_EMAIL_ENABLED": "false",
+                "GOOGLE_CLIENT_ID": "",
+                "GOOGLE_CLIENT_SECRET": "",
+                "GOOGLE_REDIRECT_URI": "",
+                "CALENDAR_TOKEN_ENCRYPTION_KEY": "",
+            },
+            "Google OAuth and calendar encryption configuration are required",
+        ),
+        (
+            {
+                "GOOGLE_CALENDAR_ENABLED": "false",
+                "BOOKING_EMAIL_ENABLED": "true",
+                "RESEND_API_KEY": "",
+                "RESEND_WEBHOOK_SECRET": "",
+                "BOOKING_EMAIL_FROM": "",
+            },
+            "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and BOOKING_EMAIL_FROM are required",
+        ),
+    ],
+)
+def test_runtime_settings_require_enabled_integration_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+    settings_class: type[ApiSettings] | type[WorkerSettings],
+    integration_environment: dict[str, str],
+    message: str,
+) -> None:
+    for name, value in integration_environment.items():
+        monkeypatch.setenv(name, value)
+
+    values: dict[str, object] = {
+        "app_environment": RuntimeEnvironment.DEVELOPMENT,
+        "database_url": "postgresql://user:password@localhost/development",
+        "test_database_url": None,
+        "api_host": "127.0.0.1",
+        "api_port": 8000,
+        "worker_name": "synthetic-worker",
+        "conversation_ai_enabled": False,
+        "demo_sandbox_enabled": False,
+        "customer_portal_enabled": False,
+    }
+    with pytest.raises(ValidationError, match=message):
+        settings_class(_env_file=None, **values)
 
 
 def test_api_settings_reject_invalid_port() -> None:

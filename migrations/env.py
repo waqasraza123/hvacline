@@ -8,7 +8,7 @@ from insurance_operations.database.connection import (
     psycopg_url,
 )
 from insurance_operations.database.models import Base
-from insurance_operations.settings import DatabaseSettings
+from insurance_operations.settings import DatabaseConnectionSettings
 
 config = context.config
 if config.config_file_name is not None:
@@ -18,7 +18,7 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    settings = DatabaseSettings()
+    settings = DatabaseConnectionSettings()
     context.configure(
         url=psycopg_url(settings.migration_database_url).render_as_string(
             hide_password=False
@@ -34,7 +34,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    settings = DatabaseSettings()
+    settings = DatabaseConnectionSettings()
     database_engine = create_database_engine(
         settings,
         service_name="alembic",
