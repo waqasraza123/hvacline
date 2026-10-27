@@ -1,5 +1,9 @@
 # Project State
 
+## Node 24 hosting compatibility — owner verification pending
+
+The owner supplied a Vercel failure rejecting the root Node engine `>=26 <27` before the Python job build. Root/web manifests, npm lockfile engine metadata, `.nvmrc` and web CI now select Node 24 (`24.x` engines), matching Vercel's supported version. No dependency versions changed. Source/build compatibility and deployment remain unverified; no installs, tests, builds, linters or type checks ran. Owner commands and deployment checks: `docs/vercel-booking-jobs.md`.
+
 ## Vercel booking job runner — owner verification pending
 
 The owner declined paid Render workers and selected Vercel. A separate root-level FastAPI Vercel project now exposes a bearer-protected POST batch runner, using the same database/integration configuration and a dedicated `BOOKING_JOBS_SECRET`. The frontend remains rooted at `apps/web`; the API remains on Render. Shared PostgreSQL transaction advisory locking coordinates function invocations and the retained standalone worker. Batches interleave notifications/calendar work, use a cooperative 20-second deadline with bounded database/provider waits, and preserve durable retries and provider idempotency. No new migration is required. Vercel Hobby cron is daily, so frequent invocations require an external scheduler. Source implementation and regression specifications are unverified; no tests, builds, linters, type checks, services or deployments ran. Exact setup, commands and manual checks: `docs/vercel-booking-jobs.md`.

@@ -10,6 +10,8 @@ Implementation and hosting are **unverified**. No tests, builds, linters, type c
 4. Add `BOOKING_JOBS_SECRET`, a separate randomly generated secret with at least 32 characters and no whitespace, using secret storage. Missing/invalid configuration stops startup. Never put it in a URL, repository, frontend variable or notes. The scheduler needs this secret, not database/provider credentials.
 5. Deploy this project to its stable production URL. Vercel's Production environment label does not change the application's development-only identity gates. If Vercel Deployment Protection blocks the scheduler, use the project's supported automation-bypass mechanism and keep bearer authentication enabled. Do not weaken the frontend or API's protections. Review Vercel's current plan eligibility and included usage for this account.
 
+Vercel validates the repository's Node engine before the Python build. Root/web manifests, lockfile metadata, `.nvmrc` and CI now select Node 24, replacing the unsupported Node 26 requirement. Set Node.js Version to `24.x` in the Vercel project's Build and Deployment settings if needed, and deploy the latest commit instead of retrying `7dbd5aa`. This repair is unverified. Owner commands: `nvm install`, `nvm use`, `npm ci`, `npm run verify:web`. Manually confirm the job deployment passes Node version selection, installs the Python package and reaches function startup.
+
 The function exposes only `POST /api/v1/internal/booking-jobs/run`. It does not expose the customer API, provider webhooks, documentation or a public job-status endpoint.
 
 ## Schedule free invocations

@@ -26,7 +26,7 @@ Internal `insurance_operations`, `@insurance-operations/web`, CLI names, existin
 
 ## Setup
 
-Requires Node.js 26 and Python 3.13.
+Requires Node.js 24 and Python 3.13.
 
 ```bash
 cp .env.example .env
