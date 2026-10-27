@@ -9,6 +9,8 @@ import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import { OperationsApiError, requestApi } from "@/features/operations/api";
 import type { Appointment } from "@/features/operations/api";
 import type { Customer } from "./server";
+import { BookingDetailsModal } from "./booking-details-modal";
+import { BookingChange } from "./booking-details";
 
 type MyAppointments = { appointments: Appointment[]; timezone: string | null };
 
@@ -24,6 +26,9 @@ export function CustomerBooking({
   const [voiceActive, setVoiceActive] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState("");
+  const [selectedBooking, setSelectedBooking] = useState<string>();
+  const [appointmentsRevision, setAppointmentsRevision] = useState(0);
+  const [bookingChanges] = useState(() => new Map<string, BookingChange>());
   async function logout() {
     setSigningOut(true);
     setError("");
@@ -111,6 +116,7 @@ export function CustomerBooking({
               presentation="customer"
               onActivityChange={setVoiceActive}
               onViewAppointments={() => setTab("appointments")}
+              onViewBooking={setSelectedBooking}
             />
           ) : (
             <section className="customer-empty">
@@ -126,9 +132,27 @@ export function CustomerBooking({
             </section>
           )
         ) : (
-          <AppointmentList onBook={() => setTab("book")} />
+          <AppointmentList
+            key={appointmentsRevision}
+            onBook={() => setTab("book")}
+            onViewBooking={setSelectedBooking}
+          />
         )}
       </main>
+      {selectedBooking && (
+        <BookingDetailsModal
+          key={selectedBooking}
+          appointmentId={selectedBooking}
+          changes={bookingChanges}
+          editingDisabled={voiceActive}
+          onClose={() => setSelectedBooking(undefined)}
+          onChanged={(appointment) => {
+            setAppointmentsRevision((current) => current + 1);
+            setTab("appointments");
+            setSelectedBooking(appointment.id);
+          }}
+        />
+      )}
       <footer className="customer-footer product-container">
         <span>HVACLine. A better first conversation.</span>
         <Link href="/">Back to home ↗</Link>
@@ -137,7 +161,13 @@ export function CustomerBooking({
   );
 }
 
-function AppointmentList({ onBook }: { onBook: () => void }) {
+function AppointmentList({
+  onBook,
+  onViewBooking,
+}: {
+  onBook: () => void;
+  onViewBooking: (appointmentId: string) => void;
+}) {
   const [data, setData] = useState<MyAppointments>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -260,6 +290,13 @@ function AppointmentList({ onBook }: { onBook: () => void }) {
                 · {data.timezone ?? "UTC"}
               </p>
               <small>HVAC service appointment</small>
+              <button
+                type="button"
+                className="product-text-link"
+                onClick={() => onViewBooking(appointment.id)}
+              >
+                View details &amp; edit
+              </button>
             </div>
             <span
               className={`appointment-status status-${appointment.status.toLowerCase()}`}

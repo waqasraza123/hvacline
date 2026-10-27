@@ -1,5 +1,9 @@
 # Project State
 
+## Booking details and three-minute timer — owner verification pending
+
+The customer booking receipt and history now open an owned-booking details modal. Date/time edits reuse the existing reschedule transaction, Google conflict/ownership checks, notice rules and notification outbox, with explicit confirmation and retained browser-memory retry keys after uncertain responses. The customer proxy exposes only scoped details/availability/reschedule routes. Contact/service snapshots remain displayed reference data. The owner retained the 180-second cap; a prominent countdown uses the server authorization expiry, warns in the final minute and explains local timer expiry. Interrupted ten-minute changes and the unexecuted migration were discarded; no new migration or provider configuration change is included. Source formatting and unexecuted regression specifications only; runtime remains unverified. Exact owner commands, deployment order and acceptance: `docs/booking-details-and-timer.md`.
+
 ## Node 24 hosting compatibility — owner verification pending
 
 The owner supplied a Vercel failure rejecting the root Node engine `>=26 <27` before the Python job build. Root/web manifests, npm lockfile engine metadata, `.nvmrc` and web CI now select Node 24 (`24.x` engines), matching Vercel's supported version. No dependency versions changed. Source/build compatibility and deployment remain unverified; no installs, tests, builds, linters or type checks ran. Owner commands and deployment checks: `docs/vercel-booking-jobs.md`.

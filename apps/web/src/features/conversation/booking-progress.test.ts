@@ -195,6 +195,7 @@ it("renders a prominent receipt after disconnect and restricts navigation during
         conversationBusy,
         conversationEnded: !conversationBusy,
         onViewAppointments: vi.fn(),
+        onViewBooking: vi.fn(),
       }),
     );
   expect(render(true)).toContain("disabled");
@@ -203,6 +204,7 @@ it("renders a prominent receipt after disconnect and restricts navigation during
   expect(ended).toContain("America/New_York");
   expect(ended).toContain("AC repair");
   expect(ended).toContain("View my appointments");
+  expect(ended).toContain("View booking details");
   expect(ended).not.toContain("disabled");
   expect(ended).toContain('aria-current="step"');
 });

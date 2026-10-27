@@ -7,7 +7,10 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, sessionmaker
 
-from insurance_operations.database.models.booking_integrations import CalendarConnection
+from insurance_operations.database.models.booking_integrations import (
+    CalendarBooking,
+    CalendarConnection,
+)
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -179,7 +182,11 @@ class SchedulingService:
             return row.id
 
     def availability(
-        self, agency_id: UUID, request: AvailabilityInput
+        self,
+        agency_id: UUID,
+        request: AvailabilityInput,
+        *,
+        replace_id: UUID | None = None,
     ) -> AvailabilityResponse:
         with self.sessions() as session, session.begin():
             schedule = session.get(BusinessSchedule, agency_id)
@@ -192,6 +199,11 @@ class SchedulingService:
             configuration = ScheduleInput.model_validate(schedule.configuration)
             in_area = request.postal_code in configuration.postal_codes
             now = datetime.now(UTC)
+            previous = (
+                self._appointment(session, agency_id, replace_id)
+                if replace_id
+                else None
+            )
             slots = candidate_slots(configuration, request.day, now) if in_area else []
             busy = self._busy(session, agency_id, now)
             free = [
@@ -203,6 +215,7 @@ class SchedulingService:
                         slot.starts_at, slot.ends_at, row.starts_at, row.ends_at
                     )
                     for row in busy
+                    if row.id != replace_id
                 )
             ]
             if free:
@@ -215,9 +228,25 @@ class SchedulingService:
                             slot for slot in free if slot.team_key == team_key
                         ]
                         with calendar_adapter(session, connection) as adapter:
+                            excluded: frozenset[str] = frozenset()
+                            previous_binding = (
+                                session.get(CalendarBooking, previous.id)
+                                if previous is not None
+                                else None
+                            )
+                            if (
+                                previous is not None
+                                and previous_binding is not None
+                                and previous_binding.connection_id == connection.id
+                            ):
+                                adapter.verify(
+                                    previous.id, previous.starts_at, previous.ends_at
+                                )
+                                excluded = frozenset({previous.id.hex})
                             periods = adapter.busy_events(
                                 min(slot.starts_at for slot in team_slots),
                                 max(slot.ends_at for slot in team_slots),
+                                excluded,
                             )
                         free = [
                             slot

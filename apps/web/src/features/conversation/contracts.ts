@@ -58,6 +58,7 @@ export type ConversationSessionAuthorization = Readonly<{
   transport: ConversationTransport;
   credential: string;
   maximumDurationSeconds: number;
+  authorizationExpiresAt?: string;
   confirmationExpiresAt: string;
 }>;
 

@@ -8,6 +8,31 @@ import { lookupConversationApprovedFaq } from "../approved-faqs/api";
 
 afterEach(() => vi.unstubAllGlobals());
 
+it("passes the server session expiry to the countdown", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValueOnce(
+      Response.json({
+        session_id: "session-1",
+        input_mode: "TEXT",
+        connection: {
+          transport: "websocket",
+          credential: "synthetic-signed-grant",
+        },
+        maximum_duration_seconds: 180,
+        authorization_expires_at: "2030-01-01T12:03:00Z",
+        confirmation_expires_at: "2030-01-01T12:30:00Z",
+      }),
+    ),
+  );
+  await expect(
+    authorizeConversationSession("", undefined, "TEXT"),
+  ).resolves.toMatchObject({
+    maximumDurationSeconds: 180,
+    authorizationExpiresAt: "2030-01-01T12:03:00Z",
+  });
+});
+
 it("preserves owned-session recovery details without creating another session", async () => {
   const previousSessionId = "00000000-0000-4000-8000-000000000099";
   const fetcher = vi.fn().mockResolvedValueOnce(

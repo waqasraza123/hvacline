@@ -172,6 +172,7 @@ class ConversationService:
                 credential=grant.credential,
             ),
             maximum_duration_seconds=self._settings.conversation_max_duration_seconds,
+            authorization_expires_at=authorization_expires_at,
             confirmation_expires_at=confirmation_expires_at,
         )
 
@@ -240,7 +241,10 @@ class ConversationService:
                     conversation_session.status = ConversationSessionStatus.FAILED.value
                     conversation_session.failure_code = expected_code
                     conversation_session.ended_at = now
-                elif conversation_session.status == ConversationSessionStatus.EXPIRED.value:
+                elif (
+                    conversation_session.status
+                    == ConversationSessionStatus.EXPIRED.value
+                ):
                     conversation_session.ended_at = conversation_session.ended_at or now
                 elif conversation_session.status != (
                     ConversationSessionStatus.CONFIRMED.value

@@ -11,6 +11,7 @@ from insurance_operations.approved_faqs import ApprovedFaqLookupInput, ApprovedF
 from insurance_operations.conversations.booking import create_browser_booking_router
 from insurance_operations.conversations.schemas import ConversationEndInput, ConversationEndResponse, ConversationIntakeConfirmationInput, ConversationIntakeResponse, ConversationSessionCreateInput, ConversationSessionResponse
 from insurance_operations.conversations.service import ConversationService
+from insurance_operations.customer_access.bookings import create_customer_booking_router
 from insurance_operations.customer_access.schemas import AccountView, LoginInput, LoginResponse, SignupInput
 from insurance_operations.customer_access.service import CustomerAccessService, unauthorized
 from insurance_operations.database.models.conversation import ConversationSession
@@ -157,4 +158,5 @@ def create_customer_router(
         return scheduling.release_hold(customer.agency_id, appointment_id, UUID(request.state.correlation_id))
 
     router.include_router(create_browser_booking_router(sessions, actor, prefix="/conversation-sessions/{session_id}/booking"))
+    router.include_router(create_customer_booking_router(sessions, actor))
     return router

@@ -37,6 +37,7 @@ import {
 import type { ConnectionFailureSource, ConversationPhase } from "./lifecycle";
 import { appendTranscript, validateConfirmation } from "./review";
 import { VoiceBookingSession } from "./voice-booking";
+import { SessionTimer, remainingSessionSeconds } from "./session-timer";
 import type { VoiceAppointment, VoiceBookingTool } from "./voice-booking";
 import type { ReceptionistSettings } from "../receptionist/contracts";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
@@ -48,6 +49,7 @@ type VoiceTestProperties = Readonly<{
   presentation?: "workspace" | "customer";
   onActivityChange?: (active: boolean) => void;
   onViewAppointments?: () => void;
+  onViewBooking?: (appointmentId: string) => void;
 }>;
 
 type IntakeForm = {
@@ -85,6 +87,7 @@ export function VoiceTest({
   presentation = "workspace",
   onActivityChange,
   onViewAppointments,
+  onViewBooking,
 }: VoiceTestProperties) {
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [form, setForm] = useState<IntakeForm>(EMPTY_FORM);
@@ -303,6 +306,7 @@ export function VoiceTest({
           bookingProgress={bookingProgress}
           setBookingProgress={setBookingProgress}
           onViewAppointments={onViewAppointments}
+          onViewBooking={onViewBooking}
         />
       )}
     </ConfiguredConversationAdapter>
@@ -336,6 +340,7 @@ type ExperienceProperties = Readonly<{
   bookingProgress: BookingProgress;
   setBookingProgress: Dispatch<SetStateAction<BookingProgress>>;
   onViewAppointments?: () => void;
+  onViewBooking?: (appointmentId: string) => void;
 }>;
 
 function VoiceTestExperience({
@@ -363,6 +368,7 @@ function VoiceTestExperience({
   bookingProgress,
   setBookingProgress,
   onViewAppointments,
+  onViewBooking,
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
@@ -370,6 +376,8 @@ function VoiceTestExperience({
     useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(180);
   const [maximumDuration, setMaximumDuration] = useState(180);
+  const [timeLimitReached, setTimeLimitReached] = useState(false);
+  const sessionDeadlineRef = useRef<number | undefined>(undefined);
   const [confirmationLocked, setConfirmationLocked] = useState(false);
   const [blockedSessionId, setBlockedSessionId] = useState<string>();
   const [inputMode, setInputMode] = useState<ConversationInputMode>(
@@ -437,22 +445,34 @@ function VoiceTestExperience({
     if (phase !== "active") {
       return;
     }
-    const startedAt = Date.now();
-    const interval = window.setInterval(() => {
-      const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1_000);
-      const nextRemaining = Math.max(maximumDuration - elapsedSeconds, 0);
+    const deadline = sessionDeadlineRef.current;
+    if (deadline === undefined) return;
+    const tick = () => {
+      const nextRemaining = Math.min(
+        maximumDuration,
+        remainingSessionSeconds(deadline, Date.now()),
+      );
       setRemainingSeconds(nextRemaining);
       if (nextRemaining === 0) {
         window.clearInterval(interval);
+        setTimeLimitReached(true);
         void finishConversationRef.current();
       }
-    }, 1_000);
-    return () => window.clearInterval(interval);
+    };
+    const refresh = window.setTimeout(tick, 0);
+    const interval = window.setInterval(tick, 1_000);
+    return () => {
+      window.clearTimeout(refresh);
+      window.clearInterval(interval);
+    };
   }, [maximumDuration, phase]);
 
   async function startConversation() {
     if (!["idle", "error"].includes(phaseRef.current)) return;
     if (blockedSessionId !== undefined) return;
+    setTimeLimitReached(false);
+    setRemainingSeconds(maximumDuration);
+    sessionDeadlineRef.current = undefined;
     if (
       !disclosureAccepted ||
       (!textOnly && !microphoneConsent) ||
@@ -535,6 +555,9 @@ function VoiceTestExperience({
       });
       setMaximumDuration(authorization.maximumDurationSeconds);
       setRemainingSeconds(authorization.maximumDurationSeconds);
+      sessionDeadlineRef.current = authorization.authorizationExpiresAt
+        ? Date.parse(authorization.authorizationExpiresAt)
+        : Date.now() + authorization.maximumDurationSeconds * 1000;
       setPhase("connecting");
       await client.start(authorization);
       if (phaseRef.current === "stopping" || phaseRef.current === "error") {
@@ -680,6 +703,10 @@ function VoiceTestExperience({
   }
 
   function resetExperience() {
+    sessionDeadlineRef.current = undefined;
+    setRemainingSeconds(180);
+    setMaximumDuration(180);
+    setTimeLimitReached(false);
     sessionIdRef.current = undefined;
     confirmationKeyRef.current = undefined;
     setConfirmationLocked(false);
@@ -926,9 +953,28 @@ function VoiceTestExperience({
         </div>
         <p className="voice-status">
           {conversationActivity(phase, client, inputMode)}
-          {phase === "active" &&
-            ` · ${formatDuration(remainingSeconds)} remaining`}
         </p>
+        <SessionTimer
+          remaining={remainingSeconds}
+          maximum={maximumDuration}
+          active={phase === "active"}
+        />
+        {phase === "active" &&
+          remainingSeconds > 0 &&
+          remainingSeconds <= 60 && (
+            <p className="voice-status" role="status">
+              Less than a minute remains. Finish confirming your appointment, or
+              continue with the booking controls after the conversation ends.
+            </p>
+          )}
+        {timeLimitReached && (
+          <p className="voice-status" role="status">
+            The conversation reached its time limit. Your saved request and any
+            confirmed appointment are kept. If your request is saved, you can
+            finish choosing and confirming a time with the booking controls
+            below.
+          </p>
+        )}
         {errorMessage && (
           <p className="error-message" role="alert">
             {errorMessage}
@@ -949,6 +995,7 @@ function VoiceTestExperience({
             "error",
           ].includes(phase)}
           onViewAppointments={onViewAppointments}
+          onViewBooking={onViewBooking}
         />
       </section>
 
@@ -1240,10 +1287,4 @@ function FormField({
       />
     </label>
   );
-}
-
-function formatDuration(totalSeconds: number): string {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-  return `${minutes}:${seconds}`;
 }

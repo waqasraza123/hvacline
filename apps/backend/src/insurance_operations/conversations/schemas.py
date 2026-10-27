@@ -35,6 +35,7 @@ class ConversationSessionResponse(BaseModel):
     input_mode: ConversationInputMode = "VOICE"
     connection: ConversationConnection
     maximum_duration_seconds: int
+    authorization_expires_at: datetime | None = None
     confirmation_expires_at: datetime
 
 

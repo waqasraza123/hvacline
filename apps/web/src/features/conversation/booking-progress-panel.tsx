@@ -20,6 +20,7 @@ export function BookingProgressPanel({
   conversationBusy,
   conversationEnded,
   onViewAppointments,
+  onViewBooking,
 }: {
   progress: BookingProgress;
   appointment?: VoiceAppointment;
@@ -27,6 +28,7 @@ export function BookingProgressPanel({
   conversationBusy: boolean;
   conversationEnded: boolean;
   onViewAppointments?: () => void;
+  onViewBooking?: (appointmentId: string) => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const failureId = useId();
@@ -164,6 +166,14 @@ export function BookingProgressPanel({
                 <p>Finish your conversation to view your appointments.</p>
               )}
             </>
+          )}
+          {view.confirmed && onViewBooking && (
+            <button
+              type="button"
+              onClick={() => onViewBooking(appointment.appointment.id)}
+            >
+              View booking details
+            </button>
           )}
         </div>
       )}

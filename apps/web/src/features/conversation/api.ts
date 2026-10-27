@@ -76,6 +76,7 @@ export async function authorizeConversationSession(
   const transport = body.connection.transport;
   const credential = requiredString(body.connection.credential);
   const maximumDurationSeconds = body.maximum_duration_seconds;
+  const authorizationExpiresAt = requiredString(body.authorization_expires_at);
   const confirmationExpiresAt = requiredString(body.confirmation_expires_at);
   if (
     sessionId === undefined ||
@@ -84,7 +85,12 @@ export async function authorizeConversationSession(
     transport !== (inputMode === "TEXT" ? "websocket" : "webrtc") ||
     credential === undefined ||
     confirmationExpiresAt === undefined ||
-    typeof maximumDurationSeconds !== "number"
+    typeof maximumDurationSeconds !== "number" ||
+    !Number.isInteger(maximumDurationSeconds) ||
+    maximumDurationSeconds < 1 ||
+    maximumDurationSeconds > 180 ||
+    (authorizationExpiresAt !== undefined &&
+      !Number.isFinite(Date.parse(authorizationExpiresAt)))
   ) {
     if (sessionId !== undefined) {
       await endConversationSession(
@@ -105,6 +111,7 @@ export async function authorizeConversationSession(
     transport,
     credential,
     maximumDurationSeconds,
+    authorizationExpiresAt,
     confirmationExpiresAt,
   };
 }

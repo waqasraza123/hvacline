@@ -10,7 +10,7 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import DBAPIError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.application import create_app
 from insurance_operations.conversations.contracts import (
@@ -33,6 +33,12 @@ from insurance_operations.database.models.identity import (
 )
 from insurance_operations.database.models.lead import AgencyLead
 from insurance_operations.database.models.operations import AuditEvent
+from insurance_operations.hvac.schemas import (
+    AvailabilityInput,
+    ReservationInput,
+    ScheduleInput,
+)
+from insurance_operations.hvac.service import SchedulingService
 from insurance_operations.settings import (
     ApiSettings,
     DatabaseSettings,
@@ -318,7 +324,9 @@ def test_repeated_failed_session_cleanup_releases_the_slot(
     assert status_code == 201
     path = f"/api/v1/development/conversation-sessions/{body['session_id']}/end"
     for outcome in ["FAILED", "INTERRUPTED", "FAILED"]:
-        status_code, ended, _ = asyncio.run(post_json(api.application, path, {"outcome": outcome}))
+        status_code, ended, _ = asyncio.run(
+            post_json(api.application, path, {"outcome": outcome})
+        )
         assert status_code == 200
         assert ended["status"] == "FAILED"
     assert authorize_session(api)[0] == 201
@@ -679,37 +687,54 @@ def test_browser_confirmation_creates_one_hvac_request_on_retry(
     assert status_code == 201
     session_id = authorization["session_id"]
     assert isinstance(session_id, str)
-    ended, _, _ = asyncio.run(post_json(
-        api.application,
-        f"/api/v1/development/conversation-sessions/{session_id}/end",
-        {"outcome": "COMPLETED"},
-    ))
+    ended, _, _ = asyncio.run(
+        post_json(
+            api.application,
+            f"/api/v1/development/conversation-sessions/{session_id}/end",
+            {"outcome": "COMPLETED"},
+        )
+    )
     assert ended == 200
     payload: JsonObject = {
         "conversation_session_id": session_id,
         "customer": {
-            "full_name": "Fictional HVAC Caller", "phone": "+12025550123",
+            "full_name": "Fictional HVAC Caller",
+            "phone": "+12025550123",
             "address": {
-                "line1": "123 Example Street", "city": "New York",
-                "state_code": "NY", "postal_code": "10001",
+                "line1": "123 Example Street",
+                "city": "New York",
+                "state_code": "NY",
+                "postal_code": "10001",
             },
         },
         "intake_intent": "AC stopped cooling",
         "service": {
-            "kind": "AC_REPAIR", "equipment_issue": "AC stopped cooling",
-            "preferred_window": "Tomorrow morning", "hazardous_condition": hazardous,
+            "kind": "AC_REPAIR",
+            "equipment_issue": "AC stopped cooling",
+            "preferred_window": "Tomorrow morning",
+            "hazardous_condition": hazardous,
         },
         "transcript": [
             {"speaker": "AGENT", "text": "Please review your fictional details."},
             {"speaker": "USER", "text": "I confirm these fictional details."},
         ],
     }
-    first = asyncio.run(post_json(api.application,
-        "/api/v1/development/conversation-intakes", payload,
-        idempotency_key="browser-hvac-confirm"))
-    replay = asyncio.run(post_json(api.application,
-        "/api/v1/development/conversation-intakes", payload,
-        idempotency_key="browser-hvac-confirm"))
+    first = asyncio.run(
+        post_json(
+            api.application,
+            "/api/v1/development/conversation-intakes",
+            payload,
+            idempotency_key="browser-hvac-confirm",
+        )
+    )
+    replay = asyncio.run(
+        post_json(
+            api.application,
+            "/api/v1/development/conversation-intakes",
+            payload,
+            idempotency_key="browser-hvac-confirm",
+        )
+    )
     assert first[0] == 201
     assert replay[1] == first[1]
     assert replay[2]["idempotent-replayed"] == "true"
@@ -721,8 +746,14 @@ def test_browser_confirmation_creates_one_hvac_request_on_retry(
         assert row.agency_id == api.agency_id
         assert row.status == ("HANDOFF_REQUESTED" if hazardous else "OPEN")
         assert row.customer_details["phone"] == "+12025550123"
-        assert session.scalar(select(func.count()).select_from(HvacServiceRequest)
-            .where(HvacServiceRequest.agency_id == api.agency_id)) == 1
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(HvacServiceRequest)
+                .where(HvacServiceRequest.agency_id == api.agency_id)
+            )
+            == 1
+        )
 
 
 def test_browser_voice_books_only_after_two_spoken_confirmations(
@@ -734,16 +765,24 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
     windows: list[JsonValue] = [
         {"weekday": day.weekday(), "start": "08:00", "end": "17:00"}
     ]
-    configured, _, _ = asyncio.run(request_json(
-        api.application, "PUT", "/api/v1/development/hvac/schedule",
-        {
-            "expected_version": 0, "enabled": True,
-            "timezone": "America/New_York", "postal_codes": ["10001"],
-            "windows": windows,
-            "teams": [{"key": "team-a", "name": "Service team", "windows": windows}],
-            "notice_minutes": 0,
-        },
-    ))
+    configured, _, _ = asyncio.run(
+        request_json(
+            api.application,
+            "PUT",
+            "/api/v1/development/hvac/schedule",
+            {
+                "expected_version": 0,
+                "enabled": True,
+                "timezone": "America/New_York",
+                "postal_codes": ["10001"],
+                "windows": windows,
+                "teams": [
+                    {"key": "team-a", "name": "Service team", "windows": windows}
+                ],
+                "notice_minutes": 0,
+            },
+        )
+    )
     assert configured == 200
     status_code, authorization, _ = authorize_session(api)
     assert status_code == 201
@@ -751,29 +790,40 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
     assert isinstance(session_id, str)
     base = f"/api/v1/development/conversation-sessions/{session_id}/booking"
 
-    def post(path: str, body: JsonObject) -> tuple[int, dict[str, object], dict[str, str]]:
+    def post(
+        path: str, body: JsonObject
+    ) -> tuple[int, dict[str, object], dict[str, str]]:
         return asyncio.run(post_json(api.application, base + path, body))
 
     assert post("/availability", {"day": day.isoformat()})[0] == 409
     payload: JsonObject = {
         "conversation_session_id": session_id,
         "customer": {
-            "full_name": "Fictional Browser Caller", "phone": "+12025550123",
+            "full_name": "Fictional Browser Caller",
+            "phone": "+12025550123",
             "address": {
-                "line1": "123 Example Street", "city": "New York",
-                "state_code": "NY", "postal_code": "10001",
+                "line1": "123 Example Street",
+                "city": "New York",
+                "state_code": "NY",
+                "postal_code": "10001",
             },
         },
         "intake_intent": "AC stopped cooling",
         "service": {
-            "kind": "AC_REPAIR", "equipment_issue": "AC stopped cooling",
-            "preferred_window": day.isoformat(), "hazardous_condition": False,
+            "kind": "AC_REPAIR",
+            "equipment_issue": "AC stopped cooling",
+            "preferred_window": day.isoformat(),
+            "hazardous_condition": False,
         },
         "spoken_confirmation": True,
     }
-    prepared_status, prepared, _ = post("/intake-readback", {
-        "customer": payload["customer"], "service": payload["service"],
-    })
+    prepared_status, prepared, _ = post(
+        "/intake-readback",
+        {
+            "customer": payload["customer"],
+            "service": payload["service"],
+        },
+    )
     assert prepared_status == 200
     readback = prepared["readback"]
     assert isinstance(readback, str)
@@ -781,23 +831,44 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
         {"speaker": "AGENT", "text": readback},
         {"speaker": "USER", "text": "Yes, but change the address."},
     ]
-    denied = asyncio.run(post_json(api.application,
-        "/api/v1/development/conversation-intakes", payload,
-        idempotency_key="spoken-browser-intake"))
+    denied = asyncio.run(
+        post_json(
+            api.application,
+            "/api/v1/development/conversation-intakes",
+            payload,
+            idempotency_key="spoken-browser-intake",
+        )
+    )
     assert denied[0] == 422
     with Session(migrated_database) as session:
-        assert session.scalar(select(func.count()).select_from(HvacServiceRequest)
-            .where(HvacServiceRequest.agency_id == api.agency_id)) == 0
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(HvacServiceRequest)
+                .where(HvacServiceRequest.agency_id == api.agency_id)
+            )
+            == 0
+        )
     payload["transcript"] = [
         {"speaker": "AGENT", "text": readback},
         {"speaker": "USER", "text": "Yes, save my request."},
     ]
-    saved = asyncio.run(post_json(api.application,
-        "/api/v1/development/conversation-intakes", payload,
-        idempotency_key="spoken-browser-intake"))
-    replay = asyncio.run(post_json(api.application,
-        "/api/v1/development/conversation-intakes", payload,
-        idempotency_key="spoken-browser-intake"))
+    saved = asyncio.run(
+        post_json(
+            api.application,
+            "/api/v1/development/conversation-intakes",
+            payload,
+            idempotency_key="spoken-browser-intake",
+        )
+    )
+    replay = asyncio.run(
+        post_json(
+            api.application,
+            "/api/v1/development/conversation-intakes",
+            payload,
+            idempotency_key="spoken-browser-intake",
+        )
+    )
     assert saved[0] == 201
     assert replay[1] == saved[1]
     assert authorize_session(api)[0] == 409
@@ -807,7 +878,8 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
     assert isinstance(slots, list) and slots
     slot = slots[0]
     reservation: JsonObject = {
-        "team_key": slot["team_key"], "starts_at": slot["starts_at"],
+        "team_key": slot["team_key"],
+        "starts_at": slot["starts_at"],
         "idempotency_key": "spoken-browser-reservation",
     }
     held_status, held, _ = post("/reservations", reservation)
@@ -831,18 +903,30 @@ def test_browser_voice_books_only_after_two_spoken_confirmations(
         {"speaker": "AGENT", "text": booking_readback},
         {"speaker": "USER", "text": "Yes, confirm my appointment."},
     ]
-    confirmed_status, confirmed, _ = post(f"/appointments/{appointment_id}/confirm", confirmation)
+    confirmed_status, confirmed, _ = post(
+        f"/appointments/{appointment_id}/confirm", confirmation
+    )
     assert confirmed_status == 200
     confirmed_appointment = confirmed["appointment"]
     assert isinstance(confirmed_appointment, dict)
     assert confirmed_appointment["status"] == "CONFIRMED"
     assert post(f"/appointments/{appointment_id}/release", {})[0] == 409
     with Session(migrated_database) as session:
-        assert session.scalar(select(func.count()).select_from(Appointment)
-            .where(Appointment.agency_id == api.agency_id)) == 1
-    ended = asyncio.run(post_json(api.application,
-        f"/api/v1/development/conversation-sessions/{session_id}/end",
-        {"outcome": "INTERRUPTED"}))
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(Appointment)
+                .where(Appointment.agency_id == api.agency_id)
+            )
+            == 1
+        )
+    ended = asyncio.run(
+        post_json(
+            api.application,
+            f"/api/v1/development/conversation-sessions/{session_id}/end",
+            {"outcome": "INTERRUPTED"},
+        )
+    )
     assert ended[0] == 200
     assert ended[1]["status"] == "CONFIRMED"
     assert post("/availability", {"day": day.isoformat()})[0] == 409
@@ -857,12 +941,14 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     settings = ApiSettings(
         _env_file=None,
         app_environment=RuntimeEnvironment.DEVELOPMENT,
-        api_host="127.0.0.1", api_port=8000,
+        api_host="127.0.0.1",
+        api_port=8000,
         database_url=database_settings.runtime_database_url,
         database_ssl_mode=database_settings.database_ssl_mode,
         development_actor_user_id=development_conversation_api.app_user_id,
         conversation_ai_enabled=True,
-        elevenlabs_api_key="fictional-provider-key", elevenlabs_agent_id="agent_test",
+        elevenlabs_api_key="fictional-provider-key",
+        elevenlabs_agent_id="agent_test",
         elevenlabs_privacy_confirmed=True,
         demo_sandbox_enabled=True,
         demo_admin_token="fictional-administrator-token-for-tests-only",
@@ -871,21 +957,39 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     )
     application = create_app(settings, migrated_database, FakeConversationProvider())
 
-    async def send(path: str, body: JsonObject | None = None, token: str | None = None, method: str = "POST") -> tuple[int, dict[str, object]]:
-        headers = {"X-Customer-Portal-Key": "fictional-customer-portal-key-for-tests-only"}
+    async def send(
+        path: str,
+        body: JsonObject | None = None,
+        token: str | None = None,
+        method: str = "POST",
+    ) -> tuple[int, dict[str, object]]:
+        headers = {
+            "X-Customer-Portal-Key": "fictional-customer-portal-key-for-tests-only"
+        }
         if token:
             headers["Authorization"] = "Bearer " + token
         if path == "conversation-intakes":
             headers["Idempotency-Key"] = "fictional-customer-intake"
-        async with AsyncClient(transport=ASGITransport(app=application), base_url="http://test") as client:
-            response = await client.request(method, "/api/v1/customer/" + path, headers=headers, json=body)
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            response = await client.request(
+                method, "/api/v1/customer/" + path, headers=headers, json=body
+            )
         return response.status_code, response.json() if response.content else {}
 
     def signup(email: str) -> str:
-        status_code, body = asyncio.run(send("auth/signup", {
-            "full_name": "Fictional Customer", "email": email,
-            "password": "fictional account passphrase", "fictional_data_acknowledged": True,
-        }))
+        status_code, body = asyncio.run(
+            send(
+                "auth/signup",
+                {
+                    "full_name": "Fictional Customer",
+                    "email": email,
+                    "password": "fictional account passphrase",
+                    "fictional_data_acknowledged": True,
+                },
+            )
+        )
         assert status_code == 201
         token = body["session_token"]
         assert isinstance(token, str)
@@ -895,38 +999,220 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     second = signup("fictional-beta@example.com")
     assert asyncio.run(send("auth/me", token=first, method="GET"))[0] == 200
     assert asyncio.run(send("auth/me", method="GET"))[0] == 401
-    authorized, grant = asyncio.run(send("conversation-sessions", {
-        "ai_disclosure_accepted": True, "microphone_consent_granted": True,
-        "synthetic_data_acknowledged": True,
-    }, first))
+    authorized, grant = asyncio.run(
+        send(
+            "conversation-sessions",
+            {
+                "ai_disclosure_accepted": True,
+                "microphone_consent_granted": True,
+                "synthetic_data_acknowledged": True,
+            },
+            first,
+        )
+    )
     assert authorized == 201
     session_id = grant["session_id"]
     assert isinstance(session_id, str)
-    blocked_status, blocked = asyncio.run(send("conversation-sessions", {
-        "ai_disclosure_accepted": True, "microphone_consent_granted": True,
-        "synthetic_data_acknowledged": True,
-    }, second))
+    blocked_status, blocked = asyncio.run(
+        send(
+            "conversation-sessions",
+            {
+                "ai_disclosure_accepted": True,
+                "microphone_consent_granted": True,
+                "synthetic_data_acknowledged": True,
+            },
+            second,
+        )
+    )
     assert blocked_status == 409
     blocked_error = blocked["error"]
     assert isinstance(blocked_error, dict)
     blocked_details = blocked_error["details"]
     assert isinstance(blocked_details, dict)
     assert "previous_session_id" not in blocked_details
-    assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, second))[0] == 404
-    assert asyncio.run(send(f"conversation-sessions/{session_id}/end", {"outcome": "COMPLETED"}, first))[0] == 200
-    saved_status, saved = asyncio.run(send("conversation-intakes", {
-        "conversation_session_id": session_id,
-        "customer": {"full_name": "Fictional Customer", "phone": "+12025550123", "address": {"line1": "123 Example Street", "city": "New York", "state_code": "NY", "postal_code": "10001"}},
-        "intake_intent": "AC is not cooling",
-        "service": {"kind": "AC_REPAIR", "equipment_issue": "AC is not cooling", "preferred_window": "Morning", "hazardous_condition": False},
-        "transcript": [{"speaker": "AGENT", "text": "Please review your fictional details."}, {"speaker": "USER", "text": "I confirm these fictional details."}],
-    }, first))
+    assert (
+        asyncio.run(
+            send(
+                f"conversation-sessions/{session_id}/end",
+                {"outcome": "COMPLETED"},
+                second,
+            )
+        )[0]
+        == 404
+    )
+    assert (
+        asyncio.run(
+            send(
+                f"conversation-sessions/{session_id}/end",
+                {"outcome": "COMPLETED"},
+                first,
+            )
+        )[0]
+        == 200
+    )
+    saved_status, saved = asyncio.run(
+        send(
+            "conversation-intakes",
+            {
+                "conversation_session_id": session_id,
+                "customer": {
+                    "full_name": "Fictional Customer",
+                    "phone": "+12025550123",
+                    "address": {
+                        "line1": "123 Example Street",
+                        "city": "New York",
+                        "state_code": "NY",
+                        "postal_code": "10001",
+                    },
+                },
+                "intake_intent": "AC is not cooling",
+                "service": {
+                    "kind": "AC_REPAIR",
+                    "equipment_issue": "AC is not cooling",
+                    "preferred_window": "Morning",
+                    "hazardous_condition": False,
+                },
+                "transcript": [
+                    {
+                        "speaker": "AGENT",
+                        "text": "Please review your fictional details.",
+                    },
+                    {"speaker": "USER", "text": "I confirm these fictional details."},
+                ],
+            },
+            first,
+        )
+    )
     assert saved_status == 201
     request_id = saved["service_request_id"]
     assert isinstance(request_id, str)
-    assert asyncio.run(send("hvac/reservations", {"service_request_id": request_id, "team_key": "team-a", "starts_at": "2030-01-01T12:00:00Z", "idempotency_key": "fictional-cross-account-booking"}, second))[0] == 404
-    assert asyncio.run(send("appointments", token=second, method="GET"))[1]["appointments"] == []
+    assert (
+        asyncio.run(
+            send(
+                "hvac/reservations",
+                {
+                    "service_request_id": request_id,
+                    "team_key": "team-a",
+                    "starts_at": "2030-01-01T12:00:00Z",
+                    "idempotency_key": "fictional-cross-account-booking",
+                },
+                second,
+            )
+        )[0]
+        == 404
+    )
+    assert (
+        asyncio.run(send("appointments", token=second, method="GET"))[1]["appointments"]
+        == []
+    )
+    scheduling = SchedulingService(
+        sessionmaker(
+            bind=migrated_database,
+            expire_on_commit=False,
+            info={"integration_settings": settings},
+        )
+    )
+    day = (datetime.now(UTC) + timedelta(days=2)).date()
+    windows = [{"weekday": day.weekday(), "start": "09:00", "end": "17:00"}]
+    scheduling.configure(
+        development_conversation_api.agency_id,
+        ScheduleInput(
+            expected_version=0,
+            enabled=True,
+            timezone="America/New_York",
+            postal_codes=["10001"],
+            windows=windows,
+            teams=[{"key": "team-a", "name": "Synthetic team", "windows": windows}],
+            notice_minutes=0,
+            cancellation_notice_minutes=0,
+        ),
+        uuid4(),
+    )
+    slot = scheduling.availability(
+        development_conversation_api.agency_id,
+        AvailabilityInput(postal_code="10001", day=day),
+    ).slots[0]
+    held = scheduling.reserve(
+        development_conversation_api.agency_id,
+        ReservationInput(
+            service_request_id=UUID(request_id),
+            team_key=slot.team_key,
+            starts_at=slot.starts_at,
+            idempotency_key="fictional-owned-booking",
+        ),
+        uuid4(),
+    )
+    appointment = scheduling.confirm(
+        development_conversation_api.agency_id, held.id, True, uuid4()
+    )
+    detail_path = f"appointments/{appointment.id}"
+    assert asyncio.run(send(detail_path, token=second, method="GET"))[0] == 404
+    detail_status, detail = asyncio.run(send(detail_path, token=first, method="GET"))
+    assert detail_status == 200
+    assert detail["can_reschedule"] is True
+    assert "transcript" not in detail
+    assert (
+        asyncio.run(
+            send(f"{detail_path}/availability", {"day": day.isoformat()}, second)
+        )[0]
+        == 404
+    )
+    available_status, available = asyncio.run(
+        send(f"{detail_path}/availability", {"day": day.isoformat()}, first)
+    )
+    assert available_status == 200
+    slots = available["slots"]
+    assert isinstance(slots, list) and len(slots) > 1
+    replacement = slots[1]
+    assert isinstance(replacement, dict)
+    change: JsonObject = {
+        "service_request_id": request_id,
+        "team_key": replacement["team_key"],
+        "starts_at": replacement["starts_at"],
+        "idempotency_key": "fictional-owned-reschedule",
+        "explicit_confirmation": True,
+    }
+    assert asyncio.run(send(f"{detail_path}/reschedule", change, second))[0] == 404
+    declined: JsonObject = {**change, "explicit_confirmation": False}
+    assert asyncio.run(send(f"{detail_path}/reschedule", declined, first))[0] == 409
+    changed_status, changed = asyncio.run(
+        send(f"{detail_path}/reschedule", change, first)
+    )
+    assert changed_status == 200 and changed["status"] == "CONFIRMED"
+    assert changed["id"] != str(appointment.id)
+    assert (
+        asyncio.run(send(f"{detail_path}/reschedule", change, first))[1]["id"]
+        == changed["id"]
+    )
+    old_status, old = asyncio.run(send(detail_path, token=first, method="GET"))
+    assert old_status == 200
+    old_appointment = old["appointment"]
+    assert (
+        isinstance(old_appointment, dict) and old_appointment["status"] == "CANCELLED"
+    )
     assert asyncio.run(send("auth/logout", {}, first))[0] == 204
     assert asyncio.run(send("auth/me", token=first, method="GET"))[0] == 401
-    assert asyncio.run(send("auth/login", {"email": "fictional-alpha@example.com", "password": "wrong fictional password"}))[0] == 401
-    assert asyncio.run(send("auth/login", {"email": "fictional-alpha@example.com", "password": "fictional account passphrase"}))[0] == 200
+    assert (
+        asyncio.run(
+            send(
+                "auth/login",
+                {
+                    "email": "fictional-alpha@example.com",
+                    "password": "wrong fictional password",
+                },
+            )
+        )[0]
+        == 401
+    )
+    assert (
+        asyncio.run(
+            send(
+                "auth/login",
+                {
+                    "email": "fictional-alpha@example.com",
+                    "password": "fictional account passphrase",
+                },
+            )
+        )[0]
+        == 200
+    )

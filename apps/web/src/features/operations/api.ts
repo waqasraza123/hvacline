@@ -80,6 +80,7 @@ export class OperationsApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code?: string,
   ) {
     super(message);
     this.name = "OperationsApiError";
@@ -108,6 +109,7 @@ export async function requestApi<T>(
     throw new OperationsApiError(
       response.status,
       data?.error?.message ?? "The request could not be completed.",
+      data?.error?.code,
     );
   return data as T;
 }
