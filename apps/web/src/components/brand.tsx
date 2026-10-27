@@ -2,17 +2,23 @@ import Link from "next/link";
 export function Brand() {
   return (
     <Link aria-label="HVACLine AI home" className="brand-link" href="/">
-      <svg aria-hidden="true" width="36" height="36" viewBox="0 0 36 36">
+      <svg
+        aria-hidden="true"
+        width="36"
+        height="36"
+        viewBox="0 0 36 36"
+        className="brand-symbol"
+      >
         <rect
           width="36"
           height="36"
           rx="11"
-          fill="var(--customer-accent, #2455F5)"
+          fill="var(--brand-charcoal)"
         />
         <path
-          d="M10 15v6m5-11v16m6-13v10m5-7v4"
+          d="M9 15v6m6-11v16m6-16v16m6-11v6M15 18h6"
           fill="none"
-          stroke="var(--customer-on-accent, white)"
+          stroke="var(--brand-orange)"
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"

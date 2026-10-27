@@ -80,10 +80,12 @@ main {
 }
 
 .brand-link {
+  --brand-orange: #f97316;
+  --brand-charcoal: #18181b;
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  color: var(--ink);
+  color: var(--brand-charcoal);
   font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -95,6 +97,14 @@ main {
   height: 2rem;
   flex: 0 0 auto;
   object-fit: contain;
+}
+
+.brand-symbol {
+  flex-shrink: 0;
+}
+
+.brand-line {
+  color: #c2410c;
 }
 
 .text-link {
@@ -919,7 +929,7 @@ body {
 }
 .brand-link em {
   font-style: normal;
-  color: #718467;
+  color: #c2410c;
   font-size: 0.8em;
 }
 .hvac-home {

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./styles.css";
 export const metadata: Metadata = {
@@ -14,7 +14,13 @@ export const metadata: Metadata = {
       "Stop losing jobs to missed calls. HVACLine talks with homeowners, checks live appointment slots, and confirms HVAC bookings in one conversation.",
     type: "website",
   },
-  icons: { icon: "/icon.svg" },
+  icons: {
+    icon: { url: "/icon.svg?v=2", type: "image/svg+xml", sizes: "any" },
+    shortcut: "/icon.svg?v=2",
+  },
+};
+export const viewport: Viewport = {
+  themeColor: "#18181b",
 };
 export default function RootLayout({
   children,
