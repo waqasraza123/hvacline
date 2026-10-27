@@ -1,6 +1,6 @@
 # Homepage branding handoff
 
-The homepage now presents HVACLine with the Line AI booking-assistant identity, electric blue/navy colors, concise customer-focused copy, responsive layouts, a prominent booking entry, a matching favicon, and keyboard/reduced-motion support. It contains no demo language, technical setup copy, invented reviews, customer counts or live appointment claims.
+The homepage presents HVACLine with the Line AI voice-receptionist identity, electric blue/navy colors, responsive layouts, a matching favicon, and keyboard/reduced-motion support. The October 27 copy update targets HVAC business owners with missed-call/job loss, live appointment availability and caller-confirmed booking. Sections follow hero, three-step workflow, services, FAQ and final CTA. Demo entry points reuse the existing customer booking route. Full copy, three ranked hero options and current owner checks are in `docs/homepage-copy.md`. No performance metrics, reviews or customer counts are invented.
 
 Booking/sign-in links target `/book`, `/login` and `/signup`. These customer routes and their draft authentication remain development-only and owner-unverified; they require the private portal configuration and customer-access migration before use. `/operations` remains a separate protected administrator workspace. Do not give customers the administrator token or treat the customer draft as production authentication.
 

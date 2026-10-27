@@ -4,10 +4,14 @@ import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import "./product.css";
 
 const services = [
-  { icon: "snow", title: "AC repair", text: "Bring the cool back." },
-  { icon: "heat", title: "Heating repair", text: "Get comfortable again." },
-  { icon: "home", title: "Installation", text: "Make room for better." },
-  { icon: "shield", title: "Maintenance", text: "Stay a step ahead." },
+  { icon: "snow", title: "AC repair", text: "Book visits for cooling problems." },
+  {
+    icon: "heat",
+    title: "Heating repair",
+    text: "Schedule heating repair visits.",
+  },
+  { icon: "home", title: "Installation", text: "Book installation consultations." },
+  { icon: "shield", title: "Maintenance", text: "Schedule routine HVAC service." },
 ] as const;
 
 export default function Home() {
@@ -27,7 +31,7 @@ export default function Home() {
             Sign in
           </Link>
           <Link className="product-button button-small" href="/book">
-            Book an appointment <ProductIcon name="arrow" />
+            Try the booking demo <ProductIcon name="arrow" />
           </Link>
         </div>
       </header>
@@ -35,21 +39,21 @@ export default function Home() {
         <section className="product-hero product-container">
           <div className="hero-copy">
             <p className="product-eyebrow">
-              <span /> HEATING. COOLING. HANDLED.
+              <span /> AI VOICE RECEPTIONIST FOR HVAC BUSINESSES
             </p>
             <h1>
-              Less waiting.
+              Stop losing jobs
               <br />
-              <span>More comfort.</span>
+              <span>to missed calls.</span>
             </h1>
             <p className="product-lead">
-              Your home needs attention. Getting help shouldn’t be another job.
-              Tell Line what you need and book your HVAC appointment in one
-              conversation.
+              HVACLine is the AI voice receptionist for HVAC businesses. Line
+              talks with homeowners, hears the problem, checks live appointment
+              slots, and confirms the time they choose.
             </p>
             <div className="product-hero-actions">
               <Link className="product-button" href="/book">
-                Book your appointment <ProductIcon name="arrow" />
+                Try the booking demo <ProductIcon name="arrow" />
               </Link>
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
@@ -57,17 +61,16 @@ export default function Home() {
             </div>
             <div className="hero-benefits">
               <span>
-                <ProductIcon name="check" /> Skip the phone tag
+                <ProductIcon name="check" /> Live appointment availability
               </span>
               <span>
-                <ProductIcon name="check" /> Choose a time that fits
+                <ProductIcon name="check" /> Every booking confirmed by the caller
               </span>
             </div>
           </div>
           <div className="hero-voice-composition">
             <div className="composition-label">
-              <span className="voice-spark">✳</span> A LITTLE LESS
-              BACK-AND-FORTH.
+              <ProductIcon name="mic" /> LIVE CONVERSATION. CONFIRMED BOOKING.
             </div>
             <article
               className="line-introduction"
@@ -75,7 +78,7 @@ export default function Home() {
             >
               <div className="line-card-header">
                 <span className="line-name">
-                  Meet Line<span>YOUR AI BOOKING ASSISTANT</span>
+                  Meet Line<span>YOUR AI VOICE RECEPTIONIST</span>
                 </span>
                 <span className="voice-ai-badge">Voice AI</span>
               </div>
@@ -86,21 +89,20 @@ export default function Home() {
                 <span className="orbit-accent" />
               </div>
               <h2 id="line-introduction-title">
-                A familiar way
+                From problem
                 <br />
-                to get things sorted.
+                to appointment.
               </h2>
               <p>
-                Just tell us what’s going on.
-                <br />
-                Line takes it from there.
+                Line collects the details, offers available times, and asks the
+                caller to confirm.
               </p>
               <Link className="line-card-action" href="/book">
-                <ProductIcon name="mic" /> Let’s talk about your home{" "}
+                <ProductIcon name="mic" /> Try a booking conversation{" "}
                 <ProductIcon name="arrow" />
               </Link>
               <p className="line-card-note">
-                Sign in to start your conversation.
+                Sign in, then choose Voice to try the demo.
               </p>
             </article>
             <div className="booking-promise">
@@ -108,20 +110,82 @@ export default function Home() {
                 <ProductIcon name="calendar" />
               </span>
               <div>
-                <strong>Your time. Your say.</strong>
-                <span>Nothing is booked until you confirm.</span>
+                <strong>Caller-confirmed appointments.</strong>
+                <span>Line asks for confirmation before booking.</span>
               </div>
               <ProductIcon name="check" />
             </div>
             <span className="composition-caption">
-              LESS HOLD MUSIC. MORE PEACE OF MIND.
+              PROBLEM. AVAILABLE TIME. CONFIRMATION.
             </span>
           </div>
+        </section>
+        <section id="how-it-works" className="how-section product-container">
+          <div className="section-heading">
+            <div>
+              <p className="product-eyebrow">
+                HOW LINE BOOKS AN APPOINTMENT
+              </p>
+              <h2>
+                Three steps.
+                <br />
+                <span>One confirmed appointment.</span>
+              </h2>
+            </div>
+            <p>
+              Homeowners describe the problem, choose an available time, and
+              confirm. Your team skips the scheduling callbacks.
+            </p>
+          </div>
+          <ol className="booking-journey">
+            <li>
+              <span className="journey-number">01</span>
+              <div className="journey-graphic journey-words">
+                <span>“The AC isn’t cooling.”</span>
+                <VoiceSymbol />
+              </div>
+              <h3>Line hears the problem.</h3>
+              <p>
+                The homeowner explains what’s wrong. Line collects the service
+                needed, address, and contact details in a natural conversation.
+              </p>
+            </li>
+            <li>
+              <span className="journey-number">02</span>
+              <div className="journey-graphic journey-calendar">
+                <ProductIcon name="calendar" />
+                <span>Live appointment slots</span>
+                <span className="calendar-option">
+                  Caller chooses <ProductIcon name="check" />
+                </span>
+              </div>
+              <h3>Line offers available times.</h3>
+              <p>
+                Line checks the business’s schedule and service area, then reads
+                out available appointment slots. The homeowner picks a time.
+              </p>
+            </li>
+            <li>
+              <span className="journey-number">03</span>
+              <div className="journey-graphic journey-confirm">
+                <span>
+                  <ProductIcon name="check" />
+                </span>
+                <strong>Details read back.</strong>
+                <p>Caller confirms the booking.</p>
+              </div>
+              <h3>The caller confirms. Line books.</h3>
+              <p>
+                Line reads back the appointment details and asks for explicit
+                confirmation before saving the booking.
+              </p>
+            </li>
+          </ol>
         </section>
         <section
           id="services"
           className="service-strip product-container"
-          aria-label="Find the right HVAC service"
+          aria-label="HVAC appointments Line can book"
         >
           {services.map((service) => (
             <article key={service.title}>
@@ -135,134 +199,58 @@ export default function Home() {
             </article>
           ))}
         </section>
-        <section id="how-it-works" className="how-section product-container">
-          <div className="section-heading">
-            <div>
-              <p className="product-eyebrow">
-                FROM “SOMETHING’S WRONG” TO SORTED.
-              </p>
-              <h2>
-                Say it. Pick a time.
-                <br />
-                <span>Get on with your day.</span>
-              </h2>
-            </div>
-            <p>
-              No long forms. No waiting for someone to call you back just to
-              find a time.
-            </p>
-          </div>
-          <ol className="booking-journey">
-            <li>
-              <span className="journey-number">01</span>
-              <div className="journey-graphic journey-words">
-                <span>“The AC isn’t cooling.”</span>
-                <VoiceSymbol />
-              </div>
-              <h3>Tell Line what you need.</h3>
-              <p>
-                A quick conversation covers the problem, your address, and the
-                best way to reach you.
-              </p>
-            </li>
-            <li>
-              <span className="journey-number">02</span>
-              <div className="journey-graphic journey-calendar">
-                <ProductIcon name="calendar" />
-                <span>A time that works for you</span>
-                <span className="calendar-option">
-                  Your choice <ProductIcon name="check" />
-                </span>
-              </div>
-              <h3>Find your time.</h3>
-              <p>
-                Hear the available appointments and choose the one that works
-                for your schedule.
-              </p>
-            </li>
-            <li>
-              <span className="journey-number">03</span>
-              <div className="journey-graphic journey-confirm">
-                <span>
-                  <ProductIcon name="check" />
-                </span>
-                <strong>You’re in control.</strong>
-                <p>Confirm when you’re ready.</p>
-              </div>
-              <h3>Confirm. Consider it handled.</h3>
-              <p>
-                Review the details, give your go-ahead, and keep your
-                appointment in one place.
-              </p>
-            </li>
-          </ol>
-        </section>
-        <section className="voice-feature-section">
-          <div className="product-container voice-feature-inner">
-            <div className="voice-feature-art" aria-hidden="true">
-              <span className="feature-ring ring-one" />
-              <span className="feature-ring ring-two" />
-              <div className="feature-orb">
-                <VoiceSymbol />
-              </div>
-              <span className="feature-art-label">
-                A BETTER FIRST CONVERSATION.
-              </span>
-            </div>
-            <div>
-              <p className="product-eyebrow">MEET YOUR NEW FIRST CALL.</p>
-              <h2>
-                Real conversation.
-                <br />
-                <span>A clear next step.</span>
-              </h2>
-              <p>
-                Line is your AI booking assistant. It listens, helps you choose
-                your service, and finds a time—without the back-and-forth.
-              </p>
-              <Link className="product-button" href="/signup">
-                Find your next appointment <ProductIcon name="arrow" />
-              </Link>
-            </div>
-          </div>
-        </section>
         <section className="product-faq product-container">
           <div>
-            <p className="product-eyebrow">A FEW THINGS, CLEARED UP.</p>
-            <h2>
-              Good questions.
-              <br />
-              Simple answers.
-            </h2>
+            <p className="product-eyebrow">FAQ</p>
+            <h2>What HVAC owners need to know.</h2>
           </div>
           <div className="product-faq-list">
             <details>
               <summary>
-                Do I need to make a phone call?<span>+</span>
+                Who is HVACLine for?<span>+</span>
               </summary>
               <p>
-                No. Sign in and talk to Line right here on the website using
-                your microphone.
+                HVAC businesses losing appointment opportunities to missed calls
+                and phone tag. Line handles the booking conversation, from the
+                homeowner’s first description to a confirmed appointment.
               </p>
             </details>
             <details>
               <summary>
-                When is my appointment booked?<span>+</span>
+                Can homeowners speak naturally?<span>+</span>
               </summary>
               <p>
-                After you choose an available time and explicitly confirm the
-                appointment. A suggested time or temporary hold is not a
-                booking.
+                Yes. Homeowners explain the problem in their own words. Line
+                asks for the details needed to schedule the visit and offers
+                available appointment times during the conversation.
               </p>
             </details>
             <details>
               <summary>
-                What can Line help me book?<span>+</span>
+                Are the appointment times real?<span>+</span>
               </summary>
               <p>
-                Air conditioning repair, heating repair, installations, and
-                maintenance. Available appointments depend on your service area
-                and the business’s schedule.
+                Yes. Line checks live availability against the business’s
+                configured schedule and service area before offering times.
+              </p>
+            </details>
+            <details>
+              <summary>
+                When does an appointment become a booking?<span>+</span>
+              </summary>
+              <p>
+                After Line reads back the appointment details and the caller
+                explicitly confirms. A suggested time or temporary hold is not a
+                confirmed booking.
+              </p>
+            </details>
+            <details>
+              <summary>
+                Can I try the conversation?<span>+</span>
+              </summary>
+              <p>
+                Yes. Open the booking demo, sign in, and choose Voice to speak
+                with Line through your browser’s microphone.
               </p>
             </details>
           </div>
@@ -270,22 +258,22 @@ export default function Home() {
         <section className="product-final-cta product-container">
           <div>
             <p className="product-eyebrow">
-              LET’S GET YOUR HOME BACK TO COMFORTABLE.
+              TRY THE BOOKING CONVERSATION
             </p>
             <h2>
-              Your next appointment.
+              Hear Line book
               <br />
-              <span>Just a conversation away.</span>
+              <span>an HVAC appointment.</span>
             </h2>
           </div>
           <Link className="product-button button-light" href="/book">
-            Book your appointment <ProductIcon name="arrow" />
+            Try the booking demo <ProductIcon name="arrow" />
           </Link>
         </section>
       </main>
       <footer className="product-footer product-container">
         <Brand />
-        <p>Good service starts with a better conversation.</p>
+        <p>AI voice receptionist. HVAC appointments booked in conversation.</p>
         <nav aria-label="Footer navigation">
           <Link href="/login">Sign in</Link>
           <Link href="/signup">Create an account</Link>
@@ -294,13 +282,13 @@ export default function Home() {
       <Link
         href="/book"
         className="voice-launcher"
-        aria-label="Book an appointment with Line, your AI voice assistant"
+        aria-label="Try the HVACLine AI voice receptionist booking demo"
       >
         <span className="launcher-mark">
           <VoiceSymbol />
         </span>
         <span>
-          Book with Line<small>YOUR AI BOOKING ASSISTANT</small>
+          Try Line<small>AI VOICE RECEPTIONIST FOR HVAC</small>
         </span>
         <ProductIcon name="arrow" />
       </Link>
