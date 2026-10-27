@@ -1,10 +1,10 @@
 .summary {
   margin: 1rem 0;
   padding: 1rem 1.2rem;
-  border: 1px solid #cbd8ef;
+  border: 1px solid var(--customer-accent-border, #cbd8ef);
   border-radius: 12px;
-  background: #f1f5ff;
-  color: #14233d;
+  background: var(--customer-accent-soft, #f1f5ff);
+  color: var(--customer-ink, #14233d);
 }
 .summary strong {
   display: block;

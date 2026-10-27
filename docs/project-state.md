@@ -1,5 +1,9 @@
 # Project State
 
+## Customer palette — owner verification pending
+
+The owner selected orange/charcoal across the homepage, login/signup and customer booking experience, using light backgrounds and dark feature panels. Shared customer theme variables now cover branding, voice graphics, controls, chat, booking progress/history, quotas, countdown and details dialogs; shared internal components retain prior colors through fallbacks. The site-wide favicon also uses orange/charcoal. Status colors remain semantic. No backend, schema or provider change. Source formatting only; implementation and browser/contrast acceptance remain unverified. Exact owner commands and manual checks: `docs/customer-color-refresh.md`.
+
 ## Customer booking quotas — owner verification pending
 
 Deployment variable names, locations and values are consolidated in `docs/environment-handoff.md`; it contains no credential values. The latest customer limits need only the two API quota variables, defaulting to 1, while the frontend reads their effective values.

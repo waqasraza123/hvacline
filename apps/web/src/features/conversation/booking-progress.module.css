@@ -1,8 +1,8 @@
 .panel {
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid #dce3ed;
-  color: #14233d;
+  border-top: 1px solid var(--customer-border, #dce3ed);
+  color: var(--customer-ink, #14233d);
   text-align: left;
 }
 
@@ -13,7 +13,7 @@
 
 .activity {
   display: block;
-  color: #4b5d76;
+  color: var(--customer-muted, #4b5d76);
   font-size: 0.85rem;
 }
 
@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   gap: 0.65rem;
-  color: #53627a;
+  color: var(--customer-muted, #53627a);
   font-size: 0.9rem;
   flex-wrap: wrap;
 }
@@ -44,18 +44,18 @@
   flex-shrink: 0;
   width: 1.7rem;
   height: 1.7rem;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 50%;
 }
 
 .steps .reached {
-  color: #14233d;
+  color: var(--customer-ink, #14233d);
 }
 
 .steps .reached span {
-  border-color: #2458eb;
-  background: #eef3ff;
-  color: #2458eb;
+  border-color: var(--customer-accent-ink, #2458eb);
+  background: var(--customer-accent-soft, #eef3ff);
+  color: var(--customer-accent-ink, #2458eb);
 }
 
 .steps li[aria-current="step"] {
@@ -79,7 +79,7 @@
 .selection,
 .receipt {
   padding: 1rem;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 0.75rem;
   overflow-wrap: anywhere;
 }
@@ -109,10 +109,15 @@
   padding: 0.65rem 0.9rem;
   border: 0;
   border-radius: 0.5rem;
-  background: #2458eb;
-  color: #fff;
+  background: var(--customer-accent, #2458eb);
+  color: var(--customer-on-accent, #fff);
   font: inherit;
   cursor: pointer;
+}
+
+.receipt button:hover:not(:disabled),
+.historyButton:hover:not(:disabled) {
+  background: var(--customer-accent-hover, #2458eb);
 }
 
 .receipt button:disabled,
@@ -123,6 +128,6 @@
 
 .receipt button:focus-visible,
 .historyButton:focus-visible {
-  outline: 3px solid #2458eb;
+  outline: 3px solid var(--customer-accent-ink, #2458eb);
   outline-offset: 3px;
 }

@@ -2,15 +2,15 @@
   width: min(620px, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
   padding: 1.5rem;
-  border: 1px solid #dce3ed;
+  border: 1px solid var(--customer-border, #dce3ed);
   border-radius: 18px;
-  background: #fff;
-  color: #14233d;
+  background: var(--customer-surface, #fff);
+  color: var(--customer-ink, #14233d);
   overflow-y: auto;
-  box-shadow: 0 24px 80px #14233d40;
+  box-shadow: 0 24px 80px var(--customer-shadow, #14233d40);
 }
 .dialog::backdrop {
-  background: #0d183bb3;
+  background: var(--customer-backdrop, #18181bb3);
 }
 .header {
   display: flex;
@@ -19,7 +19,7 @@
   gap: 1rem;
 }
 .header p {
-  color: #53627a;
+  color: var(--customer-muted, #53627a);
   font-size: 0.8rem;
   margin: 0 0 0.35rem;
 }
@@ -33,11 +33,15 @@
   flex-shrink: 0;
   width: 44px;
   height: 44px;
-  border: 1px solid #dce3ed;
+  border: 1px solid var(--customer-border, #dce3ed);
   border-radius: 50%;
-  background: #fff;
-  color: #14233d;
+  background: var(--customer-surface, #fff);
+  color: var(--customer-ink, #14233d);
   cursor: pointer;
+}
+.close:hover:not(:disabled) {
+  border-color: var(--customer-accent-ink, #a8b7cd);
+  background: var(--customer-accent-soft, #fff);
 }
 .receipt {
   padding: 1.1rem;
@@ -55,12 +59,12 @@
   text-transform: capitalize;
 }
 .receipt[data-confirmed="false"] {
-  background: #f3f5f9;
-  border-color: #dce3ed;
+  background: var(--customer-subtle, #f3f5f9);
+  border-color: var(--customer-border, #dce3ed);
 }
 .receipt[data-confirmed="false"] span {
-  background: #e1e7f0;
-  color: #53627a;
+  background: var(--customer-border, #e1e7f0);
+  color: var(--customer-muted, #53627a);
 }
 .receipt h3 {
   font-size: 1.1rem;
@@ -82,7 +86,7 @@
   gap: 0.75rem;
 }
 .details dt {
-  color: #53627a;
+  color: var(--customer-muted, #53627a);
   font-size: 0.85rem;
 }
 .details dd {
@@ -93,7 +97,7 @@
 .editor {
   margin-top: 1.5rem;
   padding-top: 1rem;
-  border-top: 1px solid #dce3ed;
+  border-top: 1px solid var(--customer-border, #dce3ed);
 }
 .editor h3 {
   font-size: 1.1rem;
@@ -109,10 +113,10 @@
   width: 100%;
   min-height: 44px;
   padding: 0.7rem;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 8px;
-  color: #14233d;
-  background: #fff;
+  color: var(--customer-ink, #14233d);
+  background: var(--customer-surface, #fff);
   font: inherit;
 }
 .editor .checkbox {
@@ -129,9 +133,9 @@
 .confirm {
   margin-block: 1rem;
   padding: 1rem;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 10px;
-  background: #f5f8ff;
+  background: var(--customer-accent-soft, #f5f8ff);
 }
 .error {
   padding: 0.8rem;
@@ -146,7 +150,7 @@
 .dialog button:focus-visible,
 .dialog input:focus-visible,
 .dialog select:focus-visible {
-  outline: 3px solid #2458eb;
+  outline: 3px solid var(--customer-accent-ink, #2458eb);
   outline-offset: 3px;
 }
 @media (max-width: 540px) {

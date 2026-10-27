@@ -12,19 +12,19 @@
   gap: 0.5rem;
   min-height: 44px;
   padding: 0.65rem 1rem;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 0.75rem;
-  background: #fff;
-  color: #14233d;
+  background: var(--customer-surface, #fff);
+  color: var(--customer-ink, #14233d);
   font: inherit;
   font-weight: 650;
   cursor: pointer;
 }
 
 .modes button[aria-pressed="true"] {
-  border-color: #2458eb;
-  background: #2458eb;
-  color: #fff;
+  border-color: var(--customer-accent-ink, #2458eb);
+  background: var(--customer-accent, #2458eb);
+  color: var(--customer-on-accent, #fff);
 }
 
 .modes button:disabled {
@@ -37,11 +37,11 @@
   gap: 0.6rem;
   margin-top: 1.25rem;
   padding-top: 1.25rem;
-  border-top: 1px solid #dce3ed;
+  border-top: 1px solid var(--customer-border, #dce3ed);
 }
 
 .label {
-  color: #14233d;
+  color: var(--customer-ink, #14233d);
   font-weight: 650;
 }
 
@@ -59,10 +59,10 @@
   max-height: 200px;
   padding: 0.8rem;
   resize: vertical;
-  border: 1px solid #a8b7cd;
+  border: 1px solid var(--customer-control-border, #a8b7cd);
   border-radius: 0.75rem;
-  background: #fff;
-  color: #14233d;
+  background: var(--customer-surface, #fff);
+  color: var(--customer-ink, #14233d);
   font: inherit;
 }
 
@@ -75,11 +75,20 @@
   padding: 0.75rem 1rem;
   border: 0;
   border-radius: 0.75rem;
-  background: #2458eb;
-  color: #fff;
+  background: var(--customer-accent, #2458eb);
+  color: var(--customer-on-accent, #fff);
   font: inherit;
   font-weight: 650;
   cursor: pointer;
+}
+
+.send:hover:not(:disabled),
+.modes button[aria-pressed="true"]:hover:not(:disabled) {
+  background: var(--customer-accent-hover, #2458eb);
+}
+
+.send:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .send:disabled {
@@ -89,7 +98,7 @@
 
 .help {
   margin: 0;
-  color: #4b5d76;
+  color: var(--customer-muted, #4b5d76);
   font-size: 0.85rem;
   line-height: 1.5;
 }
@@ -102,7 +111,7 @@
 .modes button:focus-visible,
 .input:focus-visible,
 .send:focus-visible {
-  outline: 3px solid #2458eb;
+  outline: 3px solid var(--customer-accent-ink, #2458eb);
   outline-offset: 3px;
 }
 
