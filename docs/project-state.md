@@ -2,6 +2,8 @@
 
 ## Customer booking quotas — owner verification pending
 
+Deployment variable names, locations and values are consolidated in `docs/environment-handoff.md`; it contains no credential values. The latest customer limits need only the two API quota variables, defaulting to 1, while the frontend reads their effective values.
+
 The account-scoped booking flow defaults to one active appointment and one successful date/time change per service-request booking history, configurable through API `CUSTOMER_MAX_ACTIVE_APPOINTMENTS` and `CUSTOMER_MAX_BOOKING_CHANGES`. The scheduling lock protects reservation/confirmation checks and both reschedule phases; completed retries bypass quota consumption. Active holds count, ended/cancelled bookings free capacity, and replacement IDs retain prior change usage through immutable existing reschedule audits. Authenticated API counts populate both booking/history pages and the details modal. No new migration or provider configuration change is included; phone/staff flows without verified customer-account linkage retain their existing behavior. Source formatting and unexecuted regression specifications only; runtime remains unverified. Exact setup, owner commands and acceptance: `docs/customer-booking-limits.md`.
 
 ## Booking details and three-minute timer — owner verification pending
