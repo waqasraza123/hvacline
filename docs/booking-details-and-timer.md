@@ -2,6 +2,8 @@
 
 Implementation is **unverified**. Source formatting was applied; no tests, builds, linters, type checks, migrations, services, previews, live bookings or provider changes ran. The owner chose to retain the three-minute browser limit. The interrupted ten-minute source changes and migration were discarded; no database migration is added by this feature.
 
+Customer booking and date/time-change quotas now apply; see [customer booking limits](customer-booking-limits.md) for environment settings, displayed usage and unexecuted acceptance checks.
+
 ## Customer behavior
 
 - A confirmed receipt offers **View booking details**, including while the conversation is still active. **My appointments** offers **View details & edit** for saved appointments. Both open a native modal that loads the booking from the authenticated customer API.

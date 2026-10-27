@@ -11,6 +11,7 @@ import type { Appointment } from "@/features/operations/api";
 import type { Customer } from "./server";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingChange } from "./booking-details";
+import { BookingLimitsPanel } from "./booking-limits";
 
 type MyAppointments = { appointments: Appointment[]; timezone: string | null };
 
@@ -104,6 +105,7 @@ export function CustomerBooking({
               : "Your next step, made simple."}
           </span>
         </nav>
+        <BookingLimitsPanel revision={appointmentsRevision} />
         {error && (
           <p role="alert" className="customer-error">
             {error}
@@ -117,6 +119,9 @@ export function CustomerBooking({
               onActivityChange={setVoiceActive}
               onViewAppointments={() => setTab("appointments")}
               onViewBooking={setSelectedBooking}
+              onBookingChanged={() =>
+                setAppointmentsRevision((current) => current + 1)
+              }
             />
           ) : (
             <section className="customer-empty">

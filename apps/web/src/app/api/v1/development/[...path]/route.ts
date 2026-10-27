@@ -33,8 +33,9 @@ async function handle(request: NextRequest, context: Context) {
     const path = (await context.params).path.join("/");
     const allowed =
       request.method === "GET"
-        ? ["receptionist-settings", "appointments"].includes(path) ||
-          new RegExp(`^appointments/${identifier}$`).test(path)
+        ? ["receptionist-settings", "appointments", "booking-limits"].includes(
+            path,
+          ) || new RegExp(`^appointments/${identifier}$`).test(path)
         : postPaths.some((pattern) => pattern.test(path));
     if (!allowed)
       throw new CustomerBackendError(404, "This action is not available.");

@@ -29,6 +29,7 @@ from insurance_operations.database.models.operations import (
     IdempotencyStatus,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.hvac.booking_limits import require_customer_booking_capacity
 from insurance_operations.hvac.schemas import (
     AppointmentView,
     AvailabilityInput,
@@ -80,8 +81,10 @@ def appointment_readback(appointment: AppointmentView, timezone: str) -> str:
 
 
 def create_browser_booking_router(
-    sessions: sessionmaker[Session], actor_dependency: Callable[..., ActorContext],
-    *, prefix: str = "/api/v1/development/conversation-sessions/{session_id}/booking",
+    sessions: sessionmaker[Session],
+    actor_dependency: Callable[..., ActorContext],
+    *,
+    prefix: str = "/api/v1/development/conversation-sessions/{session_id}/booking",
 ) -> APIRouter:
     router = APIRouter(prefix=prefix)
     scheduling = SchedulingService(sessions)
@@ -181,9 +184,7 @@ def create_browser_booking_router(
             ) from error
         configuration = scheduling.configuration(actor.agency_id)["configuration"]
         timezone = (
-            configuration.get("timezone")
-            if isinstance(configuration, dict)
-            else None
+            configuration.get("timezone") if isinstance(configuration, dict) else None
         )
         business_date = (
             datetime.now(ZoneInfo(timezone)).date().isoformat()
@@ -198,7 +199,9 @@ def create_browser_booking_router(
         }
 
     @router.post("/hazard")
-    def flag_hazard(session_id: UUID, request: Request, actor: Actor) -> dict[str, bool]:
+    def flag_hazard(
+        session_id: UUID, request: Request, actor: Actor
+    ) -> dict[str, bool]:
         row = confirmed_request(actor, session_id, allow_hazardous=True)
         scheduling.flag_hazard(
             actor.agency_id, row.id, UUID(request.state.correlation_id)
@@ -210,6 +213,8 @@ def create_browser_booking_router(
         session_id: UUID, data: BrowserAvailabilityInput, actor: Actor
     ) -> AvailabilityResponse:
         row = confirmed_request(actor, session_id)
+        with sessions() as session:
+            require_customer_booking_capacity(session, row)
         customer = CustomerInput.model_validate(row.customer_details)
         postal_code = customer.address.postal_code if customer.address else None
         if postal_code is None:
@@ -250,7 +255,8 @@ def create_browser_booking_router(
         )
 
     @router.post(
-        "/appointments/{appointment_id}/confirm", response_model=BrowserReservationResponse
+        "/appointments/{appointment_id}/confirm",
+        response_model=BrowserReservationResponse,
     )
     def confirm(
         session_id: UUID,

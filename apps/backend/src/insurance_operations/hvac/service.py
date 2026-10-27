@@ -20,6 +20,10 @@ from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.availability import candidate_slots, overlaps
+from insurance_operations.hvac.booking_limits import (
+    require_customer_booking_capacity,
+    require_customer_booking_change,
+)
 from insurance_operations.hvac.calendar import CalendarUnavailable
 from insurance_operations.hvac.calendar_sync import (
     bind_reservation,
@@ -322,6 +326,8 @@ class SchedulingService:
                 )
             return existing
         service_request = self._request(session, agency_id, request.service_request_id)
+        if replace_id is None:
+            require_customer_booking_capacity(session, service_request)
         if (
             service_request.service_details.get("hazardous_condition")
             or service_request.status == "CLOSED"
@@ -413,6 +419,7 @@ class SchedulingService:
                 )
             if row.status == "CONFIRMED":
                 return AppointmentView.model_validate(row)
+            require_customer_booking_capacity(session, service_request, confirming=True)
             now = datetime.now(UTC)
             if row.status != "HELD" or row.hold_expires_at <= now:
                 raise unavailable(
@@ -558,6 +565,9 @@ class SchedulingService:
             ):
                 return AppointmentView.model_validate(replacement)
             self._allow_change(old, configuration, datetime.now(UTC))
+            require_customer_booking_change(
+                session, self._request(session, agency_id, old.service_request_id)
+            )
             new = self._reserve(
                 session,
                 agency_id,
@@ -577,6 +587,9 @@ class SchedulingService:
                 return AppointmentView.model_validate(new)
             now = datetime.now(UTC)
             self._allow_change(old, configuration, now)
+            require_customer_booking_change(
+                session, self._request(session, agency_id, old.service_request_id)
+            )
             if new.status != "HELD" or new.hold_expires_at <= now:
                 raise unavailable(
                     "The replacement reservation expired. Use a fresh booking key.",

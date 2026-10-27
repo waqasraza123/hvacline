@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { ProductIcon } from "@/components/product-icons";
+import { OperationsApiError } from "../operations/api";
 import type { Appointment, Availability, Slot } from "../operations/api";
 import {
   BookingChange,
@@ -87,6 +88,16 @@ export function BookingDetailsModal({
     try {
       await task();
     } catch (failure) {
+      if (
+        failure instanceof OperationsApiError &&
+        failure.code === "CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED"
+      ) {
+        const latest = await getBookingDetails(appointmentId).catch(
+          () => undefined,
+        );
+        if (latest) setDetails(latest);
+        setEditing(false);
+      }
       setError(
         failure instanceof Error
           ? failure.message
@@ -172,6 +183,14 @@ export function BookingDetailsModal({
             <p>{SERVICE_NAMES[details.service.kind] ?? "HVAC service"}</p>
           </div>
           <dl className={styles.details}>
+            <div>
+              <dt>Date/time changes</dt>
+              <dd>
+                {details.change_allowance.used} of{" "}
+                {details.change_allowance.maximum} used ·{" "}
+                {details.change_allowance.remaining} remaining
+              </dd>
+            </div>
             <div>
               <dt>Name</dt>
               <dd>{details.customer.full_name}</dd>

@@ -69,6 +69,28 @@ it("retains calendar outage recovery but clears a definitively rejected slot", a
   expect(change.pending).toBeUndefined();
 });
 
+it("clears a rejected change when the server allowance is exhausted", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValueOnce(
+      Response.json(
+        {
+          error: {
+            code: "CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED",
+            message: "No changes remaining",
+          },
+        },
+        { status: 409 },
+      ),
+    ),
+  );
+  const change = new BookingChange("old-booking");
+  await expect(change.submit("request-1", slot)).rejects.toThrow(
+    "No changes remaining",
+  );
+  expect(change.pending).toBeUndefined();
+});
+
 it("does not report an unconfirmed or mismatched response as a successful edit", async () => {
   vi.stubGlobal(
     "fetch",

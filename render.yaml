@@ -37,6 +37,10 @@ services:
         sync: false
       - key: CUSTOMER_PORTAL_SECRET
         sync: false
+      - key: CUSTOMER_MAX_ACTIVE_APPOINTMENTS
+        value: 1
+      - key: CUSTOMER_MAX_BOOKING_CHANGES
+        value: 1
       - key: DEMO_RESULT_TTL_MINUTES
         value: 15
       - key: TELEPHONY_PROVIDER_ENABLED

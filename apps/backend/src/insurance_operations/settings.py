@@ -11,6 +11,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
+DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS = 1
+DEFAULT_CUSTOMER_MAX_BOOKING_CHANGES = 1
+
 
 class RuntimeEnvironment(StrEnum):
     DEVELOPMENT = "development"
@@ -109,6 +112,12 @@ class DatabaseConnectionSettings(CommonSettings):
 
 
 class DatabaseSettings(DatabaseConnectionSettings):
+    customer_max_active_appointments: int = Field(
+        default=DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS, ge=1, le=20
+    )
+    customer_max_booking_changes: int = Field(
+        default=DEFAULT_CUSTOMER_MAX_BOOKING_CHANGES, ge=0, le=20
+    )
     demo_inbound_number_e164: str | None = None
     demo_transfer_destination_e164: str | None = None
     google_calendar_enabled: bool = False

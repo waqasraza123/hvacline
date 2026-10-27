@@ -50,6 +50,7 @@ type VoiceTestProperties = Readonly<{
   onActivityChange?: (active: boolean) => void;
   onViewAppointments?: () => void;
   onViewBooking?: (appointmentId: string) => void;
+  onBookingChanged?: () => void;
 }>;
 
 type IntakeForm = {
@@ -88,6 +89,7 @@ export function VoiceTest({
   onActivityChange,
   onViewAppointments,
   onViewBooking,
+  onBookingChanged,
 }: VoiceTestProperties) {
   const [transcript, setTranscript] = useState<ConversationTurn[]>([]);
   const [form, setForm] = useState<IntakeForm>(EMPTY_FORM);
@@ -307,6 +309,7 @@ export function VoiceTest({
           setBookingProgress={setBookingProgress}
           onViewAppointments={onViewAppointments}
           onViewBooking={onViewBooking}
+          onBookingChanged={onBookingChanged}
         />
       )}
     </ConfiguredConversationAdapter>
@@ -341,6 +344,7 @@ type ExperienceProperties = Readonly<{
   setBookingProgress: Dispatch<SetStateAction<BookingProgress>>;
   onViewAppointments?: () => void;
   onViewBooking?: (appointmentId: string) => void;
+  onBookingChanged?: () => void;
 }>;
 
 function VoiceTestExperience({
@@ -369,6 +373,7 @@ function VoiceTestExperience({
   setBookingProgress,
   onViewAppointments,
   onViewBooking,
+  onBookingChanged,
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
@@ -545,8 +550,10 @@ function VoiceTestExperience({
           if (!isLiveConversationPhase(phaseRef.current)) setPhase("saved");
         },
         onAppointment: (appointment) => {
-          if (sessionIdRef.current === authorization.sessionId)
+          if (sessionIdRef.current === authorization.sessionId) {
             setVoiceAppointment(appointment);
+            onBookingChanged?.();
+          }
         },
         onProgress: (progress) => {
           if (sessionIdRef.current === authorization.sessionId)
@@ -1232,8 +1239,10 @@ function VoiceTestExperience({
                   setBookingProgress(update);
               }}
               onAppointment={(appointment) => {
-                if (sessionIdRef.current === experienceSessionId)
+                if (sessionIdRef.current === experienceSessionId) {
                   setVoiceAppointment(appointment);
+                  onBookingChanged?.();
+                }
               }}
             />
           )}

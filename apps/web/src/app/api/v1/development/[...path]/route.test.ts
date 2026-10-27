@@ -44,6 +44,24 @@ it("forwards owned booking details through the authenticated customer backend", 
   );
 });
 
+it("forwards the signed-in customer's limits without caching", async () => {
+  fetcher.mockResolvedValueOnce(
+    Response.json({ max_active_appointments: 1, max_booking_changes: 1 }),
+  );
+  const response = await GET(
+    new NextRequest(
+      "https://hvacline.example/api/v1/development/booking-limits",
+    ),
+    context("booking-limits"),
+  );
+  expect(response.status).toBe(200);
+  expect(response.headers.get("Cache-Control")).toBe("no-store");
+  expect(fetcher).toHaveBeenCalledWith(
+    "https://api.example.com/api/v1/customer/booking-limits",
+    expect.objectContaining({ method: "GET" }),
+  );
+});
+
 it.each(["availability", "reschedule"])(
   "allows same-origin booking %s",
   async (action) => {

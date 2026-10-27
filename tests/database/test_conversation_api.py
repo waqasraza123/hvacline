@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -1132,6 +1133,39 @@ def test_customer_accounts_cannot_access_another_customers_booking(
         development_conversation_api.agency_id,
         AvailabilityInput(postal_code="10001", day=day),
     ).slots[0]
+    with Session(migrated_database) as session, session.begin():
+        original_session = session.get(ConversationSession, UUID(session_id))
+        original_request = session.get(HvacServiceRequest, UUID(request_id))
+        assert original_session is not None and original_request is not None
+        now = datetime.now(UTC)
+        other_session = ConversationSession(
+            agency_id=original_session.agency_id,
+            initiated_by=original_session.initiated_by,
+            channel="BROWSER",
+            input_mode="VOICE",
+            status="REVIEW_PENDING",
+            disclosure_accepted_at=now,
+            microphone_consent_at=now,
+            synthetic_data_acknowledged_at=now,
+            maximum_duration_seconds=180,
+            authorization_expires_at=now + timedelta(minutes=3),
+            confirmation_expires_at=now + timedelta(minutes=30),
+            ended_at=now,
+        )
+        session.add(other_session)
+        session.flush()
+        other_request = HvacServiceRequest(
+            agency_id=original_request.agency_id,
+            conversation_session_id=other_session.id,
+            customer_details=original_request.customer_details,
+            service_details=original_request.service_details,
+            status="OPEN",
+            fingerprint="b" * 64,
+            confirmed_at=now,
+        )
+        session.add(other_request)
+        session.flush()
+        other_request_id = str(other_request.id)
     held = scheduling.reserve(
         development_conversation_api.agency_id,
         ReservationInput(
@@ -1142,6 +1176,52 @@ def test_customer_accounts_cannot_access_another_customers_booking(
         ),
         uuid4(),
     )
+    first_limits = asyncio.run(send("booking-limits", token=first, method="GET"))[1]
+    assert first_limits["active_appointments"] == 1
+    assert first_limits["appointments_remaining"] == 0
+    assert first_limits["max_booking_changes"] == 1
+    assert (
+        asyncio.run(send("booking-limits", token=second, method="GET"))[1][
+            "active_appointments"
+        ]
+        == 0
+    )
+    retry = scheduling.reserve(
+        development_conversation_api.agency_id,
+        ReservationInput(
+            service_request_id=UUID(request_id),
+            team_key=slot.team_key,
+            starts_at=slot.starts_at,
+            idempotency_key="fictional-owned-booking",
+        ),
+        uuid4(),
+    )
+    assert retry.id == held.id
+    other_slot = scheduling.availability(
+        development_conversation_api.agency_id,
+        AvailabilityInput(postal_code="10001", day=day),
+    ).slots[-1]
+    another: JsonObject = {
+        "service_request_id": other_request_id,
+        "team_key": other_slot.team_key,
+        "starts_at": other_slot.starts_at.isoformat(),
+        "idempotency_key": "fictional-extra-booking",
+    }
+    limited_status, limited = asyncio.run(send("hvac/reservations", another, first))
+    assert limited_status == 409
+    limited_error = limited["error"]
+    assert (
+        isinstance(limited_error, dict)
+        and limited_error["code"] == "CUSTOMER_APPOINTMENT_LIMIT_REACHED"
+    )
+    settings.customer_max_active_appointments = 2
+    extra_status, extra = asyncio.run(send("hvac/reservations", another, first))
+    assert extra_status == 200
+    assert (
+        asyncio.run(send(f"hvac/appointments/{extra['id']}/release", {}, first))[0]
+        == 200
+    )
+    settings.customer_max_active_appointments = 1
     appointment = scheduling.confirm(
         development_conversation_api.agency_id, held.id, True, uuid4()
     )
@@ -1175,9 +1255,15 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     assert asyncio.run(send(f"{detail_path}/reschedule", change, second))[0] == 404
     declined: JsonObject = {**change, "explicit_confirmation": False}
     assert asyncio.run(send(f"{detail_path}/reschedule", declined, first))[0] == 409
-    changed_status, changed = asyncio.run(
-        send(f"{detail_path}/reschedule", change, first)
-    )
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(
+            pool.map(
+                lambda _: asyncio.run(send(f"{detail_path}/reschedule", change, first)),
+                range(2),
+            )
+        )
+    changed_status, changed = results[0]
+    assert results[1][0] == 200 and results[1][1]["id"] == changed["id"]
     assert changed_status == 200 and changed["status"] == "CONFIRMED"
     assert changed["id"] != str(appointment.id)
     assert (
@@ -1189,6 +1275,67 @@ def test_customer_accounts_cannot_access_another_customers_booking(
     old_appointment = old["appointment"]
     assert (
         isinstance(old_appointment, dict) and old_appointment["status"] == "CANCELLED"
+    )
+    next_path = f"appointments/{changed['id']}"
+    _, next_details = asyncio.run(send(next_path, token=first, method="GET"))
+    assert next_details["change_allowance"] == {"maximum": 1, "used": 1, "remaining": 0}
+    assert next_details["can_reschedule"] is False
+    next_change: JsonObject = {
+        **change,
+        "idempotency_key": "fictional-another-change",
+        "starts_at": slot.starts_at.isoformat(),
+    }
+    exhausted_status, exhausted = asyncio.run(
+        send(f"{next_path}/reschedule", next_change, first)
+    )
+    assert exhausted_status == 409
+    exhausted_error = exhausted["error"]
+    assert (
+        isinstance(exhausted_error, dict)
+        and exhausted_error["code"] == "CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED"
+    )
+    settings.customer_max_booking_changes = 2
+    assert (
+        asyncio.run(send(next_path, token=first, method="GET"))[1]["can_reschedule"]
+        is True
+    )
+    increased_status, increased = asyncio.run(
+        send(f"{next_path}/reschedule", next_change, first)
+    )
+    assert increased_status == 200 and increased["status"] == "CONFIRMED"
+    settings.customer_max_booking_changes = 1
+    _, increased_details = asyncio.run(
+        send(f"appointments/{increased['id']}", token=first, method="GET")
+    )
+    assert increased_details["change_allowance"] == {
+        "maximum": 1,
+        "used": 2,
+        "remaining": 0,
+    }
+    with Session(migrated_database) as session, session.begin():
+        session.execute(
+            update(Appointment)
+            .where(Appointment.id == UUID(str(increased["id"])))
+            .values(
+                starts_at=datetime.now(UTC) - timedelta(hours=2),
+                ends_at=datetime.now(UTC) - timedelta(hours=1),
+            )
+        )
+    assert (
+        asyncio.run(send("booking-limits", token=first, method="GET"))[1][
+            "appointments_remaining"
+        ]
+        == 1
+    )
+    assert (
+        asyncio.run(
+            send(
+                "hvac/reservations",
+                {**another, "idempotency_key": "fictional-next-booking"},
+                first,
+            )
+        )[0]
+        == 200
     )
     assert asyncio.run(send("auth/logout", {}, first))[0] == 204
     assert asyncio.run(send("auth/me", token=first, method="GET"))[0] == 401

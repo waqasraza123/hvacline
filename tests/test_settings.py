@@ -4,10 +4,57 @@ from pydantic import ValidationError
 from insurance_operations.settings import (
     ApiSettings,
     DatabaseConnectionSettings,
+    DatabaseSettings,
     DatabaseSslMode,
     RuntimeEnvironment,
     WorkerSettings,
 )
+
+
+@pytest.mark.parametrize(
+    ("name", "value", "attribute"),
+    [
+        ("CUSTOMER_MAX_ACTIVE_APPOINTMENTS", "2", "customer_max_active_appointments"),
+        ("CUSTOMER_MAX_BOOKING_CHANGES", "0", "customer_max_booking_changes"),
+    ],
+)
+def test_customer_booking_limits_read_backend_environment(
+    monkeypatch: pytest.MonkeyPatch, name: str, value: str, attribute: str
+) -> None:
+    monkeypatch.setenv(name, value)
+    settings = DatabaseSettings(
+        _env_file=None,
+        app_environment=RuntimeEnvironment.DEVELOPMENT,
+        database_url="postgresql://synthetic:synthetic@localhost/development",
+        google_calendar_enabled=False,
+        booking_email_enabled=False,
+        booking_email_from=None,
+    )
+    assert getattr(settings, attribute) == int(value)
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"customer_max_active_appointments": 0},
+        {"customer_max_active_appointments": 21},
+        {"customer_max_booking_changes": -1},
+        {"customer_max_booking_changes": 21},
+    ],
+)
+def test_customer_booking_limits_reject_invalid_configuration(
+    overrides: dict[str, int],
+) -> None:
+    with pytest.raises(ValidationError):
+        DatabaseSettings.model_validate(
+            {
+                "app_environment": RuntimeEnvironment.DEVELOPMENT,
+                "database_url": "postgresql://synthetic:synthetic@localhost/development",
+                "google_calendar_enabled": False,
+                "booking_email_enabled": False,
+                **overrides,
+            }
+        )
 
 
 @pytest.mark.parametrize(

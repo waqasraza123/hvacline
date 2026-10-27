@@ -1,0 +1,17 @@
+.summary {
+  margin: 1rem 0;
+  padding: 1rem 1.2rem;
+  border: 1px solid #cbd8ef;
+  border-radius: 12px;
+  background: #f1f5ff;
+  color: #14233d;
+}
+.summary strong {
+  display: block;
+  font-size: 0.9rem;
+}
+.summary p {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.65;
+}

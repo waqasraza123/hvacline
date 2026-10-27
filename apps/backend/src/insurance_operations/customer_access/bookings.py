@@ -17,6 +17,12 @@ from insurance_operations.database.models.hvac import (
     HvacServiceRequest,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.hvac.booking_limits import (
+    BookingChangeAllowance,
+    BookingLimits,
+    booking_change_allowance,
+    customer_booking_limits,
+)
 from insurance_operations.hvac.schemas import (
     AppointmentView,
     AvailabilityInput,
@@ -35,6 +41,7 @@ class BookingDetails(BaseModel):
     timezone: str
     can_reschedule: bool
     change_message: str | None
+    change_allowance: BookingChangeAllowance
 
 
 class BookingAvailabilityInput(BaseModel):
@@ -84,6 +91,7 @@ def booking_details(
     configuration = (
         ScheduleInput.model_validate(schedule.configuration) if schedule else None
     )
+    allowance = booking_change_allowance(session, request.id, actor.agency_id)
     can_reschedule = bool(
         configuration
         and configuration.enabled
@@ -93,6 +101,7 @@ def booking_details(
         + timedelta(minutes=configuration.cancellation_notice_minutes)
         and not request.service_details.get("hazardous_condition")
         and request.status != "CLOSED"
+        and allowance.remaining > 0
     )
     return BookingDetails(
         appointment=AppointmentView.model_validate(appointment),
@@ -100,8 +109,11 @@ def booking_details(
         service=ServiceDetails.model_validate(request.service_details),
         timezone=configuration.timezone if configuration else "UTC",
         can_reschedule=can_reschedule,
+        change_allowance=allowance,
         change_message=None
         if can_reschedule
+        else f"You have used {allowance.used} of {allowance.maximum} allowed date/time changes. Contact the business for further changes."
+        if allowance.remaining == 0
         else "Please contact the business to change this appointment.",
     )
 
@@ -112,6 +124,14 @@ def create_customer_booking_router(
     router = APIRouter()
     scheduling = SchedulingService(sessions)
     Actor = Annotated[ActorContext, Depends(actor_dependency)]
+
+    @router.get("/booking-limits", response_model=BookingLimits)
+    def limits(customer: Actor, response: Response) -> BookingLimits:
+        response.headers["Cache-Control"] = "no-store"
+        with sessions() as session:
+            return customer_booking_limits(
+                session, customer.agency_id, customer.app_user_id
+            )
 
     @router.get("/appointments/{appointment_id}", response_model=BookingDetails)
     def detail(

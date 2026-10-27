@@ -6,6 +6,7 @@ export type BookingDetails = {
   timezone: string;
   can_reschedule: boolean;
   change_message: string | null;
+  change_allowance: { maximum: number; used: number; remaining: number };
   customer: {
     full_name: string;
     phone: string | null;
@@ -54,8 +55,25 @@ export function bookingDay(value: string, timezone: string): string {
   return `${part("year")}-${part("month")}-${part("day")}`;
 }
 
-export const getBookingDetails = (id: string) =>
-  requestApi<BookingDetails>("", "", `appointments/${encodeURIComponent(id)}`);
+export async function getBookingDetails(id: string): Promise<BookingDetails> {
+  const result = await requestApi<BookingDetails>(
+    "",
+    "",
+    `appointments/${encodeURIComponent(id)}`,
+  );
+  if (
+    !result.change_allowance ||
+    ![
+      result.change_allowance.maximum,
+      result.change_allowance.used,
+      result.change_allowance.remaining,
+    ].every((value) => Number.isInteger(value) && value >= 0)
+  )
+    throw new Error(
+      "Booking limits are unavailable. Please refresh and try again.",
+    );
+  return result;
+}
 
 export const getBookingAvailability = (id: string, day: string) =>
   requestApi<Availability>(
@@ -129,6 +147,8 @@ export class BookingChange {
             "CHANGE_NOTICE_REQUIRED",
             "HUMAN_ATTENTION_REQUIRED",
             "CALENDAR_CONFLICT",
+            "CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED",
+            "CUSTOMER_APPOINTMENT_LIMIT_REACHED",
           ].includes(error.code ?? ""))
       )
         this.pending = undefined;

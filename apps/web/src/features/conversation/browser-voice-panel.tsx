@@ -12,6 +12,7 @@ export function BrowserVoicePanel({
   onActivityChange,
   onViewAppointments,
   onViewBooking,
+  onBookingChanged,
 }: {
   apiBaseUrl: string;
   adminToken?: string;
@@ -19,6 +20,7 @@ export function BrowserVoicePanel({
   onActivityChange?: (active: boolean) => void;
   onViewAppointments?: () => void;
   onViewBooking?: (appointmentId: string) => void;
+  onBookingChanged?: () => void;
 }) {
   const [settings, setSettings] = useState<ReceptionistSettings>();
   const [error, setError] = useState("");
@@ -62,6 +64,7 @@ export function BrowserVoicePanel({
       onActivityChange={onActivityChange}
       onViewAppointments={onViewAppointments}
       onViewBooking={onViewBooking}
+      onBookingChanged={onBookingChanged}
     />
   );
 }
