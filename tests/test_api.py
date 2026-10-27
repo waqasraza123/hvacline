@@ -46,6 +46,27 @@ def test_health_reports_api_liveness() -> None:
     }
 
 
+def test_customer_memory_route_keeps_fact_path_and_portal_header_separate() -> None:
+    application = create_app(api_settings(), Mock(spec=Engine))
+    operation = application.openapi()["paths"][
+        "/api/v1/customer/memory/facts/{key}/delete"
+    ]["post"]
+    parameters = operation["parameters"]
+
+    assert any(
+        parameter["name"] == "key"
+        and parameter["in"] == "path"
+        and parameter["required"]
+        for parameter in parameters
+    )
+    assert any(
+        parameter["name"] == "X-Customer-Portal-Key"
+        and parameter["in"] == "header"
+        and not parameter["required"]
+        for parameter in parameters
+    )
+
+
 def test_ready_reports_database_readiness() -> None:
     database_engine = MagicMock(spec=Engine)
     connection = database_engine.connect.return_value.__enter__.return_value

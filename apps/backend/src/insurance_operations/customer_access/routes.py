@@ -37,7 +37,7 @@ def create_customer_router(
     scheduling = SchedulingService(sessions)
 
     def portal(
-        key: Annotated[str | None, Header(alias="X-Customer-Portal-Key")] = None,
+        portal_key: Annotated[str | None, Header(alias="X-Customer-Portal-Key")] = None,
     ) -> None:
         secret = settings.customer_portal_secret
         if (
@@ -46,8 +46,8 @@ def create_customer_router(
             or not settings.demo_sandbox_enabled
             or conversations is None
             or secret is None
-            or not key
-            or not secrets.compare_digest(key.encode(), secret.get_secret_value().encode())
+            or not portal_key
+            or not secrets.compare_digest(portal_key.encode(), secret.get_secret_value().encode())
         ):
             raise ApiError(status_code=404, code="NOT_FOUND", message="Customer booking is not available right now.")
 
