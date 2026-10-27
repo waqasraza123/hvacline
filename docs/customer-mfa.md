@@ -8,7 +8,9 @@ Signup creates the account and a ten-minute enrollment challenge, never a custom
 
 The browser stores the challenge in a separate HttpOnly, SameSite=Strict cookie (`__Host-hvacline-mfa` over production HTTPS). Session and challenge cookies are never interchangeable; bearer values are stripped from frontend JSON. POSTs require the existing same-origin checks. Setup keys, OTPs and recovery codes stay out of URLs, local storage, audit details and application notes. MFA responses use `Cache-Control: no-store`. Gateways must not record Authorization headers, request/response bodies or browser security-page contents.
 
-Use Google Authenticator, Microsoft Authenticator, 1Password or another compatible TOTP app: choose manual setup, enter the displayed Base32 key, select time-based six-digit codes and enter a current code. No Google sign-in, SMS, email factor, third-party QR service or new dependency is used. TOTP follows [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238), SHA-1/six digits/30-second periods with one interval of clock tolerance. Accepted counters cannot be reused. Synchronize API and authenticator clocks.
+Use Google Authenticator, Microsoft Authenticator, 1Password or another compatible TOTP app: add an account by scanning the displayed QR code, then enter the current six-digit code. On the same phone or unable to scan, expand **Can’t scan? Enter a setup key instead**, enter the displayed Base32 key manually and select time-based codes. Both methods enroll the same pending factor. The client validates the backend's `otpauth_uri` against its setup key and supported TOTP parameters before rendering.
+
+QR rendering uses the pinned `qrcode.react@4.2.0` SVG component locally in the browser, with a four-module quiet zone and black-on-white contrast. No external QR/image service, image URL, setup link, clipboard operation or persistent browser storage receives the setup credentials. The setup key/URI is cleared from component state after verification or cancellation. TOTP follows [RFC 6238](https://www.rfc-editor.org/rfc/rfc6238), SHA-1/six digits/30-second periods with one interval of clock tolerance. Accepted counters cannot be reused. Synchronize API and authenticator clocks.
 
 Seeds use authenticated Fernet encryption bound to tenant/account/factor version or pending challenge; challenge tokens are SHA-256 hashes in PostgreSQL. Factor-row locking serializes proof/recovery and replay counters. Five wrong codes lock the account's MFA attempts for fifteen minutes; counters survive new password challenges. Challenges expire, are consumed once, and new password challenges replace older ones. Failures commit before an API error is raised, preserving attempt limits.
 
@@ -42,6 +44,21 @@ python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 ```
 
 ## Owner-run verification — none executed
+
+### QR setup and MFA page refresh
+
+The MFA page now uses the customer orange/charcoal palette, a desktop security/step panel, responsive setup card, local SVG QR code, expandable manual key, labelled six-digit code entry, explicit loading/errors and styled recovery/backup-code screens. Server MFA rules, cookies, routes, migrations and configuration are unchanged. Frontend dependency and lockfile metadata were edited from the npm registry's pinned release. Source formatting only; no installation, tests, type checks, builds, services or scanning ran. Implementation/scannability remain **UNVERIFIED**.
+
+Owner commands from the active checkout:
+
+```sh
+cd /private/tmp/hvacline-browser-demo
+npm ci
+npm run test --workspace @insurance-operations/web -- src/features/customer/mfa-setup.test.tsx 'src/app/api/account/[action]/route.test.ts' src/features/customer/server.test.ts
+npm run verify:web
+```
+
+Deploy the frontend after acceptance. No new backend deployment, migration or environment variable is needed for the QR/page change. Manually check initial signup and replacement setup: scan in a compatible authenticator, confirm its six-digit code works, then save recovery codes and continue. Compare the manual key with the scanned account; same-phone manual setup must also work. Inspect desktop and 320px mobile widths, keyboard focus, expanded manual setup, wrong/expired codes, cancellation, returning-user verification and replacement recovery. Confirm the network panel shows only existing same-origin account requests and no QR image request; QR/manual credentials must disappear after verification/cancellation. Never capture real setup QR codes or keys in shared screenshots/logs.
 
 ### Render startup failure: missing MFA encryption key
 
@@ -79,7 +96,7 @@ APP_ENVIRONMENT=development alembic current
 Manual acceptance:
 
 1. Create a fictional customer account. Confirm immediate `/mfa` setup; opening `/book`, history, memory, appointments or conversation APIs before proof must redirect/reject. Enrollment must not create a full customer session.
-2. Add the manual key to Google or another TOTP authenticator, enter the current code, save the once-shown backup codes and continue. Confirm Chat/Voice and owned booking/history still work.
+2. Scan the QR code in Google or another TOTP authenticator (or expand manual setup), enter the current code, save the once-shown backup codes and continue. Confirm Chat/Voice and owned booking/history still work.
 3. Log out, then password-login again: require a fresh authenticator code before any account access. A wrong code must fail; a successfully used code must not work again in another challenge. Test five invalid codes and verify the fifteen-minute lock survives another password login.
 4. On an isolated database upgraded from `0014`, confirm an old session is rejected immediately and an existing customer without a factor is routed to mandatory setup. The original account/history/appointments must remain.
 5. With another browser already signed in, recover using the password plus one backup code. Existing sessions must stop working; the recovery challenge must not access data. Complete replacement, then confirm old authenticator codes and old backups fail, new codes work, and optional WhatsApp memory requires fresh browser approval.

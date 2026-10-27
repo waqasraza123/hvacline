@@ -1,5 +1,9 @@
 # Project State
 
+## Customer MFA QR and page refresh — owner acceptance pending
+
+The customer MFA page adds browser-local SVG QR enrollment using the existing backend provisioning URI, with a manual-key fallback. Pinned `qrcode.react@4.2.0` and lockfile metadata added without installation; URI/key/TOTP consistency is validated before rendering. Orange/charcoal responsive layout now covers setup, verification, recovery and backup codes. No backend/schema/environment change. Source and focused specifications remain **UNVERIFIED**; no installs, tests, builds, linters, type checks, services, scans or deployments ran. Exact owner commands and desktop/mobile/privacy/scan acceptance: `docs/customer-mfa.md`.
+
 ## Render and Vercel deployment failures — owner acceptance pending
 
 The subsequent owner-supplied Render traceback reaches router creation and fails because memory's `{key}` path parameter collides with the customer portal dependency argument `key`, an optional header. Renamed that internal argument to `portal_key`, preserving the header alias, routes and access gates. Added an unexecuted mocked-database regression specification for full app/router registration and OpenAPI parameter binding. No migrations, environment changes or frontend changes are required for this repair. Owner command: `python -m pytest tests/test_api.py`; manual API startup, readiness and authenticated/unauthorized memory-deletion checks remain pending. No verification commands ran.
