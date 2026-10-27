@@ -1,5 +1,9 @@
 # Project State
 
+## Render and Vercel deployment failures — owner acceptance pending
+
+Owner-supplied October 28 logs show Render completed migrations through `20261028_0015` but API startup rejected the enabled portal without `CUSTOMER_MFA_ENCRYPTION_KEY`. The Blueprint now declares a secret placeholder; the owner must set a stable dedicated Fernet key on the API and redeploy. Vercel rejected memory parsing because the `Fact` guard narrowed away saved provenance fields. Saved facts now validate all fields directly from an unknown record, preserving runtime validation. No application/schema/MFA-policy changes. No tests, builds, linters, type checks, migrations, services or hosting changes ran; repairs remain **UNVERIFIED**. Exact owner commands and deployment/manual checks: `docs/environment-handoff.md` and `docs/customer-mfa.md`.
+
 ## Publication authorized — UNVERIFIED
 
 The owner requested committing and pushing all current work to `main`: direct inbound WhatsApp voice, optional customer memory, customer-only authenticator MFA and the icon-only GitHub header link. Publication includes forward migrations `0013`–`0015`; migration execution, provider configuration, MFA key setup and runtime acceptance remain owner-managed. Existing remote header changes must be retained. CI/Render skip markers accompany publication; no tests, builds, linters, formatters, type checks, migrations, services or provider calls were authorized or run. Exact owner checks remain in `docs/whatsapp-inbound-calling.md`, `docs/customer-memory.md` and `docs/customer-mfa.md`; header acceptance requires `npm run verify:web` and desktop/mobile link/focus checks.

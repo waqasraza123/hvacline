@@ -43,6 +43,16 @@ python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().d
 
 ## Owner-run verification — none executed
 
+### Render startup failure: missing MFA encryption key
+
+If the build and migrations succeed but Uvicorn exits with `CUSTOMER_MFA_ENCRYPTION_KEY is required for customer accounts`, the enabled customer portal is missing its API encryption key. Package installation and database migration do not configure this secret.
+
+In the Render API service's **Environment** settings, add `CUSTOMER_MFA_ENCRYPTION_KEY` with the dedicated Fernet key generated using the command above, then select **Save and deploy**. See [Render environment-variable instructions](https://render.com/docs/configure-environment-variables). Restore the original key if MFA was previously configured; generate one only for initial setup. Keep a protected backup and retain the same value across API instances and redeployments. The Blueprint declares a secret placeholder; it does not generate a Fernet key or populate an existing service automatically. The key belongs only on the API.
+
+The owner's October 28 deployment log reports upgrades through `20261028_0015` before this startup failure. No extra migration is introduced by the configuration repair. After redeployment, manually confirm Uvicorn reaches application startup, `/ready` succeeds, and customer login requires authenticator enrollment or verification. Runtime remains **UNVERIFIED** until owner acceptance.
+
+### Commands and acceptance
+
 From the active source and existing Python 3.13/Node 24 environments, configure **isolated disposable** `TEST_DATABASE_URL`, distinct from runtime/direct database URLs. Database fixtures downgrade and rebuild their target. Do not point these tests at shared Neon data.
 
 ```sh

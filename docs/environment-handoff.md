@@ -1,5 +1,9 @@
 # Environment handoff
 
+For the reported Render startup error, set `CUSTOMER_MFA_ENCRYPTION_KEY` on the **API service → Environment** using the initial Fernet-key command in [customer MFA setup](customer-mfa.md#owner-configuration-and-rollout), or restore the original key if MFA was already configured. Select **Save and deploy**. The supplied log reports migrations through `0015` succeeded; the failure is API configuration. Keep the key stable and backed up; never place it in the Vercel frontend. The Blueprint now declares its secret placeholder. Deployment acceptance remains **UNVERIFIED**.
+
+For the reported Vercel memory-parser type error, the parser now validates saved fact fields directly from an unknown record before constructing `SavedFact`. Owner commands from `/private/tmp/hvacline-browser-demo`: `npm run typecheck:web`, `npm run test --workspace @insurance-operations/web -- src/features/customer/memory.test.ts`, then `npm run build:web`. No commands ran. Redeploy the repaired revision and manually check customer memory loads with saved fact provenance; deployment/runtime remain **UNVERIFIED**.
+
 Mandatory customer MFA requires API-only `CUSTOMER_MFA_ENCRYPTION_KEY` and forward migration `20261028_0015` after pending memory `0014`. **UNVERIFIED**. [Customer MFA setup and owner checks](customer-mfa.md) covers stable key generation/backup, existing-session revocation, mandatory enrollment and backup-code replacement. No staff/Operations or provider configuration change. Never expose this key to the frontend.
 
 Optional customer memory adds API-only `CUSTOMER_MEMORY_ENABLED`, `CUSTOMER_MEMORY_RETENTION_DAYS`, `CUSTOMER_MEMORY_CONTEXT_CHARACTERS` and forward migration `20261028_0014`. **UNVERIFIED**. See [customer memory setup and owner checks](customer-memory.md) for agent tools, explicit WhatsApp account linking and bounded retention cleanup. No new provider credentials or external memory service.

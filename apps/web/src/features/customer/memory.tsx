@@ -38,7 +38,8 @@ export function parseMemory(value: unknown): MemoryView {
     }
   }
   const facts: SavedFact[] = value.facts.map((entry: unknown) => {
-    if (!fact(entry) || !record(entry) || typeof entry.source_kind !== "string" ||
+    if (!record(entry) || typeof entry.key !== "string" || typeof entry.value !== "string" ||
+        typeof entry.source_kind !== "string" ||
         typeof entry.updated_at !== "string" || typeof entry.expires_at !== "string") {
       throw new Error("Invalid saved memory.");
     }

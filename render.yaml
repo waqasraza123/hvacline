@@ -37,6 +37,8 @@ services:
         sync: false
       - key: CUSTOMER_PORTAL_SECRET
         sync: false
+      - key: CUSTOMER_MFA_ENCRYPTION_KEY
+        sync: false
       - key: CUSTOMER_MAX_ACTIVE_APPOINTMENTS
         value: 1
       - key: CUSTOMER_MAX_BOOKING_CHANGES
