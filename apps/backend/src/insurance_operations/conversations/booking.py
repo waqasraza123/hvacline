@@ -1,11 +1,11 @@
 from collections.abc import Callable
 from datetime import UTC, date, datetime
-from typing import Annotated
+from typing import Annotated, Self
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -60,7 +60,14 @@ class BrowserReservationInput(BaseModel):
 
 class BrowserAppointmentConfirmation(BaseModel):
     explicit_confirmation: bool
-    transcript: list[ConversationTurn] = Field(min_length=2, max_length=60)
+    transcript: list[ConversationTurn] = Field(default_factory=list, max_length=60)
+    provider_history: str | None = Field(default=None, min_length=1, max_length=65_536)
+
+    @model_validator(mode="after")
+    def require_confirmation_history(self) -> Self:
+        if self.provider_history is None and len(self.transcript) < 2:
+            raise ValueError("At least two confirmation turns are required")
+        return self
 
 
 class BrowserReservationResponse(BaseModel):
@@ -85,6 +92,11 @@ def create_browser_booking_router(
     actor_dependency: Callable[..., ActorContext],
     *,
     prefix: str = "/api/v1/development/conversation-sessions/{session_id}/booking",
+    channel: ConversationChannel = ConversationChannel.BROWSER,
+    confirmation_history: Callable[
+        [BrowserAppointmentConfirmation], list[ConversationTurn]
+    ]
+    | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix=prefix)
     scheduling = SchedulingService(sessions)
@@ -98,7 +110,7 @@ def create_browser_booking_router(
             row is None
             or row.agency_id != actor.agency_id
             or row.initiated_by != actor.app_user_id
-            or row.channel != ConversationChannel.BROWSER.value
+            or row.channel != channel.value
             or row.status
             not in {
                 ConversationSessionStatus.AUTHORIZED.value,
@@ -108,7 +120,7 @@ def create_browser_booking_router(
             or row.authorization_expires_at <= datetime.now(UTC)
         ):
             raise unavailable(
-                "The browser conversation is not active.",
+                "The conversation is not active.",
                 "CONVERSATION_SESSION_NOT_ACTIVE",
             )
         return row
@@ -281,7 +293,9 @@ def create_browser_booking_router(
                 return result
         try:
             require_spoken_confirmation(
-                data.transcript, result.readback, "confirm my appointment"
+                confirmation_history(data) if confirmation_history else data.transcript,
+                result.readback,
+                "confirm my appointment",
             )
         except ValueError as error:
             raise unavailable(str(error), "SPOKEN_CONFIRMATION_REQUIRED") from error

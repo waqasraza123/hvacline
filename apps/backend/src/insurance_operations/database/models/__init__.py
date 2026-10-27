@@ -58,6 +58,7 @@ from insurance_operations.database.models.telephony import (
     InboundCallStatus,
     InboundNumberStatus,
 )
+from insurance_operations.database.models.whatsapp import WhatsAppConversation
 
 
 @dataclass(frozen=True)
@@ -67,6 +68,9 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "whatsapp_conversations": TableOwnership(
+        module="conversations", agency_column="agency_id"
+    ),
     "booking_email_events": TableOwnership(module="notifications", agency_column=None),
     "calendar_connections": TableOwnership(module="hvac", agency_column="agency_id"),
     "calendar_authorizations": TableOwnership(module="hvac", agency_column="agency_id"),
@@ -182,4 +186,5 @@ __all__ = [
     "LeadStatus",
     "LeadUrgency",
     "TableOwnership",
+    "WhatsAppConversation",
 ]

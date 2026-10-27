@@ -1,5 +1,12 @@
 # Project State
 
+## Direct inbound WhatsApp voice — UNVERIFIED
+
+Feature branch `feat/whatsapp-inbound-calling` implements direct ElevenLabs WhatsApp initialization, call-scoped authenticated tools and signed post-call finalization without Twilio credentials/IDs. The new forward migration `20261028_0013` adds agency-owned WhatsApp bindings and a WHATSAPP conversation channel. Initialization uses the documented empty call_sid, configured agent/Meta-number allowlist and opaque caller digest; consent creates the actual session. FAQs, confirmed intake/lead persistence, booking holds/readbacks, Google Calendar, notifications, audit and Operations reuse existing services. Callback-only contacts require a separate spoken readback; native transfer is not used. No messaging, outbound calls, voice notes or campaigns are implemented.
+
+Existing development/fictional-data, privacy, 180-second and quota gates remain. One configured agency/agent/number per deployment; broader onboarding and real-customer production identity remain deferred. Focused adapter/API/database specifications are added but unexecuted. No tests, builds, lint/checks, type checks, migrations, provider calls, installs or deployment ran; source formatting only. Setup, environment names, exact owner commands and manual acceptance: `docs/whatsapp-inbound-calling.md`. Migration, provider setup and runtime remain **UNVERIFIED**.
+
+
 ## Customer palette — owner verification pending
 
 The owner selected orange/charcoal across the homepage, login/signup and customer booking experience, using light backgrounds and dark feature panels. Shared customer theme variables now cover branding, voice graphics, controls, chat, booking progress/history, quotas, countdown and details dialogs; shared internal components retain prior colors through fallbacks. The site-wide favicon also uses orange/charcoal. Status colors remain semantic. No backend, schema or provider change. Source formatting only; implementation and browser/contrast acceptance remain unverified. Exact owner commands and manual checks: `docs/customer-color-refresh.md`.

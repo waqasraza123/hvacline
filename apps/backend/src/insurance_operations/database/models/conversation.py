@@ -36,6 +36,7 @@ class ConversationSessionStatus(StrEnum):
 class ConversationChannel(StrEnum):
     BROWSER = "BROWSER"
     PHONE = "PHONE"
+    WHATSAPP = "WHATSAPP"
 
 
 class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
@@ -55,7 +56,7 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
             name="provider_metadata_object",
         ),
         CheckConstraint(
-            "channel IN ('BROWSER', 'PHONE')",
+            "channel IN ('BROWSER', 'PHONE', 'WHATSAPP')",
             name="channel_valid",
         ),
         CheckConstraint(
@@ -69,7 +70,7 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
             name="input_mode_consent_consistent",
         ),
         CheckConstraint(
-            "(channel = 'BROWSER' AND inbound_call_id IS NULL) OR "
+            "(channel IN ('BROWSER', 'WHATSAPP') AND inbound_call_id IS NULL) OR "
             "(channel = 'PHONE' AND inbound_call_id IS NOT NULL)",
             name="channel_call_consistent",
         ),

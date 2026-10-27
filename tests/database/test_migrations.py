@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "whatsapp_conversations",
     "calendar_connections",
     "calendar_authorizations",
     "calendar_bookings",
@@ -69,6 +70,17 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "whatsapp_conversations": {
+        "id",
+        "agency_id",
+        "conversation_id",
+        "phone_number_id",
+        "caller_digest",
+        "session_id",
+        "initialized_at",
+        "expires_at",
+        "finalized_at",
+    },
     "calendar_connections": {
         "id",
         "agency_id",
@@ -556,6 +568,7 @@ def test_migration_unique_constraints_match_the_approved_scopes(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_unique_columns: dict[str, set[tuple[str, ...]]] = {
+        "whatsapp_conversations": {("conversation_id",), ("session_id",)},
         "agencies": {("slug",)},
         "app_users": {("auth_subject",)},
         "agency_memberships": {("agency_id", "app_user_id")},
@@ -600,6 +613,10 @@ def test_migration_check_constraints_cover_approved_invariants(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_constraint_names = {
+        "whatsapp_conversations": {
+            "ck_whatsapp_conversations_caller_digest_valid",
+            "ck_whatsapp_conversations_expiry_valid",
+        },
         "agencies": {
             "ck_agencies_name_length_valid",
             "ck_agencies_slug_lowercase",

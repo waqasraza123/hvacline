@@ -280,6 +280,7 @@ class ConversationService:
         request: ConversationIntakeConfirmationInput,
         idempotency_key: str,
         correlation_id: UUID,
+        allow_live_contact_confirmation: bool = False,
     ) -> tuple[ConversationIntakeResponse, bool]:
         now = datetime.now(UTC)
         fingerprint = request_fingerprint(request)
@@ -333,8 +334,20 @@ class ConversationService:
                     message="The conversation confirmation window has expired",
                 )
             live_confirmation = (
-                request.spoken_confirmation
-                and conversation_session.channel == ConversationChannel.BROWSER.value
+                (
+                    request.spoken_confirmation
+                    or (
+                        allow_live_contact_confirmation
+                        and request.service is None
+                        and conversation_session.channel
+                        == ConversationChannel.WHATSAPP.value
+                    )
+                )
+                and conversation_session.channel
+                in {
+                    ConversationChannel.BROWSER.value,
+                    ConversationChannel.WHATSAPP.value,
+                }
                 and conversation_session.status
                 == ConversationSessionStatus.AUTHORIZED.value
                 and conversation_session.ended_at is None
@@ -397,7 +410,7 @@ class ConversationService:
                         event_type="HVAC_SERVICE_REQUEST_CONFIRMED",
                         occurred_at=now,
                         customer_id=customer.id,
-                        summary="Browser customer confirmed HVAC service details",
+                        summary="Customer confirmed HVAC service details",
                         details={"service_request_id": str(service_request.id)},
                         correlation_id=correlation_id,
                         event_version=1,
@@ -438,7 +451,10 @@ class ConversationService:
                             "conversation_intake_id": str(conversation_intake.id),
                             "conversation_session_id": str(conversation_session.id),
                             "confirmation_mode": (
-                                "SPOKEN" if request.spoken_confirmation else "SCREEN"
+                                "SPOKEN"
+                                if request.spoken_confirmation
+                                or allow_live_contact_confirmation
+                                else "SCREEN"
                             ),
                         },
                         correlation_id=correlation_id,

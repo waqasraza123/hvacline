@@ -1,5 +1,7 @@
 # Environment handoff
 
+Direct inbound WhatsApp voice adds API-only configuration and forward migration `20261028_0013`. Status: **UNVERIFIED**. Follow [WhatsApp setup and owner checks](whatsapp-inbound-calling.md); preserve existing browser, Calendar and notification settings. Twilio remains optional.
+
 The current source is `/private/tmp/hvacline-browser-demo`. Deployment and runtime remain owner-unverified. No environment values, secrets, services, migrations, tests or hosting settings were changed during this handoff.
 
 ## New variables for booking limits
