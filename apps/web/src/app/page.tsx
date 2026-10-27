@@ -27,22 +27,61 @@ export default function Home() {
           <a href="#services">Services</a>
         </nav>
         <div className="product-header-actions">
-          <svg
-            className="product-elevenlabs-logo"
-            role="img"
-            aria-label="ElevenLabs"
-            width="16"
-            height="20"
-            viewBox="0 0 16 20"
-            fill="currentColor"
-          >
-            <path d="M2 0h4v20H2zM10 0h4v20h-4z" />
-          </svg>
+          <div className="product-provider-logos">
+            <svg
+              role="img"
+              aria-label="ElevenLabs"
+              width="16"
+              height="20"
+              viewBox="0 0 16 20"
+              fill="currentColor"
+            >
+              <path d="M2 0h4v20H2zM10 0h4v20h-4z" />
+            </svg>
+            <svg
+              role="img"
+              aria-label="Twilio"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              />
+              <circle cx="8.5" cy="8.5" r="2.5" />
+              <circle cx="15.5" cy="8.5" r="2.5" />
+              <circle cx="8.5" cy="15.5" r="2.5" />
+              <circle cx="15.5" cy="15.5" r="2.5" />
+            </svg>
+            <svg
+              role="img"
+              aria-label="WhatsApp"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M12 2a10 10 0 0 0-8.66 15L2 22l5.13-1.34A10 10 0 1 0 12 2Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <path d="M8.5 6.8c-.3-.7-.6-.7-.9-.7h-.7c-.3 0-.6.1-.9.4-.3.4-1.2 1.2-1.2 2.8s1.2 3.2 1.4 3.4c.2.2 2.4 3.7 5.8 5 .8.3 1.4.5 1.9.6.8.2 1.5.2 2.1.1.6-.1 1.9-.8 2.2-1.6.3-.8.3-1.5.2-1.6-.1-.2-.3-.3-.7-.4l-2.2-1.1c-.3-.1-.6-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.3-.7.1-.4-.2-1.5-.5-2.8-1.7-1-.9-1.7-2-1.9-2.4-.2-.3 0-.5.1-.7l.5-.6.3-.6c.1-.2 0-.4 0-.6l-1-2.4Z" />
+            </svg>
+          </div>
           <Link className="product-login" href="/login">
             Sign in
           </Link>
           <Link className="product-button button-small" href="/book">
-            Try the booking demo <ProductIcon name="arrow" />
+            Try <ProductIcon name="arrow" />
           </Link>
         </div>
       </header>

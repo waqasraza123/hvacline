@@ -146,10 +146,17 @@
   letter-spacing: 0.04em;
   margin-left: 0.5rem;
 }
-.product-elevenlabs-logo {
+.product-provider-logos {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   flex-shrink: 0;
   color: var(--customer-muted);
   opacity: 0.65;
+}
+.product-provider-logos > svg {
+  display: block;
+  flex-shrink: 0;
 }
 .product-nav,
 .product-header-actions {
@@ -1004,6 +1011,8 @@
   .product-header {
     gap: 1rem;
     min-height: 78px;
+    flex-wrap: wrap;
+    padding-block: 1rem;
   }
   .product-site .brand-link,
   .customer-shell .brand-link {
