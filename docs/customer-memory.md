@@ -4,6 +4,18 @@ Implementation started on `feat/customer-memory` in `/private/tmp/hvacline-brows
 
 ## Scope and consent
 
+The customer Memory tab now uses an orange/charcoal dashboard: memory status and retention/count summaries, saved-detail cards with source/update/expiry, a review-and-save editor, dated authorized-conversation summaries, a WhatsApp connection panel and separate privacy controls. Suggestions populate the editor and need confirmation of the selected detail before saving; changing the selection resets consent. Forgetting, clearing, disabling and disconnecting open a keyboard-accessible native confirmation dialog. The editor and WhatsApp controls use the existing backend options, revisions, validation and APIs. Booking limits remain on booking/history tabs; Memory has its own heading. No backend, schema, environment or dependency change.
+
+UI source and runtime remain **UNVERIFIED**. Only source formatting was applied; no tests, builds, linters, type checks, services, migrations, provider calls or deployments ran. Owner commands from the active checkout:
+
+```sh
+cd /private/tmp/hvacline-browser-demo
+npm run test --workspace @insurance-operations/web -- src/features/customer/memory.test.ts 'src/app/api/v1/development/[...path]/route.test.ts'
+npm run verify:web
+```
+
+After acceptance, deploy the frontend only. Manually inspect desktop and 320px mobile layouts, keyboard navigation and confirmation-dialog focus/Escape behavior. Check loading/retry, unavailable/off/on/empty/populated states; consent to retained confirmed history; add/edit/review a suggestion with selection-specific confirmation; source/update/expiry labels; cancel/confirm forget, clear and disable; confirm erasure preserves business records and clears WhatsApp links. Test linking with the current live-call code and explicit account approval, unlinking, stale-revision/unknown-write errors, refresh after changing tabs and account isolation. No caller or linking-code content belongs in shared screenshots/logs.
+
 Memory belongs to an authenticated `customer_accounts` identity and its agency, not to an intake's newly created contact record. Names, email/phone matches, provider-supplied `user_id` values and caller claims never authorize retrieval. Browser Chat/Voice reuse the existing signed-in customer session and same-origin server proxy. WhatsApp reuses the authenticated ElevenLabs call binding and requires explicit approval from that signed-in account.
 
 The feature defaults off. In Book → Memory, the customer can enable optional memory, review sources and suggestions, explicitly save a fact, correct it, forget it, clear all optional data, disable memory and unlink WhatsApp. Enabling explicitly authorizes summaries of existing and future confirmed history within retention and since the last memory erasure. Without opt-in, no history is imported. Facts entered in the controls are authoritative customer statements. Agent-proposed facts additionally need user-word evidence in the already confirmed intake and their own spoken readback/clear yes. Ambiguous evidence is not resolved by guessing.

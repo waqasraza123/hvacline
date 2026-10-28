@@ -72,13 +72,23 @@ export function CustomerBooking({
       <main className="customer-main product-container">
         <div className="customer-page-heading">
           <div>
-            <p className="product-eyebrow">YOUR HOME. YOUR SCHEDULE.</p>
+            <p className="product-eyebrow">
+              {tab === "memory"
+                ? "YOUR DETAILS. YOUR CHOICE."
+                : "YOUR HOME. YOUR SCHEDULE."}
+            </p>
             <h1>
-              A little closer
+              {tab === "memory"
+                ? "A little less repeating."
+                : "A little closer"}
               <br />
-              to comfortable.
+              {tab === "memory" ? "A little more you." : "to comfortable."}
             </h1>
-            <p>Book your next service, or pick up where you left off.</p>
+            <p>
+              {tab === "memory"
+                ? "Manage what Line remembers for your next conversation."
+                : "Book your next service, or pick up where you left off."}
+            </p>
           </div>
           <span className="customer-voice-label">
             <VoiceSymbol /> Powered by Line <span>VOICE & CHAT</span>
@@ -100,22 +110,32 @@ export function CustomerBooking({
           >
             <ProductIcon name="calendar" /> My appointments
           </button>
-          <button type="button" disabled={voiceActive}
+          <button
+            type="button"
+            disabled={voiceActive}
             aria-current={tab === "memory" ? "page" : undefined}
-            onClick={() => setTab("memory")}>Memory</button>
+            onClick={() => setTab("memory")}
+          >
+            <ProductIcon name="shield" />
+            Memory
+          </button>
           <span>
             {voiceActive
               ? "Finish your conversation before leaving this page."
               : "Your next step, made simple."}
           </span>
         </nav>
-        <BookingLimitsPanel revision={appointmentsRevision} />
+        {tab !== "memory" && (
+          <BookingLimitsPanel revision={appointmentsRevision} />
+        )}
         {error && (
           <p role="alert" className="customer-error">
             {error}
           </p>
         )}
-        {tab === "memory" ? <CustomerMemory key={user.id} /> : tab === "book" ? (
+        {tab === "memory" ? (
+          <CustomerMemory key={user.id} />
+        ) : tab === "book" ? (
           voiceEnabled ? (
             <BrowserVoicePanel
               apiBaseUrl=""

@@ -1,5 +1,9 @@
 # Project State
 
+## Customer memory dashboard refresh — owner acceptance pending
+
+The Memory tab now has responsive orange/charcoal status/count/retention cards, saved details with source/update/expiry, a selected-detail consent editor, dated authorized-summary suggestions, WhatsApp pairing and privacy controls. Suggestions go through review before save; destructive actions use native confirmation dialogs. Booking limits stay on booking/history tabs. Existing backend options/revisions/APIs remain authoritative; no backend/schema/environment/dependency change. Source formatting only; no verification or deployments ran. Implementation/runtime **UNVERIFIED**; exact owner commands and manual checks: `docs/customer-memory.md`.
+
 ## Customer MFA QR and page refresh — owner acceptance pending
 
 The customer MFA page adds browser-local SVG QR enrollment using the existing backend provisioning URI, with a manual-key fallback. Pinned `qrcode.react@4.2.0` and lockfile metadata added without installation; URI/key/TOTP consistency is validated before rendering. Orange/charcoal responsive layout now covers setup, verification, recovery and backup codes. No backend/schema/environment change. Source and focused specifications remain **UNVERIFIED**; no installs, tests, builds, linters, type checks, services, scans or deployments ran. Exact owner commands and desktop/mobile/privacy/scan acceptance: `docs/customer-mfa.md`.
