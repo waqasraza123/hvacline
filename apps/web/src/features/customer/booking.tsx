@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
-import { OperationsApiError, requestApi } from "@/features/operations/api";
-import type { Appointment } from "@/features/operations/api";
 import type { Customer } from "./server";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingChange } from "./booking-details";
 import { BookingLimitsPanel } from "./booking-limits";
 import { CustomerMemory } from "./memory";
-
-type MyAppointments = { appointments: Appointment[]; timezone: string | null };
+import { CustomerAppointments } from "./appointments";
 
 export function CustomerBooking({
   user,
@@ -75,19 +72,29 @@ export function CustomerBooking({
             <p className="product-eyebrow">
               {tab === "memory"
                 ? "YOUR DETAILS. YOUR CHOICE."
-                : "YOUR HOME. YOUR SCHEDULE."}
+                : tab === "appointments"
+                  ? "YOUR VISITS. YOUR SCHEDULE."
+                  : "YOUR HOME. YOUR SCHEDULE."}
             </p>
             <h1>
               {tab === "memory"
                 ? "A little less repeating."
-                : "A little closer"}
+                : tab === "appointments"
+                  ? "Your visits."
+                  : "A little closer"}
               <br />
-              {tab === "memory" ? "A little more you." : "to comfortable."}
+              {tab === "memory"
+                ? "A little more you."
+                : tab === "appointments"
+                  ? "All in one place."
+                  : "to comfortable."}
             </h1>
             <p>
               {tab === "memory"
                 ? "Manage what Line remembers for your next conversation."
-                : "Book your next service, or pick up where you left off."}
+                : tab === "appointments"
+                  ? "Keep track of your upcoming visits and saved booking details."
+                  : "Book your next service, or pick up where you left off."}
             </p>
           </div>
           <span className="customer-voice-label">
@@ -125,7 +132,7 @@ export function CustomerBooking({
               : "Your next step, made simple."}
           </span>
         </nav>
-        {tab !== "memory" && (
+        {tab === "book" && (
           <BookingLimitsPanel revision={appointmentsRevision} />
         )}
         {error && (
@@ -161,8 +168,9 @@ export function CustomerBooking({
             </section>
           )
         ) : (
-          <AppointmentList
+          <CustomerAppointments
             key={appointmentsRevision}
+            revision={appointmentsRevision}
             onBook={() => setTab("book")}
             onViewBooking={setSelectedBooking}
           />
@@ -187,158 +195,5 @@ export function CustomerBooking({
         <Link href="/">Back to home ↗</Link>
       </footer>
     </div>
-  );
-}
-
-function AppointmentList({
-  onBook,
-  onViewBooking,
-}: {
-  onBook: () => void;
-  onViewBooking: (appointmentId: string) => void;
-}) {
-  const [data, setData] = useState<MyAppointments>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  async function load() {
-    setLoading(true);
-    setError("");
-    try {
-      const result = await requestApi<MyAppointments>("", "", "appointments");
-      if (!Array.isArray(result.appointments))
-        throw new Error("Your appointments could not be loaded.");
-      setData(result);
-    } catch (failure) {
-      setError(
-        failure instanceof OperationsApiError && failure.status === 401
-          ? "Your session has ended. Sign in again to see your appointments."
-          : "We couldn’t load your appointments. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-  useEffect(() => {
-    let active = true;
-    void requestApi<MyAppointments>("", "", "appointments")
-      .then((value) => {
-        if (!active) return;
-        if (!Array.isArray(value.appointments))
-          throw new Error("Invalid appointments");
-        setData(value);
-      })
-      .catch((failure) => {
-        if (active)
-          setError(
-            failure instanceof OperationsApiError && failure.status === 401
-              ? "Your session has ended. Sign in again to see your appointments."
-              : "We couldn’t load your appointments. Please try again.",
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-  if (loading)
-    return (
-      <div className="customer-empty" role="status">
-        <span className="customer-loading" />
-        <p>Getting your appointments…</p>
-      </div>
-    );
-  if (error)
-    return (
-      <div className="customer-empty">
-        <p className="customer-error" role="alert">
-          {error}
-        </p>
-        <button className="product-button" onClick={() => void load()}>
-          Try again
-        </button>
-        <Link href="/login" className="product-text-link">
-          Sign in again
-        </Link>
-      </div>
-    );
-  if (!data?.appointments.length)
-    return (
-      <section className="customer-empty">
-        <span className="empty-calendar">
-          <ProductIcon name="calendar" />
-        </span>
-        <h2>Your calendar is clear.</h2>
-        <p>When you book a service, you’ll find the details right here.</p>
-        <button className="product-button" onClick={onBook}>
-          Book with Line <ProductIcon name="arrow" />
-        </button>
-      </section>
-    );
-  return (
-    <section
-      className="customer-appointment-list"
-      aria-label="Your appointments"
-    >
-      <div className="customer-list-heading">
-        <h2>Your appointments</h2>
-        <button className="product-text-link" onClick={() => void load()}>
-          Refresh ↻
-        </button>
-      </div>
-      {data.appointments.map((appointment) => {
-        const expired =
-          appointment.status === "HELD" &&
-          new Date(appointment.hold_expires_at).getTime() <= Date.now();
-        const label = expired
-          ? "Hold expired"
-          : ({
-              CONFIRMED: "Confirmed",
-              HELD: "Waiting for confirmation",
-              CANCELLED: "Cancelled",
-              EXPIRED: "Expired",
-            }[appointment.status] ?? "Needs attention");
-        return (
-          <article key={appointment.id} className="customer-appointment">
-            <span className="appointment-icon">
-              <ProductIcon name="calendar" />
-            </span>
-            <div>
-              <h3>
-                {new Intl.DateTimeFormat("en-US", {
-                  dateStyle: "full",
-                  timeZone: data.timezone ?? "UTC",
-                }).format(new Date(appointment.starts_at))}
-              </h3>
-              <p>
-                {new Intl.DateTimeFormat("en-US", {
-                  timeStyle: "short",
-                  timeZone: data.timezone ?? "UTC",
-                }).format(new Date(appointment.starts_at))}{" "}
-                · {data.timezone ?? "UTC"}
-              </p>
-              <small>HVAC service appointment</small>
-              <button
-                type="button"
-                className="product-text-link"
-                onClick={() => onViewBooking(appointment.id)}
-              >
-                View details &amp; edit
-              </button>
-            </div>
-            <span
-              className={`appointment-status status-${appointment.status.toLowerCase()}`}
-            >
-              {label}
-            </span>
-          </article>
-        );
-      })}
-      <p className="customer-list-note">
-        Only appointments you have confirmed are booked. Temporary holds expire
-        automatically.
-      </p>
-    </section>
   );
 }

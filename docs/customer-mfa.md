@@ -1,5 +1,7 @@
 # Mandatory customer authenticator MFA — UNVERIFIED
 
+Owner reports the QR code works. This establishes owner-reported scanning acceptance; complete MFA/recovery/security verification remains pending and no scan was repeated by Codex.
+
 Scope is customer accounts only. Operations/staff access is unchanged. Source is in `/private/tmp/hvacline-browser-demo` on branch `feat/mandatory-authenticator-mfa`; the owner authorized committing and publishing all pending work to `main`. No tests, formatters, checks, migrations, services, provider calls, dependency installation or deployments were run for MFA. Publication does not establish runtime/security acceptance, which remains **UNVERIFIED**.
 
 ## Authentication and recovery
