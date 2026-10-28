@@ -1,95 +1,47 @@
-# HVACLine AI
+<p align="center">
+  <img src="apps/web/public/icon.svg" alt="HVACLine AI logo" width="96" height="96">
+</p>
 
-**AI Phone Receptionist & Appointment Booking for U.S. HVAC Businesses.**
+<h1 align="center">HVACLine AI</h1>
 
-An HVAC company should receive a useful service request when it cannot answer the phone. HVACLine AI connects Twilio telephone calls to an ElevenLabs receptionist, with FastAPI controlling approved information, service intake, technician availability, reservations, and confirmed appointments. Next.js provides the service workspace. Neon PostgreSQL remains the only application database.
+<p align="center">
+  <strong>Turn missed calls into HVAC bookings.</strong><br>
+  An AI receptionist for U.S. heating and air businesses.
+</p>
 
-**Development implementation, not a production launch.** Real carrier calling has not been verified. Production sign-in, tenant onboarding, billing, retention automation and owner acceptance of the new calendar/message integrations remain launch blockers. Use fictional data only. No raw audio is stored by the application.
+<p align="center">
+  <img src="https://img.shields.io/badge/HVAC-F97316?style=flat-square" alt="HVAC">
+  <img src="https://img.shields.io/badge/AI_Receptionist-18181B?style=flat-square" alt="AI receptionist">
+  <img src="https://img.shields.io/badge/Appointment_Booking-18181B?style=flat-square" alt="Appointment booking">
+  <img src="https://img.shields.io/badge/Development_Preview-F97316?style=flat-square" alt="Development preview">
+</p>
 
-## Implemented workflow
+<p align="center">
+  <a href="https://elevenlabs.io/"><img src="https://img.shields.io/badge/ElevenLabs-18181B?style=for-the-badge&amp;logo=elevenlabs&amp;logoColor=white" alt="ElevenLabs voice AI"></a>
+  <a href="https://www.twilio.com/"><img src="https://img.shields.io/badge/Twilio-F22F46?style=for-the-badge&amp;logo=twilio&amp;logoColor=white" alt="Twilio telephone integration"></a>
+  <a href="docs/whatsapp-inbound-calling.md"><img src="https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&amp;logo=whatsapp&amp;logoColor=white" alt="WhatsApp inbound voice integration"></a>
+</p>
 
-1. A configured Twilio number routes a signed inbound webhook to the backend.
-2. The existing ElevenLabs register-call adapter starts a two-way telephone conversation.
-3. The caller accepts AI disclosure, the existing development consent gates, and explicit readback of their details.
-4. Authenticated tools save an HVAC service request, including contact, service address, equipment issue, requested service, preferred window, and hazard flag.
-5. The backend checks the business's configured ZIP codes, timezone, opening hours, technician schedules, time off, notice period, and existing appointments.
-6. A five-minute reservation holds capacity. An explicit confirmation commits the appointment before the tool returns `CONFIRMED`.
-7. The operations workspace shows persistent requests, appointments, calls, callbacks, and handoffs. A signed post-call event finalizes the existing confirmed customer/intake/lead flow; structured HVAC addresses are retained in that customer.
+HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job.
 
-Unconfigured scheduling returns no slots. Hazardous conditions require human attention and cannot be self-booked. The agent must not diagnose equipment hazards, provide repair instructions, invent pricing, or promise an emergency response time.
+## What it does
 
-## Stack and compatibility
+- **Meet customers where they are.** Browser chat and voice, with telephone and inbound WhatsApp voice integrations.
+- **Capture the job details.** Contact information, service address, equipment issue, requested service and preferred time.
+- **Book against real availability.** Service areas, business hours and technician schedules determine offered slots; customers explicitly confirm before booking.
+- **Keep the team informed.** One operations workspace for requests, appointments, calls, callbacks and handoffs.
+- **Support returning customers.** Appointment history, rescheduling and optional customer-controlled memory. Google Calendar sync and booking emails/reminders are opt-in integrations.
 
-Next.js / React / TypeScript; FastAPI / Python 3.13; SQLAlchemy 2 / psycopg 3 / Alembic; Neon PostgreSQL; Twilio; ElevenLabs. No Supabase or second runtime database.
+## From request to appointment
 
-Internal `insurance_operations`, `@insurance-operations/web`, CLI names, existing migration revisions, and `agency_id` ownership are retained to protect deployment and schema compatibility. The database's legacy `supported_insurance_categories` column is mapped to the HVAC API field `supported_service_categories`. These identifiers do not define the public product.
+1. A customer describes the issue and reviews their details with the receptionist.
+2. HVACLine checks the configured service area and schedule, then holds an available time.
+3. The customer confirms, and the saved appointment appears in the operations workspace.
 
-## Setup
+Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
 
-Requires Node.js 24 and Python 3.13.
+> **Development preview — fictional data only.** Live telephone and WhatsApp calling, Calendar sync and email delivery still need owner acceptance. Production onboarding, billing and privacy readiness remain incomplete.
 
-```bash
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env.local
-npm ci
-python3.13 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
-```
+## Explore
 
-Configure a development Neon branch with a pooled `DATABASE_URL` and a direct `DIRECT_DATABASE_URL`. Keep `TEST_DATABASE_URL` separate and disposable. See [database setup](docs/database-setup.md). Never commit credentials.
-
-```bash
-set -a
-source .env
-set +a
-alembic upgrade head
-insurance-operations-seed-development
-```
-
-For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` and no telephone fields for browser-only use. The `/operations` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
-
-```bash
-npm run dev:web
-uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
-```
-
-The development seed initializes a missing fictional-business calendar in `business_schedules`: booking enabled, America/New_York, ZIP 10001, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice, and one Test Team. It preserves existing calendars, including deliberately disabled ones, and creates no appointments. Open `/operations` → **Scheduling** to review or edit the persisted values. Other businesses require their own configuration. See [development calendar defaults](docs/development-calendar-defaults.md) for owner commands and checks; this change is unverified.
-
-Teams without an external connection use the maintained internal schedule. Google Calendar connection, live conflict checks, durable event recovery/reconciliation and queued booking emails/reminders are now implemented behind opt-in development settings, but remain owner-unverified. Migration `20261027_0012`, OAuth/Resend setup and scheduled job execution are required. Jobs can use a [Vercel Python function with a free external scheduler](docs/vercel-booking-jobs.md), or the standalone worker. See [calendar and booking messages](docs/calendar-and-booking-messages.md) for behavior, limitations, exact commands and manual acceptance.
-
-The development seed also supplies 28 approved fictional-business FAQs and missing receptionist settings. To initialize this content without changing phone routing, use `insurance-operations-seed-development --skip-telephony` in the reviewed development environment. Existing edited or inactive FAQs and calendars are preserved. No prices, warranties, financing terms or callback promises are invented. See [development business content](docs/development-business-content.md) for scope, exact owner checks and application instructions.
-
-## Browser chat and voice without phone numbers
-
-Enable the browser feature flags and reuse the private ElevenLabs browser agent using [browser setup](docs/elevenlabs-agent-setup.md) and all eight [client tools](docs/elevenlabs-browser-tools.json). Customer `/book` defaults to silent **Chat**, with **Voice** available separately. Customers can also type during Voice; replies in that mode can still be spoken. Both modes use the same approved FAQs, actual available slots and two explicit readback confirmations for saving and booking. The existing on-screen review and booking flow remains available. Saved requests and bookings appear in the same workspace. The owner reports voice works; chat and appointment booking remain unverified. See [customer chat](docs/customer-chat.md) for migration `20261025_0011`, deployment steps and exact owner checks. No new environment variables or OpenAI key are needed.
-
-Phone numbers and human transfers are optional for this path. Keep telephone provider routing disabled without numbers. Public production customer access remains blocked by unfinished identity and tenant provisioning; never share the development admin token with customers. This new flow is implemented but unverified.
-
-## Telephone setup and live validation
-
-Follow [the HVAC live-validation runbook](docs/hvacline-live-validation.md), [Twilio provider setup](docs/telephony-provider-setup.md), and [ElevenLabs phone setup](docs/elevenlabs-phone-agent-setup.md). Provider feature flags stay disabled until credentials, privacy settings, tool configuration, and routing are verified. Do not purchase numbers or activate billing as part of setup without owner approval.
-
-## Verification
-
-```bash
-npm run verify:web
-ruff format --check .
-ruff check .
-mypy apps/backend/src tests
-APP_ENVIRONMENT=test pytest tests --ignore=tests/database
-insurance-operations-worker --check
-```
-
-Database tests rebuild the selected database. Run them only when `TEST_DATABASE_URL` is confirmed isolated and disposable. CI provisions its own PostgreSQL service.
-
-```bash
-APP_ENVIRONMENT=test pytest tests/database
-APP_ENVIRONMENT=test alembic upgrade head
-APP_ENVIRONMENT=test alembic current
-APP_ENVIRONMENT=test alembic check
-```
-
-Automated provider fixtures do not prove a live telephone call. The first live acceptance gate is a synthetic caller reaching the configured number, completing consent and intake, receiving a database-confirmed appointment, and the operator seeing the request and booking in `/operations`.
-
-See [architecture](docs/hvacline-architecture.md), [current project state](docs/project-state.md), and [remaining product work](docs/ai-receptionist-product-plan.md). Historical insurance-era continuation notes are archived; they are not current requirements.
+[Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone demo](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)
