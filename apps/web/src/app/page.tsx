@@ -79,7 +79,7 @@ export default function Home() {
           </div>
           <a
             className="product-github-link"
-            href="https://github.com/waqasraza123/insurance-operations-ai"
+            href="https://github.com/waqasraza123/hvacline"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View HVACLine on GitHub (opens in a new tab)"
