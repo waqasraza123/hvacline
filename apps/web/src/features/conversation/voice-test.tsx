@@ -41,6 +41,12 @@ import { SessionTimer, remainingSessionSeconds } from "./session-timer";
 import type { VoiceAppointment, VoiceBookingTool } from "./voice-booking";
 import type { ReceptionistSettings } from "../receptionist/contracts";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
+import {
+  clearHomepageHandoff,
+  homepageContext,
+  readHomepageHandoff,
+} from "@/features/homepage-chat/handoff";
+import type { HomepageHandoff } from "@/features/homepage-chat/handoff";
 
 type VoiceTestProperties = Readonly<{
   apiBaseUrl: string;
@@ -375,6 +381,11 @@ function VoiceTestExperience({
   onViewBooking,
   onBookingChanged,
 }: ExperienceProperties) {
+  const [homepageHandoff, setHomepageHandoff] =
+    useState<HomepageHandoff | null>(null);
+  useEffect(() => {
+    if (presentation === "customer") setHomepageHandoff(readHomepageHandoff());
+  }, [presentation]);
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(180);
@@ -560,7 +571,16 @@ function VoiceTestExperience({
         ? Date.parse(authorization.authorizationExpiresAt)
         : Date.now() + authorization.maximumDurationSeconds * 1000;
       setPhase("connecting");
-      await client.start(authorization);
+      const currentHandoff =
+        homepageHandoff && homepageHandoff.expiresAt > Date.now()
+          ? homepageHandoff
+          : null;
+      await client.start(
+        authorization,
+        currentHandoff?.message && currentHandoff.reply
+          ? homepageContext(currentHandoff)
+          : undefined,
+      );
       if (phaseRef.current === "stopping" || phaseRef.current === "error") {
         throw new Error("conversation connection failed during startup");
       }
@@ -731,6 +751,48 @@ function VoiceTestExperience({
 
   return (
     <div className={`voice-grid ${customerView ? "line-experience" : ""}`}>
+      {homepageHandoff && (
+        <section
+          className="voice-card homepage-conversation-history"
+          aria-label="Earlier homepage conversation"
+        >
+          <div className="homepage-history-heading">
+            <h2>Pick up where you left off.</h2>
+            <button
+              type="button"
+              disabled={!canStart}
+              onClick={() => {
+                clearHomepageHandoff();
+                setHomepageHandoff(null);
+              }}
+            >
+              Start fresh
+            </button>
+          </div>
+          <p>
+            Your next message is ready below. Accept the conversation
+            permissions and start Chat to continue.
+          </p>
+          {homepageHandoff.message && (
+            <div className="homepage-history-turn">
+              <strong>You</strong>
+              <p>{homepageHandoff.message}</p>
+            </div>
+          )}
+          {homepageHandoff.reply && (
+            <div className="homepage-history-turn">
+              <strong>Line</strong>
+              <p>{homepageHandoff.reply}</p>
+            </div>
+          )}
+          {homepageHandoff.pendingMessage && (
+            <div className="homepage-history-turn">
+              <strong>Your next message</strong>
+              <p>{homepageHandoff.pendingMessage}</p>
+            </div>
+          )}
+        </section>
+      )}
       <section
         className="voice-card voice-control-card"
         aria-labelledby="voice-controls-title"
@@ -830,11 +892,11 @@ function VoiceTestExperience({
             ElevenLabs and its AI/LLM providers. Chat mode does not access your
             microphone or play audio. The configured agent has audio recording
             disabled and zero-day scheduled deletion; provider Zero Retention
-            Mode is not enabled. This app keeps live drafts in this browser
-            and does not store raw audio. Intake details
-            and transcript text are saved only after you confirm the full
-            readback or the on-screen review. Booking requires a separate
-            confirmation of the appointment date and time.
+            Mode is not enabled. This app keeps live drafts in this browser and
+            does not store raw audio. Intake details and transcript text are
+            saved only after you confirm the full readback or the on-screen
+            review. Booking requires a separate confirmation of the appointment
+            date and time.
           </div>
           <label className="consent-row">
             <input
@@ -1086,6 +1148,18 @@ function VoiceTestExperience({
         )}
         {phase !== "idle" && (
           <ChatComposer
+            key={homepageHandoff?.expiresAt ?? "current"}
+            initialMessage={
+              homepageHandoff && homepageHandoff.expiresAt > Date.now()
+                ? homepageHandoff.pendingMessage
+                : ""
+            }
+            onSent={() => {
+              clearHomepageHandoff();
+              setHomepageHandoff((current) =>
+                current ? { ...current, pendingMessage: "" } : null,
+              );
+            }}
             connected={phase === "active" && client.status === "connected"}
             onTyping={client.notifyTyping}
             send={client.sendText}

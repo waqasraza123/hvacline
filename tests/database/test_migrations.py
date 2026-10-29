@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "homepage_chat_visitors", "homepage_chat_daily_usage",
     "customer_mfa_factors", "customer_mfa_challenges", "customer_mfa_recovery_codes",
     "customer_memory_policies", "customer_memory_facts", "customer_memory_summaries",
     "customer_whatsapp_identities", "customer_memory_pairings",
@@ -73,6 +74,17 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "homepage_chat_visitors": {
+        "agency_id",
+        "token_hash",
+        "state",
+        "request_id",
+        "request_hash",
+        "created_at",
+        "expires_at",
+        "lease_expires_at",
+    },
+    "homepage_chat_daily_usage": {"agency_id", "day", "generations"},
     "customer_mfa_factors": {
         "account_id", "agency_id", "secret_ciphertext", "enabled_at", "last_counter",
         "version", "failed_attempts", "locked_until",

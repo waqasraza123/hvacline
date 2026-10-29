@@ -227,6 +227,9 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
 
 class ApiSettings(DatabaseSettings):
+    homepage_chat_enabled: bool = False
+    homepage_chat_daily_limit: int = Field(default=20, ge=1, le=1000)
+    homepage_chat_concurrent_limit: int = Field(default=1, ge=1, le=10)
     customer_memory_enabled: bool = False
     customer_memory_retention_days: int = Field(default=90, ge=1, le=365)
     customer_memory_context_characters: int = Field(default=1200, ge=300, le=2000)
@@ -248,6 +251,12 @@ class ApiSettings(DatabaseSettings):
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
     customer_mfa_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_homepage_chat(self) -> Self:
+        if self.homepage_chat_enabled and not self.customer_portal_enabled:
+            raise ValueError("Homepage chat requires the configured customer portal")
+        return self
 
     @field_validator("web_origin")
     @classmethod

@@ -45,7 +45,10 @@ export type ConversationClient = Readonly<{
   status: ConversationConnectionStatus;
   mode: ConversationMode;
   isMuted: boolean;
-  start: (authorization: ConversationSessionAuthorization) => Promise<void>;
+  start: (
+    authorization: ConversationSessionAuthorization,
+    backgroundContext?: string,
+  ) => Promise<void>;
   sendText: (text: string) => void;
   notifyTyping: () => void;
   end: () => Promise<void>;

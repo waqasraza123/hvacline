@@ -1,10 +1,16 @@
 # Project State
 
+## Homepage guest chat — owner-approved behavior, acceptance pending — 2026-10-29
+
+Owner selected one live text message/reply on the homepage, a dismissible sign-in popup on the second attempt, a 30-day browser allowance and same-tab continuation through existing authentication/MFA. The existing browser Line agent is reused with a guest-mode variable; a protected server-side bridge permits only approved FAQ lookup. Source adds atomic guest quotas separate from signed-in application quotas, no application transcript/customer/booking persistence, and bounded browser-only context handoff outside confirmation transcripts.
+
+Implementation/runtime are **UNVERIFIED**. Source formatting only; no tests, builds, linters, type checks, installs, migrations, services, hosted agent edits or deployments ran for this feature. Migration `20261029_0017` and pinned `websockets==17.3` are new; feature defaults off. Owner setup, exact commands and manual acceptance: `docs/homepage-chat.md`. Apply schema/dependencies and shared agent guest-mode/completion-event settings before enabling API `HOMEPAGE_CHAT_ENABLED`; the database was previously confirmed at `0016`, not `0017`.
+
 ## Owner decision: remove demo wording and fictional-data requirements — 2026-10-29
 
 The owner explicitly requested neutral product wording and removal of fictional-data requirements. This supersedes earlier synthetic-only instructions in this memory. Source removes the signup and browser/phone/WhatsApp consent requirements and demo/early-access presentation; AI/provider disclosure, microphone consent, authentication/MFA and readback confirmations remain required. New migration `20261029_0016` permits empty historical synthetic-acknowledgement timestamps without changing existing evidence. No runtime environment or development-actor configuration was changed.
 
-Implementation/runtime remain **UNVERIFIED**; no verification, migrations, seeds, provider changes or deployments ran. Apply the schema before backend/frontend deployment; hosted agent prompts/tools and existing stored greeting/FAQs need separate owner updates. Exact owner commands/manual acceptance: `docs/customer-data-requirements.md`.
+On October 29, the owner explicitly authorized applying migrations. Alembic successfully upgraded the configured development Neon database from `20261028_0015` to `20261029_0016`; the subsequent revision readback reported `20261029_0016 (head)`. No tests, builds, linters, type checks, seeds, provider changes or deployments ran. Application/runtime acceptance remains **UNVERIFIED**; hosted agent prompts/tools and existing stored greeting/FAQs need separate owner updates. Exact owner commands/manual acceptance: `docs/customer-data-requirements.md`.
 
 ## Customer appointments dashboard refresh — owner acceptance pending
 

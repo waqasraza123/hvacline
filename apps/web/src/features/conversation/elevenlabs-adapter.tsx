@@ -85,17 +85,22 @@ function AdapterBridge({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.timeout(15000),
-          body: JSON.stringify(action === "remember"
-            ? { ...parameters, transcript: memoryTurns.current }
-            : parameters),
+          body: JSON.stringify(
+            action === "remember"
+              ? { ...parameters, transcript: memoryTurns.current }
+              : parameters,
+          ),
         },
       );
-      if (!response.ok) return JSON.stringify({
-        available: false,
-        message: "Memory was not saved or retrieved. Continue booking or use Memory settings.",
-      });
+      if (!response.ok)
+        return JSON.stringify({
+          available: false,
+          message:
+            "Memory was not saved or retrieved. Continue booking or use Memory settings.",
+        });
       return response.status === 204
-        ? JSON.stringify({ saved: true }) : await response.text();
+        ? JSON.stringify({ saved: true })
+        : await response.text();
     } catch {
       return JSON.stringify({ available: false });
     }
@@ -196,7 +201,11 @@ function AdapterBridge({
       if (text) {
         if (speaker === "USER" && pendingTextEchoes.current.consume(text))
           return;
-        memoryTurns.current = appendTranscript(memoryTurns.current, speaker, text).slice(-60);
+        memoryTurns.current = appendTranscript(
+          memoryTurns.current,
+          speaker,
+          text,
+        ).slice(-60);
         onTranscript(speaker, text);
       }
     },
@@ -207,7 +216,7 @@ function AdapterBridge({
       conversation.status === "error" ? "disconnected" : conversation.status,
     mode: conversation.mode,
     isMuted: conversation.isMuted,
-    start: async (authorization) => {
+    start: async (authorization, backgroundContext) => {
       memorySessionId.current = authorization.sessionId;
       memoryTurns.current = [];
       pendingTextEchoes.current.clear();
@@ -230,7 +239,16 @@ function AdapterBridge({
         try {
           conversation.startSession({
             ...connection,
+            dynamicVariables: { homepage_guest: false },
             onConnect: () => {
+              if (backgroundContext) {
+                try {
+                  controls.sendContextualUpdate(backgroundContext);
+                } catch {
+                  fail();
+                  return;
+                }
+              }
               window.clearTimeout(timer);
               resolve();
             },
@@ -260,7 +278,11 @@ function AdapterBridge({
         pendingTextEchoes.current.consume(text);
         throw error;
       }
-      memoryTurns.current = appendTranscript(memoryTurns.current, "USER", text).slice(-60);
+      memoryTurns.current = appendTranscript(
+        memoryTurns.current,
+        "USER",
+        text,
+      ).slice(-60);
       onTranscript("USER", text);
     },
     notifyTyping: () => {

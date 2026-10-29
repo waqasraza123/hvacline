@@ -39,6 +39,12 @@ services:
         sync: false
       - key: CUSTOMER_MFA_ENCRYPTION_KEY
         sync: false
+      - key: HOMEPAGE_CHAT_ENABLED
+        value: false
+      - key: HOMEPAGE_CHAT_DAILY_LIMIT
+        value: 20
+      - key: HOMEPAGE_CHAT_CONCURRENT_LIMIT
+        value: 1
       - key: CUSTOMER_MAX_ACTIVE_APPOINTMENTS
         value: 1
       - key: CUSTOMER_MAX_BOOKING_CHANGES

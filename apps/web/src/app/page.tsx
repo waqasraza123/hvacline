@@ -1,17 +1,33 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
+import {
+  HomepageChat,
+  HomepageChatLink,
+} from "@/features/homepage-chat/homepage-chat";
 import "./product.css";
 
 const services = [
-  { icon: "snow", title: "AC repair", text: "Book visits for cooling problems." },
+  {
+    icon: "snow",
+    title: "AC repair",
+    text: "Book visits for cooling problems.",
+  },
   {
     icon: "heat",
     title: "Heating repair",
     text: "Schedule heating repair visits.",
   },
-  { icon: "home", title: "Installation", text: "Book installation consultations." },
-  { icon: "shield", title: "Maintenance", text: "Schedule routine HVAC service." },
+  {
+    icon: "home",
+    title: "Installation",
+    text: "Book installation consultations.",
+  },
+  {
+    icon: "shield",
+    title: "Maintenance",
+    text: "Schedule routine HVAC service.",
+  },
 ] as const;
 
 export default function Home() {
@@ -99,9 +115,9 @@ export default function Home() {
           <Link className="product-login" href="/login">
             Sign in
           </Link>
-          <Link className="product-button button-small" href="/book">
+          <HomepageChatLink className="product-button button-small">
             Try <ProductIcon name="arrow" />
-          </Link>
+          </HomepageChatLink>
         </div>
       </header>
       <main id="main-content" className="product-main">
@@ -133,68 +149,19 @@ export default function Home() {
                 <ProductIcon name="check" /> Live appointment availability
               </span>
               <span>
-                <ProductIcon name="check" /> Every booking confirmed by the caller
+                <ProductIcon name="check" /> Every booking confirmed by the
+                caller
               </span>
             </div>
           </div>
-          <div className="hero-voice-composition">
-            <div className="composition-label">
-              <ProductIcon name="mic" /> LIVE CONVERSATION. CONFIRMED BOOKING.
-            </div>
-            <article
-              className="line-introduction"
-              aria-labelledby="line-introduction-title"
-            >
-              <div className="line-card-header">
-                <span className="line-name">
-                  Meet Line<span>YOUR AI VOICE RECEPTIONIST</span>
-                </span>
-                <span className="voice-ai-badge">Voice AI</span>
-              </div>
-              <div className="voice-orbit">
-                <div className="voice-orbit-inner">
-                  <VoiceSymbol />
-                </div>
-                <span className="orbit-accent" />
-              </div>
-              <h2 id="line-introduction-title">
-                From problem
-                <br />
-                to appointment.
-              </h2>
-              <p>
-                Line collects the details, offers available times, and asks the
-                caller to confirm.
-              </p>
-              <Link className="line-card-action" href="/book">
-                <ProductIcon name="mic" /> Try a booking conversation{" "}
-                <ProductIcon name="arrow" />
-              </Link>
-              <p className="line-card-note">
-                Sign in, then choose Voice to speak with Line.
-              </p>
-            </article>
-            <div className="booking-promise">
-              <span className="promise-icon">
-                <ProductIcon name="calendar" />
-              </span>
-              <div>
-                <strong>Caller-confirmed appointments.</strong>
-                <span>Line asks for confirmation before booking.</span>
-              </div>
-              <ProductIcon name="check" />
-            </div>
-            <span className="composition-caption">
-              PROBLEM. AVAILABLE TIME. CONFIRMATION.
-            </span>
+          <div className="hero-chat-composition">
+            <HomepageChat />
           </div>
         </section>
         <section id="how-it-works" className="how-section product-container">
           <div className="section-heading">
             <div>
-              <p className="product-eyebrow">
-                HOW LINE BOOKS AN APPOINTMENT
-              </p>
+              <p className="product-eyebrow">HOW LINE BOOKS AN APPOINTMENT</p>
               <h2>
                 Three steps.
                 <br />
@@ -318,17 +285,16 @@ export default function Home() {
                 Can I try the conversation?<span>+</span>
               </summary>
               <p>
-                Yes. Open the booking page, sign in, and choose Voice to speak
-                with Line through your browser’s microphone.
+                Yes. Ask Line one question here without an account. Sign in to
+                continue the conversation, or choose Voice in the booking
+                workspace to speak with Line.
               </p>
             </details>
           </div>
         </section>
         <section className="product-final-cta product-container">
           <div>
-            <p className="product-eyebrow">
-              TRY THE BOOKING CONVERSATION
-            </p>
+            <p className="product-eyebrow">TRY THE BOOKING CONVERSATION</p>
             <h2>
               Hear Line book
               <br />
@@ -348,10 +314,9 @@ export default function Home() {
           <Link href="/signup">Create an account</Link>
         </nav>
       </footer>
-      <Link
-        href="/book"
+      <HomepageChatLink
         className="voice-launcher"
-        aria-label="Book an appointment with the HVACLine AI voice receptionist"
+        label="Try chatting with Line on this page"
       >
         <span className="launcher-mark">
           <VoiceSymbol />
@@ -360,7 +325,7 @@ export default function Home() {
           Try Line<small>AI VOICE RECEPTIONIST FOR HVAC</small>
         </span>
         <ProductIcon name="arrow" />
-      </Link>
+      </HomepageChatLink>
     </div>
   );
 }

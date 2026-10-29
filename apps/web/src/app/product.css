@@ -327,6 +327,12 @@
   position: relative;
   padding: 2rem 0 2rem 1rem;
 }
+.hero-chat-composition {
+  min-width: 0;
+  width: 100%;
+  max-width: 490px;
+  justify-self: center;
+}
 .composition-label {
   display: flex;
   align-items: center;
@@ -1339,6 +1345,51 @@
   font-size: 0.64rem;
   line-height: 1.6;
   margin: -0.65rem 0 0;
+}
+.homepage-conversation-history {
+  grid-column: 1 / -1;
+  background: var(--customer-subtle);
+}
+.homepage-history-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.homepage-history-heading h2 {
+  margin: 0;
+}
+.homepage-history-heading button {
+  border: 0;
+  background: none;
+  color: var(--customer-ink);
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.homepage-conversation-history > p {
+  color: var(--customer-muted);
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+.homepage-history-turn {
+  margin-top: 1rem;
+  border-top: 1px solid var(--customer-border);
+  padding-top: 0.8rem;
+}
+.homepage-history-turn strong {
+  font-size: 0.68rem;
+  color: var(--customer-muted);
+}
+.homepage-history-turn p {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 10rem;
+  overflow-y: auto;
 }
 .auth-submit {
   width: 100%;

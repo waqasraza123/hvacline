@@ -31,6 +31,10 @@ from insurance_operations.database.models.customer_memory import (
     CustomerMemoryFact, CustomerMemoryPairing, CustomerMemoryPolicy,
     CustomerMemorySummary, CustomerWhatsAppIdentity,
 )
+from insurance_operations.database.models.homepage_chat import (
+    HomepageChatDailyUsage,
+    HomepageChatVisitor,
+)
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -75,6 +79,12 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "homepage_chat_visitors": TableOwnership(
+        module="homepage_chat", agency_column="agency_id"
+    ),
+    "homepage_chat_daily_usage": TableOwnership(
+        module="homepage_chat", agency_column="agency_id"
+    ),
     "customer_mfa_factors": TableOwnership(module="customer_access", agency_column="agency_id"),
     "customer_mfa_challenges": TableOwnership(module="customer_access", agency_column="agency_id"),
     "customer_mfa_recovery_codes": TableOwnership(module="customer_access", agency_column="agency_id"),
@@ -161,6 +171,8 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "HomepageChatDailyUsage",
+    "HomepageChatVisitor",
     "TABLE_OWNERSHIP",
     "Agency",
     "AgencyApprovedFaq",

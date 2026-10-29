@@ -59,6 +59,7 @@ from insurance_operations.database.models.lead import LeadStatus
 from insurance_operations.database.models.telephony import InboundCallStatus
 from insurance_operations.demo_security import require_demo_admin_token
 from insurance_operations.errors import ApiError, api_error_handler
+from insurance_operations.homepage_chat.routes import create_homepage_chat_router
 from insurance_operations.hvac.integration_routes import (
     create_booking_integration_router,
 )
@@ -162,6 +163,7 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.integration_settings = settings
+    application.include_router(create_homepage_chat_router(settings, session_factory))
     application.include_router(create_email_event_router(settings, session_factory))
     application.add_middleware(
         CORSMiddleware,

@@ -11,14 +11,18 @@ export function ChatComposer({
   connected,
   onTyping,
   textOnly,
+  initialMessage = "",
+  onSent,
 }: {
   send: (text: string) => void;
   connected: boolean;
   onTyping: () => void;
   textOnly: boolean;
+  initialMessage?: string;
+  onSent?: () => void;
 }) {
   const id = useId();
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialMessage);
   const [error, setError] = useState("");
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -26,6 +30,7 @@ export function ChatComposer({
     if (!connected) return;
     try {
       send(customerMessage(message));
+      onSent?.();
       setMessage("");
       setError("");
     } catch (failure) {
