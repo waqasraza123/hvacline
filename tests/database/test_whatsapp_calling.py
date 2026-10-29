@@ -181,7 +181,6 @@ def test_whatsapp_inbound_call_is_scoped_consented_idempotent_and_persisted(
             consent_data = {
                 "ai_disclosure_accepted": True,
                 "voice_processing_accepted": True,
-                "synthetic_data_acknowledged": True,
                 "provider_history": history(CONSENT_READBACK),
             }
             for changed in [
@@ -218,6 +217,10 @@ def test_whatsapp_inbound_call_is_scoped_consented_idempotent_and_persisted(
             )
             assert consent.status_code == 200, consent.text
             session_id = consent.json()["session_id"]
+            with sessions() as session:
+                stored = session.get(ConversationSession, UUID(session_id))
+                assert stored is not None
+                assert stored.synthetic_data_acknowledged_at is None
             root = f"{base}/sessions/{session_id}"
             assert (
                 await client.post(f"{base}/consent", json=consent_data, headers=headers)

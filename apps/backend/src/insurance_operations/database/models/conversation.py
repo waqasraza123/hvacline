@@ -147,9 +147,9 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
         DateTime(timezone=True),
         nullable=True,
     )
-    synthetic_data_acknowledged_at: Mapped[datetime] = mapped_column(
+    synthetic_data_acknowledged_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
-        nullable=False,
+        nullable=True,
     )
     maximum_duration_seconds: Mapped[int] = mapped_column(
         SmallInteger,

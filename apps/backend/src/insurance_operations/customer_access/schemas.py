@@ -15,7 +15,9 @@ class LoginInput(BaseModel):
 class SignupInput(LoginInput):
     full_name: str = Field(min_length=1, max_length=160)
     password: SecretStr = Field(min_length=15, max_length=128)
-    fictional_data_acknowledged: bool
+    fictional_data_acknowledged: bool | None = Field(
+        default=None, exclude=True, deprecated=True
+    )
 
     @field_validator("full_name")
     @classmethod

@@ -122,7 +122,7 @@ export default function Home() {
             </p>
             <div className="product-hero-actions">
               <Link className="product-button" href="/book">
-                Try the booking demo <ProductIcon name="arrow" />
+                Book an appointment <ProductIcon name="arrow" />
               </Link>
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
@@ -171,7 +171,7 @@ export default function Home() {
                 <ProductIcon name="arrow" />
               </Link>
               <p className="line-card-note">
-                Sign in, then choose Voice to try the demo.
+                Sign in, then choose Voice to speak with Line.
               </p>
             </article>
             <div className="booking-promise">
@@ -318,7 +318,7 @@ export default function Home() {
                 Can I try the conversation?<span>+</span>
               </summary>
               <p>
-                Yes. Open the booking demo, sign in, and choose Voice to speak
+                Yes. Open the booking page, sign in, and choose Voice to speak
                 with Line through your browser’s microphone.
               </p>
             </details>
@@ -336,7 +336,7 @@ export default function Home() {
             </h2>
           </div>
           <Link className="product-button button-light" href="/book">
-            Try the booking demo <ProductIcon name="arrow" />
+            Book an appointment <ProductIcon name="arrow" />
           </Link>
         </section>
       </main>
@@ -351,7 +351,7 @@ export default function Home() {
       <Link
         href="/book"
         className="voice-launcher"
-        aria-label="Try the HVACLine AI voice receptionist booking demo"
+        aria-label="Book an appointment with the HVACLine AI voice receptionist"
       >
         <span className="launcher-mark">
           <VoiceSymbol />

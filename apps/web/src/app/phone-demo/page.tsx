@@ -8,8 +8,9 @@ import {
 } from "@/lib/environment";
 
 export const metadata: Metadata = {
-  title: "Phone Agent Demo | HVACLine AI",
-  description: "A fictional-data demonstration of an AI HVAC front desk.",
+  title: "Phone Receptionist | HVACLine AI",
+  description:
+    "An AI HVAC front desk for service requests and appointment booking.",
   robots: { index: false, follow: false },
 };
 

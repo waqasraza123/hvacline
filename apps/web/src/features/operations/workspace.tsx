@@ -86,7 +86,7 @@ export function OperationsWorkspace({
       <nav className="top-nav">
         <Brand />
         <div className="nav-links">
-          <Link href="/phone-demo">Phone sandbox</Link>
+          <Link href="/phone-demo">Phone receptionist</Link>
         </div>
       </nav>
       <div className="ops-heading">
@@ -94,8 +94,7 @@ export function OperationsWorkspace({
           <p className="eyebrow">YOUR SERVICE WORKSPACE</p>
           <h1>Keep the next job moving.</h1>
           <p className="section-help">
-            Development access · fictional data only · production sign-in
-            pending
+            Manage service requests, appointments, calls and follow-up.
           </p>
         </div>
         {data && (
@@ -112,9 +111,9 @@ export function OperationsWorkspace({
             void act(load);
           }}
         >
-          <h2>Connect to your development workspace</h2>
+          <h2>Connect to your workspace</h2>
           <p className="section-help">
-            Enter the configured demo admin token. It stays in this page’s
+            Enter the configured admin token. It stays in this page’s
             memory and is sent only to your backend.
           </p>
           <label>

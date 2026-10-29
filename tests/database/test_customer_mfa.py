@@ -38,7 +38,6 @@ class MfaHarness:
     def enroll(self) -> tuple[LoginResponse, str]:
         challenge = self.access.signup(SignupInput(
             email=EMAIL, password=PASSWORD, full_name="Fictional MFA Customer",
-            fictional_data_acknowledged=True,
         ))
         setup = self.access.mfa.setup(challenge.challenge_token)
         verified = self.access.mfa.verify(
@@ -80,7 +79,6 @@ def test_new_and_legacy_accounts_have_no_access_until_authenticator_proof(harnes
     access = harness.access
     challenge = access.signup(SignupInput(
         email=EMAIL, password=PASSWORD, full_name="Fictional MFA Customer",
-        fictional_data_acknowledged=True,
     ))
     assert challenge.next_action == "enroll"
     with access.sessions() as session, session.begin():

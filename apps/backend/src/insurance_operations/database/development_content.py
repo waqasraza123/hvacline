@@ -23,7 +23,7 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "equipment-brands",
         "Which equipment brands do you service?",
-        "No equipment-brand support list has been approved for this development "
+        "No equipment-brand support list has been approved for this "
         "business. Tell me the equipment type and issue, and ask staff to confirm "
         "whether your particular make and model can be serviced.",
     ),
@@ -45,7 +45,7 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "required-details",
         "What information do you need to book?",
-        "For this development experience, use fictional details only: your name, "
+        "To book, please provide your name, "
         "callback number, full U.S. service address with ZIP code, service type, "
         "equipment issue, preferred appointment date and any reported hazard. "
         "Email is optional. Do not provide payment details or passwords.",
@@ -95,7 +95,7 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "pricing",
         "How much does HVAC service cost?",
-        "No service prices have been approved for this development business. "
+        "No service prices have been approved for this business. "
         "A staff member must provide estimates, fees and final pricing. "
         "Booking a visit does not establish a repair price or authorize paid work.",
     ),
@@ -109,7 +109,7 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "warranty",
         "Do you offer a warranty?",
-        "No warranty terms have been approved for this development business. "
+        "No warranty terms have been approved for this business. "
         "Staff must confirm any equipment or workmanship warranty and its "
         "conditions. I cannot promise coverage or eligibility.",
     ),
@@ -156,10 +156,9 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "ai-disclosure",
         "Am I speaking with an AI assistant?",
-        "Yes. I am Line, an AI booking assistant. This is a development "
-        "experience for fictional information only. You must accept the AI "
-        "disclosure, speech processing and fictional-data requirements before "
-        "starting voice. You can stop the conversation at any time.",
+        "Yes. I am Line, an AI booking assistant. You must accept the AI "
+        "disclosure before starting and microphone processing before using voice. "
+        "You can stop the conversation at any time.",
     ),
     (
         "repair-instructions",
@@ -180,7 +179,6 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
         "When are my service details and transcript saved?",
         "The application saves service details and confirmed transcript text "
         "only after explicit confirmation. For website voice, draft details "
-        "remain in browser memory before saving. The application does not store raw audio. "
-        "Use fictional details only in this development experience.",
+        "remain in browser memory before saving. The application does not store raw audio.",
     ),
 )

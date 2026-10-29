@@ -57,7 +57,6 @@ export async function authorizeConversationSession(
         input_mode: inputMode,
         ai_disclosure_accepted: true,
         microphone_consent_granted: inputMode === "VOICE",
-        synthetic_data_acknowledged: true,
       }),
     },
   );

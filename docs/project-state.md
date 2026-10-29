@@ -1,5 +1,11 @@
 # Project State
 
+## Owner decision: remove demo wording and fictional-data requirements — 2026-10-29
+
+The owner explicitly requested neutral product wording and removal of fictional-data requirements. This supersedes earlier synthetic-only instructions in this memory. Source removes the signup and browser/phone/WhatsApp consent requirements and demo/early-access presentation; AI/provider disclosure, microphone consent, authentication/MFA and readback confirmations remain required. New migration `20261029_0016` permits empty historical synthetic-acknowledgement timestamps without changing existing evidence. No runtime environment or development-actor configuration was changed.
+
+Implementation/runtime remain **UNVERIFIED**; no verification, migrations, seeds, provider changes or deployments ran. Apply the schema before backend/frontend deployment; hosted agent prompts/tools and existing stored greeting/FAQs need separate owner updates. Exact owner commands/manual acceptance: `docs/customer-data-requirements.md`.
+
 ## Customer appointments dashboard refresh — owner acceptance pending
 
 My appointments now has a responsive next-confirmed-visit card, date/time/status cards, Upcoming/History/All filters and stored-count/booking-limit sidebar. Display distinguishes holds, expired/cancelled records, past appointments and current scheduled windows without implying service completion. Existing details/rescheduling modal and APIs remain authoritative; no backend/schema/environment/dependency change. Source formatting and unexecuted presentation/expiry/timezone specifications only; runtime **UNVERIFIED**. Exact owner commands/manual checks: `docs/customer-appointments-design.md`.

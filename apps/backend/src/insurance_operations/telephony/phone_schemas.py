@@ -15,7 +15,6 @@ from insurance_operations.telephony.schemas import CallAction
 class PhoneConsentInput(PhoneCallContext):
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
-    synthetic_data_acknowledged: bool
 
     @model_validator(mode="after")
     def require_all_consent(self) -> Self:
@@ -23,7 +22,6 @@ class PhoneConsentInput(PhoneCallContext):
             (
                 self.ai_disclosure_accepted,
                 self.microphone_consent_granted,
-                self.synthetic_data_acknowledged,
             )
         ):
             raise ValueError("all phone consent acknowledgements are required")

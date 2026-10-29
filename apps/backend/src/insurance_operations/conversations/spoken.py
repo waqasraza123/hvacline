@@ -62,7 +62,7 @@ def intake_readback(request: ServiceRequestInput) -> str:
     hazard = "reported" if service.hazardous_condition else "not reported"
     street = f"{address.line1}, {address.line2}" if address.line2 else address.line1
     readback = (
-        f"Please confirm these fictional details. Name: {customer.full_name}. "
+        f"Please confirm these details. Name: {customer.full_name}. "
         f"Callback number: {customer.phone}.{email} "
         f"Service address: {street}, {address.city}, "
         f"{address.state_code} {address.postal_code}, US. "

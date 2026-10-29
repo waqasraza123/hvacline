@@ -213,7 +213,6 @@ class WhatsAppService:
                 status=ConversationSessionStatus.AUTHORIZED.value,
                 disclosure_accepted_at=now,
                 microphone_consent_at=now,
-                synthetic_data_acknowledged_at=now,
                 maximum_duration_seconds=self.settings.conversation_max_duration_seconds,
                 authorization_expires_at=row.expires_at,
                 confirmation_expires_at=row.expires_at,

@@ -32,7 +32,7 @@ export function startFailureMessage(
 
   switch (error.status) {
     case 404:
-      return "The Voice AI demo is unavailable in this environment.";
+      return "The voice service is unavailable. Please try again shortly.";
     case 409:
       return "Another voice session is still active. Wait briefly and try again.";
     case 429:

@@ -1286,14 +1286,14 @@
   display: grid;
   gap: 1.1rem;
 }
-.auth-card label:not(.auth-checkbox) {
+.auth-card label {
   display: grid;
   gap: 0.55rem;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--customer-ink);
 }
-.auth-card input:not([type="checkbox"]) {
+.auth-card input {
   min-width: 0;
   width: 100%;
   min-height: 48px;
@@ -1339,37 +1339,6 @@
   font-size: 0.64rem;
   line-height: 1.6;
   margin: -0.65rem 0 0;
-}
-.early-access-note {
-  background: var(--customer-subtle);
-  padding: 0.85rem;
-  border: 1px solid var(--customer-border);
-  border-radius: 7px;
-}
-.early-access-note strong {
-  font-size: 0.66rem;
-  color: var(--customer-muted);
-}
-.early-access-note p {
-  font-size: 0.67rem;
-  line-height: 1.65;
-  color: var(--customer-muted);
-  margin: 0.3rem 0 0;
-}
-.auth-checkbox {
-  display: flex;
-  gap: 0.65rem;
-  align-items: flex-start;
-  font-size: 0.66rem;
-  line-height: 1.6;
-  color: var(--customer-muted);
-}
-.auth-checkbox input {
-  margin: 0.18rem 0 0;
-  width: 16px;
-  height: 16px;
-  flex: none;
-  accent-color: var(--customer-accent-ink);
 }
 .auth-submit {
   width: 100%;

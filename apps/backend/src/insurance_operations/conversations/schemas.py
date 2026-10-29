@@ -22,7 +22,6 @@ class ConversationSessionCreateInput(BaseModel):
     input_mode: ConversationInputMode = "VOICE"
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
-    synthetic_data_acknowledged: bool
 
 
 class ConversationConnection(BaseModel):

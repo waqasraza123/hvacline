@@ -377,8 +377,6 @@ function VoiceTestExperience({
 }: ExperienceProperties) {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [microphoneConsent, setMicrophoneConsent] = useState(false);
-  const [syntheticDataAcknowledged, setSyntheticDataAcknowledged] =
-    useState(false);
   const [remainingSeconds, setRemainingSeconds] = useState(180);
   const [maximumDuration, setMaximumDuration] = useState(180);
   const [timeLimitReached, setTimeLimitReached] = useState(false);
@@ -478,11 +476,7 @@ function VoiceTestExperience({
     setTimeLimitReached(false);
     setRemainingSeconds(maximumDuration);
     sessionDeadlineRef.current = undefined;
-    if (
-      !disclosureAccepted ||
-      (!textOnly && !microphoneConsent) ||
-      !syntheticDataAcknowledged
-    ) {
+    if (!disclosureAccepted || (!textOnly && !microphoneConsent)) {
       setErrorMessage("Accept the required conversation permissions first.");
       return;
     }
@@ -836,8 +830,8 @@ function VoiceTestExperience({
             ElevenLabs and its AI/LLM providers. Chat mode does not access your
             microphone or play audio. The configured agent has audio recording
             disabled and zero-day scheduled deletion; provider Zero Retention
-            Mode is not enabled. Use fictional details only. This app keeps live
-            drafts in this browser and does not store raw audio. Intake details
+            Mode is not enabled. This app keeps live drafts in this browser
+            and does not store raw audio. Intake details
             and transcript text are saved only after you confirm the full
             readback or the on-screen review. Booking requires a separate
             confirmation of the appointment date and time.
@@ -862,18 +856,6 @@ function VoiceTestExperience({
               I consent to live microphone access for this conversation.
             </label>
           )}
-          <label className="consent-row">
-            <input
-              checked={syntheticDataAcknowledged}
-              disabled={!canStart}
-              onChange={(event) =>
-                setSyntheticDataAcknowledged(event.target.checked)
-              }
-              type="checkbox"
-            />
-            I will use fictional test details only, never real customer or
-            sensitive data.
-          </label>
         </div>
         {customerView && !canStart && (
           <p className="line-permissions-status">
@@ -887,7 +869,6 @@ function VoiceTestExperience({
               disabled={
                 !disclosureAccepted ||
                 (!textOnly && !microphoneConsent) ||
-                !syntheticDataAcknowledged ||
                 blockedSessionId !== undefined ||
                 isBusy
               }

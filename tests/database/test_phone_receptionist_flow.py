@@ -169,7 +169,6 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             conversation_id=conversation_id,
             ai_disclosure_accepted=True,
             microphone_consent_granted=True,
-            synthetic_data_acknowledged=True,
         ),
         correlation_id=uuid4(),
     )
@@ -353,6 +352,7 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         )
 
     assert conversation_session is not None
+    assert conversation_session.synthetic_data_acknowledged_at is None
     assert conversation_session.status == ConversationSessionStatus.CONFIRMED.value
     assert inbound_call is not None
     assert inbound_call.lead_id is not None

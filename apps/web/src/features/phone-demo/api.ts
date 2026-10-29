@@ -19,19 +19,19 @@ export async function getPhoneDemoStatus(
     cache: "no-store",
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
   });
-  if (!response.ok) throw new Error("The phone demo status is unavailable");
+  if (!response.ok) throw new Error("The phone call status is unavailable");
   return parsePhoneDemoStatus(await response.json());
 }
 
 export function parsePhoneDemoStatus(body: unknown): PhoneDemoStatus {
   if (!isRecord(body) || !STATES.includes(body.state as PhoneDemoState)) {
-    throw new Error("The phone demo returned an invalid response");
+    throw new Error("The phone call status returned an invalid response");
   }
   if (
     typeof body.consent_completed !== "boolean" ||
     typeof body.lead_created !== "boolean"
   ) {
-    throw new Error("The phone demo returned an invalid response");
+    throw new Error("The phone call status returned an invalid response");
   }
   return {
     state: body.state as PhoneDemoState,
@@ -57,7 +57,7 @@ function enumOrNull<const Value extends string>(
 ): Value | null {
   if (value === null) return null;
   if (typeof value !== "string" || !allowed.includes(value as Value)) {
-    throw new Error("The phone demo returned an invalid response");
+    throw new Error("The phone call status returned an invalid response");
   }
   return value as Value;
 }
@@ -65,7 +65,7 @@ function enumOrNull<const Value extends string>(
 function nullableString(value: unknown): string | null {
   if (value === null) return null;
   if (typeof value !== "string" || !value.trim()) {
-    throw new Error("The phone demo returned an invalid response");
+    throw new Error("The phone call status returned an invalid response");
   }
   return value;
 }

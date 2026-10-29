@@ -13,7 +13,6 @@
   <img src="https://img.shields.io/badge/HVAC-F97316?style=flat-square" alt="HVAC">
   <img src="https://img.shields.io/badge/AI_Receptionist-18181B?style=flat-square" alt="AI receptionist">
   <img src="https://img.shields.io/badge/Appointment_Booking-18181B?style=flat-square" alt="Appointment booking">
-  <img src="https://img.shields.io/badge/Development_Preview-F97316?style=flat-square" alt="Development preview">
 </p>
 
 <p align="center">
@@ -40,8 +39,6 @@ HVACLine collects service requests, answers business-approved questions, and gui
 
 Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
 
-> **Development preview — fictional data only.** Live telephone and WhatsApp calling, Calendar sync and email delivery still need owner acceptance. Production onboarding, billing and privacy readiness remain incomplete.
-
 ## Explore
 
-[Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone demo](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)
+[Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)

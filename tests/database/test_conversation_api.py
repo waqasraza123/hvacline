@@ -175,15 +175,15 @@ def authorize_session(
             {
                 "ai_disclosure_accepted": True,
                 "microphone_consent_granted": True,
-                "synthetic_data_acknowledged": True,
             },
         )
     )
 
 
 @pytest.mark.parametrize("input_mode", ["VOICE", "TEXT"])
-def test_session_authorization_requires_all_acknowledgements(
+def test_session_authorization_does_not_require_fictional_data_acknowledgement(
     development_conversation_api: DevelopmentConversationApi,
+    migrated_database: Engine,
     input_mode: str,
 ) -> None:
     status_code, body, _headers = asyncio.run(
@@ -194,15 +194,44 @@ def test_session_authorization_requires_all_acknowledgements(
                 "input_mode": input_mode,
                 "ai_disclosure_accepted": True,
                 "microphone_consent_granted": input_mode == "VOICE",
-                "synthetic_data_acknowledged": False,
             },
         )
     )
 
+    assert status_code == 201
+    with Session(migrated_database) as session:
+        stored = session.get(ConversationSession, UUID(str(body["session_id"])))
+        assert stored is not None
+        assert stored.synthetic_data_acknowledged_at is None
+
+
+@pytest.mark.parametrize(
+    ("ai_disclosure_accepted", "microphone_consent_granted", "error_code"),
+    [
+        (False, True, "AI_DISCLOSURE_REQUIRED"),
+        (True, False, "MICROPHONE_CONSENT_REQUIRED"),
+    ],
+)
+def test_voice_authorization_still_requires_disclosure_and_microphone_consent(
+    development_conversation_api: DevelopmentConversationApi,
+    ai_disclosure_accepted: bool,
+    microphone_consent_granted: bool,
+    error_code: str,
+) -> None:
+    status_code, body, _headers = asyncio.run(
+        post_json(
+            development_conversation_api.application,
+            "/api/v1/development/conversation-sessions",
+            {
+                "ai_disclosure_accepted": ai_disclosure_accepted,
+                "microphone_consent_granted": microphone_consent_granted,
+            },
+        )
+    )
     assert status_code == 422
     error = body["error"]
     assert isinstance(error, dict)
-    assert error["code"] == "SYNTHETIC_DATA_ACKNOWLEDGEMENT_REQUIRED"
+    assert error["code"] == error_code
 
 
 def test_confirmed_intake_is_owned_audited_transactional_and_idempotent(

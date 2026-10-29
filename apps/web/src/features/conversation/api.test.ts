@@ -153,7 +153,6 @@ it("authorizes text chat without asserting microphone consent", async () => {
     input_mode: "TEXT",
     ai_disclosure_accepted: true,
     microphone_consent_granted: false,
-    synthetic_data_acknowledged: true,
   });
 });
 

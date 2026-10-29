@@ -2,7 +2,7 @@
 
 Direct ElevenLabs → HVACLine backend → Neon/Google Calendar. Inbound voice only. No outbound call, messaging, voice-note, campaign or native-transfer implementation. No provider calls, live settings, dependency installation, verification or deployment performed. Source formatting only was applied.
 
-The repository's development identity, explicit fictional-data acknowledgement and 180-second maximum remain mandatory. This implementation does not enable real-customer production operation. One deployment binds one configured WhatsApp agent/Meta number to one verified agency membership. Existing browser Voice/Chat and optional Twilio paths remain available.
+The repository's development identity gates and 180-second maximum remain. The owner removed fictional-data requirements on October 29; AI disclosure, voice-processing consent and exact readbacks remain required. One deployment binds one configured WhatsApp agent/Meta number to one verified agency membership. Existing browser Voice/Chat and optional Twilio paths remain available. See [deployment and owner checks](customer-data-requirements.md); the hosted agent must receive the updated exact disclosure before using the new backend.
 
 ## Verified documentation contracts
 
@@ -45,7 +45,7 @@ Migration `20261028_0013` adds `whatsapp_conversations` and permits `WHATSAPP` s
 1. Use a Meta business portfolio you administer and an eligible number. In Meta Business Settings → WhatsApp accounts, check ownership/Partners first. The documented import excludes numbers already registered to another provider or the WhatsApp Business app, and WABAs created under a developer app. Do not disconnect an existing production number just to test; use an eligible dedicated number.
 2. Create a dedicated ElevenLabs agent; keep the browser and Twilio agents unchanged. In ElevenLabs → WhatsApp → Import account, complete Meta authorization, select the business account/number and grant the requested permissions. Copy its phone-number ID into `ELEVENLABS_WHATSAPP_PHONE_NUMBER_ID` and assign this agent to the account.
 3. Turn **Enable messaging off** on this imported account. In Meta WhatsApp Manager → Phone numbers → select number → Call settings, enable voice calls. Complete any Meta eligibility/payment requirements shown for the account. Do not create outbound templates, campaigns, outbound-call jobs, messaging tools or transfer tools.
-4. Choose the voice/model intentionally, set maximum conversation duration to the same backend maximum (default 180 seconds), disable audio recording and audio webhooks, and review transcript retention/deletion and privacy. Keep fictional data only. Configure the End call system tool so refusal, unsupported requests and expired sessions can terminate safely.
+4. Choose the voice/model intentionally, set maximum conversation duration to the same backend maximum (default 180 seconds), disable audio recording and audio webhooks, and review transcript retention/deletion and privacy. Use test data for owner acceptance. Configure the End call system tool so refusal, unsupported requests and expired sessions can terminate safely.
 5. In ElevenAgents settings, configure the initiation webhook URL as `https://YOUR_API_ORIGIN/api/v1/providers/elevenlabs/whatsapp/initialize`. Add an `Authorization` header secret containing `Bearer ` followed by `ELEVENLABS_WHATSAPP_INIT_SECRET`. On the dedicated agent's Security tab enable **Fetch initiation client data from a webhook**. Scope routing to this agent; preserve other agents' existing initiation configuration. If the workspace exposes only a shared webhook, use an owner-managed dispatcher that preserves those routes rather than replacing them. Do not enable prompt/voice overrides to make initialization work.
 6. Configure a dedicated agent post-call webhook/override at `https://YOUR_API_ORIGIN/api/v1/providers/elevenlabs/whatsapp/post-call`, with HMAC authentication, transcription events, initiation failures if offered, retries on, **Send audio data off**. Copy its generated signing secret to `ELEVENLABS_WHATSAPP_POST_CALL_SECRET`. Preserve the current Twilio webhook. If your account cannot scope these settings, a dispatcher preserving existing routes is required before activation.
 7. Define exactly these custom dynamic variables: `whatsapp_binding_id`, `whatsapp_session_id`, `secret__whatsapp_session_token`. Initialization supplies all three, with session ID initially empty. Never place the secret variable in a prompt, first message, URL or body, and never let a tool assignment overwrite the binding/token. Do not require any other custom variable unless the backend initialization contract is deliberately extended.
@@ -55,7 +55,7 @@ Migration `20261028_0013` adds `whatsapp_conversations` and permits `WHATSAPP` s
 Exact first message:
 
 ```text
-I am HVACLine's AI receptionist. This is a development demo: use fictional details only. ElevenLabs processes this WhatsApp voice call. May I process your voice and, after a separate readback confirmation, save the confirmed details and transcript? Reply yes to continue, or no to end the call.
+I am HVACLine's AI receptionist. ElevenLabs processes this WhatsApp voice call. May I process your voice and, after a separate readback confirmation, save the confirmed details and transcript? Reply yes to continue, or no to end the call.
 ```
 
 ### Tool configuration
@@ -75,7 +75,7 @@ For every `provider_history` body field below use the string value of system dyn
 
 | Tool name | Path after base | JSON body |
 | --- | --- | --- |
-| `whatsapp_consent` | `/consent` | `ai_disclosure_accepted`, `voice_processing_accepted`, `synthetic_data_acknowledged`: booleans; `provider_history`: system history string |
+| `whatsapp_consent` | `/consent` | `ai_disclosure_accepted`, `voice_processing_accepted`: booleans; `provider_history`: system history string |
 | `whatsapp_faq` | `/sessions/{session_id}/faq` | `query`: string, 1–500 characters |
 | `whatsapp_intake_readback` | `/sessions/{session_id}/booking/intake-readback` | `customer`, `service` objects described below |
 | `whatsapp_confirm_intake` | `/sessions/{session_id}/confirm-intake` | Identical `customer`, `service`; `provider_history` |
@@ -95,7 +95,7 @@ Agent procedure:
 
 1. Read the exact disclosure, wait for explicit acceptance, then call consent. A no/refusal ends the call; never authorize consent from silence or a tool-generated boolean alone. Do not call business tools before successful consent.
 2. Answer only matched agency FAQs; unknown answers require callback/human attention. Qualify the HVAC issue, service location, requested window and hazards. Never infer a callback number from caller ID or BSUID.
-3. For a booking, collect complete fictional intake, call intake-readback, read its entire `readback` verbatim and wait for a new clear yes. Corrections require a fresh readback. Call confirm-intake with the current system history; continue only after success.
+3. For a booking, collect complete intake, call intake-readback, read its entire `readback` verbatim and wait for a new clear yes. Corrections require a fresh readback. Call confirm-intake with the current system history; continue only after success.
 4. Query real availability. Speak slots in the returned timezone; use business date/time from intake-readback. Reserve exactly a returned slot. Keep the same reservation key/payload for uncertain retries; release the previous hold before deliberately choosing a different slot.
 5. Read the reservation's entire `readback` verbatim and wait for a separate clear yes. Call confirm-appointment. Say “booked” only if the backend returns `appointment.status=CONFIRMED`. HELD is temporary. On a failure/expiry, do not claim success; explain recovery or offer callback. Calendar errors do not justify inventing availability.
 6. For hazards: give the existing immediate-danger guidance, avoid booking, save only explicitly confirmed details, then flag-hazard and offer callback. If full intake is unavailable, callback-only can still record separately confirmed contact without an appointment. Never attempt native WhatsApp transfer.
@@ -128,7 +128,7 @@ Only after reviewing those results, the owner can apply the new forward migratio
 ## Complete manual call-to-booking scenario
 
 1. Use fictional data, a connected writable test Google calendar, a configured service ZIP/team and a future available working-day slot. Keep Twilio disabled and its credentials absent. Ensure the existing notification job is configured if testing email delivery.
-2. From personal WhatsApp, **voice call** the imported business number. Confirm the exact AI/voice/fictional-data disclosure, then explicitly accept. Verify initialization produced one binding and consent one WHATSAPP session with no Twilio call ID. Declining in a separate call must save no intake/appointment.
+2. From personal WhatsApp, **voice call** the imported business number. Confirm the exact AI/voice-processing disclosure, then explicitly accept. Verify initialization produced one binding and consent one WHATSAPP session with no Twilio call ID. Declining in a separate call must save no intake/appointment.
 3. Ask an approved HVAC FAQ. Then request fictional AC repair at a complete test address in the configured ZIP, give a caller-supplied callback number and a controlled test email address. State there is no hazardous condition.
 4. Hear the full intake/address/contact/storage readback and reply yes. Ask for an available future slot. After the agent holds it, confirm it says it is not yet booked; check Operations shows no confirmed appointment at this point.
 5. Hear the full appointment date/time/timezone readback and reply yes again. The agent must wait for backend CONFIRMED before announcing success. End the call.

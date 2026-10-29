@@ -53,9 +53,9 @@ from insurance_operations.whatsapp.service import WhatsAppService
 from insurance_operations.whatsapp.settings import WhatsAppSettings
 
 CONSENT_READBACK = (
-    "I am HVACLine's AI receptionist. This is a development demo: use fictional "
-    "details only. ElevenLabs processes this WhatsApp voice call. May I process "
-    "your voice and, after a separate readback confirmation, save the confirmed "
+    "I am HVACLine's AI receptionist. ElevenLabs processes this WhatsApp voice "
+    "call. May I process your voice and, after a separate readback confirmation, "
+    "save the confirmed "
     "details and transcript? Reply yes to continue, or no to end the call."
 )
 
@@ -63,7 +63,6 @@ CONSENT_READBACK = (
 class ConsentInput(BaseModel):
     ai_disclosure_accepted: bool
     voice_processing_accepted: bool
-    synthetic_data_acknowledged: bool
     provider_history: str = Field(min_length=1, max_length=65_536)
 
 
@@ -104,7 +103,7 @@ def callback_readback(customer: CustomerInput) -> str:
         )
     email = f" Email: {customer.email}." if customer.email else ""
     return (
-        f"Please confirm these fictional callback details. Name: {customer.full_name}. "
+        f"Please confirm these callback details. Name: {customer.full_name}. "
         f"Callback number: {customer.phone}.{email} "
         "May I save these contact details and the conversation transcript and ask "
         "the team to call you? Reply yes to request a callback, or tell me what to correct."
@@ -205,7 +204,6 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
             (
                 data.ai_disclosure_accepted,
                 data.voice_processing_accepted,
-                data.synthetic_data_acknowledged,
             )
         ):
             raise ApiError(

@@ -57,8 +57,6 @@ class CustomerAccessService:
                 row.attempts += 1
 
     def signup(self, request: SignupInput) -> MfaChallengeResponse:
-        if not request.fictional_data_acknowledged:
-            raise ApiError(status_code=422, code="FICTIONAL_DETAILS_REQUIRED", message="Please acknowledge the fictional-data requirement for early access.")
         email = str(request.email).casefold()
         self._throttle(email)
         password_hash = hash_password(request.password.get_secret_value())

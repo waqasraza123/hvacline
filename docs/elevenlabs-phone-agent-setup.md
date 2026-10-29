@@ -2,9 +2,9 @@
 
 # ElevenLabs Phone Agent Setup
 
-Create a private development-only phone agent separate from the browser agent. Use
-fictional data only and do not attach a real business number until the complete
-owner verification section passes.
+Create a private phone agent separate from the browser agent. Use controlled test
+data for owner acceptance. See [current deployment and owner checks](customer-data-requirements.md)
+for the removal of fictional-data requirements and the required schema update.
 
 ## Audio and privacy
 
@@ -22,23 +22,23 @@ owner verification section passes.
 
 ## Agent behavior
 
-The first message must disclose that the caller is speaking to AI, that provider
-processing occurs, and that the development demo accepts fictional data only. Ask
+The first message must disclose that the caller is speaking to AI and that provider
+processing occurs. Ask
 the caller to explicitly agree before collecting or answering anything.
 
 The system prompt must enforce this sequence:
 
 1. Obtain explicit agreement and call `accept_phone_consent`.
 2. Answer agency facts only through `lookup_phone_approved_faq`.
-3. Collect a fictional full name, one contact method, and a short intake intent.
+3. Collect a full name, one contact method, and a short intake intent.
 4. Read the structured intake back exactly and ask for an explicit spoken yes.
 5. Only after yes, call `confirm_phone_intake` once. Explain that finalization
    occurs after the call; do not claim the lead is already saved.
 6. Use `request_phone_handoff` for a live transfer or callback. Never use the
    ElevenLabs native transfer tool because register-call mode keeps transfer
    authority in this application and Twilio.
-7. End at 180 seconds or immediately when consent is declined, sensitive/real
-   data is provided, or a prohibited insurance action is requested.
+7. End at 180 seconds or immediately when consent is declined or a prohibited
+   action is requested. Do not request payment details, passwords or authentication codes.
 
 The agent must never quote, advise, bind, recommend limits, verify coverage,
 determine eligibility, make claims decisions, or improvise an agency answer.
@@ -53,7 +53,8 @@ Use `{{phone_inbound_call_id}}` for `inbound_call_id` and
 `{{system__conversation_id}}` for `conversation_id`.
 
 - `accept_phone_consent` → `POST /api/v1/providers/elevenlabs/tools/phone-consent`
-  with the two identifiers and all three consent booleans set to true.
+  with the two identifiers, `ai_disclosure_accepted=true` and
+  `microphone_consent_granted=true`, only after explicit caller acceptance.
 - `lookup_phone_approved_faq` →
   `POST /api/v1/providers/elevenlabs/tools/approved-faq` with the identifiers and
   the caller's complete `query`.

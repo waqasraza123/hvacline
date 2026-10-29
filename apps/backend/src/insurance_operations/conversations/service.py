@@ -84,12 +84,6 @@ class ConversationService:
                 code="TEXT_SESSION_MICROPHONE_CONSENT_INVALID",
                 message="Text-only chat does not request microphone access",
             )
-        if not request.synthetic_data_acknowledged:
-            raise ApiError(
-                status_code=422,
-                code="SYNTHETIC_DATA_ACKNOWLEDGEMENT_REQUIRED",
-                message="Synthetic-data acknowledgement is required",
-            )
 
         now = datetime.now(UTC)
         authorization_expires_at = now + timedelta(
@@ -112,7 +106,6 @@ class ConversationService:
                 microphone_consent_at=(
                     now if request.microphone_consent_granted else None
                 ),
-                synthetic_data_acknowledged_at=now,
                 maximum_duration_seconds=(
                     self._settings.conversation_max_duration_seconds
                 ),

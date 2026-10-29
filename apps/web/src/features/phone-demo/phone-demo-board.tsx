@@ -28,13 +28,13 @@ const INITIAL_STATUS: PhoneDemoStatus = {
 };
 
 const STATE_COPY: Record<PhoneDemoState, string> = {
-  READY: "Ready for the next fictional call",
-  RINGING: "A demo call is arriving",
+  READY: "Ready for the next call",
+  RINGING: "A call is arriving",
   IN_PROGRESS: "The AI receptionist is handling the call",
   LEAD_CREATED: "A confirmed lead was created",
   TRANSFERRED: "The caller reached the human transfer destination",
   CALLBACK_REQUESTED: "A human callback was requested",
-  FAILED: "The call ended without a confirmed demo lead",
+  FAILED: "The call ended without a confirmed lead",
 };
 
 type PhoneDemoBoardProperties = Readonly<{
@@ -82,12 +82,12 @@ export function PhoneDemoBoard({
     <main className="phone-demo-shell">
       <nav className="top-nav" aria-label="Primary navigation">
         <Brand />
-        <span className="demo-mode-badge">Fictional demo</span>
+        <span className="demo-mode-badge">AI receptionist</span>
       </nav>
 
       <section className="phone-demo-hero" aria-labelledby="phone-demo-title">
         <div>
-          <p className="eyebrow">Harborline Heating & Air showcase</p>
+          <p className="eyebrow">Harborline Heating & Air</p>
           <h1 id="phone-demo-title">Call the AI front desk.</h1>
           <p className="summary">
             Hear disclosure, approved FAQ answers, structured intake, verbal
@@ -97,7 +97,7 @@ export function PhoneDemoBoard({
             {phoneNumber}
           </a>
           <p className="demo-notice">
-            Use fictional information only. This agent cannot diagnose hazards,
+            This agent cannot diagnose hazards,
             give repair instructions, or promise an unconfirmed appointment.
           </p>
         </div>
@@ -133,10 +133,10 @@ export function PhoneDemoBoard({
         <p className="eyebrow">Suggested call script</p>
         <h2 id="demo-script-title">A two-minute walkthrough</h2>
         <ol>
-          <li>Agree to the AI and fictional-data disclosure.</li>
+          <li>Review and accept the AI and voice-processing disclosure.</li>
           <li>Ask: “What are your office hours?”</li>
-          <li>Use the fictional name “Taylor Morgan.”</li>
-          <li>Ask about a fictional AC repair callback.</li>
+          <li>Share your name and service request.</li>
+          <li>Ask about an AC repair callback.</li>
           <li>Confirm the details after the agent reads them back.</li>
           <li>Request a callback or live transfer.</li>
         </ol>

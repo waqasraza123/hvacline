@@ -29,8 +29,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           ...(signup
             ? {
                 full_name: fields.get("full_name"),
-                fictional_data_acknowledged:
-                  fields.get("fictional_data_acknowledged") === "on",
               }
             : {}),
         }),
@@ -183,26 +181,6 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               <p className="auth-field-help" id="password-help">
                 Use at least 15 characters. A few memorable words work well.
               </p>
-            )}
-            <div className="early-access-note">
-              <strong>Early access</strong>
-              <p>
-                Please use fictional account and service details. This
-                experience is not open for real customer information yet.
-              </p>
-            </div>
-            {signup && (
-              <label className="auth-checkbox">
-                <input
-                  name="fictional_data_acknowledged"
-                  type="checkbox"
-                  required
-                  disabled={busy}
-                />
-                <span>
-                  I’ll use fictional details for this early access experience.
-                </span>
-              </label>
             )}
             {error && (
               <p className="customer-error" role="alert">

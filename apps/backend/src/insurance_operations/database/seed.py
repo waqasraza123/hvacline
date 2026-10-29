@@ -50,7 +50,7 @@ DEVELOPMENT_ACTOR_DISPLAY_NAME = "Synthetic Voice AI Tester"
 DEVELOPMENT_RECEPTIONIST_PUBLIC_NAME = "Harborline Heating & Air"
 DEVELOPMENT_GREETING = (
     "Thanks for contacting Harborline Heating & Air. I'm Line, "
-    "the AI booking assistant. Please use fictional details only."
+    "the AI booking assistant. What HVAC service do you need?"
 )
 DEVELOPMENT_ESCALATION_MESSAGE = (
     "I do not have an approved answer for that request. "
@@ -71,7 +71,7 @@ DEVELOPMENT_FAQ_CONTENT: tuple[tuple[UUID, str, str, str], ...] = (
         DEVELOPMENT_APPROVED_FAQ_IDS[1],
         "What HVAC services do you offer?",
         "what hvac services do you offer",
-        "Our synthetic showcase handles air conditioning repair, "
+        "We handle air conditioning repair, "
         "heating repair, installation, and maintenance.",
     ),
     (

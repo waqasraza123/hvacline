@@ -136,7 +136,6 @@ class PhoneReceptionistService:
                     },
                     disclosure_accepted_at=now,
                     microphone_consent_at=now,
-                    synthetic_data_acknowledged_at=now,
                     maximum_duration_seconds=self._maximum_duration_seconds,
                     authorization_expires_at=(
                         now + timedelta(seconds=self._maximum_duration_seconds)

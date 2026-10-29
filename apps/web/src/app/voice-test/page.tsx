@@ -25,7 +25,7 @@ export default async function VoiceTestPage() {
           <h1>Receptionist profile unavailable</h1>
           <p className="summary">
             Apply the latest migration and rerun the development seed before
-            starting a synthetic conversation.
+            starting a conversation.
           </p>
         </section>
       </main>

@@ -493,6 +493,17 @@ def test_migration_columns_match_the_approved_contract(
     assert actual_columns == EXPECTED_COLUMNS
 
 
+def test_synthetic_acknowledgement_is_optional_but_disclosure_is_required(
+    migrated_database: Engine,
+) -> None:
+    columns = {
+        column["name"]: column
+        for column in inspect(migrated_database).get_columns("conversation_sessions")
+    }
+    assert columns["synthetic_data_acknowledged_at"]["nullable"] is True
+    assert columns["disclosure_accepted_at"]["nullable"] is False
+
+
 def test_migration_creates_only_the_documented_foundation_indexes(
     migrated_database: Engine,
 ) -> None:
