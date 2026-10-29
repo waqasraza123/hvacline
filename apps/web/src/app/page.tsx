@@ -5,6 +5,7 @@ import {
   HomepageChat,
   HomepageChatLink,
 } from "@/features/homepage-chat/homepage-chat";
+import { parseHomepagePhoneCta } from "@/lib/environment";
 import "./product.css";
 
 const services = [
@@ -31,6 +32,11 @@ const services = [
 ] as const;
 
 export default function Home() {
+  const phoneCta = parseHomepagePhoneCta({
+    HOMEPAGE_PHONE_NUMBER_E164: process.env.HOMEPAGE_PHONE_NUMBER_E164,
+    TELNYX_INBOUND_CALLING_VERIFIED: process.env.TELNYX_INBOUND_CALLING_VERIFIED,
+  });
+
   return (
     <div className="product-site">
       <a className="skip-link" href="#main-content">
@@ -136,6 +142,22 @@ export default function Home() {
               talks with homeowners, hears the problem, checks live appointment
               slots, and confirms the time they choose.
             </p>
+            {phoneCta && (
+              <a
+                className="hero-phone-cta"
+                href={phoneCta.href}
+                aria-label={`Call us at ${phoneCta.displayNumber} to book your HVAC appointment.`}
+              >
+                <span className="hero-phone-icon">
+                  <ProductIcon name="phone" />
+                </span>
+                <span className="hero-phone-copy">
+                  <span>Call us at</span>
+                  <strong>{phoneCta.displayNumber}</strong>
+                  <span>to book your HVAC appointment.</span>
+                </span>
+              </a>
+            )}
             <div className="product-hero-actions">
               <Link className="product-button" href="/book">
                 Book an appointment <ProductIcon name="arrow" />

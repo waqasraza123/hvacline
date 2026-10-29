@@ -11,6 +11,33 @@ export class EnvironmentValidationError extends Error {
   }
 }
 
+export type HomepagePhoneCta = Readonly<{
+  displayNumber: string;
+  href: `tel:${string}`;
+}>;
+
+export function parseHomepagePhoneCta(
+  values: Readonly<Record<string, string | undefined>>,
+): HomepagePhoneCta | null {
+  const verified = parseBoolean(
+    values.TELNYX_INBOUND_CALLING_VERIFIED?.trim().toLowerCase() ?? "false",
+    "TELNYX_INBOUND_CALLING_VERIFIED",
+  );
+  if (!verified) return null;
+
+  const number = values.HOMEPAGE_PHONE_NUMBER_E164?.trim();
+  if (!number || !/^\+1[0-9]{10}$/.test(number)) {
+    throw new EnvironmentValidationError(
+      "HOMEPAGE_PHONE_NUMBER_E164 must be a US E.164 number when Telnyx calling is verified",
+    );
+  }
+
+  return {
+    displayNumber: `+1 (${number.slice(2, 5)}) ${number.slice(5, 8)}-${number.slice(8)}`,
+    href: `tel:${number}`,
+  };
+}
+
 export function parsePublicEnvironment(
   values: Readonly<Record<string, string | undefined>>,
 ): PublicEnvironment {

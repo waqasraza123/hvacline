@@ -1,5 +1,22 @@
 # Project State
 
+## Homepage phone CTA — disabled, owner verification pending — 2026-10-29
+
+The existing hero now includes an optional phone-icon booking call panel. A
+server-rendered configuration parser formats the configured US E.164 number and
+derives its `tel:` link. Web-only `HOMEPAGE_PHONE_NUMBER_E164` holds the number;
+`TELNYX_INBOUND_CALLING_VERIFIED` defaults false and suppresses the public panel
+until the owner records real-call acceptance. Existing hero layout, typography,
+booking/chat paths and Telnyx backend changes are preserved. The web environment
+example carries the owner-supplied public business number, not application code.
+
+Source, focused release-gate specifications and responsive acceptance remain
+**UNVERIFIED**. No tests, builds, linters, type checks, services, provider calls or
+deployments ran. Exact owner commands and desktop/mobile/focus checks:
+`docs/telnyx-sip-setup.md`, homepage CTA section. Public activation requires live
+Telnyx acceptance, explicit verified configuration and an authorized frontend
+rebuild/deployment; no environment value was enabled by this implementation.
+
 ## Alternative Telnyx inbound SIP — implementation UNVERIFIED — 2026-10-29
 
 Feature branch `feat/telnyx-sip-inbound` adds explicit disabled/Twilio/Telnyx SIP

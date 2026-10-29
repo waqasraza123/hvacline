@@ -3,8 +3,51 @@ import { describe, expect, it } from "vitest";
 import {
   EnvironmentValidationError,
   parseDemoPhoneNumber,
+  parseHomepagePhoneCta,
   parsePublicEnvironment,
 } from "./environment";
+
+describe("homepage phone CTA release gate", () => {
+  it("hides the phone CTA until live calling is explicitly verified", () => {
+    expect(parseHomepagePhoneCta({})).toBeNull();
+    expect(
+      parseHomepagePhoneCta({
+        HOMEPAGE_PHONE_NUMBER_E164: "+15550100100",
+        TELNYX_INBOUND_CALLING_VERIFIED: "false",
+      }),
+    ).toBeNull();
+  });
+
+  it("uses the configured number for the visible label and dial link", () => {
+    expect(
+      parseHomepagePhoneCta({
+        HOMEPAGE_PHONE_NUMBER_E164: "+15550100100",
+        TELNYX_INBOUND_CALLING_VERIFIED: "true",
+      }),
+    ).toEqual({
+      displayNumber: "+1 (555) 010-0100",
+      href: "tel:+15550100100",
+    });
+  });
+
+  it.each([undefined, "", "201-555-0100", "+442012345678", "javascript:alert(1)"])(
+    "rejects missing or invalid phone configuration when enabling calling",
+    (number) => {
+      expect(() =>
+        parseHomepagePhoneCta({
+          HOMEPAGE_PHONE_NUMBER_E164: number,
+          TELNYX_INBOUND_CALLING_VERIFIED: "true",
+        }),
+      ).toThrow("HOMEPAGE_PHONE_NUMBER_E164 must be a US E.164 number");
+    },
+  );
+
+  it("rejects ambiguous verification flags", () => {
+    expect(() =>
+      parseHomepagePhoneCta({ TELNYX_INBOUND_CALLING_VERIFIED: "yes" }),
+    ).toThrow("TELNYX_INBOUND_CALLING_VERIFIED must be true or false");
+  });
+});
 
 describe("parsePublicEnvironment", () => {
   it("returns a normalized API URL", () => {
