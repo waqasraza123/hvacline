@@ -28,6 +28,11 @@ class DatabaseSslMode(StrEnum):
     VERIFY_FULL = "verify-full"
 
 
+class ConversationProviderName(StrEnum):
+    ELEVENLABS = "elevenlabs"
+    LOCAL = "local"
+
+
 class CommonSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -238,6 +243,9 @@ class ApiSettings(DatabaseSettings):
     web_origin: str = "http://localhost:3000"
     idempotency_retention_hours: int = Field(default=24, ge=1, le=168)
     conversation_ai_enabled: bool = False
+    conversation_provider: ConversationProviderName = (
+        ConversationProviderName.ELEVENLABS
+    )
     development_actor_user_id: UUID | None = None
     conversation_max_duration_seconds: int = Field(default=180, ge=1, le=180)
     conversation_daily_session_limit: int = Field(default=10, ge=1, le=10)
@@ -245,6 +253,17 @@ class ApiSettings(DatabaseSettings):
     elevenlabs_api_key: SecretStr | None = None
     elevenlabs_agent_id: str | None = Field(default=None, min_length=1, max_length=200)
     elevenlabs_privacy_confirmed: bool = False
+    local_whisper_command: str = Field(default="whisper-cli", min_length=1)
+    local_whisper_model_path: str = Field(
+        default=".local/models/ggml-base.en.bin",
+        min_length=1,
+    )
+    local_ollama_base_url: str = "http://127.0.0.1:11434"
+    local_ollama_model: str = Field(default="llama3.2:3b", min_length=1)
+    local_piper_model_path: str = Field(
+        default=".local/models/piper/en_US-lessac-medium.onnx",
+        min_length=1,
+    )
     demo_sandbox_enabled: bool = False
     demo_admin_token: SecretStr | None = None
     demo_result_ttl_minutes: int = Field(default=15, ge=5, le=60)
@@ -272,6 +291,24 @@ class ApiSettings(DatabaseSettings):
             or parsed_origin.fragment
         ):
             raise ValueError("WEB_ORIGIN must be an HTTP or HTTPS origin")
+        return value.rstrip("/")
+
+    @field_validator("local_ollama_base_url")
+    @classmethod
+    def validate_local_ollama_base_url(cls, value: str) -> str:
+        parsed_url = urlsplit(value)
+        if (
+            parsed_url.scheme not in {"http", "https"}
+            or parsed_url.hostname not in {"localhost", "127.0.0.1", "::1"}
+            or parsed_url.username is not None
+            or parsed_url.password is not None
+            or parsed_url.query
+            or parsed_url.fragment
+            or parsed_url.path not in {"", "/"}
+        ):
+            raise ValueError(
+                "LOCAL_OLLAMA_BASE_URL must be a loopback HTTP or HTTPS URL"
+            )
         return value.rstrip("/")
 
     @field_validator("elevenlabs_agent_id")
@@ -312,20 +349,31 @@ class ApiSettings(DatabaseSettings):
                 "DEVELOPMENT_ACTOR_USER_ID is required when conversation AI is enabled"
             )
         if (
-            self.elevenlabs_api_key is None
-            or not self.elevenlabs_api_key.get_secret_value().strip()
+            self.conversation_provider is ConversationProviderName.LOCAL
+            and self.customer_portal_enabled
         ):
             raise ValueError(
-                "ELEVENLABS_API_KEY is required when conversation AI is enabled"
+                "local conversations support the development workspace only; "
+                "disable CUSTOMER_PORTAL_ENABLED or select elevenlabs"
             )
-        if self.elevenlabs_agent_id is None:
-            raise ValueError(
-                "ELEVENLABS_AGENT_ID is required when conversation AI is enabled"
-            )
-        if not self.elevenlabs_privacy_confirmed:
-            raise ValueError(
-                "ElevenLabs audio saving and zero-day retention must be confirmed"
-            )
+        if self.conversation_provider is ConversationProviderName.ELEVENLABS:
+            if (
+                self.elevenlabs_api_key is None
+                or not self.elevenlabs_api_key.get_secret_value().strip()
+            ):
+                raise ValueError(
+                    "ELEVENLABS_API_KEY is required when the ElevenLabs "
+                    "conversation provider is enabled"
+                )
+            if self.elevenlabs_agent_id is None:
+                raise ValueError(
+                    "ELEVENLABS_AGENT_ID is required when the ElevenLabs "
+                    "conversation provider is enabled"
+                )
+            if not self.elevenlabs_privacy_confirmed:
+                raise ValueError(
+                    "ElevenLabs audio saving and zero-day retention must be confirmed"
+                )
         return self
 
     @model_validator(mode="after")
@@ -336,11 +384,15 @@ class ApiSettings(DatabaseSettings):
             try:
                 Fernet(self.customer_mfa_encryption_key.get_secret_value().encode())
             except (ValueError, TypeError) as error:
-                raise ValueError("CUSTOMER_MFA_ENCRYPTION_KEY must be a Fernet key") from error
+                raise ValueError(
+                    "CUSTOMER_MFA_ENCRYPTION_KEY must be a Fernet key"
+                ) from error
         if not self.customer_portal_enabled:
             return self
         if self.customer_mfa_encryption_key is None:
-            raise ValueError("CUSTOMER_MFA_ENCRYPTION_KEY is required for customer accounts")
+            raise ValueError(
+                "CUSTOMER_MFA_ENCRYPTION_KEY is required for customer accounts"
+            )
         if (
             self.app_environment is not RuntimeEnvironment.DEVELOPMENT
             or not self.demo_sandbox_enabled

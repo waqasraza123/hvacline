@@ -44,3 +44,14 @@ describe("conversation connections", () => {
     },
   );
 });
+
+it("never forwards a local grant to the ElevenLabs SDK", () => {
+  expect(() =>
+    sessionConnection({
+      provider: "local",
+      inputMode: "TEXT",
+      transport: "websocket",
+      credential: "synthetic-local-token",
+    }),
+  ).toThrow("local adapter");
+});

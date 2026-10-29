@@ -25,8 +25,10 @@ class ConversationSessionCreateInput(BaseModel):
 
 
 class ConversationConnection(BaseModel):
+    provider: Literal["elevenlabs", "local"] = "elevenlabs"
     transport: ConversationTransport
     credential: str
+    websocket_path: str | None = None
 
 
 class ConversationSessionResponse(BaseModel):

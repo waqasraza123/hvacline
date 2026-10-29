@@ -17,6 +17,7 @@ export type ConversationDraft = Readonly<{
   serviceKind?: string;
   preferredWindow?: string;
   hazardousCondition?: boolean;
+  handoffRequested?: boolean;
 }>;
 
 export type ApprovedFaqToolResult = Readonly<{
@@ -56,6 +57,8 @@ export type ConversationClient = Readonly<{
 }>;
 
 export type ConversationSessionAuthorization = Readonly<{
+  provider?: "elevenlabs" | "local";
+  websocketPath?: string;
   sessionId: string;
   inputMode: ConversationInputMode;
   transport: ConversationTransport;
@@ -66,6 +69,7 @@ export type ConversationSessionAuthorization = Readonly<{
 }>;
 
 export type ConfirmedConversationIntake = Readonly<{
+  leadId?: string;
   serviceRequestId?: string;
   conversationIntakeId: string;
   customerId: string;

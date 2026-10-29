@@ -161,8 +161,10 @@ class ConversationService:
             session_id=conversation_session_id,
             input_mode=request.input_mode,
             connection=ConversationConnection(
+                provider=grant.provider,
                 transport=grant.transport,
                 credential=grant.credential,
+                websocket_path=grant.websocket_path,
             ),
             maximum_duration_seconds=self._settings.conversation_max_duration_seconds,
             authorization_expires_at=authorization_expires_at,

@@ -42,3 +42,5 @@ Answers stay within approved business information. Hazards and unsupported reque
 ## Explore
 
 [Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)
+
+Optional development-only [local browser conversations](docs/local-browser-voice.md) use whisper.cpp, Ollama and Piper; implementation and runtime acceptance remain unverified.

@@ -132,6 +132,14 @@ Use fictional data for every check:
 - confirm the 180-second cutoff
 - inspect application/provider logs and the database for raw audio or secrets
 - wait 15 minutes and confirm the public result returns to `READY`
+- without reloading the page, make another fictional call after a completed
+  result and confirm the panel updates for the new call
+- keep two browser windows open and confirm both show the latest demo call;
+  this is a shared agency showcase, not a private result for each visitor
+
+For the result-expiry check, measure the configured window from call receipt;
+the API filters calls by `received_at`, not the time the call ended. Allow one
+five-second polling interval after expiry for the page to refresh.
 
 To roll back, set `TELEPHONY_PROVIDER_ENABLED=false` first, redeploy Render, and
 then detach the Twilio webhook. Do not delete database records during rollback.

@@ -20,7 +20,7 @@ import type {
   ConversationTurn,
 } from "./contracts";
 
-type AdapterProperties = Readonly<{
+export type AdapterProperties = Readonly<{
   children: (client: ConversationClient) => ReactNode;
   onDisconnect: () => void;
   onDraft: (draft: ConversationDraft) => Promise<string>;

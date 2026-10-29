@@ -73,6 +73,8 @@ export async function authorizeConversationSession(
   const sessionId = requiredString(body.session_id);
   const authorizedInputMode = body.input_mode ?? "VOICE";
   const transport = body.connection.transport;
+  const provider = body.connection.provider ?? "elevenlabs";
+  const websocketPath = requiredString(body.connection.websocket_path);
   const credential = requiredString(body.connection.credential);
   const maximumDurationSeconds = body.maximum_duration_seconds;
   const authorizationExpiresAt = requiredString(body.authorization_expires_at);
@@ -81,7 +83,11 @@ export async function authorizeConversationSession(
     sessionId === undefined ||
     authorizedInputMode !== inputMode ||
     (transport !== "webrtc" && transport !== "websocket") ||
-    transport !== (inputMode === "TEXT" ? "websocket" : "webrtc") ||
+    (provider !== "elevenlabs" && provider !== "local") ||
+    (provider === "local"
+      ? transport !== "websocket" ||
+        websocketPath !== "/api/v1/development/local-conversation"
+      : transport !== (inputMode === "TEXT" ? "websocket" : "webrtc")) ||
     credential === undefined ||
     confirmationExpiresAt === undefined ||
     typeof maximumDurationSeconds !== "number" ||
@@ -106,6 +112,8 @@ export async function authorizeConversationSession(
   }
   return {
     sessionId,
+    provider,
+    websocketPath,
     inputMode,
     transport,
     credential,
@@ -241,7 +249,35 @@ export async function confirmConversationIntake(
     customerName,
     confirmedAt,
     serviceRequestId: requiredString(body.service_request_id),
+    leadId: requiredString(body.lead_id),
   };
+}
+
+export async function createCallbackHandoff(
+  apiBaseUrl: string,
+  leadId: string,
+  idempotencyKey: string,
+  adminToken?: string,
+): Promise<void> {
+  const response = await fetch(
+    `${apiBaseUrl}/api/v1/development/leads/${leadId}/handoff-requests`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey,
+        ...(adminToken ? { "X-Demo-Admin-Token": adminToken } : {}),
+      },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
+      body: JSON.stringify({
+        request_kind: "CALLBACK",
+        preferred_contact_method: "PHONE",
+        reason: "Human follow-up requested during browser conversation",
+        availability: null,
+      }),
+    },
+  );
+  if (!response.ok) throw apiError(response, await readJson(response));
 }
 
 async function readJson(response: Response): Promise<unknown> {

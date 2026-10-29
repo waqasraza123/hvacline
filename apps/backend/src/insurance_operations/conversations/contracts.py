@@ -30,6 +30,8 @@ class ConnectionGrant:
     transport: ConversationTransport
     credential: str
     metadata: ProviderSessionMetadata
+    provider: Literal["elevenlabs", "local"] = "elevenlabs"
+    websocket_path: str | None = None
 
 
 class ConversationProvider(Protocol):

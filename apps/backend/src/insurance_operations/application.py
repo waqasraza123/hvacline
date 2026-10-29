@@ -37,8 +37,14 @@ from insurance_operations.approved_faqs import (
 )
 from insurance_operations.conversations.booking import create_browser_booking_router
 from insurance_operations.conversations.contracts import ConversationProvider
+from insurance_operations.conversations.local_session import (
+    LocalConversationSessionService,
+    configure_local_conversation,
+)
 from insurance_operations.conversations.providers import (
+    LOCAL_WEBSOCKET_PATH,
     ElevenLabsConversationProvider,
+    LocalConversationProvider,
 )
 from insurance_operations.conversations.schemas import (
     ConversationEndInput,
@@ -80,7 +86,11 @@ from insurance_operations.receptionist import (
     ReceptionistSettingsResponse,
     ReceptionistSettingsService,
 )
-from insurance_operations.settings import ApiSettings, RuntimeEnvironment
+from insurance_operations.settings import (
+    ApiSettings,
+    ConversationProviderName,
+    RuntimeEnvironment,
+)
 from insurance_operations.telephony import (
     CallPolicyInput,
     CallPolicyResponse,
@@ -137,6 +147,16 @@ def create_app(
         session_factory=session_factory
     )
     approved_faq_service = ApprovedFaqService(session_factory=session_factory)
+    local_conversation_service = (
+        LocalConversationSessionService(
+            settings=settings,
+            session_factory=session_factory,
+            approved_faq_service=approved_faq_service,
+            receptionist_settings_service=receptionist_settings_service,
+        )
+        if isinstance(provider, LocalConversationProvider)
+        else None
+    )
     lead_service = LeadService(
         session_factory=session_factory,
         idempotency_retention_hours=settings.idempotency_retention_hours,
@@ -157,6 +177,8 @@ def create_app(
             telephony_ingress.close()
         if provider is not None:
             provider.close()
+        if local_conversation_service is not None:
+            local_conversation_service.close()
         database_engine.dispose()
 
     application = FastAPI(
@@ -182,6 +204,13 @@ def create_app(
         ],
         expose_headers=["Idempotent-Replayed", "X-Correlation-ID"],
     )
+
+    if local_conversation_service is not None:
+        configure_local_conversation(
+            application,
+            local_conversation_service,
+            LOCAL_WEBSOCKET_PATH,
+        )
 
     application.include_router(
         create_development_telephony_router(
@@ -810,6 +839,8 @@ def default_conversation_provider(
 ) -> ConversationProvider | None:
     if not settings.conversation_ai_enabled:
         return None
+    if settings.conversation_provider is ConversationProviderName.LOCAL:
+        return LocalConversationProvider()
     if settings.elevenlabs_api_key is None or settings.elevenlabs_agent_id is None:
         raise RuntimeError("conversation provider configuration is unavailable")
     return ElevenLabsConversationProvider(

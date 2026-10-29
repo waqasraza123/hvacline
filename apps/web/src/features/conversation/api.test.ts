@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 import {
   authorizeConversationSession,
+  createCallbackHandoff,
   ConversationApiError,
   endConversationSession,
 } from "./api";
@@ -199,3 +200,83 @@ it.each([
     ).rejects.toBeInstanceOf(ConversationApiError);
   },
 );
+
+it.each(["VOICE", "TEXT"] as const)(
+  "routes local %s grants to the bounded backend socket",
+  async (inputMode) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValueOnce(
+        Response.json({
+          session_id: "local-session",
+          input_mode: inputMode,
+          connection: {
+            provider: "local",
+            transport: "websocket",
+            credential: "synthetic-token",
+            websocket_path: "/api/v1/development/local-conversation",
+          },
+          maximum_duration_seconds: 180,
+          confirmation_expires_at: "2030-01-01T00:00:00Z",
+        }),
+      ),
+    );
+    await expect(
+      authorizeConversationSession(
+        "http://localhost:8000",
+        undefined,
+        inputMode,
+      ),
+    ).resolves.toMatchObject({
+      provider: "local",
+      transport: "websocket",
+      websocketPath: "/api/v1/development/local-conversation",
+    });
+  },
+);
+
+it.each(["https://untrusted.example.test/collect", "/api/other", undefined])(
+  "rejects and releases local grants with an unexpected socket path %s",
+  async (path) => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          session_id: "local-session",
+          input_mode: "VOICE",
+          connection: {
+            provider: "local",
+            transport: "websocket",
+            credential: "synthetic-token",
+            websocket_path: path,
+          },
+          maximum_duration_seconds: 180,
+          confirmation_expires_at: "2030-01-01T00:00:00Z",
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ review_available: false }));
+    vi.stubGlobal("fetch", fetcher);
+    await expect(
+      authorizeConversationSession("http://localhost:8000"),
+    ).rejects.toBeInstanceOf(ConversationApiError);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  },
+);
+
+it("preserves protected workspace authorization and retry identity for callback requests", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(new Response(null, { status: 201 }));
+  vi.stubGlobal("fetch", fetcher);
+  await createCallbackHandoff(
+    "https://api.example.test",
+    "lead-1",
+    "save-1-handoff",
+    "synthetic-admin-token",
+  );
+  const [url, options] = fetcher.mock.calls[0];
+  expect(url).not.toContain("synthetic-admin-token");
+  expect(options.headers["X-Demo-Admin-Token"]).toBe("synthetic-admin-token");
+  expect(options.headers["Idempotency-Key"]).toBe("save-1-handoff");
+  expect(JSON.parse(options.body).request_kind).toBe("CALLBACK");
+});

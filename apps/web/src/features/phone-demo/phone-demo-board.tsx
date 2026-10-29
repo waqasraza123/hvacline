@@ -8,13 +8,6 @@ import { getPhoneDemoStatus } from "./api";
 import type { PhoneDemoState, PhoneDemoStatus } from "./contracts";
 
 const POLL_INTERVAL_MILLISECONDS = 5_000;
-const TERMINAL_STATES: readonly PhoneDemoState[] = [
-  "LEAD_CREATED",
-  "TRANSFERRED",
-  "CALLBACK_REQUESTED",
-  "FAILED",
-];
-
 const INITIAL_STATUS: PhoneDemoStatus = {
   state: "READY",
   receivedAt: null,
@@ -59,9 +52,7 @@ export function PhoneDemoBoard({
         if (!active) return;
         setStatus(nextStatus);
         setError(null);
-        if (!TERMINAL_STATES.includes(nextStatus.state)) {
-          timer = setTimeout(refresh, POLL_INTERVAL_MILLISECONDS);
-        }
+        timer = setTimeout(refresh, POLL_INTERVAL_MILLISECONDS);
       } catch {
         if (!active) return;
         setError(
@@ -97,8 +88,8 @@ export function PhoneDemoBoard({
             {phoneNumber}
           </a>
           <p className="demo-notice">
-            This agent cannot diagnose hazards,
-            give repair instructions, or promise an unconfirmed appointment.
+            This agent cannot diagnose hazards, give repair instructions, or
+            promise an unconfirmed appointment.
           </p>
         </div>
 
@@ -107,9 +98,13 @@ export function PhoneDemoBoard({
             <span
               className={`demo-state-dot demo-state-${status.state.toLowerCase()}`}
             />
-            Live call result
+            Latest call result
           </div>
           <h2>{STATE_COPY[status.state]}</h2>
+          <p className="section-help">
+            This shared panel shows the latest call to this number. Another
+            visitor’s call may replace the result. It updates automatically.
+          </p>
           <dl className="demo-result-list">
             <Result
               label="Consent"

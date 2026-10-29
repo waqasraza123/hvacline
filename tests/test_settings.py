@@ -11,6 +11,13 @@ from insurance_operations.settings import (
 )
 
 
+@pytest.fixture(autouse=True)
+def isolate_settings_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    field_names = set(ApiSettings.model_fields) | set(WorkerSettings.model_fields)
+    for field_name in field_names:
+        monkeypatch.delenv(field_name.upper(), raising=False)
+
+
 @pytest.mark.parametrize(
     ("name", "value", "attribute"),
     [
@@ -149,6 +156,7 @@ def test_runtime_settings_require_enabled_integration_credentials(
 def test_api_settings_reject_invalid_port() -> None:
     with pytest.raises(ValidationError, match="less than or equal to 65535"):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.TEST,
             api_host="127.0.0.1",
             api_port=70_000,
@@ -163,6 +171,7 @@ def test_api_settings_reject_invalid_port() -> None:
 def test_worker_settings_reject_empty_name() -> None:
     with pytest.raises(ValidationError, match="at least 1 character"):
         WorkerSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.TEST,
             worker_name="",
             database_url="postgresql://user:password@localhost/development",
@@ -177,6 +186,7 @@ def test_api_settings_reject_web_origin_with_a_path() -> None:
         match="WEB_ORIGIN must be an HTTP or HTTPS origin",
     ):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.TEST,
             api_host="127.0.0.1",
             api_port=8000,
@@ -194,6 +204,7 @@ def test_conversation_ai_cannot_be_enabled_outside_development() -> None:
         match="conversation AI can be enabled only in development",
     ):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.TEST,
             api_host="127.0.0.1",
             api_port=8000,
@@ -210,6 +221,7 @@ def test_enabled_conversation_ai_requires_privacy_attestation() -> None:
         match="audio saving and zero-day retention must be confirmed",
     ):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.DEVELOPMENT,
             api_host="127.0.0.1",
             api_port=8000,
@@ -225,6 +237,7 @@ def test_enabled_conversation_ai_requires_privacy_attestation() -> None:
 
 def test_enabled_conversation_ai_accepts_complete_configuration() -> None:
     settings = ApiSettings(
+        _env_file=None,
         app_environment=RuntimeEnvironment.DEVELOPMENT,
         api_host="127.0.0.1",
         api_port=8000,
@@ -247,6 +260,7 @@ def test_demo_sandbox_requires_a_strong_admin_token() -> None:
         match="DEMO_ADMIN_TOKEN must contain at least 32 characters",
     ):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.DEVELOPMENT,
             api_host="127.0.0.1",
             api_port=8000,
@@ -262,6 +276,7 @@ def test_demo_sandbox_requires_a_strong_admin_token() -> None:
 
 def test_demo_sandbox_accepts_complete_development_configuration() -> None:
     settings = ApiSettings(
+        _env_file=None,
         app_environment=RuntimeEnvironment.DEVELOPMENT,
         api_host="127.0.0.1",
         api_port=8000,
@@ -281,6 +296,7 @@ def test_demo_sandbox_accepts_complete_development_configuration() -> None:
 @pytest.mark.parametrize("number", [None, "", "   "])
 def test_browser_sandbox_does_not_require_phone_numbers(number: str | None) -> None:
     settings = ApiSettings(
+        _env_file=None,
         app_environment=RuntimeEnvironment.DEVELOPMENT,
         api_host="127.0.0.1",
         api_port=8000,
@@ -298,6 +314,7 @@ def test_browser_sandbox_does_not_require_phone_numbers(number: str | None) -> N
 def test_invalid_configured_phone_number_is_rejected() -> None:
     with pytest.raises(ValidationError, match="E.164"):
         ApiSettings(
+            _env_file=None,
             app_environment=RuntimeEnvironment.DEVELOPMENT,
             api_host="127.0.0.1",
             api_port=8000,

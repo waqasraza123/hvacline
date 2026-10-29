@@ -9,6 +9,11 @@ from insurance_operations.conversations.providers.elevenlabs import (
     ELEVENLABS_API_BASE_URL,
     ElevenLabsConversationProvider,
 )
+from insurance_operations.conversations.providers.local import (
+    LOCAL_WEBSOCKET_PATH,
+    LocalConversationProvider,
+    credential_digest,
+)
 
 
 def test_provider_mints_webrtc_token_without_exposing_api_key() -> None:
@@ -137,3 +142,18 @@ def test_text_provider_rejects_invalid_urls_with_a_sanitized_error(
     with pytest.raises(ConversationProviderError) as error:
         provider.authorize_session(input_mode="TEXT")
     assert str(error.value) == "conversation provider authorization failed"
+
+
+@pytest.mark.parametrize("input_mode", ["VOICE", "TEXT"])
+def test_local_provider_returns_one_time_websocket_grant(
+    input_mode: ConversationInputMode,
+) -> None:
+    grant = LocalConversationProvider().authorize_session(input_mode=input_mode)
+    assert grant.provider == "local"
+    assert grant.transport == "websocket"
+    assert grant.websocket_path == LOCAL_WEBSOCKET_PATH
+    assert grant.metadata.adapter == "local_browser_voice"
+    assert grant.metadata.external_session_reference == credential_digest(
+        grant.credential
+    )
+    assert grant.credential not in grant.metadata.as_storage_value().values()

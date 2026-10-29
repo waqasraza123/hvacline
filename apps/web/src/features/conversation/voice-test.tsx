@@ -7,6 +7,7 @@ import {
   authorizeConversationSession,
   ConversationApiError,
   confirmConversationIntake,
+  createCallbackHandoff,
   endConversationSession,
 } from "./api";
 import { lookupConversationApprovedFaq } from "../approved-faqs/api";
@@ -71,6 +72,7 @@ type IntakeForm = {
   serviceKind: string;
   preferredWindow: string;
   hazardousCondition: boolean;
+  handoffRequested: boolean;
 };
 
 const EMPTY_FORM: IntakeForm = {
@@ -85,6 +87,7 @@ const EMPTY_FORM: IntakeForm = {
   serviceKind: "AC_REPAIR",
   preferredWindow: "",
   hazardousCondition: false,
+  handoffRequested: false,
 };
 
 export function VoiceTest({
@@ -166,6 +169,7 @@ export function VoiceTest({
       preferredWindow: draft.preferredWindow ?? current.preferredWindow,
       hazardousCondition:
         current.hazardousCondition || draft.hazardousCondition === true,
+      handoffRequested: draft.handoffRequested ?? current.handoffRequested,
     }));
     return result ?? "The draft is visible for review. Nothing has been saved.";
   }, []);
@@ -281,6 +285,7 @@ export function VoiceTest({
 
   return (
     <ConfiguredConversationAdapter
+      apiBaseUrl={apiBaseUrl}
       onApprovedFaqLookup={handleApprovedFaqLookup}
       onDisconnect={handleDisconnect}
       onDraft={handleDraft}
@@ -700,6 +705,22 @@ function VoiceTestExperience({
         adminToken,
       );
       setSavedIntake(result);
+      if (form.handoffRequested && presentation === "workspace") {
+        try {
+          if (!result.leadId) throw new Error("Saved lead is unavailable");
+          await createCallbackHandoff(
+            apiBaseUrl,
+            result.leadId,
+            `${confirmationKeyRef.current}-handoff`,
+            adminToken,
+          );
+        } catch {
+          setErrorMessage(
+            "Your service request was saved, but the callback request could not " +
+              "be recorded. Staff can follow up from the saved service request.",
+          );
+        }
+      }
       setBookingProgress({
         requestSaved: true,
         awaitingIntakeConfirmation: false,
@@ -888,15 +909,16 @@ function VoiceTestExperience({
           {customerView && <h3>Before we begin</h3>}
           <div className="disclosure" role="note">
             You are interacting with an AI, not a human. Your messages
-            {textOnly ? "" : " and microphone audio"} are processed by
-            ElevenLabs and its AI/LLM providers. Chat mode does not access your
-            microphone or play audio. The configured agent has audio recording
-            disabled and zero-day scheduled deletion; provider Zero Retention
-            Mode is not enabled. This app keeps live drafts in this browser and
-            does not store raw audio. Intake details and transcript text are
-            saved only after you confirm the full readback or the on-screen
-            review. Booking requires a separate confirmation of the appointment
-            date and time.
+            {textOnly ? "" : " and microphone audio"} are processed by the
+            configured conversation provider. ElevenLabs mode uses ElevenLabs
+            and its AI/LLM providers, with audio recording disabled and zero-day
+            scheduled deletion; provider Zero Retention Mode is not enabled.
+            Optional local mode uses speech and language models on the API host.
+            Chat mode does not access your microphone or play audio. This app
+            keeps live drafts in memory and does not store raw audio. Intake
+            details and transcript text are saved only after you confirm the
+            full readback or the on-screen review. Booking requires a separate
+            confirmation of the appointment date and time.
           </div>
           <label className="consent-row">
             <input
@@ -1265,6 +1287,19 @@ function VoiceTestExperience({
                 value={form.intakeIntent}
               />
             </label>
+            {!customerView && (
+              <label className="consent-row wide-field">
+                <input
+                  checked={form.handoffRequested}
+                  disabled={phase !== "review" || confirmationLocked}
+                  onChange={(event) =>
+                    setForm({ ...form, handoffRequested: event.target.checked })
+                  }
+                  type="checkbox"
+                />
+                Request a human callback after confirming this service request.
+              </label>
+            )}
           </div>
           {phase === "review" && (
             <button

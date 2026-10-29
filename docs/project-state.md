@@ -1,5 +1,25 @@
 # Project State
 
+## Original local draft integrated — runtime UNVERIFIED — 2026-10-29
+
+The owner explicitly requested reviewing and publishing the original checkout's
+remaining edits. Snapshot `7cb32e4` preserves that draft on local branch
+`archive/local-voice-draft-20261029`. Its local browser provider is adapted to the
+current Chat/Voice contracts and HVAC fields without restoring obsolete branding
+or overwriting customer/MFA/booking work. ElevenLabs remains the default; local
+mode is limited to the development workspace and rejects enabled customer portal
+configuration. Local models run on the API host, with loopback-only Ollama.
+
+WebSocket grants are hashed, single-use, origin/owner/channel/expiry checked and
+revalidated during turns. Review/save, callback and on-screen booking reuse
+existing services; local models cannot confirm or book. Phone status polling now
+continues after terminal results and identifies the shared latest-call view.
+No new migration; Piper remains an optional extra. Source formatting only;
+implementation/runtime **UNVERIFIED**. No tests, builds, linters, type checks,
+migrations, services or model/provider calls ran. Exact owner setup, commands and
+manual acceptance: `docs/local-browser-voice.md` and
+`docs/demo-readiness-checklist.md`.
+
 ## Main publication authorized; release handoff completed — 2026-10-29
 
 The owner requested finishing and publishing pending work to `main`, superseding
@@ -107,13 +127,11 @@ Memory references existing immutable confirmed intakes without transcript copies
 
 Implementation and all test specifications remain **UNVERIFIED**. No tests, builds, linters, formatters, type checks, migrations, seeds, services, provider calls, installs, commits, pushes or deployments ran. Exact tools, environment names, owner commands, retention scheduling and cross-session acceptance: `docs/customer-memory.md`. Existing development/fictional-data identity/privacy gates remain. Unrelated header/title/style edits are preserved.
 
-
 ## Direct inbound WhatsApp voice — UNVERIFIED
 
 Feature branch `feat/whatsapp-inbound-calling` implements direct ElevenLabs WhatsApp initialization, call-scoped authenticated tools and signed post-call finalization without Twilio credentials/IDs. The new forward migration `20261028_0013` adds agency-owned WhatsApp bindings and a WHATSAPP conversation channel. Initialization uses the documented empty call_sid, configured agent/Meta-number allowlist and opaque caller digest; consent creates the actual session. FAQs, confirmed intake/lead persistence, booking holds/readbacks, Google Calendar, notifications, audit and Operations reuse existing services. Callback-only contacts require a separate spoken readback; native transfer is not used. No messaging, outbound calls, voice notes or campaigns are implemented.
 
 Existing development/fictional-data, privacy, 180-second and quota gates remain. One configured agency/agent/number per deployment; broader onboarding and real-customer production identity remain deferred. Focused adapter/API/database specifications are added but unexecuted. No tests, builds, lint/checks, type checks, migrations, provider calls, installs or deployment ran; source formatting only. Setup, environment names, exact owner commands and manual acceptance: `docs/whatsapp-inbound-calling.md`. Migration, provider setup and runtime remain **UNVERIFIED**.
-
 
 ## Customer palette — owner verification pending
 

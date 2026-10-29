@@ -52,6 +52,14 @@ Enable the browser feature flags and reuse the private ElevenLabs browser agent 
 
 Phone numbers and human transfers are optional for this path. Keep telephone provider routing disabled without numbers. Public production customer access remains blocked by unfinished identity and tenant provisioning; never share the development admin token with customers. This new flow is implemented but unverified.
 
+## Optional local browser conversations
+
+A separate development workspace can select local Chat/Voice using whisper.cpp,
+Ollama and Piper. ElevenLabs stays the default for the customer account flow.
+See [local browser setup](local-browser-voice.md) for the optional dependency,
+configuration, compatibility limits and exact owner checks. Implementation and
+runtime remain unverified.
+
 ## Telephone setup and live validation
 
 Follow [the HVAC live-validation runbook](hvacline-live-validation.md), [Twilio provider setup](telephony-provider-setup.md), and [ElevenLabs phone setup](elevenlabs-phone-agent-setup.md). Provider feature flags stay disabled until credentials, privacy settings, tool configuration, and routing are verified. Do not purchase numbers or activate billing as part of setup without owner approval.

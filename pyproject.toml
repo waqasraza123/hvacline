@@ -22,6 +22,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+local-voice = [
+    "piper-tts==1.8.0",
+]
 dev = [
     "mypy==2.3.0",
     "pytest==9.1.1",

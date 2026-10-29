@@ -8,10 +8,14 @@ export function sessionConnection({
   inputMode,
   transport,
   credential,
+  provider,
 }: Pick<
   ConversationSessionAuthorization,
-  "inputMode" | "transport" | "credential"
+  "inputMode" | "transport" | "credential" | "provider"
 >): SessionConnection {
+  if (provider === "local") {
+    throw new Error("Local conversations require the local adapter.");
+  }
   if (inputMode === "TEXT" && transport === "websocket") {
     return {
       signedUrl: credential,
