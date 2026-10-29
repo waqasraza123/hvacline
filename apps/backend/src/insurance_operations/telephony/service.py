@@ -1,10 +1,11 @@
-from datetime import UTC, datetime, time
+from datetime import UTC, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.sql.elements import ColumnElement
 
 from insurance_operations.actors import ActorContext
 from insurance_operations.database.models.conversation import ConversationIntake
@@ -29,6 +30,7 @@ from insurance_operations.database.models.telephony import (
     InboundNumberStatus,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.telephony.contracts import PhoneCallInitialization
 from insurance_operations.telephony.schemas import (
     AvailabilityWindow,
     CallAction,
@@ -258,6 +260,7 @@ class TelephonyService:
         actor: ActorContext | None,
         request: InboundCallReceiveInput,
         correlation_id: UUID,
+        initialization: PhoneCallInitialization | None = None,
     ) -> InboundCallActionResponse:
         with self._session_factory() as session, session.begin():
             existing = session.scalar(
@@ -267,7 +270,7 @@ class TelephonyService:
                 )
             )
 
-            if existing is not None:
+            if existing is not None and initialization is None:
                 expected_agency_id = (
                     actor.agency_id if actor is not None else existing.agency_id
                 )
@@ -288,7 +291,10 @@ class TelephonyService:
             if actor is not None:
                 number_filters.append(AgencyInboundNumber.agency_id == actor.agency_id)
 
-            number = session.scalar(select(AgencyInboundNumber).where(*number_filters))
+            number_statement = select(AgencyInboundNumber).where(*number_filters)
+            if initialization is not None:
+                number_statement = number_statement.with_for_update()
+            number = session.scalar(number_statement)
 
             if number is None:
                 raise ApiError(
@@ -312,10 +318,19 @@ class TelephonyService:
                     message="Inbound calls are disabled for this agency",
                 )
 
+            identity_filter: ColumnElement[bool] = (
+                InboundCall.source_call_reference == request.source_call_reference
+            )
+            if initialization is not None:
+                identity_filter = or_(
+                    identity_filter,
+                    InboundCall.adapter_metadata["external_session_reference"].astext
+                    == initialization.conversation_id,
+                )
             existing = session.scalar(
                 select(InboundCall).where(
                     InboundCall.adapter_name == request.adapter_name,
-                    InboundCall.source_call_reference == request.source_call_reference,
+                    identity_filter,
                 )
             )
 
@@ -325,8 +340,10 @@ class TelephonyService:
                     agency_id,
                     request,
                     existing,
-                    compare_occurred_at=actor is not None,
+                    compare_occurred_at=actor is not None and initialization is None,
                 )
+                if initialization is not None:
+                    validate_initialization_replay(existing, request, initialization)
                 return replay_receive_response(existing)
 
             enforce_call_limits(
@@ -345,6 +362,7 @@ class TelephonyService:
                 source_call_reference=request.source_call_reference,
                 adapter_metadata={
                     "adapter_version": request.adapter_version,
+                    **(initialization.metadata() if initialization is not None else {}),
                 },
                 policy_snapshot=policy_snapshot(policy),
                 received_at=request.occurred_at,
@@ -371,8 +389,10 @@ class TelephonyService:
                     agency_id,
                     request,
                     existing,
-                    compare_occurred_at=actor is not None,
+                    compare_occurred_at=actor is not None and initialization is None,
                 )
+                if initialization is not None:
+                    validate_initialization_replay(existing, request, initialization)
                 return replay_receive_response(existing)
 
             session.refresh(inbound_call)
@@ -390,7 +410,7 @@ class TelephonyService:
                 )
             )
 
-            if actor is None:
+            if actor is None or initialization is not None:
                 audit_event = telephony_system_audit(
                     agency_id=agency_id,
                     event_type="INBOUND_CALL_RECEIVED",
@@ -419,6 +439,21 @@ class TelephonyService:
                 inbound_call,
                 action=CallAction.ANSWER_AI,
             )
+
+    def initialize_phone_call(
+        self,
+        *,
+        actor: ActorContext,
+        request: InboundCallReceiveInput,
+        initialization: PhoneCallInitialization,
+        correlation_id: UUID,
+    ) -> InboundCallActionResponse:
+        return self._receive_call(
+            actor=actor,
+            request=request,
+            initialization=initialization,
+            correlation_id=correlation_id,
+        )
 
     def list_calls(
         self,
@@ -1155,6 +1190,7 @@ def validate_receive_replay(
         inbound_call.agency_id != expected_agency_id
         or inbound_call.caller_number_e164 != request.caller_number_e164
         or number is None
+        or number.status != InboundNumberStatus.ACTIVE.value
         or number.phone_number_e164 != request.called_number_e164
         or adapter_version != request.adapter_version
     )
@@ -1167,6 +1203,37 @@ def validate_receive_replay(
             status_code=409,
             code="INBOUND_CALL_REFERENCE_REUSED",
             message="The source call reference was reused",
+        )
+
+
+def validate_initialization_replay(
+    call: InboundCall,
+    request: InboundCallReceiveInput,
+    initialization: PhoneCallInitialization,
+) -> None:
+    expected = initialization.metadata()
+    if call.source_call_reference != request.source_call_reference or any(
+        call.adapter_metadata.get(key) != expected[key]
+        for key in ("external_session_reference", "agent_id", "provider_call_id")
+    ):
+        raise ApiError(
+            status_code=409,
+            code="PHONE_INITIATION_CONFLICT",
+            message="The call identity is already bound to a different conversation",
+        )
+    duration = call.adapter_metadata.get("maximum_duration_seconds")
+    if (
+        not isinstance(duration, int)
+        or call.status not in {
+            InboundCallStatus.RECEIVED.value,
+            InboundCallStatus.CONNECTED.value,
+        }
+        or call.received_at + timedelta(seconds=duration) <= datetime.now(UTC)
+    ):
+        raise ApiError(
+            status_code=409,
+            code="PHONE_INITIATION_EXPIRED",
+            message="The call is no longer eligible for initiation",
         )
 
 

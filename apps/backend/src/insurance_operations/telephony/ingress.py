@@ -35,6 +35,7 @@ from insurance_operations.telephony.providers.elevenlabs import (
 from insurance_operations.telephony.providers.twilio import (
     TwilioTelephonyAdapter,
 )
+from insurance_operations.telephony.providers.telnyx_sip import TelnyxSipAdapter
 from insurance_operations.telephony.schemas import (
     CallAction,
     InboundCallActionResponse,
@@ -43,7 +44,14 @@ from insurance_operations.telephony.schemas import (
     InboundCallReceiveInput,
 )
 from insurance_operations.telephony.service import TelephonyService
-from insurance_operations.telephony.settings import TelephonyProviderSettings
+from insurance_operations.telephony.settings import (
+    TelephoneProvider,
+    TelephonyProviderSettings,
+)
+from insurance_operations.telephony.sip import (
+    SipPhoneInitializationService,
+    create_sip_initiation_router,
+)
 
 
 class TelephonyIngressService:
@@ -326,6 +334,13 @@ def create_twilio_ingress_router(
             )
         return Response(content=str(VoiceResponse()), media_type="application/xml")
 
+    router.include_router(create_phone_tools_router(ingress_service))
+    return router
+
+
+def create_phone_tools_router(ingress_service: TelephonyIngressService) -> APIRouter:
+    router = APIRouter()
+
     @router.post(
         "/api/v1/providers/elevenlabs/tools/phone-consent",
         response_model=PhoneConsentResponse,
@@ -407,29 +422,13 @@ def create_twilio_ingress_router(
     return router
 
 
-def configure_twilio_ingress(
+def configure_telephony_ingress(
     application: FastAPI,
     settings: TelephonyProviderSettings,
     database_engine: Engine,
 ) -> TelephonyIngressService | None:
-    if not settings.telephony_provider_enabled:
+    if not settings.provider_enabled:
         return None
-
-    account_sid = required_setting(
-        settings.twilio_account_sid,
-        "TWILIO_ACCOUNT_SID",
-    )
-    webhook_url = required_setting(
-        settings.twilio_inbound_webhook_url,
-        "TWILIO_INBOUND_WEBHOOK_URL",
-    )
-    transfer_callback_url = required_setting(
-        settings.twilio_transfer_callback_url,
-        "TWILIO_TRANSFER_CALLBACK_URL",
-    )
-
-    if settings.twilio_auth_token is None:
-        raise RuntimeError("TWILIO_AUTH_TOKEN is unavailable")
 
     session_factory = sessionmaker(
         bind=database_engine,
@@ -442,16 +441,37 @@ def configure_twilio_ingress(
         },
     )
 
-    adapter = TwilioTelephonyAdapter(
-        account_sid=account_sid,
-        auth_token=settings.twilio_auth_token.get_secret_value(),
-        inbound_webhook_url=webhook_url,
-        transfer_callback_url=transfer_callback_url,
-    )
+    adapter: TelephonyAdapter
+    if settings.telephone_provider is TelephoneProvider.TELNYX_SIP:
+        adapter = TelnyxSipAdapter(
+            agent_id=required_setting(
+                settings.elevenlabs_phone_agent_id, "ELEVENLABS_PHONE_AGENT_ID"
+            ),
+            initiation_secret=required_secret(
+                settings.elevenlabs_phone_initiation_secret,
+                "ELEVENLABS_PHONE_INITIATION_SECRET",
+            ),
+            maximum_duration_seconds=settings.phone_max_duration_seconds,
+        )
+    else:
+        adapter = TwilioTelephonyAdapter(
+            account_sid=required_setting(settings.twilio_account_sid, "TWILIO_ACCOUNT_SID"),
+            auth_token=required_secret(settings.twilio_auth_token, "TWILIO_AUTH_TOKEN"),
+            inbound_webhook_url=required_setting(
+                settings.twilio_inbound_webhook_url, "TWILIO_INBOUND_WEBHOOK_URL"
+            ),
+            transfer_callback_url=required_setting(
+                settings.twilio_transfer_callback_url, "TWILIO_TRANSFER_CALLBACK_URL"
+            ),
+        )
 
     telephony_service = TelephonyService(session_factory=session_factory)
     phone_provider = ElevenLabsPhoneProvider(
-        api_key=required_secret(settings.elevenlabs_api_key, "ELEVENLABS_API_KEY"),
+        api_key=(
+            required_secret(settings.elevenlabs_api_key, "ELEVENLABS_API_KEY")
+            if settings.telephone_provider is TelephoneProvider.TWILIO
+            else None
+        ),
         agent_id=required_setting(
             settings.elevenlabs_phone_agent_id,
             "ELEVENLABS_PHONE_AGENT_ID",
@@ -485,13 +505,29 @@ def configure_twilio_ingress(
         session_factory=session_factory,
     )
 
-    application.include_router(create_twilio_ingress_router(ingress_service))
+    if isinstance(adapter, TelnyxSipAdapter):
+        application.include_router(create_phone_tools_router(ingress_service))
+        application.include_router(
+            create_sip_initiation_router(
+                SipPhoneInitializationService(
+                    adapter=adapter,
+                    telephony_service=telephony_service,
+                    session_factory=session_factory,
+                    development_actor_user_id=settings.development_actor_user_id,
+                )
+            )
+        )
+    else:
+        application.include_router(create_twilio_ingress_router(ingress_service))
     application.include_router(
         create_hvac_phone_router(session_factory, ingress_service.verify_phone_tool)
     )
     application.state.telephony_ingress_service = ingress_service
 
     return ingress_service
+
+
+configure_twilio_ingress = configure_telephony_ingress
 
 
 def required_setting(value: str | None, name: str) -> str:

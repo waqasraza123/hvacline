@@ -28,7 +28,9 @@ class TelephonyProviderSettings(CommonSettings):
     elevenlabs_api_key: SecretStr | None = None
     elevenlabs_phone_agent_id: str | None = None
     elevenlabs_phone_tool_secret: SecretStr | None = None
-    elevenlabs_phone_initiation_secret: SecretStr | None = None
+    elevenlabs_phone_initiation_secret: SecretStr | None = Field(
+        default=None, min_length=32, max_length=512
+    )
     elevenlabs_post_call_webhook_secret: SecretStr | None = None
     elevenlabs_privacy_confirmed: bool = False
     phone_max_duration_seconds: int = Field(default=180, ge=1, le=180)

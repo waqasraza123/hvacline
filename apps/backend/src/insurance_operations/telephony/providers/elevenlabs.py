@@ -28,7 +28,7 @@ class ElevenLabsPhoneProvider:
     def __init__(
         self,
         *,
-        api_key: str,
+        api_key: str | None,
         agent_id: str,
         post_call_webhook_secret: str,
         client: httpx.Client | None = None,
@@ -41,6 +41,8 @@ class ElevenLabsPhoneProvider:
         self._clock = clock or time.time
 
     def register_inbound_call(self, registration: PhoneCallRegistration) -> str:
+        if self._api_key is None:
+            raise TelephonyAdapterError("Twilio phone registration is unavailable")
         owns_client = self._client is None
         client = self._client or httpx.Client(
             base_url=ELEVENLABS_API_BASE_URL,

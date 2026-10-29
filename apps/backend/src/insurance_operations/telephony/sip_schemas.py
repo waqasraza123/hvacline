@@ -26,6 +26,13 @@ class SipConversationInitiation(BaseModel):
     def validate_called_number(cls, value: str) -> str:
         return validate_e164(value)
 
+    @field_validator("caller_id", "agent_id", "conversation_id", "call_sid")
+    @classmethod
+    def validate_identifier(cls, value: str) -> str:
+        if any(ord(character) < 32 or ord(character) == 127 for character in value):
+            raise ValueError("phone identifier contains control characters")
+        return value
+
     @field_validator("call_id")
     @classmethod
     def normalize_call_id(cls, value: str | None) -> str | None:
