@@ -19,6 +19,22 @@ class VerifiedInboundCall:
 
 
 @dataclass(frozen=True)
+class PhoneCallInitialization:
+    conversation_id: str
+    agent_id: str
+    provider_call_id: str | None
+    maximum_duration_seconds: int
+
+    def metadata(self) -> dict[str, object]:
+        return {
+            "external_session_reference": self.conversation_id,
+            "agent_id": self.agent_id,
+            "provider_call_id": self.provider_call_id,
+            "maximum_duration_seconds": self.maximum_duration_seconds,
+        }
+
+
+@dataclass(frozen=True)
 class TransferInstruction:
     destination_e164: str
     ring_timeout_seconds: int

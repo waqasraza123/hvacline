@@ -1,4 +1,5 @@
 import re
+from enum import StrEnum
 from typing import Self
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -10,8 +11,15 @@ from insurance_operations.settings import CommonSettings, RuntimeEnvironment
 TWILIO_ACCOUNT_SID_PATTERN = re.compile(r"^AC[0-9a-fA-F]{32}$")
 
 
+class TelephoneProvider(StrEnum):
+    DISABLED = "disabled"
+    TWILIO = "twilio"
+    TELNYX_SIP = "telnyx_sip"
+
+
 class TelephonyProviderSettings(CommonSettings):
     telephony_provider_enabled: bool = False
+    telephone_provider: TelephoneProvider = TelephoneProvider.TWILIO
     development_actor_user_id: UUID | None = None
     twilio_account_sid: str | None = None
     twilio_auth_token: SecretStr | None = None
@@ -20,6 +28,7 @@ class TelephonyProviderSettings(CommonSettings):
     elevenlabs_api_key: SecretStr | None = None
     elevenlabs_phone_agent_id: str | None = None
     elevenlabs_phone_tool_secret: SecretStr | None = None
+    elevenlabs_phone_initiation_secret: SecretStr | None = None
     elevenlabs_post_call_webhook_secret: SecretStr | None = None
     elevenlabs_privacy_confirmed: bool = False
     phone_max_duration_seconds: int = Field(default=180, ge=1, le=180)
@@ -33,6 +42,7 @@ class TelephonyProviderSettings(CommonSettings):
         "elevenlabs_api_key",
         "elevenlabs_phone_agent_id",
         "elevenlabs_phone_tool_secret",
+        "elevenlabs_phone_initiation_secret",
         "elevenlabs_post_call_webhook_secret",
         mode="before",
     )
@@ -74,7 +84,7 @@ class TelephonyProviderSettings(CommonSettings):
 
     @model_validator(mode="after")
     def validate_enabled_provider(self) -> Self:
-        if not self.telephony_provider_enabled:
+        if not self.provider_enabled:
             return self
 
         if self.app_environment is not RuntimeEnvironment.DEVELOPMENT:
@@ -84,23 +94,16 @@ class TelephonyProviderSettings(CommonSettings):
 
         missing: list[str] = []
 
-        if self.twilio_account_sid is None:
-            missing.append("TWILIO_ACCOUNT_SID")
-
-        if (
-            self.twilio_auth_token is None
-            or not self.twilio_auth_token.get_secret_value()
+        if self.telephone_provider is TelephoneProvider.TWILIO:
+            self._require_twilio_configuration(missing)
+        elif (
+            self.elevenlabs_phone_initiation_secret is None
+            or not self.elevenlabs_phone_initiation_secret.get_secret_value()
         ):
-            missing.append("TWILIO_AUTH_TOKEN")
-
-        if self.twilio_inbound_webhook_url is None:
-            missing.append("TWILIO_INBOUND_WEBHOOK_URL")
-
-        if self.twilio_transfer_callback_url is None:
-            missing.append("TWILIO_TRANSFER_CALLBACK_URL")
+            missing.append("ELEVENLABS_PHONE_INITIATION_SECRET")
         if self.development_actor_user_id is None:
             missing.append("DEVELOPMENT_ACTOR_USER_ID")
-        if (
+        if self.telephone_provider is TelephoneProvider.TWILIO and (
             self.elevenlabs_api_key is None
             or not self.elevenlabs_api_key.get_secret_value()
         ):
@@ -119,10 +122,41 @@ class TelephonyProviderSettings(CommonSettings):
             missing.append("ELEVENLABS_POST_CALL_WEBHOOK_SECRET")
         if not self.elevenlabs_privacy_confirmed:
             missing.append("ELEVENLABS_PRIVACY_CONFIRMED")
-
+        if (
+            self.telephone_provider is TelephoneProvider.TELNYX_SIP
+            and self.elevenlabs_phone_initiation_secret is not None
+            and self.elevenlabs_phone_initiation_secret
+            in (
+                self.elevenlabs_phone_tool_secret,
+                self.elevenlabs_post_call_webhook_secret,
+            )
+        ):
+            raise ValueError("phone initiation must use a separate webhook secret")
         if missing:
             raise ValueError(
                 "telephony provider configuration is incomplete: " + ", ".join(missing)
             )
-
         return self
+
+    @property
+    def provider_enabled(self) -> bool:
+        return (
+            self.telephony_provider_enabled
+            and self.telephone_provider is not TelephoneProvider.DISABLED
+        )
+
+    def _require_twilio_configuration(self, missing: list[str]) -> None:
+        if self.twilio_account_sid is None:
+            missing.append("TWILIO_ACCOUNT_SID")
+
+        if (
+            self.twilio_auth_token is None
+            or not self.twilio_auth_token.get_secret_value()
+        ):
+            missing.append("TWILIO_AUTH_TOKEN")
+
+        if self.twilio_inbound_webhook_url is None:
+            missing.append("TWILIO_INBOUND_WEBHOOK_URL")
+
+        if self.twilio_transfer_callback_url is None:
+            missing.append("TWILIO_TRANSFER_CALLBACK_URL")
