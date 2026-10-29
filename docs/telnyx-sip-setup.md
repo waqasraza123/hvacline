@@ -106,6 +106,44 @@ Provider contracts:
 
 ## API environment and deployment — UNVERIFIED
 
+### Main publication and hosted release handoff — 2026-10-29
+
+The owner has authorized completing and publishing the pending Telnyx/phone-CTA
+work to `main`. The five feature commits extend main's `d85ff6d` without a
+conflicting branch history. Publication does not establish runtime acceptance;
+the execution commands below remain unrun and activation stays gated.
+
+The last reported Render source was `54e6603`; this is owner-reported evidence,
+not a fresh hosting inspection. A release from that revision includes earlier
+main changes as well as Telnyx:
+
+| Area | Included change | Release requirement |
+| --- | --- | --- |
+| Schema | `20261029_0016` removes the fictional-data acknowledgement requirement; `20261029_0017` adds guest-chat quota tables | Apply forward migrations to the intended database before starting the API. The configured development database was previously confirmed at `0016`; hosted revision is unverified. |
+| Backend dependencies | `websockets==17.3` for homepage guest chat | Install from the current Python manifest during the authorized release. |
+| Frontend dependencies | `qrcode.react@4.2.0` for MFA enrollment | Use the current npm lockfile and Node 24 when rebuilding the frontend. |
+| Agent contracts | Updated disclosure/confirmation wording and shared browser guest mode | Follow [customer wording](customer-data-requirements.md) and [homepage chat](homepage-chat.md) before enabling their respective paths. |
+| Telnyx | SIP initialization, shared tools/finalization and callback fallback | Complete this guide's account/configuration and live acceptance steps. Telnyx itself adds no schema migration or dependency. |
+| Public phone CTA | Server-rendered number and verification flag | Keep `TELNYX_INBOUND_CALLING_VERIFIED=false` until real-call acceptance, then explicitly authorize frontend activation/rebuild. |
+
+Before any separately authorized deployment, review the actual Render service's
+branch, auto-deploy setting and build/pre-deploy commands. The checked-in
+Blueprint defaults to Twilio and its pre-deploy command runs both migrations and
+the development seed. It is not evidence of the existing service configuration;
+publishing source does not authorize reseeding. Existing business settings and
+content must be preserved. The owner's previously reported Free service uses a
+different migration/build arrangement; retain the established environment
+handoff rather than applying the Blueprint blindly.
+
+For rollout, keep homepage chat disabled and telephone ingress disabled until
+schema/dependencies and private agent/webhook configuration are ready. Deploy the
+API before the frontend, complete the owner-run automated checks and live call
+checklist, then enable each feature deliberately. Provider switching must drain
+the old carrier path as described below. Withdrawing the public phone button
+also requires a frontend rebuild; switching a flag alone cannot validate or
+disconnect an existing carrier call. No deployment/provider action is performed
+by this publication.
+
 Set on the API service only, after review; no `NEXT_PUBLIC_` setting is needed:
 
 ```dotenv
@@ -143,7 +181,8 @@ existing dependencies/schema. Review any unrelated pending migrations in the
 release before deployment. Deploy only after owner authorization; update the
 API first, configure provider dashboards, then enable the execution gate. The
 frontend already reads these call/appointment tables and needs no Telnyx changes.
-No hosting deployment, merge to main or provider configuration was performed.
+Hosting deployment and provider configuration remain separate from the
+owner-authorized main publication.
 
 ## Homepage call CTA — disabled pending live acceptance
 

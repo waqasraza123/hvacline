@@ -1,5 +1,20 @@
 # Project State
 
+## Main publication authorized; release handoff completed — 2026-10-29
+
+The owner requested finishing and publishing pending work to `main`, superseding
+the earlier feature-branch-only publication scope. The active Telnyx SIP and
+gated homepage phone CTA commits extend published main `d85ff6d`. Static source
+review and the release handoff are complete; implementation/runtime remain
+**UNVERIFIED**. No execution checks, migrations, services, provider configuration
+or deployment commands ran. The older dirty original checkout is preserved.
+
+`docs/telnyx-sip-setup.md` now records the release delta from owner-reported Render
+source `54e6603`, schema/dependency prerequisites, Blueprint seed/default-provider
+differences, exact owner commands and live acceptance. Publication does not
+activate Telnyx or the public phone CTA. Hosted revision/configuration, migration
+`0017`, agent updates and real-call acceptance remain pending.
+
 ## Homepage phone CTA — disabled, owner verification pending — 2026-10-29
 
 The existing hero now includes an optional phone-icon booking call panel. A
