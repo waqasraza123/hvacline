@@ -2,7 +2,7 @@ from datetime import UTC, datetime, time, timedelta
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.sql.elements import ColumnElement
@@ -263,6 +263,16 @@ class TelephonyService:
         initialization: PhoneCallInitialization | None = None,
     ) -> InboundCallActionResponse:
         with self._session_factory() as session, session.begin():
+            if initialization is not None:
+                session.execute(
+                    text("SELECT pg_advisory_xact_lock(hashtextextended(:name, 0))"),
+                    {
+                        "name": (
+                            f"phone-init:{request.adapter_name}:"
+                            f"{initialization.conversation_id}"
+                        )
+                    },
+                )
             existing = session.scalar(
                 select(InboundCall).where(
                     InboundCall.adapter_name == request.adapter_name,
@@ -324,7 +334,9 @@ class TelephonyService:
             if initialization is not None:
                 identity_filter = or_(
                     identity_filter,
-                    InboundCall.adapter_metadata["external_session_reference"].astext
+                    InboundCall.adapter_metadata[
+                        "external_session_reference"
+                    ].as_string()
                     == initialization.conversation_id,
                 )
             existing = session.scalar(
@@ -811,7 +823,8 @@ def transition_call(
         )
         if (
             snapshot_bool(inbound_call.policy_snapshot, "transfer_enabled")
-            and inbound_call.policy_snapshot.get("live_transfer_supported", True) is True
+            and inbound_call.policy_snapshot.get("live_transfer_supported", True)
+            is True
             and available
         ):
             inbound_call.status = InboundCallStatus.TRANSFER_PENDING.value
@@ -1194,7 +1207,6 @@ def validate_receive_replay(
         inbound_call.agency_id != expected_agency_id
         or inbound_call.caller_number_e164 != request.caller_number_e164
         or number is None
-        or number.status != InboundNumberStatus.ACTIVE.value
         or number.phone_number_e164 != request.called_number_e164
         or adapter_version != request.adapter_version
     )
@@ -1228,7 +1240,8 @@ def validate_initialization_replay(
     duration = call.adapter_metadata.get("maximum_duration_seconds")
     if (
         not isinstance(duration, int)
-        or call.status not in {
+        or call.status
+        not in {
             InboundCallStatus.RECEIVED.value,
             InboundCallStatus.CONNECTED.value,
         }

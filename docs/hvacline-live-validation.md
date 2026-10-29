@@ -2,6 +2,14 @@
 
 Status: synthetic development only. A real carrier call is not yet verified. This runbook does not authorize purchasing a telephone number, enabling paid billing, or using real customer data.
 
+For the new alternative carrier, follow [Telnyx SIP setup](telnyx-sip-setup.md).
+Telnyx requires neither Twilio credentials nor register-call. Its initiation
+webhook and existing signed ElevenLabs finalizer share the same booking path.
+Telnyx implementation, provider configuration and real-call acceptance remain
+**UNVERIFIED**. The current owner decision in `customer-data-requirements.md`
+supersedes the historical fictional-data requirement here; existing development
+identity, consent and confirmation gates remain.
+
 ## Prepare the backend and workspace
 
 1. Apply migrations through `20261024_0009` on an owner-selected development Neon branch. Do not downgrade a shared database.
@@ -13,6 +21,9 @@ Status: synthetic development only. A real carrier call is not yet verified. Thi
 ## Configure an already authorized test number
 
 Supply the existing server-only settings: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_INBOUND_WEBHOOK_URL`, `TWILIO_TRANSFER_CALLBACK_URL`, `ELEVENLABS_API_KEY`, `ELEVENLABS_PHONE_AGENT_ID`, `ELEVENLABS_PHONE_TOOL_SECRET`, and `ELEVENLABS_POST_CALL_WEBHOOK_SECRET`. Set the demo inbound and transfer destination numbers only to owner-authorized test numbers.
+
+These carrier settings apply to `TELEPHONY_PROVIDER=twilio`. The Telnyx setup
+guide lists the separate configuration for `TELEPHONY_PROVIDER=telnyx_sip`.
 
 Twilio inbound webhook: `POST /api/v1/providers/twilio/inbound`.
 Twilio transfer result: `POST /api/v1/providers/twilio/transfer-result`.

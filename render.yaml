@@ -53,6 +53,8 @@ services:
         value: 15
       - key: TELEPHONY_PROVIDER_ENABLED
         sync: false
+      - key: TELEPHONY_PROVIDER
+        value: twilio
       - key: TWILIO_ACCOUNT_SID
         sync: false
       - key: TWILIO_AUTH_TOKEN
@@ -68,6 +70,8 @@ services:
       - key: ELEVENLABS_PHONE_AGENT_ID
         sync: false
       - key: ELEVENLABS_PHONE_TOOL_SECRET
+        sync: false
+      - key: ELEVENLABS_PHONE_INITIATION_SECRET
         sync: false
       - key: ELEVENLABS_POST_CALL_WEBHOOK_SECRET
         sync: false

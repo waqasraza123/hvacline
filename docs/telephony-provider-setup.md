@@ -4,7 +4,11 @@
 
 ## Provider
 
-Twilio is the first concrete telephone carrier.
+Select `TELEPHONY_PROVIDER=twilio` or `telnyx_sip` behind the existing
+`TELEPHONY_PROVIDER_ENABLED` execution gate. `disabled` prevents all telephone
+ingress even if the gate is true. Omitting selection preserves legacy Twilio
+behavior. For Telnyx's direct ElevenLabs SIP path, follow
+[Telnyx SIP setup](telnyx-sip-setup.md); no Twilio credentials or client are used.
 
 Twilio-specific authentication, webhook fields, call identifiers, and transfer commands stay inside the Twilio adapter. Application business services remain provider-neutral.
 
@@ -38,6 +42,7 @@ Provider execution remains disabled by default:
 
 ```dotenv
 TELEPHONY_PROVIDER_ENABLED=false
+TELEPHONY_PROVIDER=twilio
 TWILIO_ACCOUNT_SID=
 TWILIO_AUTH_TOKEN=
 TWILIO_INBOUND_WEBHOOK_URL=

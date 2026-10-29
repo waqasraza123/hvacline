@@ -44,7 +44,11 @@ class TelnyxSipAdapter:
         self, *, headers: Mapping[str, str], body: bytes
     ) -> tuple[VerifiedInboundCall, PhoneCallInitialization]:
         authorization = next(
-            (value for key, value in headers.items() if key.casefold() == "authorization"),
+            (
+                value
+                for key, value in headers.items()
+                if key.casefold() == "authorization"
+            ),
             None,
         )
         self.verify_authorization(authorization)
@@ -100,12 +104,16 @@ class TelnyxSipAdapter:
     def request_transfer(
         self, *, source_call_reference: str, instruction: TransferInstruction
     ) -> None:
-        raise TelephonyAdapterError("SIP live transfer result verification is unavailable")
+        raise TelephonyAdapterError(
+            "SIP live transfer result verification is unavailable"
+        )
 
     def verify_transfer_callback(
         self, *, headers: Mapping[str, str], body: bytes
     ) -> VerifiedTransferResult:
-        raise TelephonyAdapterError("SIP live transfer result verification is unavailable")
+        raise TelephonyAdapterError(
+            "SIP live transfer result verification is unavailable"
+        )
 
     def close(self) -> None:
         return None

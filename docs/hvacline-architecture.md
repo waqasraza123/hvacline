@@ -6,6 +6,17 @@ The web app, FastAPI API, and separate worker retain the established repository 
 
 Twilio signatures authenticate inbound calls and transfer callbacks. The called number determines the business. ElevenLabs tools use the existing server-only bearer secret, and the backend verifies the active call/session relationship and expiry. ElevenLabs post-call events retain existing HMAC timestamp verification and event replay checks.
 
+The alternative `telnyx_sip` provider routes Telnyx directly to ElevenLabs over
+SIP. Its separate authenticated initiation webhook persists the application call
+and provider conversation binding together, resolves an active backend-owned
+number within the configured development actor's business, and enforces the same
+locked policy quotas. It returns only `phone_inbound_call_id` and
+`phone_max_duration_seconds`. Existing tables, consent receipts, HVAC services
+and signed finalization remain shared. No Telnyx REST API, Twilio client,
+register-call, new schema or media gateway is used. SIP live transfer is disabled
+and audited handoff uses callback fallback. Source/runtime and carrier acceptance
+are **UNVERIFIED**; see [Telnyx setup](telnyx-sip-setup.md).
+
 Phone intake requires consent and verbal readback. A new `service-request` tool requires the existing confirmation receipt and matching caller name and callback number, plus explicit confirmation of structured HVAC details. It persists a service request without retaining transcript text. Transcript/customer/lead finalization remains in the existing signed post-call transaction. The HVAC customer address feeds that finalization; transcripts remain excluded from the operations projection.
 
 ## Booking

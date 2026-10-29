@@ -19,14 +19,16 @@ class TelephoneProvider(StrEnum):
 
 class TelephonyProviderSettings(CommonSettings):
     telephony_provider_enabled: bool = False
-    telephone_provider: TelephoneProvider = TelephoneProvider.TWILIO
+    telephony_provider: TelephoneProvider = TelephoneProvider.TWILIO
     development_actor_user_id: UUID | None = None
     twilio_account_sid: str | None = None
     twilio_auth_token: SecretStr | None = None
     twilio_inbound_webhook_url: str | None = None
     twilio_transfer_callback_url: str | None = None
     elevenlabs_api_key: SecretStr | None = None
-    elevenlabs_phone_agent_id: str | None = None
+    elevenlabs_phone_agent_id: str | None = Field(
+        default=None, min_length=1, max_length=200
+    )
     elevenlabs_phone_tool_secret: SecretStr | None = None
     elevenlabs_phone_initiation_secret: SecretStr | None = Field(
         default=None, min_length=32, max_length=512
@@ -96,7 +98,7 @@ class TelephonyProviderSettings(CommonSettings):
 
         missing: list[str] = []
 
-        if self.telephone_provider is TelephoneProvider.TWILIO:
+        if self.telephony_provider is TelephoneProvider.TWILIO:
             self._require_twilio_configuration(missing)
         elif (
             self.elevenlabs_phone_initiation_secret is None
@@ -105,7 +107,7 @@ class TelephonyProviderSettings(CommonSettings):
             missing.append("ELEVENLABS_PHONE_INITIATION_SECRET")
         if self.development_actor_user_id is None:
             missing.append("DEVELOPMENT_ACTOR_USER_ID")
-        if self.telephone_provider is TelephoneProvider.TWILIO and (
+        if self.telephony_provider is TelephoneProvider.TWILIO and (
             self.elevenlabs_api_key is None
             or not self.elevenlabs_api_key.get_secret_value()
         ):
@@ -125,7 +127,7 @@ class TelephonyProviderSettings(CommonSettings):
         if not self.elevenlabs_privacy_confirmed:
             missing.append("ELEVENLABS_PRIVACY_CONFIRMED")
         if (
-            self.telephone_provider is TelephoneProvider.TELNYX_SIP
+            self.telephony_provider is TelephoneProvider.TELNYX_SIP
             and self.elevenlabs_phone_initiation_secret is not None
             and self.elevenlabs_phone_initiation_secret
             in (
@@ -144,7 +146,7 @@ class TelephonyProviderSettings(CommonSettings):
     def provider_enabled(self) -> bool:
         return (
             self.telephony_provider_enabled
-            and self.telephone_provider is not TelephoneProvider.DISABLED
+            and self.telephony_provider is not TelephoneProvider.DISABLED
         )
 
     def _require_twilio_configuration(self, missing: list[str]) -> None:

@@ -1,5 +1,14 @@
 # Environment handoff
 
+Alternative inbound telephone provider: API-only `TELEPHONY_PROVIDER=telnyx_sip`
+and separate `ELEVENLABS_PHONE_INITIATION_SECRET` behind
+`TELEPHONY_PROVIDER_ENABLED`. Preserve phone agent/tool/HMAC/privacy/duration,
+database and actor settings. Telnyx needs no Twilio credentials or carrier API
+key; existing browser ElevenLabs credentials remain independent. No new migration
+or frontend configuration. Source/runtime, dashboard setup and live acceptance
+are **UNVERIFIED**; exact setup, commands and manual checks:
+[Telnyx SIP setup](telnyx-sip-setup.md). No deployment is authorized by publication.
+
 For the subsequent Render `AssertionError: Path parameters cannot have default values`, the customer portal header dependency's Python argument `key` collided with the memory route's `{key}` path parameter. Renamed the dependency argument to `portal_key`, preserving `X-Customer-Portal-Key`, the endpoint URL and authentication behavior. Owner command from `/private/tmp/hvacline-browser-demo`: `python -m pytest tests/test_api.py`. This uses mocked database access and includes route-registration/OpenAPI coverage; no command ran. Deploy the repaired API revision, confirm application startup and `/ready`, then check signed-in memory fact deletion and rejection without customer authorization. No migration, new variable or frontend deployment is required for this repair. Runtime remains **UNVERIFIED**.
 
 For the reported Render startup error, set `CUSTOMER_MFA_ENCRYPTION_KEY` on the **API service → Environment** using the initial Fernet-key command in [customer MFA setup](customer-mfa.md#owner-configuration-and-rollout), or restore the original key if MFA was already configured. Select **Save and deploy**. The supplied log reports migrations through `0015` succeeded; the failure is API configuration. Keep the key stable and backed up; never place it in the Vercel frontend. The Blueprint now declares its secret placeholder. Deployment acceptance remains **UNVERIFIED**.

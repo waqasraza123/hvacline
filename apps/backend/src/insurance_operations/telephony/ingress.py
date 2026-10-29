@@ -444,7 +444,7 @@ def configure_telephony_ingress(
     )
 
     adapter: TelephonyAdapter
-    if settings.telephone_provider is TelephoneProvider.TELNYX_SIP:
+    if settings.telephony_provider is TelephoneProvider.TELNYX_SIP:
         adapter = TelnyxSipAdapter(
             agent_id=required_setting(
                 settings.elevenlabs_phone_agent_id, "ELEVENLABS_PHONE_AGENT_ID"
@@ -457,7 +457,9 @@ def configure_telephony_ingress(
         )
     else:
         adapter = TwilioTelephonyAdapter(
-            account_sid=required_setting(settings.twilio_account_sid, "TWILIO_ACCOUNT_SID"),
+            account_sid=required_setting(
+                settings.twilio_account_sid, "TWILIO_ACCOUNT_SID"
+            ),
             auth_token=required_secret(settings.twilio_auth_token, "TWILIO_AUTH_TOKEN"),
             inbound_webhook_url=required_setting(
                 settings.twilio_inbound_webhook_url, "TWILIO_INBOUND_WEBHOOK_URL"
@@ -471,7 +473,7 @@ def configure_telephony_ingress(
     phone_provider = ElevenLabsPhoneProvider(
         api_key=(
             required_secret(settings.elevenlabs_api_key, "ELEVENLABS_API_KEY")
-            if settings.telephone_provider is TelephoneProvider.TWILIO
+            if settings.telephony_provider is TelephoneProvider.TWILIO
             else None
         ),
         agent_id=required_setting(

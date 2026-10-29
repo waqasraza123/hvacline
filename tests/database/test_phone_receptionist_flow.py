@@ -1,8 +1,12 @@
 import asyncio
+import hashlib
+import hmac
+import json
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
@@ -17,6 +21,7 @@ from insurance_operations.database.models.conversation import (
     ConversationSessionStatus,
 )
 from insurance_operations.database.models.customer import Customer
+from insurance_operations.database.models.hvac import Appointment
 from insurance_operations.database.models.identity import (
     Agency,
     AgencyEnvironment,
@@ -33,21 +38,27 @@ from insurance_operations.database.models.telephony import (
 from insurance_operations.hvac.phone import create_hvac_phone_router
 from insurance_operations.hvac.schemas import ScheduleInput
 from insurance_operations.hvac.service import SchedulingService
-from insurance_operations.settings import ApiSettings
+from insurance_operations.settings import ApiSettings, DatabaseSettings
 from insurance_operations.telephony.contracts import (
     TransferInstruction,
     VerifiedInboundCall,
     VerifiedTransferResult,
 )
 from insurance_operations.telephony.demo import PhoneDemoService, PhoneDemoState
-from insurance_operations.telephony.ingress import TelephonyIngressService
+from insurance_operations.telephony.ingress import (
+    TelephonyIngressService,
+    create_phone_tools_router,
+)
 from insurance_operations.telephony.phone_schemas import (
     PhoneConsentInput,
     PhoneIntakeConfirmationInput,
 )
 from insurance_operations.telephony.phone_service import PhoneReceptionistService
+from insurance_operations.telephony.providers.elevenlabs import ElevenLabsPhoneProvider
+from insurance_operations.telephony.providers.telnyx_sip import TelnyxSipAdapter
 from insurance_operations.telephony.schemas import InboundCallReceiveInput
 from insurance_operations.telephony.service import TelephonyService
+from insurance_operations.telephony.sip import SipPhoneInitializationService
 
 CALLED_NUMBER = "+15559991001"
 CALLER_NUMBER = "+15559991002"
@@ -84,8 +95,11 @@ class NoopTelephonyAdapter:
         return None
 
 
+@pytest.mark.parametrize("adapter_name", ["twilio", "telnyx_sip"])
 def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
     migrated_database: Engine,
+    database_settings: DatabaseSettings,
+    adapter_name: str,
 ) -> None:
     now = datetime.now(UTC)
     agency = Agency(
@@ -127,7 +141,9 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         session.add(
             AgencyInboundNumber(
                 agency_id=agency.id,
-                phone_number_e164=CALLED_NUMBER,
+                phone_number_e164=CALLED_NUMBER
+                if adapter_name == "twilio"
+                else "+15559991005",
                 label="Synthetic phone line",
                 status=InboundNumberStatus.ACTIVE.value,
                 created_by=user.id,
@@ -143,17 +159,48 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         expire_on_commit=False,
     )
     telephony = TelephonyService(session_factory=factory)
-    received = telephony.receive_provider_call(
-        request=InboundCallReceiveInput(
-            adapter_name="twilio",
-            adapter_version="1",
-            source_call_reference="CA" + ("e" * 32),
-            called_number_e164=CALLED_NUMBER,
-            caller_number_e164=CALLER_NUMBER,
-            occurred_at=now,
-        ),
-        correlation_id=uuid4(),
-    )
+    conversation_id = f"conv_{uuid4()}"
+    if adapter_name == "telnyx_sip":
+        initializer = SipPhoneInitializationService(
+            adapter=TelnyxSipAdapter(
+                agent_id="synthetic-phone-agent",
+                initiation_secret="synthetic-init-secret-at-least-32-characters",
+                maximum_duration_seconds=180,
+            ),
+            telephony_service=telephony,
+            session_factory=factory,
+            development_actor_user_id=user_id,
+        )
+        initialized = initializer.initialize(
+            headers={
+                "Authorization": "Bearer synthetic-init-secret-at-least-32-characters"
+            },
+            body=json.dumps(
+                {
+                    "caller_id": CALLER_NUMBER,
+                    "called_number": "+15559991005",
+                    "agent_id": "synthetic-phone-agent",
+                    "call_sid": "",
+                    "call_id": f"{uuid4()}@sip.example.test",
+                    "conversation_id": conversation_id,
+                }
+            ).encode(),
+            correlation_id=uuid4(),
+        )
+        inbound_call_id = UUID(initialized.dynamic_variables.phone_inbound_call_id)
+    else:
+        received = telephony.receive_provider_call(
+            request=InboundCallReceiveInput(
+                adapter_name="twilio",
+                adapter_version="1",
+                source_call_reference="CA" + ("e" * 32),
+                called_number_e164=CALLED_NUMBER,
+                caller_number_e164=CALLER_NUMBER,
+                occurred_at=now,
+            ),
+            correlation_id=uuid4(),
+        )
+        inbound_call_id = received.call.id
     phone = PhoneReceptionistService(
         session_factory=factory,
         telephony_service=telephony,
@@ -162,10 +209,9 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         maximum_duration_seconds=180,
         confirmation_window_minutes=30,
     )
-    conversation_id = f"conv_{uuid4()}"
     consent = phone.accept_consent(
         request=PhoneConsentInput(
-            inbound_call_id=received.call.id,
+            inbound_call_id=inbound_call_id,
             conversation_id=conversation_id,
             ai_disclosure_accepted=True,
             microphone_consent_granted=True,
@@ -173,7 +219,7 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         correlation_id=uuid4(),
     )
     confirmation_request = PhoneIntakeConfirmationInput(
-        inbound_call_id=received.call.id,
+        inbound_call_id=inbound_call_id,
         conversation_id=conversation_id,
         customer=CustomerInput(
             full_name="Synthetic Phone Caller",
@@ -210,12 +256,36 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
         ),
         uuid4(),
     )
-    application = create_app(ApiSettings(), migrated_database)
+    application = create_app(
+        ApiSettings(
+            _env_file=None,
+            app_environment="development",
+            api_host="127.0.0.1",
+            api_port=8000,
+            database_url=database_settings.runtime_database_url,
+            database_ssl_mode=database_settings.database_ssl_mode,
+            development_actor_user_id=user_id,
+            conversation_ai_enabled=False,
+            google_calendar_enabled=False,
+            booking_email_enabled=False,
+            demo_sandbox_enabled=False,
+            customer_portal_enabled=False,
+            homepage_chat_enabled=False,
+        ),
+        migrated_database,
+    )
     ingress = TelephonyIngressService(
         adapter=NoopTelephonyAdapter(),
         telephony_service=telephony,
         phone_tool_secret="synthetic-phone-tool-secret",
+        phone_service=phone,
+        phone_provider=ElevenLabsPhoneProvider(
+            api_key=None,
+            agent_id="synthetic-phone-agent",
+            post_call_webhook_secret="synthetic-post-call-secret",
+        ),
     )
+    application.include_router(create_phone_tools_router(ingress))
     application.include_router(
         create_hvac_phone_router(factory, ingress.verify_phone_tool)
     )
@@ -225,7 +295,7 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             transport=ASGITransport(app=application), base_url="http://test"
         ) as client:
             context = {
-                "inbound_call_id": str(received.call.id),
+                "inbound_call_id": str(inbound_call_id),
                 "conversation_id": conversation_id,
             }
             prefix = "/api/v1/providers/elevenlabs/tools/"
@@ -321,7 +391,7 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             "conversation_id": conversation_id,
             "conversation_initiation_client_data": {
                 "dynamic_variables": {
-                    "phone_inbound_call_id": str(received.call.id),
+                    "phone_inbound_call_id": str(inbound_call_id),
                 }
             },
             "transcript": [
@@ -330,15 +400,41 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             ],
         },
     }
-    phone.finalize_post_call(payload=payload, correlation_id=uuid4())
-    phone.finalize_post_call(payload=payload, correlation_id=uuid4())
+    data = payload["data"]
+    assert isinstance(data, dict)
+    data["agent_id"] = "synthetic-phone-agent"
+
+    async def disconnect() -> None:
+        body = json.dumps(payload).encode()
+        timestamp = int(datetime.now(UTC).timestamp())
+        signature = hmac.new(
+            b"synthetic-post-call-secret",
+            str(timestamp).encode() + b"." + body,
+            hashlib.sha256,
+        ).hexdigest()
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            for _ in range(2):
+                finalized = await client.post(
+                    "/api/v1/providers/elevenlabs/post-call",
+                    content=body,
+                    headers={"ElevenLabs-Signature": f"t={timestamp},v0={signature}"},
+                )
+                assert finalized.status_code == 200, finalized.text
+            operations = await client.get("/api/v1/development/hvac/operations")
+            assert operations.status_code == 200, operations.text
+            assert operations.json()["appointments"][0]["status"] == "CONFIRMED"
+            assert operations.json()["calls"][0]["id"] == str(inbound_call_id)
+
+    asyncio.run(disconnect())
 
     with Session(migrated_database) as session:
         conversation_session = session.get(
             ConversationSession,
             consent.conversation_session_id,
         )
-        inbound_call = session.get(InboundCall, received.call.id)
+        inbound_call = session.get(InboundCall, inbound_call_id)
         intake = session.scalar(
             select(ConversationIntake).where(
                 ConversationIntake.conversation_session_id
@@ -350,6 +446,10 @@ def test_confirmed_phone_call_materializes_one_intake_and_lead_after_post_call(
             .select_from(AgencyLead)
             .where(AgencyLead.agency_id == agency_id)
         )
+        appointments = session.scalars(
+            select(Appointment).where(Appointment.agency_id == agency_id)
+        ).all()
+        assert len(appointments) == 1 and appointments[0].status == "CONFIRMED"
 
     assert conversation_session is not None
     assert conversation_session.synthetic_data_acknowledged_at is None

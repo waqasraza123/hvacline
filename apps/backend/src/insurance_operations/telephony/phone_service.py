@@ -856,7 +856,10 @@ def require_phone_call(
     if for_update:
         statement = statement.with_for_update()
     inbound_call = session.scalar(statement)
-    if inbound_call is None or inbound_call.adapter_name not in {"twilio", "telnyx_sip"}:
+    if inbound_call is None or inbound_call.adapter_name not in {
+        "twilio",
+        "telnyx_sip",
+    }:
         raise phone_context_error()
     return inbound_call
 
@@ -902,13 +905,19 @@ def bind_sip_call_id(call: InboundCall, provider_call_id: str) -> None:
     if (
         not provider_call_id.strip()
         or len(provider_call_id) > 200
-        or any(ord(character) < 32 or ord(character) == 127 for character in provider_call_id)
+        or any(
+            ord(character) < 32 or ord(character) == 127
+            for character in provider_call_id
+        )
     ):
         raise phone_context_error()
     existing = call.adapter_metadata.get("provider_call_id")
     if existing is not None and existing != provider_call_id:
         raise phone_context_error()
-    call.adapter_metadata = {**call.adapter_metadata, "provider_call_id": provider_call_id}
+    call.adapter_metadata = {
+        **call.adapter_metadata,
+        "provider_call_id": provider_call_id,
+    }
 
 
 def require_conversation_reference(
@@ -962,12 +971,18 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
         if isinstance(metadata, dict) and metadata.get("type") == "sip":
             source_adapter_name = "telnyx_sip"
             raw_reference = (
-                metadata_body.get("call_sid") if isinstance(metadata_body, dict) else None
+                metadata_body.get("call_sid")
+                if isinstance(metadata_body, dict)
+                else None
+            )
+        elif isinstance(metadata, dict) and metadata.get("type") in {None, "twilio"}:
+            raw_reference = (
+                metadata_body.get("CallSid")
+                if isinstance(metadata_body, dict)
+                else None
             )
         else:
-            raw_reference = (
-                metadata_body.get("CallSid") if isinstance(metadata_body, dict) else None
-            )
+            raise invalid_post_call_event()
         if not isinstance(raw_reference, str) or not raw_reference.strip():
             raise invalid_post_call_event()
         source_call_reference = raw_reference
@@ -1015,7 +1030,7 @@ def resolve_post_call(
     if normalized.source_adapter_name == "telnyx_sip":
         statement = select(InboundCall).where(
             InboundCall.adapter_name == "telnyx_sip",
-            InboundCall.adapter_metadata["external_session_reference"].astext
+            InboundCall.adapter_metadata["external_session_reference"].as_string()
             == normalized.conversation_id,
         )
     else:

@@ -1,5 +1,28 @@
 # Project State
 
+## Alternative Telnyx inbound SIP — implementation UNVERIFIED — 2026-10-29
+
+Feature branch `feat/telnyx-sip-inbound` adds explicit disabled/Twilio/Telnyx SIP
+selection behind the existing telephone enable flag. Telnyx routes directly to
+the existing private ElevenLabs phone agent, with a separate authenticated,
+size-bounded initiation endpoint, backend-owned active-number routing and existing
+policy quotas. Call and conversation identity persist together in existing call
+metadata; policy/advisory locks protect duplicate/quota decisions. Shared consent,
+FAQ/intake/HVAC booking tools and HMAC/replay-protected post-call finalization are
+reused. SIP handoff records backend authorization/audit and uses callback fallback;
+native SIP REFER remains disabled without verified result handling. No Twilio
+client/register-call, Telnyx REST dependency, new schema or frontend feature is
+needed for this path. Historical Twilio finalization fingerprints are preserved.
+
+Source and added unit/database specifications remain **UNVERIFIED**. Source
+formatting only; no tests, builds, linters, type checks, migrations, services,
+provider calls, purchases, account changes or deployments ran. Exact API settings,
+Telnyx FQDN/ElevenLabs import and webhook setup, transfer design, owner commands
+and live acceptance: `docs/telnyx-sip-setup.md`. Provider-dashboard setup and real
+carrier acceptance remain **UNVERIFIED**. Existing development identity/privacy,
+business confirmation and production onboarding gates remain; completed bookings
+must survive disconnect and be checked in Operations during owner acceptance.
+
 ## Homepage guest chat — owner-approved behavior, acceptance pending — 2026-10-29
 
 Owner selected one live text message/reply on the homepage, a dismissible sign-in popup on the second attempt, a 30-day browser allowance and same-tab continuation through existing authentication/MFA. The existing browser Line agent is reused with a guest-mode variable; a protected server-side bridge permits only approved FAQ lookup. Source adds atomic guest quotas separate from signed-in application quotas, no application transcript/customer/booking persistence, and bounded browser-only context handoff outside confirmation transcripts.

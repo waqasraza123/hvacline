@@ -90,9 +90,9 @@ def create_sip_initiation_router(service: SipPhoneInitializationService) -> APIR
         authorization: Annotated[str | None, Header()] = None,
     ) -> PhoneInitiationResponse:
         service.adapter.verify_authorization(authorization)
-        if request.headers.get("content-type", "").split(";", 1)[0].strip() != (
-            "application/json"
-        ):
+        if request.headers.get("content-type", "").split(";", 1)[
+            0
+        ].strip().casefold() != ("application/json"):
             raise ApiError(
                 status_code=415,
                 code="PHONE_INITIATION_CONTENT_TYPE_INVALID",
