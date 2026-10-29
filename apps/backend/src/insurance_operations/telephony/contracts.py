@@ -30,6 +30,7 @@ class PhoneCallInitialization:
             "external_session_reference": self.conversation_id,
             "agent_id": self.agent_id,
             "provider_call_id": self.provider_call_id,
+            "initiation_call_id": self.provider_call_id,
             "maximum_duration_seconds": self.maximum_duration_seconds,
         }
 

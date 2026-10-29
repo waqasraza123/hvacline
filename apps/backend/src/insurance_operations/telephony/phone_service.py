@@ -104,6 +104,23 @@ class PhoneReceptionistService:
             )
             if inbound_call.agency_id != actor.agency_id:
                 raise phone_context_error()
+            require_initialized_conversation(inbound_call, request.conversation_id)
+            duration = self._maximum_duration_seconds
+            authorization_expires_at = now + timedelta(seconds=duration)
+            if inbound_call.adapter_name == "telnyx_sip":
+                stored_duration = inbound_call.adapter_metadata.get(
+                    "maximum_duration_seconds"
+                )
+                if not isinstance(stored_duration, int):
+                    raise phone_context_error()
+                duration = stored_duration
+                authorization_expires_at = inbound_call.received_at + timedelta(
+                    seconds=duration
+                )
+                if authorization_expires_at <= now:
+                    raise phone_context_error()
+                if request.call_id is not None:
+                    bind_sip_call_id(inbound_call, request.call_id)
 
             existing = session.scalar(
                 select(ConversationSession).where(
@@ -136,10 +153,8 @@ class PhoneReceptionistService:
                     },
                     disclosure_accepted_at=now,
                     microphone_consent_at=now,
-                    maximum_duration_seconds=self._maximum_duration_seconds,
-                    authorization_expires_at=(
-                        now + timedelta(seconds=self._maximum_duration_seconds)
-                    ),
+                    maximum_duration_seconds=duration,
+                    authorization_expires_at=authorization_expires_at,
                     confirmation_expires_at=(
                         now + timedelta(minutes=self._confirmation_window_minutes)
                     ),
@@ -163,7 +178,7 @@ class PhoneReceptionistService:
                 response = PhoneConsentResponse(
                     conversation_session_id=conversation_session.id,
                     accepted=True,
-                    maximum_duration_seconds=self._maximum_duration_seconds,
+                    maximum_duration_seconds=duration,
                 )
 
         self._telephony_service.apply_provider_event(
@@ -276,7 +291,9 @@ class PhoneReceptionistService:
         correlation_id: UUID,
     ) -> PhoneHandoffResponse:
         with self._session_factory() as session:
-            require_phone_session_context(session, request)
+            conversation = require_phone_session_context(session, request)
+            if conversation.authorization_expires_at <= datetime.now(UTC):
+                raise phone_context_error()
 
         event_type = (
             InboundCallEventType.TRANSFER_REQUESTED
@@ -451,6 +468,11 @@ class PhoneReceptionistService:
                 normalized,
                 for_update=True,
             )
+            require_initialized_conversation(inbound_call, normalized.conversation_id)
+            if normalized.source_adapter_name == "telnyx_sip" and (
+                normalized.source_call_reference is not None
+            ):
+                bind_sip_call_id(inbound_call, normalized.source_call_reference)
             conversation_session = session.scalar(
                 select(ConversationSession)
                 .where(
@@ -548,6 +570,10 @@ class PhoneReceptionistService:
         occurred_at: datetime,
         correlation_id: UUID,
     ) -> None:
+        if len(normalized.transcript) < 2 or {
+            turn.speaker for turn in normalized.transcript
+        } != {"USER", "AGENT"}:
+            raise invalid_post_call_event()
         existing_intake = session.scalar(
             select(ConversationIntake).where(
                 ConversationIntake.conversation_session_id == conversation_session.id
@@ -770,6 +796,10 @@ class PhoneReceptionistService:
         occurred_at: datetime,
         correlation_id: UUID,
     ) -> None:
+        if inbound_call.adapter_name == "telnyx_sip" and (
+            inbound_call.status != InboundCallStatus.RECEIVED.value
+        ):
+            raise phone_context_error()
         inbound_call.status = InboundCallStatus.FAILED.value
         inbound_call.failure_code = "PHONE_PROVIDER_INITIATION_FAILED"
         inbound_call.ended_at = max(occurred_at, inbound_call.received_at)
@@ -826,7 +856,7 @@ def require_phone_call(
     if for_update:
         statement = statement.with_for_update()
     inbound_call = session.scalar(statement)
-    if inbound_call is None or inbound_call.adapter_name != "twilio":
+    if inbound_call is None or inbound_call.adapter_name not in {"twilio", "telnyx_sip"}:
         raise phone_context_error()
     return inbound_call
 
@@ -850,7 +880,35 @@ def require_phone_session_context(
     }:
         raise phone_context_error()
     require_conversation_reference(conversation_session, request.conversation_id)
+    call = require_phone_call(session, request.inbound_call_id)
+    if conversation_session.agency_id != call.agency_id or call.status not in {
+        InboundCallStatus.CONNECTED.value,
+        InboundCallStatus.CALLBACK_PENDING.value,
+        InboundCallStatus.TRANSFER_PENDING.value,
+    }:
+        raise phone_context_error()
+    require_initialized_conversation(call, request.conversation_id)
     return conversation_session
+
+
+def require_initialized_conversation(call: InboundCall, conversation_id: str) -> None:
+    if call.adapter_name == "telnyx_sip" and (
+        call.adapter_metadata.get("external_session_reference") != conversation_id
+    ):
+        raise phone_context_error()
+
+
+def bind_sip_call_id(call: InboundCall, provider_call_id: str) -> None:
+    if (
+        not provider_call_id.strip()
+        or len(provider_call_id) > 200
+        or any(ord(character) < 32 or ord(character) == 127 for character in provider_call_id)
+    ):
+        raise phone_context_error()
+    existing = call.adapter_metadata.get("provider_call_id")
+    if existing is not None and existing != provider_call_id:
+        raise phone_context_error()
+    call.adapter_metadata = {**call.adapter_metadata, "provider_call_id": provider_call_id}
 
 
 def require_conversation_reference(
@@ -885,6 +943,7 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
         raise invalid_post_call_event()
     inbound_call_id: UUID | None = None
     source_call_reference: str | None = None
+    source_adapter_name: Literal["twilio", "telnyx_sip"] = "twilio"
     if event_type == "post_call_transcription":
         initiation_data = data.get("conversation_initiation_client_data")
         if not isinstance(initiation_data, dict):
@@ -900,9 +959,15 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
     else:
         metadata = data.get("metadata")
         metadata_body = metadata.get("body") if isinstance(metadata, dict) else None
-        raw_reference = (
-            metadata_body.get("CallSid") if isinstance(metadata_body, dict) else None
-        )
+        if isinstance(metadata, dict) and metadata.get("type") == "sip":
+            source_adapter_name = "telnyx_sip"
+            raw_reference = (
+                metadata_body.get("call_sid") if isinstance(metadata_body, dict) else None
+            )
+        else:
+            raw_reference = (
+                metadata_body.get("CallSid") if isinstance(metadata_body, dict) else None
+            )
         if not isinstance(raw_reference, str) or not raw_reference.strip():
             raise invalid_post_call_event()
         source_call_reference = raw_reference
@@ -927,6 +992,7 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
             event_timestamp=event_timestamp,
             inbound_call_id=inbound_call_id,
             source_call_reference=source_call_reference,
+            source_adapter_name=source_adapter_name,
             conversation_id=conversation_id,
             transcript=turns,
         )
@@ -946,10 +1012,17 @@ def resolve_post_call(
             normalized.inbound_call_id,
             for_update=for_update,
         )
-    statement = select(InboundCall).where(
-        InboundCall.adapter_name == "twilio",
-        InboundCall.source_call_reference == normalized.source_call_reference,
-    )
+    if normalized.source_adapter_name == "telnyx_sip":
+        statement = select(InboundCall).where(
+            InboundCall.adapter_name == "telnyx_sip",
+            InboundCall.adapter_metadata["external_session_reference"].astext
+            == normalized.conversation_id,
+        )
+    else:
+        statement = select(InboundCall).where(
+            InboundCall.adapter_name == "twilio",
+            InboundCall.source_call_reference == normalized.source_call_reference,
+        )
     if for_update:
         statement = statement.with_for_update()
     inbound_call = session.scalar(statement)
@@ -1074,7 +1147,7 @@ def bounded_event_key(prefix: str, *parts: str) -> str:
 
 def post_call_fingerprint(request: NormalizedPostCall) -> str:
     encoded = json.dumps(
-        request.model_dump(mode="json"),
+        request.model_dump(mode="json", exclude={"source_adapter_name"}),
         sort_keys=True,
         separators=(",", ":"),
     ).encode()

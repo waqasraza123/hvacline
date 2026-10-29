@@ -1,5 +1,5 @@
 from enum import StrEnum
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -15,6 +15,7 @@ from insurance_operations.telephony.schemas import CallAction
 class PhoneConsentInput(PhoneCallContext):
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
+    call_id: str | None = Field(default=None, min_length=1, max_length=200)
 
     @model_validator(mode="after")
     def require_all_consent(self) -> Self:
@@ -80,13 +81,14 @@ class PhoneHandoffResponse(BaseModel):
 
 class NormalizedPostCall(BaseModel):
     event_type: str
-    event_timestamp: int
+    event_timestamp: int = Field(ge=0, le=253_402_300_799)
     inbound_call_id: UUID | None = None
     source_call_reference: str | None = Field(
         default=None,
         min_length=1,
         max_length=200,
     )
+    source_adapter_name: Literal["twilio", "telnyx_sip"] = "twilio"
     conversation_id: str = Field(min_length=1, max_length=200)
     transcript: list[ConversationTurn] = Field(default_factory=list, max_length=60)
 
@@ -95,12 +97,6 @@ class NormalizedPostCall(BaseModel):
         if self.event_type == "post_call_transcription":
             if self.inbound_call_id is None or self.source_call_reference is not None:
                 raise ValueError("transcription webhook requires the inbound call id")
-            if len(self.transcript) < 2:
-                raise ValueError(
-                    "confirmed phone transcript requires at least two turns"
-                )
-            if {turn.speaker for turn in self.transcript} != {"USER", "AGENT"}:
-                raise ValueError("confirmed phone transcript requires both speakers")
             if sum(len(turn.text) for turn in self.transcript) > 30_000:
                 raise ValueError("confirmed phone transcript is too large")
         elif self.source_call_reference is None or self.inbound_call_id is not None:

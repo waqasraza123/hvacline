@@ -32,10 +32,10 @@ from insurance_operations.telephony.providers.elevenlabs import (
     ElevenLabsPhoneProvider,
     PhoneCallRegistration,
 )
+from insurance_operations.telephony.providers.telnyx_sip import TelnyxSipAdapter
 from insurance_operations.telephony.providers.twilio import (
     TwilioTelephonyAdapter,
 )
-from insurance_operations.telephony.providers.telnyx_sip import TelnyxSipAdapter
 from insurance_operations.telephony.schemas import (
     CallAction,
     InboundCallActionResponse,
@@ -153,7 +153,9 @@ class TelephonyIngressService:
         if (
             not separator
             or scheme.casefold() != "bearer"
-            or not secrets.compare_digest(supplied, self._phone_tool_secret)
+            or not secrets.compare_digest(
+                supplied.encode("utf-8"), self._phone_tool_secret.encode("utf-8")
+            )
         ):
             raise phone_tool_rejected()
 

@@ -364,7 +364,10 @@ class TelephonyService:
                     "adapter_version": request.adapter_version,
                     **(initialization.metadata() if initialization is not None else {}),
                 },
-                policy_snapshot=policy_snapshot(policy),
+                policy_snapshot={
+                    **policy_snapshot(policy),
+                    **({"live_transfer_supported": False} if initialization else {}),
+                },
                 received_at=request.occurred_at,
             )
 
@@ -808,6 +811,7 @@ def transition_call(
         )
         if (
             snapshot_bool(inbound_call.policy_snapshot, "transfer_enabled")
+            and inbound_call.policy_snapshot.get("live_transfer_supported", True) is True
             and available
         ):
             inbound_call.status = InboundCallStatus.TRANSFER_PENDING.value
@@ -1214,7 +1218,7 @@ def validate_initialization_replay(
     expected = initialization.metadata()
     if call.source_call_reference != request.source_call_reference or any(
         call.adapter_metadata.get(key) != expected[key]
-        for key in ("external_session_reference", "agent_id", "provider_call_id")
+        for key in ("external_session_reference", "agent_id", "initiation_call_id")
     ):
         raise ApiError(
             status_code=409,

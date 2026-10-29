@@ -149,8 +149,10 @@ def create_app(
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:
-        del application
         yield
+        telephony_ingress = getattr(application.state, "telephony_ingress_service", None)
+        if telephony_ingress is not None:
+            telephony_ingress.close()
         if provider is not None:
             provider.close()
         database_engine.dispose()
