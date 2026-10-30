@@ -295,6 +295,37 @@ def test_authenticated_initiation_persists_exact_context_and_replays(
     assert initialize(sip, caller_id="+15559991004").status_code == 409
 
 
+def test_digits_only_sip_numbers_share_the_canonical_call_and_tenant_route(
+    sip: SipContext, make_sip_context: Callable[[], SipContext]
+) -> None:
+    initialized = initialize(
+        sip, called_number=sip.called_number.removeprefix("+"), caller_id="15559991002"
+    )
+    assert initialized.status_code == 200, initialized.text
+    assert initialized.headers["cache-control"] == "no-store"
+    assert initialized.json()["type"] == "conversation_initiation_client_data"
+    assert initialize(sip).json() == initialized.json()
+    call_id = UUID(initialized.json()["dynamic_variables"]["phone_inbound_call_id"])
+    with sip.sessions() as session:
+        call = session.get(InboundCall, call_id)
+        assert call is not None
+        assert call.agency_id == sip.agency_id
+        assert call.caller_number_e164 == "+15559991002"
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(InboundCall)
+                .where(InboundCall.agency_id == sip.agency_id)
+            )
+            == 1
+        )
+    other = make_sip_context()
+    assert (
+        initialize(sip, called_number=other.called_number.removeprefix("+")).status_code
+        == 404
+    )
+
+
 @pytest.mark.parametrize("authorization", [None, "Bearer invalid", "Basic invalid"])
 def test_initiation_authentication_precedes_database_work(
     sip: SipContext, authorization: str | None
@@ -503,6 +534,57 @@ def test_signed_sip_initiation_failure_uses_documented_metadata_and_replays(
         assert call is not None and call.status == "FAILED"
         assert call.failure_code == "PHONE_PROVIDER_INITIATION_FAILED"
         assert call.adapter_metadata["provider_call_id"] == sip.call_id
+
+
+def test_uninitialized_failure_is_a_context_conflict_not_a_schema_failure(
+    sip: SipContext,
+) -> None:
+    payload: dict[str, object] = {
+        "type": "call_initiation_failure",
+        "event_timestamp": int(datetime.now(UTC).timestamp()),
+        "data": {
+            "agent_id": AGENT,
+            "conversation_id": sip.conversation_id,
+            "failure_reason": "unknown",
+            "metadata": {"type": "sip", "body": {"call_sid": sip.call_id}},
+        },
+    }
+    result = signed_post(sip, payload)
+    assert result.status_code == 409
+    assert result.json()["error"]["code"] == "PHONE_CONVERSATION_CONTEXT_INVALID"
+    with sip.sessions() as session:
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(InboundCall)
+                .where(InboundCall.agency_id == sip.agency_id)
+            )
+            == 0
+        )
+
+
+def test_post_call_diagnostics_are_emitted_only_after_signature_verification(
+    sip: SipContext, caplog: pytest.LogCaptureFixture
+) -> None:
+    payload = end_payload(sip, {"inbound_call_id": "private-invalid-uuid"})
+    unsigned = post(sip, PREFIX + "post-call", content=json.dumps(payload).encode())
+    assert unsigned.status_code == 403
+    assert not caplog.records
+    result = signed_post(sip, payload)
+    assert result.status_code == 422
+    assert result.json()["error"]["code"] == "PHONE_POST_CALL_EVENT_INVALID"
+    assert len(caplog.records) == 1
+    assert caplog.records[0].args == (
+        [
+            {
+                "path": "data.conversation_initiation_client_data.dynamic_variables."
+                "phone_inbound_call_id",
+                "type": "uuid_parsing",
+            }
+        ],
+    )
+    assert "private" not in caplog.text
+    assert POST_SECRET not in caplog.text
 
 
 def test_expired_initialization_cannot_restart_or_obtain_consent(

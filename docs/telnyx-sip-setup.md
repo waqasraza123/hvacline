@@ -5,6 +5,11 @@ account setup, deployed configuration, audio/security negotiation and real
 telephone acceptance are **UNVERIFIED**. No tests, migrations, services, provider
 calls, account changes, purchases or deployments were executed for this feature.
 
+The October 30 inbound 422 investigation, boundary normalization and privacy-safe
+diagnostics are recorded in [the webhook repair handoff](inbound-phone-webhook-repair.md).
+That handoff includes passing automated checks, read-only provider evidence,
+remaining uncertainty and exact checks; hosted runtime acceptance remains pending.
+
 ## Implemented path
 
 Customer → assigned Telnyx number → ElevenLabs SIP/private phone agent →
@@ -380,7 +385,7 @@ carrier connectivity or call quality.
 | 404 routing | Number must be E.164, ACTIVE and owned by the configured operator's single active business. No caller-provided tenant may select it. |
 | 409 binding/eligibility | Check number/policy state, actual conversation ID, terminated/expired call and changed call identity on replay. Do not replace the stored UUID or bypass ownership checks. |
 | 429 initiation | Review concurrent/daily limits. Duplicate accepted initiation does not consume another slot. A missing signed terminal event can leave a call active: restore webhook delivery and use audited operator reconciliation; do not blindly release a carrier call that may still be live. |
-| 413/422 | Body exceeds 16 KiB or fields exceed validated bounds; inspect schema/identifier format and remove unsupported tenant/override fields. Do not log the whole request. |
+| 413/422 | Body exceeds 16 KiB or fields fail the contract. Inspect safe validation paths/types using [the repair handoff](inbound-phone-webhook-repair.md); do not log payloads or assume which field failed. Digit-only international numbers are canonicalized at the SIP boundary; other number formats remain rejected. |
 | One-way or distorted audio | Compare SDP codec offer/answer, PCMU/PCMA, RTP reachability/NAT and SRTP requirements on both sides; signaling success alone is insufficient. Do not add a custom audio gateway as a first fix. |
 | Signed finalization fails | Correct per-agent destination and HMAC secret, fresh signature, persisted UUID dynamic variable, real conversation binding and documented SIP failure metadata. Replay a genuine signed event through provider-supported delivery; never synthesize confirmation from an ended call. |
 | TLS/BYE failure | Check trust chain, matching remote domains and follow-up connection certificates. Preserve required encryption. |

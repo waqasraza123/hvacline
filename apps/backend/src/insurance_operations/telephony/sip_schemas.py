@@ -1,3 +1,4 @@
+import re
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
@@ -6,6 +7,12 @@ from insurance_operations.telephony.schemas import validate_e164
 
 SipHeaderName = Annotated[str, StringConstraints(min_length=1, max_length=100)]
 SipHeaderValue = Annotated[str, StringConstraints(max_length=1000)]
+
+
+def normalize_sip_phone_number(value: str) -> str:
+    if re.fullmatch(r"[1-9][0-9]{7,14}", value):
+        value = f"+{value}"
+    return validate_e164(value)
 
 
 class SipConversationInitiation(BaseModel):
@@ -24,7 +31,7 @@ class SipConversationInitiation(BaseModel):
     @field_validator("called_number")
     @classmethod
     def validate_called_number(cls, value: str) -> str:
-        return validate_e164(value)
+        return normalize_sip_phone_number(value)
 
     @field_validator("caller_id", "agent_id", "conversation_id", "call_sid")
     @classmethod

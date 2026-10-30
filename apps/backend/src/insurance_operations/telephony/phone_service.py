@@ -67,6 +67,9 @@ from insurance_operations.telephony.schemas import (
     InboundCallEventType,
 )
 from insurance_operations.telephony.service import TelephonyService
+from insurance_operations.telephony.webhook_validation import (
+    log_webhook_validation_failure,
+)
 
 
 class PhoneReceptionistService:
@@ -573,7 +576,7 @@ class PhoneReceptionistService:
         if len(normalized.transcript) < 2 or {
             turn.speaker for turn in normalized.transcript
         } != {"USER", "AGENT"}:
-            raise invalid_post_call_event()
+            raise invalid_post_call_event(path=("data", "transcript"))
         existing_intake = session.scalar(
             select(ConversationIntake).where(
                 ConversationIntake.conversation_session_id == conversation_session.id
@@ -935,64 +938,94 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
     event_type = payload.get("type")
     event_timestamp = payload.get("event_timestamp")
     data = payload.get("data")
-    if (
-        not isinstance(event_type, str)
-        or event_type not in {"post_call_transcription", "call_initiation_failure"}
-        or not isinstance(event_timestamp, int)
-        or isinstance(event_timestamp, bool)
-        or not isinstance(data, dict)
-    ):
-        raise ApiError(
-            status_code=422,
-            code="PHONE_POST_CALL_EVENT_INVALID",
-            message="The post-call event did not satisfy the provider contract",
-        )
+    if not isinstance(event_type, str) or event_type not in {
+        "post_call_transcription",
+        "call_initiation_failure",
+    }:
+        raise invalid_post_call_event(path=("type",), error_type="literal_error")
+    if not isinstance(event_timestamp, int) or isinstance(event_timestamp, bool):
+        raise invalid_post_call_event(path=("event_timestamp",), error_type="int_type")
+    if not isinstance(data, dict):
+        raise invalid_post_call_event(path=("data",), error_type="dict_type")
     conversation_id = data.get("conversation_id")
     if not isinstance(conversation_id, str):
-        raise invalid_post_call_event()
+        raise invalid_post_call_event(
+            path=("data", "conversation_id"), error_type="string_type"
+        )
     inbound_call_id: UUID | None = None
     source_call_reference: str | None = None
     source_adapter_name: Literal["twilio", "telnyx_sip"] = "twilio"
     if event_type == "post_call_transcription":
         initiation_data = data.get("conversation_initiation_client_data")
         if not isinstance(initiation_data, dict):
-            raise invalid_post_call_event()
+            raise invalid_post_call_event(
+                path=("data", "conversation_initiation_client_data"),
+                error_type="dict_type",
+            )
         dynamic_variables = initiation_data.get("dynamic_variables")
         if not isinstance(dynamic_variables, dict):
-            raise invalid_post_call_event()
+            raise invalid_post_call_event(
+                path=(
+                    "data",
+                    "conversation_initiation_client_data",
+                    "dynamic_variables",
+                ),
+                error_type="dict_type",
+            )
         raw_call_id = dynamic_variables.get("phone_inbound_call_id")
         try:
             inbound_call_id = UUID(str(raw_call_id))
         except (TypeError, ValueError) as error:
-            raise invalid_post_call_event() from error
+            raise invalid_post_call_event(
+                path=(
+                    "data",
+                    "conversation_initiation_client_data",
+                    "dynamic_variables",
+                    "phone_inbound_call_id",
+                ),
+                error_type="missing" if raw_call_id is None else "uuid_parsing",
+            ) from error
     else:
         metadata = data.get("metadata")
         metadata_body = metadata.get("body") if isinstance(metadata, dict) else None
-        if isinstance(metadata, dict) and metadata.get("type") == "sip":
+        if not isinstance(metadata, dict):
+            raise invalid_post_call_event(
+                path=("data", "metadata"), error_type="dict_type"
+            )
+        if not isinstance(metadata_body, dict):
+            raise invalid_post_call_event(
+                path=("data", "metadata", "body"), error_type="dict_type"
+            )
+        if metadata.get("type") == "sip":
             source_adapter_name = "telnyx_sip"
-            raw_reference = (
-                metadata_body.get("call_sid")
-                if isinstance(metadata_body, dict)
-                else None
-            )
-        elif isinstance(metadata, dict) and metadata.get("type") in {None, "twilio"}:
-            raw_reference = (
-                metadata_body.get("CallSid")
-                if isinstance(metadata_body, dict)
-                else None
-            )
+            reference_field = "call_sid"
+        elif metadata.get("type") in (None, "twilio"):
+            reference_field = "CallSid"
         else:
-            raise invalid_post_call_event()
+            raise invalid_post_call_event(
+                path=("data", "metadata", "type"), error_type="literal_error"
+            )
+        raw_reference = metadata_body.get(reference_field)
         if not isinstance(raw_reference, str) or not raw_reference.strip():
-            raise invalid_post_call_event()
+            raise invalid_post_call_event(
+                path=("data", "metadata", "body", reference_field),
+                error_type=(
+                    "missing"
+                    if raw_reference is None
+                    else "string_too_short"
+                    if isinstance(raw_reference, str)
+                    else "string_type"
+                ),
+            )
         source_call_reference = raw_reference
 
+    validation_path: tuple[str | int, ...] = ("data", "transcript")
     try:
         turns: list[ConversationTurn] = []
         raw_transcript = data.get("transcript", [])
         if not isinstance(raw_transcript, list):
-            raise invalid_post_call_event()
-        for raw_turn in raw_transcript:
+            raise invalid_post_call_event(path=validation_path, error_type="list_type")
+        for index, raw_turn in enumerate(raw_transcript):
             if not isinstance(raw_turn, dict):
                 continue
             role = raw_turn.get("role")
@@ -1001,7 +1034,9 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
                 "USER" if role == "user" else "AGENT" if role == "agent" else None
             )
             if speaker is not None and isinstance(message, str) and message.strip():
+                validation_path = ("data", "transcript", index)
                 turns.append(ConversationTurn(speaker=speaker, text=message))
+        validation_path = ()
         return NormalizedPostCall(
             event_type=event_type,
             event_timestamp=event_timestamp,
@@ -1012,7 +1047,7 @@ def normalize_post_call(payload: dict[str, object]) -> NormalizedPostCall:
             transcript=turns,
         )
     except ValidationError as error:
-        raise invalid_post_call_event() from error
+        raise invalid_post_call_event(path=validation_path, error=error) from error
 
 
 def resolve_post_call(
@@ -1200,7 +1235,13 @@ def system_audit(
     )
 
 
-def invalid_post_call_event() -> ApiError:
+def invalid_post_call_event(
+    *,
+    path: tuple[str | int, ...],
+    error_type: str = "value_error",
+    error: ValidationError | None = None,
+) -> ApiError:
+    log_webhook_validation_failure(path=path, error_type=error_type, error=error)
     return ApiError(
         status_code=422,
         code="PHONE_POST_CALL_EVENT_INVALID",

@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+from typing import Any
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -43,7 +44,7 @@ def isolated_settings(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def sip_settings(**overrides: object) -> TelephonyProviderSettings:
-    values: dict[str, object] = {
+    values: dict[str, Any] = {
         "app_environment": "development",
         "telephony_provider_enabled": True,
         "telephony_provider": "telnyx_sip",
@@ -161,6 +162,33 @@ def test_sip_identity_is_not_validated_as_a_twilio_sid() -> None:
     assert "Authorization" not in json.dumps(context.metadata())
 
 
+@pytest.mark.parametrize("include_plus", [False, True])
+def test_sip_numbers_are_canonicalized_at_the_provider_boundary(
+    include_plus: bool,
+) -> None:
+    prefix = "+" if include_plus else ""
+    call, _ = adapter().verify_initiation(
+        headers=INIT_HEADERS,
+        body=initiation_body(
+            caller_id=f"{prefix}15559990002",
+            called_number=f"{prefix}15559990001",
+        ),
+    )
+    assert call.called_number_e164 == "+15559990001"
+    assert call.caller_number_e164 == "+15559990002"
+
+
+def test_documented_initiation_fields_do_not_require_optional_sip_fields() -> None:
+    payload = json.loads(initiation_body())
+    del payload["call_id"]
+    del payload["call_sid"]
+    call, context = adapter().verify_initiation(
+        headers=INIT_HEADERS, body=json.dumps(payload).encode()
+    )
+    assert context.provider_call_id is None
+    assert call.source_call_reference == "conversation:conv_synthetic_sip"
+
+
 def test_missing_sip_id_uses_conversation_identity_without_inventing_a_carrier_id() -> (
     None
 ):
@@ -199,6 +227,14 @@ def test_sip_headers_cannot_authenticate_the_webhook() -> None:
     [
         ({"agent_id": "wrong-agent"}, 403),
         ({"called_number": "not-E164"}, 422),
+        ({"called_number": "05559990001"}, 422),
+        ({"called_number": "0015559990001"}, 422),
+        ({"called_number": "1 (555) 999-0001"}, 422),
+        ({"called_number": "sip:15559990001@example.test"}, 422),
+        ({"called_number": "\uff11\uff15\uff15\uff15\uff19\uff19\uff19\uff10"}, 422),
+        ({"called_number": "1555999"}, 422),
+        ({"called_number": "1555999000112345"}, 422),
+        ({"called_number": 15559990001}, 422),
         ({"conversation_id": ""}, 422),
         ({"conversation_id": "x" * 181}, 422),
         ({"call_id": "x" * 201}, 422),
@@ -224,6 +260,65 @@ def test_oversized_sip_body_is_rejected() -> None:
             headers=INIT_HEADERS, body=b" " * (MAX_INITIATION_BYTES + 1)
         )
     assert rejected.value.status_code == 413
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected_path", "expected_type"),
+    [
+        ({"called_number": "private-number"}, "called_number", "value_error"),
+        ({"conversation_id": None}, "conversation_id", "string_type"),
+        ({"private-field-name": "private-value"}, "*", "extra_forbidden"),
+        (
+            {"sip_headers": {"private-header-name": "private-value" * 100}},
+            "sip_headers.*",
+            "string_too_long",
+        ),
+    ],
+)
+def test_initiation_diagnostics_expose_only_safe_paths_and_types(
+    caplog: pytest.LogCaptureFixture,
+    changes: dict[str, object],
+    expected_path: str,
+    expected_type: str,
+) -> None:
+    with pytest.raises(ApiError) as rejected:
+        adapter().verify_initiation(
+            headers=INIT_HEADERS, body=initiation_body(**changes)
+        )
+    assert rejected.value.code == "PHONE_INITIATION_INVALID"
+    assert rejected.value.details == {}
+    assert len(caplog.records) == 1
+    assert caplog.records[0].args == ([{"path": expected_path, "type": expected_type}],)
+    assert caplog.records[0].exc_info is None
+    assert "private" not in caplog.text
+    assert INIT_SECRET not in caplog.text
+    assert "+15559990002" not in caplog.text
+    assert AGENT_ID not in caplog.text
+
+
+def test_initiation_diagnostics_identify_missing_fields_and_malformed_json(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    payload = json.loads(initiation_body())
+    del payload["conversation_id"]
+    for body, path, kind in (
+        (json.dumps(payload).encode(), "conversation_id", "missing"),
+        (b'{"private":', "$", "json_invalid"),
+    ):
+        caplog.clear()
+        with pytest.raises(ApiError):
+            adapter().verify_initiation(headers=INIT_HEADERS, body=body)
+        assert caplog.records[0].args == ([{"path": path, "type": kind}],)
+        assert "private" not in caplog.text
+
+
+def test_unauthenticated_initiation_emits_no_payload_diagnostics(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with pytest.raises(ApiError) as rejected:
+        adapter().verify_initiation(headers={}, body=b"private-invalid-json")
+    assert rejected.value.status_code == 401
+    assert not caplog.records
 
 
 def test_telnyx_transfer_adapter_fails_closed() -> None:

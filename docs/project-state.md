@@ -1,5 +1,44 @@
 # Project State
 
+## Inbound phone webhook repair — checks passed, live acceptance pending — 2026-10-30
+
+Owner reports Render `ab69756`, successful Telnyx → ElevenLabs SIP routing,
+registered/enabled phone routes, repaired initiation authentication and 422 on
+both webhooks. Source confirms digit-only called numbers fail the SIP E.164
+validator; caller formatting alone cannot cause initiation 422. Documented
+initiation fields and SIP failure metadata already have support. The exact
+production rejected field remains unconfirmed without safe field diagnostics.
+
+Local source canonicalizes ASCII international digit strings at the SIP boundary
+through the existing E.164 validator and exact tenant-owned active-number route.
+Bounded diagnostics log known validation paths/types only, masking unknown keys
+and SIP-header names; no values, raw bodies or exception contents. Post-call
+transcription still requires the persisted initiation UUID; documented failure
+events do not require it, and unbound failures retain 409. Malformed metadata
+provider types now reject with 422 instead of an unhashable-value exception.
+Auth/HMAC, agent/tenant binding, replay fingerprints, quotas and audit gates remain.
+
+Owner subsequently authorized all needed checks and treating the current database
+as disposable. Focused phone suite: 76 passed; full non-database suite: 214 passed
+with explicit test configuration; four phone database suites: 23 passed together on
+a fresh local database that was dropped afterward. The first remote test run's
+two failures were corrected and passed on retry: test sandbox isolation and
+Alembic logging setup now preserving existing validation loggers. All eight
+changed Python files pass Ruff format/lint and targeted mypy. Full-repository
+checks still report unrelated baseline formatting/lint/type failures.
+
+Read-only ElevenLabs inspection confirms enabled initiation fetch and missing UUID
+on recent failed calls, with a digit-only system called-number variable. A
+metadata reconstruction passes repaired initiation validation and fails the old
+number check; reconstructed transcription reproduces missing-UUID 422. Original
+HTTP bodies and successful hosted 200 remain unverified. No provider settings,
+outbound calls or production writes occurred during testing. The owner explicitly
+authorized committing/pushing the tested repair and Render rollout; publication
+and hosted acceptance are in progress. Current runtime data was preserved;
+existing test migrations ran only on isolated targets. No new
+migration/dependency/configuration requirement. Exact results, commands and live
+acceptance: `docs/inbound-phone-webhook-repair.md`.
+
 ## Original local draft integrated — runtime UNVERIFIED — 2026-10-29
 
 The owner explicitly requested reviewing and publishing the original checkout's

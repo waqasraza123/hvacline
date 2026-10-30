@@ -12,8 +12,13 @@ from insurance_operations.telephony.contracts import (
     VerifiedInboundCall,
     VerifiedTransferResult,
 )
-from insurance_operations.telephony.schemas import validate_e164
-from insurance_operations.telephony.sip_schemas import SipConversationInitiation
+from insurance_operations.telephony.sip_schemas import (
+    SipConversationInitiation,
+    normalize_sip_phone_number,
+)
+from insurance_operations.telephony.webhook_validation import (
+    log_webhook_validation_failure,
+)
 
 MAX_INITIATION_BYTES = 16_384
 
@@ -61,6 +66,7 @@ class TelnyxSipAdapter:
         try:
             request = SipConversationInitiation.model_validate_json(body)
         except ValidationError as error:
+            log_webhook_validation_failure(error=error)
             raise ApiError(
                 status_code=422,
                 code="PHONE_INITIATION_INVALID",
@@ -73,7 +79,7 @@ class TelnyxSipAdapter:
                 message="The phone agent is not authorized for this integration",
             )
         try:
-            caller_number = validate_e164(request.caller_id)
+            caller_number = normalize_sip_phone_number(request.caller_id)
         except ValueError:
             caller_number = None
         return (
