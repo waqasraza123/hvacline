@@ -5,10 +5,12 @@
   scroll-margin-top: 2rem;
   background: #18181b;
   color: #fafaf9;
-  border: 1px solid #343438;
+  border: 1px solid #52525b;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 28px 70px -36px #18181b80;
+  box-shadow:
+    0 28px 70px -36px #18181b80,
+    0 0 0 6px #f9731610;
 }
 .header {
   display: flex;
@@ -62,29 +64,107 @@
   background: #fb923c;
   border-radius: 50%;
 }
-.intro {
-  padding: 18px 24px 4px;
+.modes {
+  display: flex;
+  gap: 4px;
+  margin: 20px 24px 0;
+  padding: 4px;
+  border: 1px solid #ffffff12;
+  border-radius: 12px;
+  background: #09090b;
+}
+.modes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 44px;
+  padding: 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #a1a1aa;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.modes button[aria-pressed="true"] {
+  background: #27272a;
+  color: #fed7aa;
+  box-shadow: 0 2px 6px #0003;
+}
+.modes svg {
+  width: 17px;
+  height: 17px;
+}
+.voicePreview {
+  padding: 30px 32px 28px;
+  text-align: center;
+  background: radial-gradient(ellipse at 50% 30%, #f9731614, transparent 65%);
+}
+.voiceOrb {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  margin: 4px auto 28px;
+  border: 1px solid #fdba7470;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 25%, #fdba74, #f97316 55%, #9a3412);
+  color: #18181b;
+  box-shadow:
+    0 0 0 12px #f973160a,
+    0 0 60px #f9731626;
 }
 .eyebrow {
   color: #fb923c;
   font-size: 0.58rem;
   font-weight: 700;
+  line-height: 1.7;
   letter-spacing: 0.13em;
 }
-.intro h3 {
-  margin: 12px 0;
+.voicePreview h3 {
+  margin: 16px 0 12px;
   color: #fafaf9;
-  font-size: clamp(1.25rem, 2vw, 1.65rem);
-  line-height: 1.15;
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  line-height: 1.08;
   font-weight: 600;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.055em;
 }
-.intro > p:last-child {
-  color: #a1a1aa;
-  font-size: 0.75rem;
+.voicePreview > p:not(.eyebrow) {
+  color: #d4d4d8;
+  font-size: 0.85rem;
   line-height: 1.7;
 }
+.voiceAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 52px;
+  margin-top: 28px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  background: #f97316;
+  color: #18181b;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.voiceAction:hover {
+  background: #fb923c;
+}
+.voiceAction svg:last-child {
+  margin-left: auto;
+}
+.voicePreview > .voiceHelp {
+  margin: 12px 0 0;
+  color: #a1a1aa;
+  font-size: 0.68rem;
+}
 .messages {
+  margin-top: 16px;
   max-height: 280px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -460,9 +540,19 @@
   }
 }
 @media (max-width: 480px) {
-  .header,
-  .intro {
+  .header {
     padding-inline: 18px;
+  }
+  .modes {
+    margin-inline: 18px;
+  }
+  .voicePreview {
+    padding: 24px 18px;
+  }
+  .voiceOrb {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 24px;
   }
   .messages {
     padding-inline: 18px;

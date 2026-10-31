@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Brand } from "@/components/brand";
@@ -32,13 +33,9 @@ const STATE_COPY: Record<PhoneDemoState, string> = {
 
 type PhoneDemoBoardProperties = Readonly<{
   apiBaseUrl: string;
-  phoneNumber: string;
 }>;
 
-export function PhoneDemoBoard({
-  apiBaseUrl,
-  phoneNumber,
-}: PhoneDemoBoardProperties) {
+export function PhoneDemoBoard({ apiBaseUrl }: PhoneDemoBoardProperties) {
   const [status, setStatus] = useState<PhoneDemoStatus>(INITIAL_STATUS);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,9 +81,9 @@ export function PhoneDemoBoard({
             Hear disclosure, approved FAQ answers, structured intake, verbal
             confirmation, and human handoff in one guarded phone workflow.
           </p>
-          <a className="phone-number-link" href={`tel:${phoneNumber}`}>
-            {phoneNumber}
-          </a>
+          <Link className="primary-button" href="/book">
+            Try voice chat in your browser
+          </Link>
           <p className="demo-notice">
             This agent cannot diagnose hazards, give repair instructions, or
             promise an unconfirmed appointment.
@@ -102,8 +99,8 @@ export function PhoneDemoBoard({
           </div>
           <h2>{STATE_COPY[status.state]}</h2>
           <p className="section-help">
-            This shared panel shows the latest call to this number. Another
-            visitor’s call may replace the result. It updates automatically.
+            This shared panel shows the latest inbound call. Another visitor’s
+            call may replace the result. It updates automatically.
           </p>
           <dl className="demo-result-list">
             <Result

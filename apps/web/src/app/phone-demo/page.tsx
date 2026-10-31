@@ -22,11 +22,6 @@ export default function PhoneDemoPage() {
   ) {
     notFound();
   }
-  const phoneNumber = parseDemoPhoneNumber(process.env);
-  return (
-    <PhoneDemoBoard
-      apiBaseUrl={environment.apiBaseUrl}
-      phoneNumber={phoneNumber}
-    />
-  );
+  parseDemoPhoneNumber(process.env);
+  return <PhoneDemoBoard apiBaseUrl={environment.apiBaseUrl} />;
 }

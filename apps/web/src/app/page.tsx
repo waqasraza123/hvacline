@@ -5,7 +5,6 @@ import {
   HomepageChat,
   HomepageChatLink,
 } from "@/features/homepage-chat/homepage-chat";
-import { parseHomepagePhoneCta } from "@/lib/environment";
 import "./product.css";
 
 const services = [
@@ -32,11 +31,6 @@ const services = [
 ] as const;
 
 export default function Home() {
-  const phoneCta = parseHomepagePhoneCta({
-    HOMEPAGE_PHONE_NUMBER_E164: process.env.HOMEPAGE_PHONE_NUMBER_E164,
-    TELNYX_INBOUND_CALLING_VERIFIED: process.env.TELNYX_INBOUND_CALLING_VERIFIED,
-  });
-
   return (
     <div className="product-site">
       <a className="skip-link" href="#main-content">
@@ -136,7 +130,7 @@ export default function Home() {
             Sign in
           </Link>
           <HomepageChatLink className="product-button button-small">
-            Try <ProductIcon name="arrow" />
+            Try Line <ProductIcon name="arrow" />
           </HomepageChatLink>
         </div>
       </header>
@@ -144,7 +138,7 @@ export default function Home() {
         <section className="product-hero product-container">
           <div className="hero-copy">
             <p className="product-eyebrow">
-              <span /> AI VOICE RECEPTIONIST FOR HVAC BUSINESSES
+              <span /> AI VOICE RECEPTIONIST FOR HVAC
             </p>
             <h1>
               Stop losing jobs
@@ -152,42 +146,13 @@ export default function Home() {
               <span>to missed calls.</span>
             </h1>
             <p className="product-lead">
-              HVACLine is the AI voice receptionist for HVAC businesses. Line
-              talks with homeowners, hears the problem, checks live appointment
-              slots, and confirms the time they choose.
+              Line answers questions, checks available times, and books HVAC
+              appointments in one natural conversation.
             </p>
-            {phoneCta && (
-              <a
-                className="hero-phone-cta"
-                href={phoneCta.href}
-                aria-label={`Call us at ${phoneCta.displayNumber} to book your HVAC appointment.`}
-              >
-                <span className="hero-phone-icon">
-                  <ProductIcon name="phone" />
-                </span>
-                <span className="hero-phone-copy">
-                  <span>Call us at</span>
-                  <strong>{phoneCta.displayNumber}</strong>
-                  <span>to book your HVAC appointment.</span>
-                </span>
-              </a>
-            )}
             <div className="product-hero-actions">
-              <Link className="product-button" href="/book">
-                Book an appointment <ProductIcon name="arrow" />
-              </Link>
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
               </a>
-            </div>
-            <div className="hero-benefits">
-              <span>
-                <ProductIcon name="check" /> Live appointment availability
-              </span>
-              <span>
-                <ProductIcon name="check" /> Every booking confirmed by the
-                caller
-              </span>
             </div>
           </div>
           <div className="hero-chat-composition">
@@ -352,7 +317,7 @@ export default function Home() {
       </footer>
       <HomepageChatLink
         className="voice-launcher"
-        label="Try chatting with Line on this page"
+        label="Try Line’s voice AI on this page"
       >
         <span className="launcher-mark">
           <VoiceSymbol />

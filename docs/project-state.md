@@ -1,5 +1,22 @@
 # Project State
 
+## Simplified homepage with prominent voice AI — UNVERIFIED — 2026-10-31
+
+The owner requested hiding the public business phone number and simplifying the
+hero around voice AI. Source removes the homepage phone panel/parser and public
+phone-status number/dial link. A larger Line card defaults to Voice AI, with
+existing guest text chat available as a secondary choice. Voice links to the
+existing signed-in booking workspace; selecting Voice and microphone consent
+remain explicit there. Old homepage phone-CTA variables no longer affect rendering.
+Backend routing and customer contact workflows are unchanged.
+
+Source formatting only; no tests, builds, linters, type checks, services, browser
+previews or deployments ran. Implementation/rendering remain **UNVERIFIED**.
+Exact owner command and responsive, keyboard, consent and chat checks:
+`docs/homepage-hero.md`. Earlier phone-CTA activation instructions are superseded.
+The owner subsequently authorized committing and pushing this frontend change to
+`main`; no test execution or hosting deployment command was requested.
+
 ## Inbound phone webhook repair — checks passed, live acceptance pending — 2026-10-30
 
 Owner reports Render `ab69756`, successful Telnyx → ElevenLabs SIP routing,

@@ -9,14 +9,11 @@ or frontend configuration. Source/runtime, dashboard setup and live acceptance
 are **UNVERIFIED**; exact setup, commands and manual checks:
 [Telnyx SIP setup](telnyx-sip-setup.md). No deployment is authorized by publication.
 
-The homepage's optional phone panel adds server-only **frontend-project**
-`HOMEPAGE_PHONE_NUMBER_E164` and `TELNYX_INBOUND_CALLING_VERIFIED=false`;
-`apps/web/.env.example` contains the owner-supplied public booking number.
-Keep the verification flag false until real inbound Telnyx acceptance is reported.
-After acceptance, authorized enablement requires setting the flag true and
-rebuilding/redeploying the frontend. This flag does not enable or verify the
-backend. Source, web checks and responsive acceptance are **UNVERIFIED**; exact
-commands and manual checks are in the Telnyx guide's homepage CTA section.
+The owner removed the public phone panel on October 31. Frontend variables
+`HOMEPAGE_PHONE_NUMBER_E164` and `TELNYX_INBOUND_CALLING_VERIFIED` are no longer
+used and can be removed from hosting configuration. The hero emphasizes browser
+voice AI; backend phone routing is unchanged. Source/rendering remain
+**UNVERIFIED**; exact owner commands and manual checks: [homepage hero](homepage-hero.md).
 
 For the subsequent Render `AssertionError: Path parameters cannot have default values`, the customer portal header dependency's Python argument `key` collided with the memory route's `{key}` path parameter. Renamed the dependency argument to `portal_key`, preserving `X-Customer-Portal-Key`, the endpoint URL and authentication behavior. Owner command from `/private/tmp/hvacline-browser-demo`: `python -m pytest tests/test_api.py`. This uses mocked database access and includes route-registration/OpenAPI coverage; no command ran. Deploy the repaired API revision, confirm application startup and `/ready`, then check signed-in memory fact deletion and rejection without customer authorization. No migration, new variable or frontend deployment is required for this repair. Runtime remains **UNVERIFIED**.
 

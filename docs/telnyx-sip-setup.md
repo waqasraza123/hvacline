@@ -189,52 +189,19 @@ frontend already reads these call/appointment tables and needs no Telnyx changes
 Hosting deployment and provider configuration remain separate from the
 owner-authorized main publication.
 
-## Homepage call CTA — disabled pending live acceptance
+## Public phone number hidden — 2026-10-31
 
-The hero includes a phone-icon call panel with the configured, formatted US
-number and “Call us at … to book your HVAC appointment.” The number and the
-entire panel link to its `tel:` URI. Existing hero typography, orange palette,
-booking links and responsive grid remain in place.
+The owner requested removing the public business phone number. The homepage no
+longer renders a phone panel or dial link, regardless of earlier configuration.
+`HOMEPAGE_PHONE_NUMBER_E164` and `TELNYX_INBOUND_CALLING_VERIFIED` are no longer
+used and can be removed from the frontend project. The sandbox phone-status page
+also omits the number and dial link, while retaining its existing access gates.
+Backend inbound-number routing and provider configuration are unchanged.
 
-Set these **server-only web variables** in Vercel's frontend project or
-`apps/web/.env.local`, using `apps/web/.env.example` as the configuration reference:
-
-```dotenv
-HOMEPAGE_PHONE_NUMBER_E164=<owner-authorized-US-number-in-E.164>
-TELNYX_INBOUND_CALLING_VERIFIED=false
-```
-
-The verification flag defaults to false and the public hero renders **no phone
-panel or dial link** until it is explicitly true. It is an owner attestation of
-completed real-call acceptance, not an automated provider-health check. Keep it
-false on public deployments until the live checklist below passes. Invalid flags
-and missing/non-US numbers when enabled fail configuration validation. No
-`NEXT_PUBLIC_` variables or browser provider credentials are required.
-
-After the owner verifies live Telnyx inbound calling, configure the authorized
-number, set the flag to true and rebuild/redeploy the frontend only with owner
-authorization. The server-rendered homepage may be generated at build time;
-changing a hosting variable alone does not refresh an existing build. To withdraw
-the public CTA, set the flag false and rebuild/redeploy. This change does not
-configure, enable or verify the carrier connection.
-
-Implementation and responsive/accessibility acceptance are **UNVERIFIED**. Exact
-owner-run web checks (not run):
-
-```bash
-cd /private/tmp/hvacline-browser-demo
-npm run test --workspace @insurance-operations/web -- src/lib/environment.test.ts
-npm run verify:web
-```
-
-Manual checks: before acceptance, confirm the public homepage has no call panel
-or `tel:` link with the flag absent/false. After carrier acceptance and authorized
-enablement, inspect the number/message and exact configured `tel:` target; review
-desktop and 320/390-pixel mobile widths, tablet layout, keyboard focus and 200%
-zoom for readable text and no overflow. Confirm the icon is decorative, the full
-booking message is the link's accessible name, and existing Book, Try and hero
-chat interactions remain available. Complete a mobile dial action only as part
-of owner-authorized live acceptance.
+The simplified hero emphasizes browser voice AI with text chat as a secondary
+choice. Voice still uses the existing signed-in booking workspace and explicit
+microphone consent. Implementation/rendering are **UNVERIFIED**; owner commands
+and manual acceptance are in [homepage hero](homepage-hero.md).
 
 ## Identity, replay and finalization
 

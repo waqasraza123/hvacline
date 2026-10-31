@@ -36,8 +36,10 @@ export function HomepageChatLink({
       aria-label={label}
       onClick={(event) => {
         const panel = document.getElementById("try-line");
-        const composer = document.getElementById("homepage-line-message");
-        if (panel && composer) {
+        const action =
+          document.getElementById("homepage-line-voice") ??
+          document.getElementById("homepage-line-message");
+        if (panel && action) {
           event.preventDefault();
           panel.scrollIntoView({
             behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -46,7 +48,7 @@ export function HomepageChatLink({
               : "smooth",
             block: "center",
           });
-          composer.focus({ preventScroll: true });
+          action.focus({ preventScroll: true });
         }
       }}
     >
@@ -57,6 +59,7 @@ export function HomepageChatLink({
 
 export function HomepageChat() {
   const router = useRouter();
+  const [mode, setMode] = useState<"voice" | "text">("voice");
   const [state, setState] = useState<State>("loading");
   const [draft, setDraft] = useState("");
   const [exchange, setExchange] = useState({ message: "", reply: "" });
@@ -253,189 +256,241 @@ export function HomepageChat() {
         </span>
         <div>
           <h2 id="try-line-title">
-            Meet Line<span>Your AI booking assistant</span>
+            Meet Line<span>Your AI voice receptionist</span>
           </h2>
         </div>
         <span className={styles.badge}>
-          <span /> Chat
+          <span /> Voice & chat
         </span>
       </header>
-      <div className={styles.intro}>
-        <p className={styles.eyebrow}>ONE QUESTION. A BETTER FIRST STEP.</p>
-        <h3>Your first question starts here.</h3>
-        <p>Ask about HVAC service or how booking works.</p>
-      </div>
       <div
-        ref={messages}
-        className={styles.messages}
-        role="log"
-        aria-label="Conversation with Line"
-        aria-live="polite"
-        aria-relevant="additions text"
+        className={styles.modes}
+        role="group"
+        aria-label="Try Line by voice or text"
       >
-        <div className={styles.lineMessage}>
-          <span>LINE</span>
-          <p>Hi, I’m Line. What can I help you with today?</p>
-        </div>
-        {exchange.message && (
-          <div className={styles.userMessage}>
-            <span>YOU</span>
-            <p>{exchange.message}</p>
-          </div>
-        )}
-        {exchange.reply && (
-          <div className={styles.lineMessage}>
-            <span>LINE</span>
-            <p>{exchange.reply}</p>
-          </div>
-        )}
-        {pending && (
-          <>
-            <div className={styles.userMessage}>
-              <span>YOU</span>
-              <p>{draft}</p>
-            </div>
-            <div className={styles.thinking} role="status">
-              <i />
-              <i />
-              <i />
-              <span>Line is thinking…</span>
-            </div>
-          </>
-        )}
+        <button
+          type="button"
+          aria-pressed={mode === "voice"}
+          onClick={() => setMode("voice")}
+        >
+          <ProductIcon name="mic" /> Voice AI
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === "text"}
+          onClick={() => setMode("text")}
+        >
+          <ProductIcon name="chat" /> Text chat
+        </button>
       </div>
-      {!exchange.reply && state === "ready" && !pending && (
-        <div className={styles.suggestions} aria-label="Suggested questions">
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => {
-                setDraft(suggestion);
-                input.current?.focus();
-              }}
-            >
-              {suggestion}
-              <span>↗</span>
-            </button>
-          ))}
-        </div>
-      )}
-      {state === "used" && (
-        <div className={styles.continuation}>
-          <span>
-            <ProductIcon name="check" /> Your next step is a conversation away.
-          </span>
-          <button type="button" onClick={openGate}>
-            Continue with Line <span>→</span>
-          </button>
-        </div>
-      )}
-      <form
-        className={styles.form}
-        onSubmit={(event) => void submit(event)}
-        aria-busy={pending}
-      >
-        <label className={styles.label} htmlFor="homepage-line-message">
-          Message Line
-        </label>
-        <div className={styles.composer}>
-          <textarea
-            ref={input}
-            id="homepage-line-message"
-            value={draft}
-            maxLength={1000}
-            rows={2}
-            disabled={pending}
-            aria-describedby="homepage-chat-help"
-            placeholder={
-              state === "used"
-                ? "What would you like to ask next?"
-                : "How can Line help you?"
-            }
-            onChange={(event) => setDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (
-                event.key === "Enter" &&
-                !event.shiftKey &&
-                !event.nativeEvent.isComposing
-              ) {
-                event.preventDefault();
-                event.currentTarget.form?.requestSubmit();
-              }
-            }}
-          />
-          <button
-            type="submit"
-            disabled={!canSubmit || !draft.trim()}
-            aria-label={
-              state === "ready"
-                ? "Send message and agree to AI processing"
-                : "Continue with Line"
-            }
-          >
-            {state === "ready" ? "Send & agree" : "Continue"}
-            <ProductIcon name="arrow" />
-          </button>
-        </div>
-        <p id="homepage-chat-help" className={styles.help}>
-          {pending
-            ? "Getting your reply from Line…"
-            : state === "loading"
-              ? "Getting Line ready…"
-              : state === "ready"
-                ? "Try one message. No account needed."
-                : state === "used"
-                  ? "Sign in to keep the conversation going."
-                  : state === "authenticated"
-                    ? "Continue in your booking workspace."
-                    : state === "busy"
-                      ? "Line is busy. Check availability in a moment, or sign in."
-                      : "Line is unavailable here right now. You can still sign in."}
-        </p>
-        {state === "ready" && (
-          <p className={styles.help}>
-            Choosing Send &amp; agree accepts AI processing by ElevenLabs. Read
-            the details below.
-          </p>
-        )}
-        {state === "ready" && (
-          <details className={styles.disclosure}>
-            <summary>Send & agree · AI processing details</summary>
-            <p>
-              Choosing Send means you agree to AI processing by ElevenLabs and
-              its AI providers. This is text only; your microphone stays off.
-              Audio recording is disabled and zero-day scheduled deletion is
-              configured; provider Zero Retention Mode is not enabled. No
-              request or booking is saved here. This tab keeps your exchange and
-              draft for up to 30 minutes so you can continue after signing in. A
-              cookie remembers your free allowance for 30 days.
-            </p>
-          </details>
-        )}
-        {error && (
-          <p className={styles.error} role="alert">
-            {error}
-          </p>
-        )}
-        {["busy", "unavailable"].includes(state) && (
-          <div className={styles.fallback}>
-            <button type="button" onClick={() => void refreshStatus()}>
-              Check availability
-            </button>
-            <Link href="/login">Sign in to continue ↗</Link>
+      {mode === "voice" ? (
+        <div id="homepage-voice-preview" className={styles.voicePreview}>
+          <div className={styles.voiceOrb} aria-hidden="true">
+            <VoiceSymbol />
           </div>
-        )}
-        {!storageAvailable && (
-          <p className={styles.help}>
-            Browser storage is unavailable. Keep this page open to read your
-            conversation.
+          <p className={styles.eyebrow}>
+            SPEAK NATURALLY. LINE TAKES IT FROM HERE.
           </p>
-        )}
-      </form>
+          <h3>
+            Talk it through.
+            <br />
+            Book with Line.
+          </h3>
+          <p>Tell Line what you need. Find a time that works.</p>
+          <Link
+            id="homepage-line-voice"
+            className={styles.voiceAction}
+            href="/book"
+          >
+            <ProductIcon name="mic" /> Start voice chat{" "}
+            <ProductIcon name="arrow" />
+          </Link>
+          <p className={styles.voiceHelp}>
+            Sign in, then choose Voice to get started.
+          </p>
+        </div>
+      ) : (
+        <div id="homepage-text-preview">
+          <div
+            ref={messages}
+            className={styles.messages}
+            role="log"
+            aria-label="Conversation with Line"
+            aria-live="polite"
+            aria-relevant="additions text"
+          >
+            <div className={styles.lineMessage}>
+              <span>LINE</span>
+              <p>Hi, I’m Line. What can I help you with today?</p>
+            </div>
+            {exchange.message && (
+              <div className={styles.userMessage}>
+                <span>YOU</span>
+                <p>{exchange.message}</p>
+              </div>
+            )}
+            {exchange.reply && (
+              <div className={styles.lineMessage}>
+                <span>LINE</span>
+                <p>{exchange.reply}</p>
+              </div>
+            )}
+            {pending && (
+              <>
+                <div className={styles.userMessage}>
+                  <span>YOU</span>
+                  <p>{draft}</p>
+                </div>
+                <div className={styles.thinking} role="status">
+                  <i />
+                  <i />
+                  <i />
+                  <span>Line is thinking…</span>
+                </div>
+              </>
+            )}
+          </div>
+          {!exchange.reply && state === "ready" && !pending && (
+            <div
+              className={styles.suggestions}
+              aria-label="Suggested questions"
+            >
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setDraft(suggestion);
+                    input.current?.focus();
+                  }}
+                >
+                  {suggestion}
+                  <span>↗</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {state === "used" && (
+            <div className={styles.continuation}>
+              <span>
+                <ProductIcon name="check" /> Your next step is a conversation
+                away.
+              </span>
+              <button type="button" onClick={openGate}>
+                Continue with Line <span>→</span>
+              </button>
+            </div>
+          )}
+          <form
+            className={styles.form}
+            onSubmit={(event) => void submit(event)}
+            aria-busy={pending}
+          >
+            <label className={styles.label} htmlFor="homepage-line-message">
+              Message Line
+            </label>
+            <div className={styles.composer}>
+              <textarea
+                ref={input}
+                id="homepage-line-message"
+                value={draft}
+                maxLength={1000}
+                rows={2}
+                disabled={pending}
+                aria-describedby="homepage-chat-help"
+                placeholder={
+                  state === "used"
+                    ? "What would you like to ask next?"
+                    : "How can Line help you?"
+                }
+                onChange={(event) => setDraft(event.target.value)}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.nativeEvent.isComposing
+                  ) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!canSubmit || !draft.trim()}
+                aria-label={
+                  state === "ready"
+                    ? "Send message and agree to AI processing"
+                    : "Continue with Line"
+                }
+              >
+                {state === "ready" ? "Send & agree" : "Continue"}
+                <ProductIcon name="arrow" />
+              </button>
+            </div>
+            <p id="homepage-chat-help" className={styles.help}>
+              {pending
+                ? "Getting your reply from Line…"
+                : state === "loading"
+                  ? "Getting Line ready…"
+                  : state === "ready"
+                    ? "Try one message. No account needed."
+                    : state === "used"
+                      ? "Sign in to keep the conversation going."
+                      : state === "authenticated"
+                        ? "Continue in your booking workspace."
+                        : state === "busy"
+                          ? "Line is busy. Check availability in a moment, or sign in."
+                          : "Line is unavailable here right now. You can still sign in."}
+            </p>
+            {state === "ready" && (
+              <p className={styles.help}>
+                Choosing Send &amp; agree accepts AI processing by ElevenLabs.
+                Read the details below.
+              </p>
+            )}
+            {state === "ready" && (
+              <details className={styles.disclosure}>
+                <summary>Send & agree · AI processing details</summary>
+                <p>
+                  Choosing Send means you agree to AI processing by ElevenLabs
+                  and its AI providers. This is text only; your microphone stays
+                  off. Audio recording is disabled and zero-day scheduled
+                  deletion is configured; provider Zero Retention Mode is not
+                  enabled. No request or booking is saved here. This tab keeps
+                  your exchange and draft for up to 30 minutes so you can
+                  continue after signing in. A cookie remembers your free
+                  allowance for 30 days.
+                </p>
+              </details>
+            )}
+            {error && (
+              <p className={styles.error} role="alert">
+                {error}
+              </p>
+            )}
+            {["busy", "unavailable"].includes(state) && (
+              <div className={styles.fallback}>
+                <button type="button" onClick={() => void refreshStatus()}>
+                  Check availability
+                </button>
+                <Link href="/login">Sign in to continue ↗</Link>
+              </div>
+            )}
+            {!storageAvailable && (
+              <p className={styles.help}>
+                Browser storage is unavailable. Keep this page open to read your
+                conversation.
+              </p>
+            )}
+          </form>
+        </div>
+      )}
       <footer className={styles.footer}>
-        <ProductIcon name="shield" /> Your microphone stays off. Booking starts
-        after sign-in.
+        <ProductIcon name="shield" />
+        {mode === "voice"
+          ? "Microphone access starts only with your permission."
+          : "Your microphone stays off. Booking starts after sign-in."}
       </footer>
       <dialog
         ref={dialog}

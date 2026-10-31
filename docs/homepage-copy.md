@@ -8,39 +8,35 @@ Applied to the homepage source with option 1. Implementation is owner-unverified
 2. **An AI receptionist that books HVAC appointments.** States the category, industry and outcome immediately, with less emphasis on the owner's pain.
 3. **Less phone tag. More HVAC appointments.** Connects scheduling friction to the business outcome in eight words.
 
-## Hero
+## Hero — updated October 31
 
-AI voice receptionist for HVAC businesses
+AI voice receptionist for HVAC
 
 **Stop losing jobs to missed calls.**
 
-HVACLine is the AI voice receptionist for HVAC businesses. Line talks with homeowners, hears the problem, checks live appointment slots, and confirms the time they choose.
+Line answers questions, checks available times, and books HVAC appointments in one natural conversation.
 
-Primary CTA: **Try the booking demo**
+Secondary link: **See how it works**
 
-Secondary CTA: **See how it works**
-
-Trust line: **Live appointment availability. Every booking confirmed by the caller.**
-
-### Line preview card
-
-Live conversation. Confirmed booking.
+### Line card
 
 Meet Line — Your AI voice receptionist
 
-Voice AI
+Voice AI / Text chat (Voice AI selected initially)
 
-**From problem to appointment.**
+**Talk it through. Book with Line.**
 
-Line collects the details, offers available times, and asks the caller to confirm.
+Tell Line what you need. Find a time that works.
 
-CTA: **Try a booking conversation**
+Primary CTA: **Start voice chat**
 
-Sign in, then choose Voice to try the demo.
+Sign in, then choose Voice to get started.
 
-**Caller-confirmed appointments.** Line asks for confirmation before booking.
+Microphone access starts only with your permission.
 
-Problem. Available time. Confirmation.
+The public business number and dial links are hidden. Text chat retains its
+one-message guest exchange and sign-in continuation. Implementation/rendering
+remain **UNVERIFIED**; owner checks: [homepage hero](homepage-hero.md).
 
 ## How it works
 

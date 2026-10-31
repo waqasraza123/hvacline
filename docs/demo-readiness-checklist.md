@@ -43,9 +43,9 @@ provider guide; never run the fixture against retained business data.
 6. For the separate local browser workspace, follow [local browser
    setup](local-browser-voice.md). Check local Chat/Voice, cleanup, on-screen
    review, callback save and booking. The customer/MFA flow stays on ElevenLabs.
-7. Complete homepage phone-CTA acceptance from the Telnyx guide. Keep
-   `TELNYX_INBOUND_CALLING_VERIFIED=false` until actual carrier acceptance, then
-   authorize frontend activation/rebuild separately.
+7. Complete [homepage hero acceptance](homepage-hero.md). Confirm the public
+   business number and dial links stay hidden, and check browser Voice AI and
+   Text chat navigation. The former phone-CTA variables no longer enable a panel.
 
 Record actual results before marking any path ready. Publication to main does
 not establish live calling, model performance or production readiness.
