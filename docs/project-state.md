@@ -1,5 +1,67 @@
 # Project State
 
+## Calling publication authorized — UNVERIFIED — 2026-11-02
+
+Owner explicitly requests pushing the outbound implementation and November 5
+announcement to main. Publication includes the dedicated outbound adapter,
+disabled website form, unapplied forward migration0018, configuration templates,
+unexecuted regression specifications and setup/acceptance handoff. Earlier
+uncommitted inbound-investigation documentation is excluded from this publication.
+No tests, builds, linters, type checks, migrations, services, calls, provider edits
+or hosting deployment commands are authorized by this push request. Calling
+remains disabled and implementation/runtime **UNVERIFIED**. Owner setup and exact
+checks: `docs/outbound-demo-calling.md`; hosted revision and activation are pending.
+
+## Calling completion and November 5 announcement — UNVERIFIED — 2026-11-02
+
+Owner requests inbound/outbound calling advertised as coming November 5, 2026.
+Homepage source now shows the shared release date in the hero, calling section
+and FAQ, plus Calling navigation. Disabled calling renders two upcoming options
+and a browser Voice link; existing-request status recovery stays accessible.
+The date never enables provider or website gates automatically.
+
+Outbound source repairs allow form correction only for certified pre-creation
+rejections, serialize browser status reads and preserve uncertain transfer
+evidence across later lifecycle events and late dial errors. Malformed nested
+transcript/tool collections reject before state changes. Regression specifications
+are written, unexecuted. Existing provider, migration and real-call prerequisites
+remain; calling is disabled and no end-to-end acceptance is claimed.
+
+Local/unpublished and **UNVERIFIED**. Source formatting only; no verification,
+migrations, services, calls, provider edits, commits, pushes or deployments ran.
+Exact owner commands and manual checks: `docs/outbound-demo-calling.md`.
+
+## Outbound AI demo calling — disabled, UNVERIFIED — 2026-11-01
+
+Source adds a separate ElevenLabs outbound SIP adapter and dedicated fictional
+HVAC demo prompt, using the existing FastAPI/Next/Neon architecture. Admin dialing
+always requires the existing strong admin token; website dialing remains disabled
+until owner-recorded real outbound and human-transfer acceptance. Exact E.164
+allowlist, explicit versioned consent, tenant-serialized reservations, persistent
+idempotency, one active/unknown slot, cooldown/global/number limits and existing
+HMAC webhook verification protect attempts. No raw phone numbers, audio or
+transcripts enter the new call table; keyed hashes and minimal consent/receipt
+metadata persist. New forward migration `20261101_0018` is unapplied.
+
+Native transfer configuration permits one fixed authorized human via SIP REFER,
+with separate-turn agreement in the prompt/tool condition. REFER acceptance never
+claims a human answer; missing/uncertain results retain the slot until an audited
+operator attests that every carrier leg ended. AI duration is checked at <=180
+seconds before dialing. Telnyx's documented external-transfer flow requires inbound
+matching; outbound-originated REFER, acceptable unavailable-human behavior and a
+carrier-enforced transferred-leg duration limit remain unresolved prerequisites.
+The carrier-limit flag is an owner attestation, not an implemented timer. Keep
+transfer and website disabled until these are established and tested.
+
+Homepage form, same-origin server bridge, focused specifications and exact agent
+JSON/dashboard/environment/manual-call instructions are staged. Admin-controlled
+out-of-band number approval is the only ownership-verification mode; no unrestricted
+public dialing, OTP service or new platform is added. Existing inbound/browser/booking
+routes and provider settings were preserved. Source formatting only; no tests,
+builds, linters, type checks, migrations, services, live calls, provider edits,
+commits, pushes or deployments ran. Implementation/runtime remain **UNVERIFIED**.
+Owner commands and real-call procedure: `docs/outbound-demo-calling.md`.
+
 ## Simplified homepage with prominent voice AI — UNVERIFIED — 2026-10-31
 
 The owner requested hiding the public business phone number and simplifying the

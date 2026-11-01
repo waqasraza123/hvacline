@@ -109,6 +109,8 @@ from insurance_operations.telephony.demo import (
     PhoneDemoService,
     PhoneDemoStatusResponse,
 )
+from insurance_operations.telephony.outbound.routes import create_outbound_demo_router
+from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
 from insurance_operations.telephony.routes import create_development_telephony_router
 
 
@@ -126,6 +128,7 @@ def create_app(
     settings: ApiSettings,
     database_engine: Engine,
     conversation_provider: ConversationProvider | None = None,
+    outbound_settings: OutboundDemoSettings | None = None,
 ) -> FastAPI:
     session_factory = sessionmaker(
         bind=database_engine,
@@ -189,6 +192,14 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.integration_settings = settings
+    application.include_router(
+        create_outbound_demo_router(
+            settings,
+            session_factory,
+            outbound_settings
+            or OutboundDemoSettings(app_environment=settings.app_environment),
+        )
+    )
     application.include_router(create_homepage_chat_router(settings, session_factory))
     application.include_router(create_email_event_router(settings, session_factory))
     application.add_middleware(

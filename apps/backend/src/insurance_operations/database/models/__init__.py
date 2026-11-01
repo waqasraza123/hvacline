@@ -58,6 +58,7 @@ from insurance_operations.database.models.operations import (
     AuditEvent,
     IdempotencyRecord,
 )
+from insurance_operations.database.models.outbound_demo import OutboundDemoCall
 from insurance_operations.database.models.receptionist import (
     AgencyReceptionistSettings,
 )
@@ -79,6 +80,9 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "outbound_demo_calls": TableOwnership(
+        module="telephony", agency_column="agency_id"
+    ),
     "homepage_chat_visitors": TableOwnership(
         module="homepage_chat", agency_column="agency_id"
     ),
@@ -171,6 +175,7 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "OutboundDemoCall",
     "HomepageChatDailyUsage",
     "HomepageChatVisitor",
     "TABLE_OWNERSHIP",

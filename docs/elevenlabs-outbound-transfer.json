@@ -1,0 +1,19 @@
+{
+  "type": "system",
+  "name": "transfer_to_number",
+  "description": "Only after the person explicitly requests a human, you explain that the demo owner may be unavailable, ask for agreement to try connecting now, and receive a clear affirmative answer in a separate turn. Attempt only once.",
+  "params": {
+    "system_tool_type": "transfer_to_number",
+    "enable_client_message": true,
+    "transfers": [
+      {
+        "transfer_type": "sip_refer",
+        "condition": "Only after the person explicitly requests a human, you explain that the demo owner may be unavailable, ask for agreement to try connecting now, and receive a clear affirmative answer in a separate turn. Attempt only once.",
+        "transfer_destination": {
+          "type": "phone",
+          "phone_number": "REPLACE_WITH_AUTHORIZED_HUMAN_E164"
+        }
+      }
+    ]
+  }
+}

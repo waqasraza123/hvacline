@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
+import { CallingLaunchDate } from "@/features/outbound-demo/calling-launch";
+import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
 import {
   HomepageChat,
   HomepageChatLink,
 } from "@/features/homepage-chat/homepage-chat";
 import "./product.css";
+import "@/features/outbound-demo/outbound-demo.css";
 
 const services = [
   {
@@ -41,6 +44,7 @@ export default function Home() {
         <nav className="product-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#services">Services</a>
+          <a href="#call-me">Calling</a>
         </nav>
         <div className="product-header-actions">
           <div className="product-provider-logos">
@@ -149,6 +153,16 @@ export default function Home() {
               Line answers questions, checks available times, and books HVAC
               appointments in one natural conversation.
             </p>
+            <a className="calling-announcement" href="#call-me">
+              <ProductIcon name="phone" />
+              <span>
+                Inbound &amp; outbound calling
+                <strong>
+                  Coming <CallingLaunchDate />
+                </strong>
+              </span>
+              <ProductIcon name="arrow" />
+            </a>
             <div className="product-hero-actions">
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
@@ -236,12 +250,22 @@ export default function Home() {
             </article>
           ))}
         </section>
+        <OutboundDemo />
         <section className="product-faq product-container">
           <div>
             <p className="product-eyebrow">FAQ</p>
             <h2>What HVAC owners need to know.</h2>
           </div>
           <div className="product-faq-list">
+            <details>
+              <summary>
+                When is telephone calling coming?<span>+</span>
+              </summary>
+              <p>
+                Inbound and outbound calling are coming on <CallingLaunchDate />
+                . You can try Line’s Voice AI in your browser today.
+              </p>
+            </details>
             <details>
               <summary>
                 Who is HVACLine for?<span>+</span>

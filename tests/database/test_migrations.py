@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "outbound_demo_calls",
     "homepage_chat_visitors", "homepage_chat_daily_usage",
     "customer_mfa_factors", "customer_mfa_challenges", "customer_mfa_recovery_codes",
     "customer_memory_policies", "customer_memory_facts", "customer_memory_summaries",
@@ -74,6 +75,12 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "outbound_demo_calls": {
+        "id", "agency_id", "request_id", "owner_hash", "destination_hash",
+        "request_hash", "scenario", "consent_version", "consent_at", "created_at",
+        "status", "transfer_status", "conversation_id", "sip_call_id",
+        "last_event_hash", "finalized_at",
+    },
     "homepage_chat_visitors": {
         "agency_id",
         "token_hash",
@@ -626,6 +633,7 @@ def test_migration_unique_constraints_match_the_approved_scopes(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_unique_columns: dict[str, set[tuple[str, ...]]] = {
+        "outbound_demo_calls": {("agency_id", "request_id"), ("conversation_id",), ("sip_call_id",)},
         "customer_mfa_challenges": {("token_hash",)},
         "customer_mfa_recovery_codes": {("code_hash",)},
         "whatsapp_conversations": {("conversation_id",), ("session_id",)},
