@@ -8,6 +8,7 @@ from fastapi import APIRouter, FastAPI, Header, Request, Response, status
 from pydantic import SecretStr
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
+from starlette.concurrency import run_in_threadpool
 from twilio.twiml.voice_response import VoiceResponse
 
 from insurance_operations.database.models.telephony import AgencyInboundNumber
@@ -29,6 +30,7 @@ from insurance_operations.telephony.phone_schemas import (
 )
 from insurance_operations.telephony.phone_service import PhoneReceptionistService
 from insurance_operations.telephony.providers.elevenlabs import (
+    MAX_WEBHOOK_BYTES,
     ElevenLabsPhoneProvider,
     PhoneCallRegistration,
 )
@@ -413,10 +415,19 @@ def create_phone_tools_router(ingress_service: TelephonyIngressService) -> APIRo
         include_in_schema=False,
     )
     async def receive_elevenlabs_post_call(request: Request) -> Response:
-        body = await request.body()
-        ingress_service.receive_post_call(
+        body = bytearray()
+        async for chunk in request.stream():
+            if len(body) + len(chunk) > MAX_WEBHOOK_BYTES:
+                raise ApiError(
+                    status_code=413,
+                    code="PHONE_POST_CALL_TOO_LARGE",
+                    message="The phone post-call event is too large",
+                )
+            body.extend(chunk)
+        await run_in_threadpool(
+            ingress_service.receive_post_call,
             headers=request.headers,
-            body=body,
+            body=bytes(body),
             correlation_id=UUID(request.state.correlation_id),
         )
         return Response(status_code=status.HTTP_200_OK)

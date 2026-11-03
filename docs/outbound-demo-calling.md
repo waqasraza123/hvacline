@@ -1,7 +1,20 @@
 # Outbound AI demo calling with human transfer
 
-Implementation and all runtime behavior are **UNVERIFIED**. No tests, builds,
-migrations, services, provider edits, deployments or telephone calls were run.
+Current closeout, November 3: after explicit owner migration authorization, the
+configured development database reported `20261101_0018` before and after the
+targeted upgrade; no schema change was needed. This supersedes earlier pending
+migration notes for that target only. Local outbound provider/recipient/signing
+values remain missing and calling flags remain false. The subsequently authorized
+`.venv/bin/python -m pytest tests/test_outbound_demo.py` passed 39 tests in 1.64s.
+The separately authorized `npm run test:web --
+src/app/api/outbound-demo/route.test.ts` passed 15 tests in one file (556ms);
+the focused inbound/webhook suite passed 73 tests in 2.32s. Other release checks
+remain unexecuted. No provider edits, deployments or calls
+ran. See [FINAL-CLOSEOUT.md](../FINAL-CLOSEOUT.md) for
+current evidence, owner commands and remaining activation blockers.
+
+Live runtime behavior remains **UNVERIFIED**. No builds, services, provider edits,
+deployments or telephone calls were run for this release.
 Do not enable the website until an authorized real outbound call and a real
 human transfer pass the acceptance procedure below. Existing inbound SIP,
 browser Voice/Chat and booking use their existing agents and routes.

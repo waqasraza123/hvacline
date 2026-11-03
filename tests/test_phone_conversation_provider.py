@@ -121,3 +121,35 @@ def test_post_call_webhook_requires_valid_fresh_hmac() -> None:
             headers={"ElevenLabs-Signature": f"t={timestamp},v0={'0' * 64}"},
             body=body,
         )
+
+
+@pytest.mark.parametrize("signature", ["\u00e9" * 64, "g" * 64, "0" * 63])
+def test_post_call_webhook_rejects_malformed_signature(signature: str) -> None:
+    timestamp = 1_786_550_400
+    provider = ElevenLabsPhoneProvider(
+        api_key=None,
+        agent_id="synthetic-phone-agent",
+        post_call_webhook_secret="synthetic-webhook-secret",
+        clock=lambda: float(timestamp),
+    )
+
+    with pytest.raises(TelephonyAdapterError, match="verification failed"):
+        provider.verify_post_call_webhook(
+            headers={"ElevenLabs-Signature": f"t={timestamp},v0={signature}"},
+            body=b"{}",
+        )
+
+
+def test_post_call_webhook_rejects_unbounded_timestamp() -> None:
+    provider = ElevenLabsPhoneProvider(
+        api_key=None,
+        agent_id="synthetic-phone-agent",
+        post_call_webhook_secret="synthetic-webhook-secret",
+        clock=lambda: 1_786_550_400.0,
+    )
+
+    with pytest.raises(TelephonyAdapterError, match="verification failed"):
+        provider.verify_post_call_webhook(
+            headers={"ElevenLabs-Signature": f"t={'9' * 400},v0={'0' * 64}"},
+            body=b"{}",
+        )

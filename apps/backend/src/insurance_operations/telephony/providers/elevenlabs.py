@@ -93,7 +93,12 @@ class ElevenLabsPhoneProvider:
             raise TelephonyAdapterError("phone provider webhook verification failed")
 
         timestamp, supplied_signature = parse_signature(signature_header)
-        if abs(self._clock() - timestamp) > WEBHOOK_TOLERANCE_SECONDS:
+        now = self._clock()
+        if not (
+            now - WEBHOOK_TOLERANCE_SECONDS
+            <= timestamp
+            <= now + WEBHOOK_TOLERANCE_SECONDS
+        ):
             raise TelephonyAdapterError("phone provider webhook verification failed")
 
         signed_payload = str(timestamp).encode("ascii") + b"." + body
@@ -160,7 +165,11 @@ def parse_signature(value: str) -> tuple[int, str]:
         raise TelephonyAdapterError(
             "phone provider webhook verification failed"
         ) from error
-    if timestamp < 0 or len(signature) != 64:
+    if (
+        timestamp < 0
+        or len(signature) != 64
+        or any(character not in "0123456789abcdef" for character in signature)
+    ):
         raise TelephonyAdapterError("phone provider webhook verification failed")
     return timestamp, signature
 

@@ -1,5 +1,64 @@
 # Project State
 
+## Final closeout publication authorized — 2026-11-03
+
+Owner explicitly requests committing/pushing only closeout fixes, regression
+specifications and documentation to main after static diff/secret review. Scope
+is the phone ingress/provider, two regression files, outbound guide, this note's
+November 3 closeout evidence and `FINAL-CLOSEOUT.md`. Older inbound-investigation
+documentation and the provisioning section below remain excluded/preserved.
+No tests, builds, lint, type checks, migrations, deployment or calls are authorized
+for publication. Earlier recorded test results remain the evidence; calling and
+transfer gates stay disabled and live acceptance remains pending.
+
+## Authorized inbound/webhook regressions — 2026-11-03
+
+Owner explicitly requested the focused inbound/webhook tests from the closeout.
+`DEMO_SANDBOX_ENABLED=false PYTHONPATH=apps/backend/src .venv/bin/python -m
+pytest --import-mode=importlib tests/test_telnyx_sip_provider.py
+tests/test_phone_webhook_validation.py tests/test_phone_conversation_provider.py
+tests/test_phone_post_call_ingress.py` passed **73 tests in 2.32s**. This includes
+the new malformed-signature/large-timestamp and streaming-body regressions.
+No database tests, other checks, migrations, services, provider edits or calls
+ran. Hosted/live calling and broader release acceptance remain unverified.
+
+## Authorized outbound unit verification — 2026-11-03
+
+Owner then explicitly requested `npm run test:web --
+src/app/api/outbound-demo/route.test.ts`: **15 tests passed**, one file, 556ms.
+Vitest emitted a non-failing warning about future Vite native config loading.
+No configuration change or additional checks were made.
+
+Owner explicitly requested `python -m pytest tests/test_outbound_demo.py`.
+Shell `python` was unavailable; equivalent `.venv/bin/python -m pytest
+tests/test_outbound_demo.py` passed **39 tests in 1.64s**. This verifies only that
+unit suite; database, new webhook regressions, hosted calling and transfer remain
+unverified. No other checks, migrations, services, provider edits or calls ran.
+
+## Portfolio closeout and migration authorization — 2026-11-03
+
+Focused static review covered browser Voice/Chat/booking, SIP initialization and
+signed finalization, outbound/configuration/transfer gates/migration0018, and
+homepage claims/flags. Source fixes reject malformed signatures/oversized
+timestamps cleanly, bound inbound post-call bodies while streaming and move
+synchronous finalization off the async request loop. Regression specifications
+are written but unexecuted; current implementation/runtime remain **UNVERIFIED**.
+
+Owner subsequently explicitly requested completing migrations. The configured
+development database reported `20261101_0018` before and after the targeted
+Alembic upgrade; it was already current and no schema change was needed. This
+supersedes pending0018 notes for that inspected target only, not hosting/schema
+acceptance. No seed, downgrade, tests, build, lint, formatting, type checks,
+services, provider edits, deployment, commit, push or call ran in this closeout.
+
+Private local outbound agent/resource/recipient/state/signing configuration is
+missing; local execution/acceptance flags default false. Hosted values were not
+inspected and no private environment was changed. Outbound REFER support,
+unavailable-human behavior and carrier-enforced transferred-leg duration remain
+public/transfer blockers. Development identity boundaries remain intentional.
+Current evidence, exact owner commands and deployment/live-call handoff:
+`FINAL-CLOSEOUT.md`; detailed setup: `docs/outbound-demo-calling.md`.
+
 ## Calling publication authorized — UNVERIFIED — 2026-11-02
 
 Owner explicitly requests pushing the outbound implementation and November 5
