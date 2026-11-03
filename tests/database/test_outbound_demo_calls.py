@@ -44,14 +44,16 @@ class FakeProvider(ElevenLabsOutboundProvider):
         self.lock = Lock()
         self.unknown = False
         self.fail_preflight = False
+        self.last_destination: str | None = None
 
-    def preflight(self) -> None:
+    def preflight(self, phone_number: str) -> None:
         if self.fail_preflight:
             raise OutboundProviderError(outcome_unknown=False)
 
     def dial(self, data: DemoCallInput, call_id: str) -> OutboundCallReceipt:
         with self.lock:
             self.dial_count += 1
+            self.last_destination = data.phone_number
         if self.unknown:
             raise OutboundProviderError(outcome_unknown=True)
         return OutboundCallReceipt(f"conv-{call_id}", f"sip-{call_id}")
@@ -136,6 +138,21 @@ def data(**overrides: Any) -> DemoCallInput:
     )
 
 
+@pytest.fixture
+def us_context(context: Context) -> Context:
+    config = OutboundDemoSettings(
+        _env_file=None,
+        **{
+            **context.service.settings.model_dump(),
+            "outbound_demo_number_policy": "consented_us",
+            "outbound_demo_allowed_numbers": "",
+        },
+    )
+    context.service.settings = config
+    context.provider.settings = config
+    return context
+
+
 def final_event(call_id: UUID, **overrides: Any) -> dict[str, Any]:
     return {
         "type": "post_call_transcription",
@@ -189,6 +206,96 @@ def test_non_allowlisted_number_never_reaches_provider(context: Context) -> None
         context.service.create(data(phone_number="+15559990004"), OWNER)
     assert caught.value.status_code == 403
     assert context.provider.dial_count == 0
+
+
+def test_allowlist_still_accepts_only_the_configured_international_number(
+    context: Context,
+) -> None:
+    context.service.settings.outbound_demo_allowed_numbers = SecretStr("+442079460123")
+    result = context.service.create(data(phone_number="+44 20 7946 0123"), OWNER)
+    assert result.status is DemoCallStatus.DIALING
+    assert context.provider.last_destination == "+442079460123"
+    with pytest.raises(ApiError) as caught:
+        context.service.create(data(phone_number="+12025550123"), OWNER)
+    assert caught.value.code == "DEMO_NUMBER_NOT_AUTHORIZED"
+    assert context.provider.dial_count == 1
+
+
+def test_consented_us_normalizes_and_replays_without_allowlisting(
+    us_context: Context,
+) -> None:
+    request = data(phone_number="(202) 555-0123")
+    result = us_context.service.create(request, "admin")
+    retry = data(request_id=request.request_id, phone_number="+1 202 555 0123")
+    assert us_context.service.create(retry, "admin").id == result.id
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(
+            data(request_id=request.request_id, phone_number="+12125550123"), "admin"
+        )
+    assert caught.value.code == "DEMO_REQUEST_CONFLICT"
+    assert us_context.provider.dial_count == 1
+    assert us_context.provider.last_destination == "+12025550123"
+    with us_context.sessions() as session:
+        row = session.get(OutboundDemoCall, result.id)
+        assert row is not None
+        assert row.consent_version == "outbound-demo-v1"
+        assert row.consent_at is not None
+        assert row.destination_hash != request.phone_number
+        assert row.owner_hash == us_context.service._hash("owner", "admin")
+
+
+def test_consented_us_formatting_cannot_bypass_number_quota(us_context: Context) -> None:
+    result = us_context.service.create(data(phone_number="202-555-0123"), "admin")
+    us_context.service.webhook(final_event(result.id))
+    with us_context.sessions() as session, session.begin():
+        row = session.get(OutboundDemoCall, result.id)
+        assert row is not None
+        row.created_at = datetime.now(UTC) - timedelta(minutes=10)
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(data(phone_number="+1 (202) 555-0123"), "admin")
+    assert caught.value.code == "DEMO_CALL_LIMIT"
+    assert us_context.provider.dial_count == 1
+
+
+def test_consented_us_unknown_outcome_blocks_all_destinations(us_context: Context) -> None:
+    us_context.provider.unknown = True
+    request = data(phone_number="+12025550123")
+    result = us_context.service.create(request, "admin")
+    assert result.status is DemoCallStatus.UNKNOWN
+    assert us_context.service.create(request, "admin").id == result.id
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(data(phone_number="+12125550123"), "admin")
+    assert caught.value.code == "DEMO_CALL_LIMIT"
+    assert us_context.provider.dial_count == 1
+
+
+def test_consented_us_daily_budget_includes_failed_preflight(us_context: Context) -> None:
+    us_context.service.settings.outbound_demo_daily_limit = 1
+    us_context.provider.fail_preflight = True
+    result = us_context.service.create(data(phone_number="+12025550123"), "admin")
+    assert result.status is DemoCallStatus.FAILED
+    with us_context.sessions() as session, session.begin():
+        row = session.get(OutboundDemoCall, result.id)
+        assert row is not None
+        row.created_at = datetime.now(UTC) - timedelta(minutes=10)
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(data(phone_number="+12125550123"), "admin")
+    assert caught.value.code == "DEMO_CALL_LIMIT"
+    assert us_context.provider.dial_count == 0
+
+
+def test_consented_us_parallel_requests_share_one_slot(us_context: Context) -> None:
+    def attempt(number: str) -> str:
+        try:
+            result = us_context.service.create(data(phone_number=number), "admin")
+            return result.status.value
+        except ApiError as error:
+            return error.code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(executor.map(attempt, ["+12025550123", "+12125550123"]))
+    assert sorted(outcomes) == ["DEMO_CALL_LIMIT", "dialing"]
+    assert us_context.provider.dial_count == 1
 
 
 def test_distinct_parallel_requests_share_one_active_slot(context: Context) -> None:

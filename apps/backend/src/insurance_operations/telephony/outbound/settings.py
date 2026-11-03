@@ -1,11 +1,9 @@
-import re
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 
 from insurance_operations.settings import CommonSettings, RuntimeEnvironment
-
-E164 = re.compile(r"\+[1-9][0-9]{7,14}\Z")
+from insurance_operations.telephony.outbound.destinations import E164
 
 
 class OutboundDemoSettings(CommonSettings):
@@ -21,6 +19,7 @@ class OutboundDemoSettings(CommonSettings):
     outbound_demo_phone_number_id: str | None = Field(
         default=None, min_length=1, max_length=200
     )
+    outbound_demo_number_policy: Literal["allowlist", "consented_us"] = "allowlist"
     outbound_demo_allowed_numbers: SecretStr = SecretStr("")
     outbound_demo_human_number: SecretStr = SecretStr("")
     outbound_demo_secret: SecretStr | None = Field(default=None, min_length=32)
@@ -67,6 +66,12 @@ class OutboundDemoSettings(CommonSettings):
         human = self.outbound_demo_human_number.get_secret_value()
         if human and E164.fullmatch(human) is None:
             raise ValueError("OUTBOUND_DEMO_HUMAN_NUMBER must use E.164")
+        if self.outbound_demo_number_policy == "consented_us" and (
+            self.outbound_demo_website_enabled or self.outbound_demo_transfer_enabled
+        ):
+            raise ValueError(
+                "Consented US calling requires website calling and transfer disabled"
+            )
         if self.outbound_demo_website_enabled and not (
             self.outbound_demo_enabled
             and self.outbound_demo_live_verified
@@ -82,11 +87,12 @@ class OutboundDemoSettings(CommonSettings):
             raise ValueError(
                 "Outbound demonstration requires the development environment"
             )
+        if self.outbound_demo_number_policy == "allowlist" and not self.allowed_numbers:
+            raise ValueError("Outbound demo allowlist is required in allowlist mode")
         if not all(
             (
                 self.outbound_demo_agent_id,
                 self.outbound_demo_phone_number_id,
-                self.allowed_numbers,
                 self.elevenlabs_api_key
                 and self.elevenlabs_api_key.get_secret_value().strip(),
                 self.outbound_demo_secret
@@ -95,9 +101,7 @@ class OutboundDemoSettings(CommonSettings):
                 and len(self.outbound_demo_webhook_secret.get_secret_value()) >= 32,
             )
         ):
-            raise ValueError(
-                "Outbound demo agent, SIP number, allowlist and secrets are required"
-            )
+            raise ValueError("Outbound demo agent, SIP number and secrets are required")
         if self.outbound_demo_agent_id in {
             self.elevenlabs_agent_id,
             self.elevenlabs_phone_agent_id,

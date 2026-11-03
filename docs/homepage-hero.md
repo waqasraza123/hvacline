@@ -1,5 +1,44 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Hero demo-call modal — November 4, 2026
+
+The hero now includes **Request an AI demo call**. This and the Calling section
+open one shared Radix Dialog (`@radix-ui/react-dialog`1.2.0), styled with the
+existing orange/charcoal palette. Desktop uses an agent introduction beside the
+phone/scenario/explicit-consent form; mobile uses a stacked scrollable layout.
+Radix supplies the modal behavior; initial phone focus and focus restoration to
+the clicked trigger are explicit. Closing preserves in-memory drafts, pending
+requests and status recovery. Only the existing request key enters session storage.
+
+The form can be filled while calling is disabled. Submission stays disabled with
+an honest coming-soon message; browser Voice remains available. Existing website
+activation gates, allowlist requirements and admin-only `consented_us` policy
+are unchanged. Opening/filling/dismissing the modal does not initiate a call.
+No provider/backend settings or feature flags were changed.
+
+Manifest and lockfile were updated using npm lockfile-only mode with lifecycle
+scripts disabled. No tests, builds, linters, type checks, services, browser preview,
+deployment or calls ran; implementation/rendering remain **UNVERIFIED**.
+
+Owner commands with Node24, **not run**:
+
+```sh
+npm ci
+npm run test:web -- src/app/api/outbound-demo/route.test.ts
+npm run typecheck:web
+npm run build:web
+```
+
+Manual: at320px/390px, desktop and200% zoom, open from both triggers; check phone
+focus, Tab/Shift+Tab containment, Escape/close/outside dismissal, return focus,
+scroll lock, mobile keyboard and no overflow. Fill and close/reopen: draft and
+consent stay in memory. With calling disabled, Enter/click must never POST a call.
+Using mocked requests, check one POST on double-click, close during submission,
+reopen/reload status recovery, unknown lock, and correction/renewed consent after
+a certified pre-creation rejection. Closing must never redial or clear recovery.
+
+## Earlier browser Voice homepage work
+
 The October 31 owner request removes the public business phone number and makes
 browser voice AI the hero's main action. The hero now has shorter copy, fewer
 links and a larger Line card that opens on Voice AI. Text chat remains available

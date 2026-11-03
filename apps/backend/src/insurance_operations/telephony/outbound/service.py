@@ -14,6 +14,7 @@ from insurance_operations.database.models.operations import AuditEvent
 from insurance_operations.database.models.outbound_demo import OutboundDemoCall
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings
+from insurance_operations.telephony.outbound.destinations import validate_us_destination
 from insurance_operations.telephony.outbound.provider import (
     ElevenLabsOutboundProvider,
     OutboundProviderError,
@@ -95,7 +96,7 @@ class OutboundDemoService:
         if existing is not None:
             return existing
         try:
-            self.provider.preflight()
+            self.provider.preflight(data.phone_number)
             receipt = self.provider.dial(data, str(call_id))
         except OutboundProviderError as error:
             with self.sessions() as session, session.begin():
@@ -127,7 +128,15 @@ class OutboundDemoService:
     ) -> tuple[UUID, DemoCallResponse | None]:
         if not self.settings.outbound_demo_enabled:
             raise unavailable()
-        if data.phone_number not in self.settings.allowed_numbers:
+        if self.settings.outbound_demo_number_policy == "consented_us":
+            if owner != "admin":
+                raise ApiError(
+                    status_code=403,
+                    code="DEMO_ADMIN_AUTH_REQUIRED",
+                    message="Consented US calls require demo administrator authorization.",
+                )
+            validate_us_destination(data.phone_number)
+        elif data.phone_number not in self.settings.allowed_numbers:
             raise ApiError(
                 status_code=403,
                 code="DEMO_NUMBER_NOT_AUTHORIZED",

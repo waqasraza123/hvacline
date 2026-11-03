@@ -4,6 +4,9 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_core import PydanticCustomError
+
+from insurance_operations.telephony.outbound.destinations import normalize_phone_number
 
 
 class DemoScenario(StrEnum):
@@ -40,10 +43,18 @@ class DemoCallInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     request_id: UUID
-    phone_number: str = Field(pattern=r"^\+[1-9][0-9]{7,14}$", max_length=16)
+    phone_number: str = Field(min_length=1, max_length=64)
     scenario: DemoScenario
     consent: Literal[True]
     consent_version: Literal["outbound-demo-v1"]
+
+    @field_validator("phone_number")
+    @classmethod
+    def normalize_destination(cls, value: str) -> str:
+        try:
+            return normalize_phone_number(value)
+        except ValueError as error:
+            raise PydanticCustomError("phone_number_invalid", str(error)) from None
 
     @field_validator("consent", mode="before")
     @classmethod

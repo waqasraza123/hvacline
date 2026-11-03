@@ -10,6 +10,7 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import httpx
+import phonenumbers
 import pytest
 from fastapi import FastAPI
 from pydantic import ValidationError
@@ -18,6 +19,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from insurance_operations.errors import ApiError, api_error_handler
 from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.contracts import TelephonyAdapterError
+from insurance_operations.telephony.outbound.destinations import validate_us_destination
 from insurance_operations.telephony.outbound.prompt import (
     DEMO_PROMPT,
     FIRST_MESSAGE,
@@ -31,6 +33,7 @@ from insurance_operations.telephony.outbound.provider import (
 )
 from insurance_operations.telephony.outbound.routes import create_outbound_demo_router
 from insurance_operations.telephony.outbound.schemas import DemoCallInput
+from insurance_operations.telephony.outbound.service import OutboundDemoService
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
 
 NUMBER = "+15559990002"
@@ -148,7 +151,7 @@ def test_configuration_fails_closed(overrides: dict[str, Any]) -> None:
         {"consent": False},
         {"consent": 1},
         {"consent_version": "old"},
-        {"phone_number": "15559990002"},
+        {"phone_number": "911"},
         {"scenario": "anything"},
     ],
 )
@@ -420,7 +423,7 @@ def test_later_failure_does_not_erase_a_possible_live_transfer_leg() -> None:
     )
 
 
-def test_admin_gate_is_required_even_without_general_sandbox() -> None:
+def outbound_application(config: OutboundDemoSettings) -> tuple[FastAPI, Mock]:
     api = ApiSettings(
         _env_file=None,
         app_environment="development",
@@ -436,7 +439,18 @@ def test_admin_gate_is_required_even_without_general_sandbox() -> None:
     sessions = Mock(spec=sessionmaker[Session])
     application = FastAPI()
     application.add_exception_handler(ApiError, api_error_handler)  # type: ignore[arg-type]
-    application.include_router(create_outbound_demo_router(api, sessions, settings()))
+    application.include_router(create_outbound_demo_router(api, sessions, config))
+    return application, sessions
+
+
+@pytest.mark.parametrize("policy", ["allowlist", "consented_us"])
+@pytest.mark.parametrize("token", [None, "wrong-admin-token"])
+def test_admin_gate_is_required_even_without_general_sandbox(
+    policy: str, token: str | None
+) -> None:
+    application, sessions = outbound_application(
+        settings(outbound_demo_number_policy=policy)
+    )
 
     async def request() -> httpx.Response:
         async with httpx.AsyncClient(
@@ -444,8 +458,312 @@ def test_admin_gate_is_required_even_without_general_sandbox() -> None:
         ) as client:
             return await client.post(
                 "/api/v1/outbound-demo/admin/calls",
-                json=call_input().model_dump(mode="json"),
+                headers={"X-Demo-Admin-Token": token} if token is not None else {},
+                json=call_input(phone_number="+12025550123").model_dump(mode="json"),
             )
 
     assert asyncio.run(request()).status_code == 401
     sessions.assert_not_called()
+
+
+def test_number_policy_defaults_to_allowlist_and_requires_recipients() -> None:
+    assert settings().outbound_demo_number_policy == "allowlist"
+    with pytest.raises(ValidationError, match="allowlist is required"):
+        settings(outbound_demo_allowed_numbers="")
+    config = settings(
+        outbound_demo_number_policy="consented_us", outbound_demo_allowed_numbers=""
+    )
+    assert config.allowed_numbers == frozenset()
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"outbound_demo_number_policy": "any"},
+        {"outbound_demo_website_enabled": True},
+        {"outbound_demo_transfer_enabled": True},
+        {"outbound_demo_secret": ""},
+        {"outbound_demo_webhook_secret": ""},
+        {"elevenlabs_api_key": ""},
+    ],
+)
+def test_consented_us_configuration_fails_closed(overrides: dict[str, Any]) -> None:
+    with pytest.raises(ValidationError):
+        settings(
+            **{
+                "outbound_demo_number_policy": "consented_us",
+                "outbound_demo_allowed_numbers": "",
+                **overrides,
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["+12025550123", "+1 (202) 555-0123", "202-555-0123", "1 202 555 0123"],
+)
+def test_destination_normalization_precedes_request_hashing(value: str) -> None:
+    assert call_input(phone_number=value).phone_number == "+12025550123"
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "911",
+        "988",
+        "112",
+        "211",
+        "12345",
+        "",
+        "+1",
+        "call +12025550123",
+        "1-800-FLOWERS",
+        "+12025550123 ext 4",
+        "+12025550123;ext=4",
+        "+12025550123,123",
+        "+12025550123#",
+        "sip:+12025550123@example.test",
+        "+１２０２５５５０１２３",
+        "2" * 65,
+    ],
+)
+def test_malformed_and_short_destinations_are_rejected(value: str) -> None:
+    with pytest.raises(ValidationError):
+        call_input(phone_number=value)
+
+
+@pytest.mark.parametrize(
+    "number", ["+12025550123", "+12125550123", "+19075550123", "+18085550123"]
+)
+def test_consented_us_accepts_us_geographic_numbers(number: str) -> None:
+    validate_us_destination(number)
+
+
+@pytest.mark.parametrize("region", ["CA", "BS", "DO", "JM", "BB", "TT", "SX"])
+def test_consented_us_rejects_other_nanp_regions(region: str) -> None:
+    number = phonenumbers.example_number(region)
+    assert number is not None
+    assert number.country_code == 1
+    value = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
+    with pytest.raises(ApiError) as caught:
+        validate_us_destination(value)
+    assert caught.value.code == "DEMO_DESTINATION_UNSUPPORTED"
+
+
+@pytest.mark.parametrize("region", ["US", "AS", "GU", "MP", "PR", "VI"])
+def test_consented_us_accepts_us_and_territory_numbering_assignments(region: str) -> None:
+    number = phonenumbers.example_number(region)
+    assert number is not None
+    value = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
+    validate_us_destination(value)
+
+
+@pytest.mark.parametrize(
+    "kind", [phonenumbers.PhoneNumberType.FIXED_LINE, phonenumbers.PhoneNumberType.MOBILE]
+)
+def test_consented_us_accepts_mobile_and_landline_examples(kind: int) -> None:
+    number = phonenumbers.example_number_for_type("US", kind)
+    assert number is not None
+    value = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
+    validate_us_destination(value)
+
+
+@pytest.mark.parametrize(
+    "number,code",
+    [
+        ("+14165550123", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+19002345678", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+12001230101", "DEMO_PHONE_NUMBER_INVALID"),
+    ],
+)
+def test_admin_destination_errors_use_the_existing_api_envelope(
+    number: str, code: str
+) -> None:
+    application, sessions = outbound_application(
+        settings(outbound_demo_number_policy="consented_us")
+    )
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.post(
+                "/api/v1/outbound-demo/admin/calls",
+                headers={"X-Demo-Admin-Token": SECRET},
+                json=call_input(phone_number=number).model_dump(mode="json"),
+            )
+
+    response = asyncio.run(request())
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == code
+    assert response.json()["error"]["details"] == {"field": "phone_number"}
+    sessions.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "number,code",
+    [
+        ("+14165550123", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+442079460123", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+19002345678", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+18002345678", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+15002345678", "DEMO_DESTINATION_UNSUPPORTED"),
+        ("+12001230101", "DEMO_PHONE_NUMBER_INVALID"),
+        ("+12021110123", "DEMO_PHONE_NUMBER_INVALID"),
+        ("+99912345678", "DEMO_PHONE_NUMBER_INVALID"),
+    ],
+)
+def test_consented_us_rejections_are_structured_and_never_reach_persistence(
+    number: str, code: str
+) -> None:
+    config = settings(
+        outbound_demo_number_policy="consented_us", outbound_demo_allowed_numbers=""
+    )
+    sessions = Mock(spec=sessionmaker[Session])
+    provider = Mock(spec=ElevenLabsOutboundProvider)
+    service = OutboundDemoService(sessions, Mock(spec=ApiSettings), config, provider)
+    with pytest.raises(ApiError) as caught:
+        service.create(call_input(phone_number=number), "admin")
+    assert caught.value.status_code == 422
+    assert caught.value.code == code
+    assert caught.value.details == {"field": "phone_number"}
+    assert number not in caught.value.message
+    sessions.assert_not_called()
+    provider.preflight.assert_not_called()
+    provider.dial.assert_not_called()
+
+
+def test_consented_us_rejects_visitor_calls_before_reserving() -> None:
+    config = settings(outbound_demo_number_policy="consented_us")
+    sessions = Mock(spec=sessionmaker[Session])
+    provider = Mock(spec=ElevenLabsOutboundProvider)
+    service = OutboundDemoService(sessions, Mock(spec=ApiSettings), config, provider)
+    with pytest.raises(ApiError) as caught:
+        service.create(call_input(phone_number="+12025550123"), "synthetic-visitor")
+    assert caught.value.code == "DEMO_ADMIN_AUTH_REQUIRED"
+    sessions.assert_not_called()
+    provider.dial.assert_not_called()
+
+
+@pytest.mark.parametrize("consent", [False, None, 1, "true"])
+def test_consented_us_admin_endpoint_requires_explicit_consent(consent: object) -> None:
+    application, sessions = outbound_application(
+        settings(outbound_demo_number_policy="consented_us")
+    )
+    payload = call_input(phone_number="+12025550123").model_dump(mode="json")
+    payload["consent"] = consent
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.post(
+                "/api/v1/outbound-demo/admin/calls",
+                headers={"X-Demo-Admin-Token": SECRET},
+                json=payload,
+            )
+
+    assert asyncio.run(request()).status_code == 422
+    sessions.assert_not_called()
+
+
+@pytest.mark.parametrize("field", ["consent", "consent_version"])
+def test_consented_us_admin_endpoint_requires_consent_fields(field: str) -> None:
+    application, sessions = outbound_application(
+        settings(outbound_demo_number_policy="consented_us")
+    )
+    payload = call_input(phone_number="+12025550123").model_dump(mode="json")
+    del payload[field]
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.post(
+                "/api/v1/outbound-demo/admin/calls",
+                headers={"X-Demo-Admin-Token": SECRET},
+                json=payload,
+            )
+
+    assert asyncio.run(request()).status_code == 422
+    sessions.assert_not_called()
+
+
+def test_consented_us_website_cannot_dial_even_if_flag_is_mutated() -> None:
+    config = settings(outbound_demo_number_policy="consented_us")
+    config.outbound_demo_website_enabled = True
+    application, sessions = outbound_application(config)
+
+    async def request() -> tuple[httpx.Response, httpx.Response]:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application),
+            base_url="http://test",
+            headers={"X-Outbound-Demo-Key": SECRET, "X-Outbound-Visitor": "a" * 43},
+        ) as client:
+            available = await client.get("/api/v1/outbound-demo/availability")
+            response = await client.post(
+                "/api/v1/outbound-demo/calls",
+                json=call_input(phone_number="+12025550123").model_dump(mode="json"),
+            )
+            return available, response
+
+    available, response = asyncio.run(request())
+    assert available.json() == {"available": False}
+    assert response.status_code == 503
+    sessions.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "trunk_overrides,caller,accepted",
+    [
+        ({}, "+12125550123", True),
+        ({"transport": "tcp"}, "+12125550123", False),
+        ({"transport": "udp"}, "+12125550123", False),
+        ({"has_auth_credentials": False}, "+12125550123", False),
+        ({"has_auth_credentials": "true"}, "+12125550123", False),
+        ({"address": "other.example.test"}, "+12125550123", False),
+        ({}, "+12025550123", False),
+        ({}, None, False),
+        ({}, "", False),
+        ({}, "12125550123", False),
+    ],
+)
+def test_consented_us_preflight_preserves_tls_digest_and_caller_loop_protection(
+    trunk_overrides: dict[str, Any], caller: str | None, accepted: bool
+) -> None:
+    config = settings(
+        outbound_demo_number_policy="consented_us", outbound_demo_allowed_numbers=""
+    )
+    requests: list[httpx.Request] = []
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        if request.url.path.startswith("/v1/convai/agents/"):
+            return httpx.Response(200, json=agent_config())
+        return httpx.Response(
+            200,
+            json={
+                "phone_number_id": config.outbound_demo_phone_number_id,
+                "provider": "sip_trunk",
+                "phone_number": caller,
+                "outbound_trunk": {
+                    "address": "sip.telnyx.com",
+                    "transport": "tls",
+                    "has_auth_credentials": True,
+                    **trunk_overrides,
+                },
+            },
+        )
+
+    with httpx.Client(
+        base_url="https://api.elevenlabs.io", transport=httpx.MockTransport(handle)
+    ) as client:
+        provider = ElevenLabsOutboundProvider(config, client)
+        if accepted:
+            provider.preflight("+12025550123")
+        else:
+            with pytest.raises(OutboundProviderError) as caught:
+                provider.preflight("+12025550123")
+            assert caught.value.outcome_unknown is False
+    assert all(request.method == "GET" for request in requests)
+    assert all(request.headers["xi-api-key"] == "synthetic-api-key" for request in requests)

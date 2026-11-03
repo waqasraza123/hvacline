@@ -4,6 +4,10 @@ import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { CallingLaunchDate } from "@/features/outbound-demo/calling-launch";
 import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
 import {
+  OutboundDemoDialog,
+  OutboundDemoTrigger,
+} from "@/features/outbound-demo/outbound-demo-dialog";
+import {
   HomepageChat,
   HomepageChatLink,
 } from "@/features/homepage-chat/homepage-chat";
@@ -35,7 +39,7 @@ const services = [
 
 export default function Home() {
   return (
-    <div className="product-site">
+    <OutboundDemoDialog>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
@@ -164,6 +168,7 @@ export default function Home() {
               <ProductIcon name="arrow" />
             </a>
             <div className="product-hero-actions">
+              <OutboundDemoTrigger />
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
               </a>
@@ -351,6 +356,6 @@ export default function Home() {
         </span>
         <ProductIcon name="arrow" />
       </HomepageChatLink>
-    </div>
+    </OutboundDemoDialog>
   );
 }

@@ -1,5 +1,102 @@
 # Outbound AI demo calling with human transfer
 
+## Hero request form — November 4, 2026 — UNVERIFIED
+
+The hero and Calling section now open a shared Radix Dialog phone/scenario/consent
+form. Fields remain editable for preview with gates off, but submission remains
+disabled; the UI does not enable website calling or route visitors through admin
+credentials. Existing request/status/idempotency handling is reused and stays
+mounted while the dialog closes, preserving pending-call recovery. This does not
+change the admin-only `consented_us` policy or activate transfer/public calling.
+Dependency setup, exact owner commands and keyboard/mobile/manual acceptance:
+`docs/homepage-hero.md`. Rendering and runtime remain unverified; no checks or
+calls ran for this UI change.
+
+## Consented US admin calls — November 4, 2026 — UNVERIFIED
+
+`OUTBOUND_DEMO_NUMBER_POLICY` selects `allowlist` (default, existing exact E.164
+approval) or `consented_us` (no preconfigured recipients). The new policy is
+restricted to the existing authenticated admin endpoint. It rejects configuration
+with website calling or transfer enabled; the website route also refuses this
+policy. Keep `OUTBOUND_DEMO_TRANSFER_ENABLED=false`,
+`OUTBOUND_DEMO_WEBSITE_ENABLED=false` and Next server
+`OUTBOUND_DEMO_FORM_ENABLED=false`. This supersedes the allowlist-only admin
+instructions below when `consented_us` is selected; it does not enable public calls.
+
+Inputs accept full US national numbers with area code or international numbers
+with `+`, spaces, parentheses, dots and hyphens. The shared request model normalizes
+them to E.164 before eligibility, request fingerprints, recipient quotas or dialing.
+Existing E.164 allowlist requests and stored fingerprints retain their format.
+Extensions, SIP URIs, vanity strings, dialing instructions and short codes reject.
+
+The pinned `phonenumbers==9.0.42` dependency checks numbering-plan validity,
+US region assignments and mobile/landline type (including the shared fixed/mobile
+category). Scope includes the 50 states, DC and US territories (`US`, `AS`, `GU`,
+`MP`, `PR`, `VI`). This is more than a `+1` check: Canada and non-US Caribbean
+regions reject, as do international, premium, toll-free, personal-number and other
+unsupported types. Carrier restrictions still apply, including territory-specific
+rates and destination permissions. Metadata validates assigned
+numbering ranges, not an active subscriber, ownership, reachability or current
+carrier after porting. The operator must establish control and explicit one-time
+recipient consent out of band for every new call. No automated ownership lookup,
+OTP service or consent verification is added. Review metadata updates as numbering
+plans change. Sources: [library](https://pypi.org/project/phonenumbers/9.0.42/),
+[upstream validity limits](https://github.com/google/libphonenumber/blob/master/FAQ.md#what-does-it-mean-for-a-phone-number-to-be-valid).
+US jurisdiction scope follows [NANPA](https://www.nanpa.com/sites/default/files/reports/annual-reports/2023_NANPA_AnnualReport_0.pdf).
+
+Errors use the existing API envelope: malformed syntax returns 422
+`VALIDATION_FAILED` with field type `phone_number_invalid`; invalid ranges return
+422 `DEMO_PHONE_NUMBER_INVALID`; unsupported regions/types return 422
+`DEMO_DESTINATION_UNSUPPORTED`. A legacy allowlist miss retains 403
+`DEMO_NUMBER_NOT_AUTHORIZED`. Consent/version validation, admin authentication,
+tenant locking, quotas, cooldown, idempotency, hashed records, audit, unknown
+outcomes, HMAC webhooks and the 180-second AI cap are unchanged. Preflight also
+checks the actual normalized destination against the provider caller number so
+an empty allowlist cannot remove the existing call-loop protection. TLS and SIP
+digest remain mandatory. Telnyx destination/spending restrictions still apply.
+
+Owner-reported completed setup: existing outbound agent/webhook, Telnyx SIP
+connection/limits, Render agent/phone IDs, Neon0018, 127 focused tests and frontend
+typecheck/build. Preserve these resources. The November 4 changes have not been
+executed or tested. No migration is required. Prior Render deployment failure
+and reported TCP versus required TLS remain blockers; no provider or environment
+setting was changed here.
+
+Render: set `OUTBOUND_DEMO_NUMBER_POLICY=consented_us`; the allowlist may be empty.
+Retain existing admin/operator identity, agent/phone IDs, API key, stable state
+secret and distinct signing secret. Leave admin calling disabled until the
+compatible backend is Live and private configuration/TLS are accepted; only then
+temporarily set `OUTBOUND_DEMO_ENABLED=true` for an authorized test. Keep public
+and transfer flags false as above. Install the updated backend dependencies as
+part of an owner-approved release; this change has not installed them locally.
+
+Owner commands for this change, **not run**:
+
+```sh
+.venv/bin/python -m pip install -e '.[dev]'
+DEMO_SANDBOX_ENABLED=false PYTHONPATH=apps/backend/src .venv/bin/python -m pytest --import-mode=importlib tests/test_outbound_demo.py
+.venv/bin/python -m ruff check apps/backend/src/insurance_operations/telephony/outbound tests/test_outbound_demo.py tests/database/test_outbound_demo_calls.py
+.venv/bin/python -m mypy --explicit-package-bases apps/backend/src/insurance_operations/telephony/outbound
+```
+
+Only after privately confirming an isolated disposable `TEST_DATABASE_URL`,
+distinct from runtime/direct targets (fixtures rebuild/truncate it):
+
+```sh
+APP_ENVIRONMENT=test GOOGLE_CALENDAR_ENABLED=false BOOKING_EMAIL_ENABLED=false DEMO_SANDBOX_ENABLED=false PYTHONPATH=apps/backend/src .venv/bin/python -m pytest --import-mode=importlib tests/database/test_outbound_demo_calls.py
+```
+
+Manual checks after owner-approved deployment: confirm the Live commit; verify
+TLS/digest and US-only carrier restrictions/spend caps on the existing resources;
+reject missing/wrong admin credentials, missing/refused/stale consent, non-US `+1`,
+international, premium/toll-free and short-code destinations before dialing.
+Confirm the website stays unavailable. Use the single-call command below only
+with fresh recipient consent. Confirm correct caller ID, AI disclosure, audio,
+interruption handling, <=180-second ending and signed terminal receipt. On a
+lost response reuse the saved key, same normalized number and same scenario;
+never create a fresh key merely to retry an uncertain call. Confirm equivalent
+formats share one request/recipient quota. No bulk or automatic redial is added.
+
 Current closeout, November 3: after explicit owner migration authorization, the
 configured development database reported `20261101_0018` before and after the
 targeted upgrade; no schema change was needed. This supersedes earlier pending
@@ -28,10 +125,11 @@ navigation, a dedicated section and the FAQ. The date is shared through
 element. The announcement is visible with every calling flag disabled and needs
 no API configuration or migration to render. It does not enable calling on the
 date automatically. With calling unavailable, visitors see the two upcoming
-calling options and a browser Voice link; no phone/consent form is displayed.
-An existing request still exposes its status recovery controls when new calls
-are disabled. The approved-number form appears only after the existing frontend
-and backend activation gates pass.
+calling options and a browser Voice link. The November4 hero/modal update now
+allows previewing the phone/consent form with submission disabled. Existing
+requests retain status recovery in that shared modal even when new calls are
+disabled. Actual submission still requires the existing frontend and backend
+activation gates.
 
 Completion repairs preserve uncertain transfer evidence across later final
 events and refreshes. A late dial error cannot overwrite lifecycle evidence
@@ -208,7 +306,8 @@ numbers and secrets out of source, notes, screenshots, shell history and git.
 | `OUTBOUND_DEMO_ENABLED` | `false`; enable only for approved admin tests |
 | `OUTBOUND_DEMO_AGENT_ID` | Dedicated private demo agent ID |
 | `OUTBOUND_DEMO_PHONE_NUMBER_ID` | Existing ElevenLabs imported Telnyx SIP resource ID |
-| `OUTBOUND_DEMO_ALLOWED_NUMBERS` | Comma-separated exact E.164 recipients; owner verifies control and obtains consent out of band |
+| `OUTBOUND_DEMO_NUMBER_POLICY` | `allowlist` (default) or `consented_us` (admin-only US mobile/landline destinations) |
+| `OUTBOUND_DEMO_ALLOWED_NUMBERS` | Comma-separated exact E.164 recipients; required only in `allowlist` mode. Recipient control and one-time consent remain required in both modes |
 | `OUTBOUND_DEMO_HUMAN_NUMBER` | One authorized E.164 human destination |
 | `OUTBOUND_DEMO_SECRET` | Dedicated stable >=32-character secret; API and Next server only; keyed state hashes + bridge authentication |
 | `OUTBOUND_DEMO_WEBHOOK_SECRET` | Dedicated ElevenLabs HMAC secret; must differ from bridge secret |
@@ -270,14 +369,15 @@ transfer flags false for the first AI-only test.
 
 ### Place exactly one authorized admin test call
 
-Only after approving an actual telephone call, run this from the project virtual
-environment with `HVACLINE_API_BASE_URL` set to the intended HTTPS API. The token
+Only after approving an actual telephone call, run this from the repository root
+with `HVACLINE_API_BASE_URL` set to the intended HTTPS API. In `consented_us` mode
+the recipient needs no allowlist entry. The token
 and approved recipient are read privately, never included in history or output.
 Save the printed request key and response call ID securely for status/recovery.
 **Executing the POST places a real, potentially billable call.**
 
 ```sh
-python - <<'PY'
+.venv/bin/python - <<'PY'
 import getpass
 import os
 import uuid
@@ -287,8 +387,11 @@ base = os.environ['HVACLINE_API_BASE_URL'].rstrip('/')
 if not base.startswith('https://'):
     raise SystemExit('Set the intended HTTPS API origin first')
 token = getpass.getpass('Demo admin token: ')
-number = getpass.getpass('Consented allowlisted E.164 recipient: ')
-request_id = str(uuid.uuid4())
+number = getpass.getpass('Consented recipient (full US number or E.164): ')
+if getpass.getpass('Recipient agreed to this one AI demo call? Type YES: ') != 'YES':
+    raise SystemExit('Recipient consent is required')
+saved_key = getpass.getpass('Saved request key for retry, or Enter for new call: ').strip()
+request_id = str(uuid.UUID(saved_key)) if saved_key else str(uuid.uuid4())
 print('Request key:', request_id, flush=True)
 response = httpx.post(
     base + '/api/v1/outbound-demo/admin/calls',
@@ -301,7 +404,7 @@ print(response.status_code, response.json())
 PY
 ```
 
-Do not rerun that snippet with a fresh key after a timeout. Reuse the same key,
+After a timeout, enter the saved key when rerunning the snippet. Reuse the same key,
 number and scenario for an idempotent retry or inspect the stored call through
 the admin status endpoint. Unknown/preflight-crash reservations intentionally
 block another call. There is no automatic retry, expiry or redial.
@@ -321,7 +424,8 @@ Admin API (all require `X-Demo-Admin-Token`, even when the general sandbox is of
 ### Real-call acceptance, in order
 
 1. Confirm recipient ownership and explicit one-time consent with the owner.
-   Call only a configured recipient. Answer: check correct caller ID, AI/fictional
+   Call only an eligible recipient under the configured number policy. Answer:
+   check correct caller ID, AI/fictional
    disclosure, permission to continue, natural cooling/heating/maintenance turns,
    interruptions, no price/availability/booking inventions, and immediate stop.
 2. Keep an AI-only call open: prove it disconnects at <=180 seconds from actual
@@ -387,8 +491,8 @@ carrier dashboard. Keep retention of minimal consent/hash records bounded throug
 an owner-approved policy; no automated purge is added because it could defeat
 the durable limits/idempotency evidence.
 
-Remaining blockers: unapplied migration and unchecked implementation; dedicated
-agent/webhook/outbound trunk setup; real-call acceptance; outbound REFER support;
+Remaining blockers: current-change verification, hosted deployment/configuration
+and TLS compatibility; real-call acceptance; outbound REFER support;
 carrier-enforced transferred-leg duration and acceptable unavailable-human behavior.
 The native transfer consent check is guided by the dedicated agent prompt and
 tool condition; it is not a separate deterministic backend transcript gate.

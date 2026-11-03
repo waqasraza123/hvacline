@@ -7,6 +7,7 @@ from urllib.parse import quote
 import httpx
 
 from insurance_operations.telephony.contracts import TelephonyAdapterError
+from insurance_operations.telephony.outbound.destinations import E164
 from insurance_operations.telephony.outbound.prompt import (
     DEMO_PROMPT,
     FIRST_MESSAGE,
@@ -148,7 +149,7 @@ class ElevenLabsOutboundProvider:
             if self.client is None:
                 client.close()
 
-    def preflight(self) -> None:
+    def preflight(self, phone_number: str) -> None:
         try:
             agent = self._request(
                 "GET",
@@ -163,6 +164,8 @@ class ElevenLabsOutboundProvider:
             phone.raise_for_status()
             value = object_value(phone.json())
             trunk = object_value(value.get("outbound_trunk"))
+            caller = value.get("phone_number")
+            human = self.settings.outbound_demo_human_number.get_secret_value()
             if (
                 value.get("phone_number_id")
                 != self.settings.outbound_demo_phone_number_id
@@ -170,9 +173,11 @@ class ElevenLabsOutboundProvider:
                 or trunk.get("address") != "sip.telnyx.com"
                 or trunk.get("transport") != "tls"
                 or trunk.get("has_auth_credentials") is not True
-                or value.get("phone_number") in self.settings.allowed_numbers
-                or value.get("phone_number")
-                == self.settings.outbound_demo_human_number.get_secret_value()
+                or not isinstance(caller, str)
+                or E164.fullmatch(caller) is None
+                or caller == phone_number
+                or caller in self.settings.allowed_numbers
+                or caller == human
             ):
                 raise OutboundProviderError(outcome_unknown=False)
         except (httpx.HTTPError, ValueError, TypeError) as error:

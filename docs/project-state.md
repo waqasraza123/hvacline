@@ -1,5 +1,70 @@
 # Project State
 
+## Outbound policy and hero publication authorized — 2026-11-04
+
+Owner requests pushing the pending consented-US admin policy and hero demo-call
+modal to main. Scope includes both features, dependency manifests/lockfile,
+unexecuted regression specifications and their documentation. Static source and
+credential review found no exposed secrets in that scope. Preserve older inbound
+investigation documents and the inbound-provisioning note below outside this
+publication. No tests/builds/lint/type checks, migrations, deployment commands or
+calls are authorized by this push request. Use existing skip markers and disable
+local Git hooks; runtime remains UNVERIFIED and public/transfer gates stay off.
+
+## Hero demo-call modal — UNVERIFIED — 2026-11-04
+
+Owner requests a hero phone-demo CTA and polished modal using an established
+library. Source adds Radix Dialog1.2.0 and a shared dialog opened from the hero
+and Calling section, with responsive orange/charcoal layout, explicit consent,
+phone focus and clicked-trigger focus restoration. Existing outbound controller,
+single-request lock, status polling and session-key recovery move into the dialog
+owner so closing preserves state. Preview fields are editable with gates off;
+submission still requires availability. Website/transfer flags and admin-only
+consented_us policy are unchanged. No backend/provider/agent/webhook edits.
+
+Dependency manifests/lockfile updated in npm lockfile-only mode with scripts
+disabled. No tests/builds/lint/type checks, services/browser preview, deployment,
+calls, commit or push ran. Implementation/rendering UNVERIFIED. Owner setup,
+exact commands and manual acceptance: `docs/homepage-hero.md`.
+
+## Consented US outbound admin policy — UNVERIFIED — 2026-11-04
+
+Owner requests `OUTBOUND_DEMO_NUMBER_POLICY=allowlist|consented_us`, defaulting
+to existing allowlist behavior. Source adds pinned phonenumbers9.0.42 metadata
+validation for US states/DC/territory mobile and landline ranges, canonical E.164
+normalization before fingerprints/quotas, and structured destination errors.
+Consented US mode permits an empty allowlist, requires the existing authenticated
+admin path and rejects enabled website/transfer configuration. Website routes
+also reject that policy. Preflight preserves TLS/digest and requires a canonical
+provider caller number distinct from the actual destination to preserve loop
+protection without an allowlist. Existing consent, tenant quotas/locking,
+idempotency, signed events and unknown-outcome handling are reused unchanged.
+
+Focused unit/API/database regression specifications are added but unexecuted.
+No migration, provider/agent/webhook/environment change, install, verification,
+deployment, call, commit or push ran. Implementation/runtime remain UNVERIFIED.
+Owner setup, exact commands and manual acceptance: `docs/outbound-demo-calling.md`.
+Metadata establishes numbering-range eligibility, not subscriber assignment,
+ownership or reachability; fresh out-of-band consent remains required. Existing
+Render deployment and reported TCP versus mandatory TLS blockers remain pending.
+
+## Owner-corrected outbound rollout status — 2026-11-04
+
+Owner reports the dedicated ElevenLabs outbound agent/webhook and Telnyx
+outbound SIP connection/spending/destination limits are configured, Render
+agent/phone resource IDs are set, Neon migration0018 is applied, 127 focused
+tests passed and frontend typecheck/build passed. These owner-reported results
+supersede older pending-setup/check notes; they were not rerun by Codex.
+
+Owner reports Render deployment1667e5f failed after a successful build. Priority
+is inspecting that deployment's Events/runtime logs or confirming a newer Live
+commit, then checking remaining private configuration/authorized recipient and
+webhook secret. Last reported ElevenLabs trunk transport was TCP; source preflight
+requires TLS. Preserve the existing agent/connection; no new implementation is
+requested. Live outbound remains untested and human transfer disabled. Only
+after backend/configuration acceptance, proceed to one restricted admin test
+call, keeping public calling and transfer disabled.
+
 ## Final closeout publication authorized — 2026-11-03
 
 Owner explicitly requests committing/pushing only closeout fixes, regression

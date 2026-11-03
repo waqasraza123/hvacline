@@ -129,11 +129,15 @@ def create_outbound_demo_router(
         return {
             "available": settings.outbound_demo_enabled
             and settings.outbound_demo_website_enabled
+            and settings.outbound_demo_number_policy == "allowlist"
         }
 
     @router.post("/calls", response_model=DemoCallResponse)
     def create_visitor_call(data: DemoCallInput, owner: Visitor) -> DemoCallResponse:
-        if not settings.outbound_demo_website_enabled:
+        if (
+            not settings.outbound_demo_website_enabled
+            or settings.outbound_demo_number_policy != "allowlist"
+        ):
             raise unavailable()
         return service.create(data, owner)
 
