@@ -1,5 +1,76 @@
 # Project State
 
+## Outbound prompt publication authorized — UNVERIFIED — 2026-11-04
+
+Owner requests pushing the synchronized outbound prompt/agent JSON and related
+outbound notes to main. Preserve unrelated inbound documentation/provisioning
+edits. Publish with local hooks disabled and [skip ci] [skip render] markers;
+no tests/builds/checks, hosted agent change, deployment or call is authorized.
+Runtime and hosted/deployed text alignment remain unverified.
+
+## Outbound prompt synchronized to owner-supplied text — UNVERIFIED — 2026-11-04
+
+Copied the owner's exact latest system prompt, including CRITICAL — CALL
+TERMINATION, into outbound `prompt.py` and the agent JSON prompt field. Existing
+first message, identity, native End call definition and all security/privacy,
+TLS, webhook and transfer controls are preserved. Source inspection confirms
+preflight already accepts native system end_call in `built_in_tools` or `tools`
+and rejects its absence; no validator change is needed. Owner reports enabling
+the dashboard tool fixed termination; this is not independent carrier evidence.
+
+Hosted agent and deployed backend were not inspected or changed. Their exact
+text alignment with this revision remains unverified; preflight still requires
+matching prompt text (apart from leading/trailing whitespace). No research,
+tests/builds/checks, deployment, commit, push or calls ran. Deferred owner command:
+`.venv/bin/python -m pytest tests/test_outbound_demo.py`. Before separately
+authorized calling, manually compare hosted/deployed prompt and first message,
+confirm native End conversation is enabled and retain existing TLS, signed
+webhook, auth, privacy and disabled public/transfer controls.
+
+## Outbound live-test prerequisites — owner reports resolved — 2026-11-04
+
+Owner confirms the remaining prerequisites in the readiness handoff are resolved:
+Render backend is Live, outbound TLS/digest is configured, and hosted prompt/first
+message match the deployed backend with native End call enabled. This supersedes
+earlier deployment/TCP/alignment blockers as owner-reported evidence, not an
+independent inspection. Next is one consented private admin AI-only outbound
+test using the existing runbook; actual carrier termination and signed terminal
+receipt remain unverified. Website and human-transfer acceptance remain pending.
+No call, configuration change, deployment or verification command was executed.
+
+## Native end call — disabled hosted tool corrected by owner — 2026-11-04
+
+Owner identifies the cause of the outbound dashboard failure: native End call
+was disabled in the ElevenLabs settings. Owner enabled it and reports end-call
+behavior now works. The hosted tool was unavailable despite the system prompt
+requesting it and the repository JSON defining it. This is owner-reported
+configuration/acceptance evidence; hosted configuration, tool arguments and
+actual session termination were not independently inspected.
+Official documentation confirms native end_call takes a required reason and an
+optional message; Tool Call Testing supports end_call parameter assertions.
+Read-only hosted lookup failed sandbox networking and escalation was canceled.
+Codex made no implementation, regression, hosted configuration or permission
+changes during this investigation; existing preflight is preserved. No tests,
+builds, lint, formatting/type checks, calls, deployment, commit or push ran.
+
+## Outbound conversation refinement — UNVERIFIED — 2026-11-04
+
+Owner requests concise American HVAC receptionist behavior, one introduction,
+one useful question per turn, correction/pause handling, disabled-transfer silence
+and native call termination without spoken tool names or emotion tags. Owner
+confirms the ending artifact was audible. Source updates FIRST_MESSAGE/DEMO_PROMPT
+and synchronizes the existing agent JSON; native tool configuration, privacy,
+hazard handling, consent and all calling controls are preserved. Duration remains
+a <=180-second ceiling, not a pacing target.
+
+Hosted agent was not updated. Read-only network inspection failed in the sandbox;
+owner aborted the escalation and requested manual dashboard work. No hosted
+configuration or audio inspection completed; the exact audible-leak cause remains
+unverified. Existing preflight still requires exact hosted/backend prompt and
+first-message matches. Owner must apply the JSON's two text fields to the existing
+outbound agent and coordinate the same backend version before enabling calls.
+No tests/builds/lint/format/type checks, live calls, deployment, commit or push ran.
+
 ## Callback sign-in gate — UNVERIFIED — 2026-11-04
 
 Owner requires sign-in before callback requests. Source gates the Radix form on
