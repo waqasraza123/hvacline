@@ -1,5 +1,19 @@
 # Outbound AI demo calling with human transfer
 
+## Rollout handoff and date removal — November 4, 2026
+
+Owner requests removing the November5 announcement and rolling out outbound
+calling. Source removes the dated promotion and obsolete shared date/component;
+unavailable form/bridge messages now reflect availability. This supersedes the
+historical date-announcement instructions below. The existing call gates remain
+enforced pending hosted configuration and the owner’s admin/visitor rollout scope.
+Policy/modal implementation is pushed as048ff2f. Render/Vercel integrations are
+not connected and no local deployment credentials are configured; no hosted
+deployment/configuration or real-call acceptance is established by that push.
+The earlier failed Render deployment and reported TCP versus mandatory TLS still
+need inspection. Preserve the existing provider resources and do not weaken TLS
+or route visitors through admin credentials to bypass the admin-only policy.
+
 ## Hero request form — November 4, 2026 — UNVERIFIED
 
 The hero and Calling section now open a shared Radix Dialog phone/scenario/consent

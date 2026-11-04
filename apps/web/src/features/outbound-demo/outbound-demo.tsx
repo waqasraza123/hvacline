@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
-import { CallingLaunchDate } from "./calling-launch";
 import { OutboundDemoTrigger } from "./outbound-demo-dialog";
 
 export function OutboundDemo() {
@@ -11,9 +10,7 @@ export function OutboundDemo() {
       aria-labelledby="outbound-title"
     >
       <div className="outbound-demo-intro">
-        <p className="product-eyebrow">
-          COMING <CallingLaunchDate />
-        </p>
+        <p className="product-eyebrow">ON YOUR PHONE</p>
         <h2 id="outbound-title">
           Inbound &amp;
           <br />
@@ -29,11 +26,9 @@ export function OutboundDemo() {
         </div>
       </div>
       <div className="calling-preview">
-        <div className="calling-preview-date">
-          <ProductIcon name="calendar" />
-          <span>
-            Coming <CallingLaunchDate />
-          </span>
+        <div className="calling-preview-label">
+          <ProductIcon name="clock" />
+          <span>One AI conversation · up to 3 minutes</span>
         </div>
         <article>
           <ProductIcon name="phone" />

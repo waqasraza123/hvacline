@@ -1,5 +1,21 @@
 # Project State
 
+## Calling date removed; outbound rollout pending — 2026-11-04
+
+Owner requests removing the November5 calling announcement and rolling out
+outbound calling. Source removes the hero banner and obsolete date references
+from homepage/Calling section/FAQ and disabled dialog/bridge messages. Existing
+call eligibility and activation gates are retained. Owner clarification of
+admin-only versus visitor rollout is pending. Render/Vercel are not connected
+and no local deployment credentials are configured; hosted rollout remains
+unverified. No tests/builds/lint/type checks, provider changes or calls ran.
+
+The earlier consented-US policy and hero modal were committed/pushed as048ff2f;
+remote accepted1667e5f..048ff2f to main. The new wording is a separate follow-up.
+GitHub reports successful Vercel frontend/worker deployment statuses for048ff2f;
+this does not establish Render backend readiness or live-call acceptance.
+Preserve old inbound-investigation/provisioning edits outside this publication.
+
 ## Outbound policy and hero publication authorized — 2026-11-04
 
 Owner requests pushing the pending consented-US admin policy and hero demo-call

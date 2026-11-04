@@ -1,5 +1,20 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Calling announcement removal — November 4, 2026
+
+Owner requests removing the dated calling announcement and proceeding with an
+outbound rollout. Source removes the hero banner and all November5/date references
+from homepage, Calling section, dialog fallback and disabled bridge responses.
+The obsolete shared date/component/styles are removed. The demo CTA/modal remains;
+unavailable submission uses current-availability wording without claiming Live
+calling. No calling flags or admin-only policy are bypassed. Hosting access and
+owner selection of admin-only versus visitor calling remain pending. The earlier
+policy/modal commit048ff2f is pushed; this removal is a follow-up.
+
+Use the owner commands and manual checks below; no verification command ran.
+Also confirm the removed announcement/date no longer renders, and unavailable
+form/bridge responses make no date or successful-call claim.
+
 ## Hero demo-call modal — November 4, 2026
 
 The hero now includes **Request an AI demo call**. This and the Calling section

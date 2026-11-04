@@ -1,8 +1,3 @@
-export const callingLaunch = {
-  date: "2026-11-05",
-  label: "November 5, 2026",
-} as const;
-
 export const scenarios = {
   cooling: "My AC isn’t cooling",
   heating: "My heating isn’t working",

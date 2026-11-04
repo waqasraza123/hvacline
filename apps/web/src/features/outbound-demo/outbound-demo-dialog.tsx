@@ -61,7 +61,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
   const [locked, setLocked] = useState(false);
   const [call, setCall] = useState<DemoCall | null>(null);
   const [message, setMessage] = useState(
-    "Phone demos are coming soon. You can explore the form or try Line in your browser today.",
+    "Phone demos aren’t available right now. You can explore the form or try Line in your browser.",
   );
   const requestId = useRef<string | null>(null);
   const submitting = useRef(false);
@@ -346,7 +346,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                       ? "Call already requested"
                       : available
                         ? "Request my demo call"
-                        : "Phone demos coming soon"}
+                        : "Phone demos unavailable"}
                   <ProductIcon name="arrow" />
                 </button>
                 <p className="outbound-demo-status" role="status" aria-live="polite">

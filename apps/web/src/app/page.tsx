@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
-import { CallingLaunchDate } from "@/features/outbound-demo/calling-launch";
 import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
 import {
   OutboundDemoDialog,
@@ -157,16 +156,6 @@ export default function Home() {
               Line answers questions, checks available times, and books HVAC
               appointments in one natural conversation.
             </p>
-            <a className="calling-announcement" href="#call-me">
-              <ProductIcon name="phone" />
-              <span>
-                Inbound &amp; outbound calling
-                <strong>
-                  Coming <CallingLaunchDate />
-                </strong>
-              </span>
-              <ProductIcon name="arrow" />
-            </a>
             <div className="product-hero-actions">
               <OutboundDemoTrigger />
               <a className="product-text-link" href="#how-it-works">
@@ -264,11 +253,12 @@ export default function Home() {
           <div className="product-faq-list">
             <details>
               <summary>
-                When is telephone calling coming?<span>+</span>
+                How can I try a demo call?<span>+</span>
               </summary>
               <p>
-                Inbound and outbound calling are coming on <CallingLaunchDate />
-                . You can try Line’s Voice AI in your browser today.
+                Choose Request an AI demo call to enter your number, pick a
+                scenario and check phone-demo availability. You can also try
+                Line’s Voice AI in your browser.
               </p>
             </details>
             <details>

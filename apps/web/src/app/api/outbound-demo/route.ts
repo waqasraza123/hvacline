@@ -2,7 +2,6 @@ import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSameOrigin } from "@/features/customer/proxy";
 import {
-  callingLaunch,
   isDemoCall,
   scenarios,
   UUID_PATTERN,
@@ -139,7 +138,7 @@ export async function POST(request: NextRequest) {
   }
   if (process.env.OUTBOUND_DEMO_FORM_ENABLED !== "true")
     return rejected(
-      `Telephone calling is coming on ${callingLaunch.label}. Try browser Voice today.`,
+      "Phone demos aren’t available right now. Please try browser Voice.",
       503,
     );
   const token = request.cookies.get(COOKIE)?.value;
