@@ -331,8 +331,25 @@
   line-height: 1.7;
 }
 .outbound-demo-dialog .outbound-demo-browser {
+  display: block;
+  margin-top: 1rem;
   justify-self: center;
   text-align: center;
+}
+.outbound-demo-signin {
+  display: grid;
+  gap: 1rem;
+  padding-block: 0.5rem;
+}
+.outbound-demo-signin > p {
+  margin: 0;
+  color: var(--customer-muted);
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+.outbound-demo-signin .product-button {
+  justify-content: center;
+  width: 100%;
 }
 @media (max-width: 760px) {
   .outbound-demo {

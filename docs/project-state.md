@@ -1,5 +1,22 @@
 # Project State
 
+## Callback sign-in gate — UNVERIFIED — 2026-11-04
+
+Owner requires sign-in before callback requests. Source gates the Radix form on
+existing customer session validation, with structured401/503 failures in the Next
+availability/status/submission bridge. The existing login/signup/MFA flow carries
+only a fixed demo-call intent and returns to the homepage modal; normal account
+navigation remains `/book`. Pending request key/lock recovery is retained and
+returning never submits a call. This supersedes anonymous form preview; it does
+not remove current calling/policy/TLS gates or authorize customer-to-admin bypass.
+
+Focused auth/bridge regression specifications are written, unexecuted. No local
+tests/builds/lint/type checks, provider/config changes, migrations or calls ran.
+Owner checks/manual acceptance: `docs/homepage-hero.md`. Earlier frontend removal
+commit9867717 has successful Vercel frontend/worker statuses; backend rollout and
+live calling remain unverified. Publish this gate under the ongoing main rollout
+authorization, preserving older unrelated inbound documentation/provisioning.
+
 ## Calling date removed; outbound rollout pending — 2026-11-04
 
 Owner requests removing the November5 calling announcement and rolling out

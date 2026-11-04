@@ -1,5 +1,35 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Callback sign-in requirement — November 4, 2026 — UNVERIFIED
+
+The callback CTA now asks signed-out visitors to sign in before showing phone,
+scenario or consent fields. Existing customer login/signup and required MFA carry
+a fixed `demo-call` intent, returning to `/?demo_call=1` to reopen the modal.
+Ordinary sign-in still returns to `/book`; arbitrary redirect URLs are ignored.
+Returning/opening the modal only checks availability and never submits a call.
+
+The Next callback bridge revalidates the existing customer session on availability,
+status and submission. Missing/expired sessions get401 `CALLBACK_SIGN_IN_REQUIRED`;
+unavailable session verification fails closed with503. Existing pending request
+keys/locks survive sign-in; status denials never claim a call was not created.
+This supersedes anonymous form preview. Signed-in previews remain subject to the
+existing website/policy gates; no outbound activation or provider setting changed.
+
+Regression specifications added, unexecuted. Owner commands with Node24:
+
+```sh
+npm run test:web -- src/app/api/outbound-demo/route.test.ts src/features/customer/auth-continuation.test.ts 'src/app/api/account/[action]/route.test.ts'
+npm run typecheck:web
+npm run build:web
+```
+
+Manual: signed-out hero/Calling buttons show sign-in before phone fields; login,
+signup, MFA enrollment/verification/recovery and cancellation retain callback
+intent; successful sign-in reopens the form without dialing. Normal login still
+goes to `/book`. Check unavailable/expired sessions, Tab/Escape/focus, and saved
+call recovery across sign-in. Direct unsigned GET/POST must never reach dialing;
+with gates off, signed-in users still cannot submit calls. No checks ran locally.
+
 ## Calling announcement removal — November 4, 2026
 
 Owner requests removing the dated calling announcement and proceeding with an

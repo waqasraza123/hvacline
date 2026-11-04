@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSameOrigin } from "@/features/customer/proxy";
+import { currentCustomer } from "@/features/customer/server";
 import {
   isDemoCall,
   scenarios,
@@ -22,6 +23,24 @@ function json(body: unknown, status = 200) {
 
 function rejected(message: string, status: number) {
   return json({ error: { message }, request_not_created: true }, status);
+}
+
+async function customerGate(creating = false) {
+  const customer = await currentCustomer();
+  if (customer.status === "authenticated") return null;
+  const anonymous = customer.status === "anonymous";
+  return json(
+    {
+      error: {
+        code: anonymous ? "CALLBACK_SIGN_IN_REQUIRED" : "CALLBACK_AUTH_UNAVAILABLE",
+        message: anonymous
+          ? "Sign in to request a demo call or check its status."
+          : "We couldn’t check your sign-in. Please try again.",
+      },
+      ...(creating ? { request_not_created: true } : {}),
+    },
+    anonymous ? 401 : 503,
+  );
 }
 
 async function backend(path: string, token: string, body?: string) {
@@ -58,6 +77,8 @@ async function backend(path: string, token: string, body?: string) {
 export async function GET(request: NextRequest) {
   if (request.headers.get("sec-fetch-site") === "cross-site")
     return json({ available: false }, 403);
+  const denied = await customerGate();
+  if (denied) return denied;
   const requestId = request.nextUrl.searchParams.get("request_id");
   const existing = request.cookies.get(COOKIE)?.value;
   if (
@@ -136,6 +157,8 @@ export async function POST(request: NextRequest) {
   } catch {
     return rejected("Please use the demo form on this website.", 403);
   }
+  const denied = await customerGate(true);
+  if (denied) return denied;
   if (process.env.OUTBOUND_DEMO_FORM_ENABLED !== "true")
     return rejected(
       "Phone demos aren’t available right now. Please try browser Voice.",

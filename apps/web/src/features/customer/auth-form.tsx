@@ -6,8 +6,15 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
+import { type AuthIntent, authPageHref } from "./auth-continuation";
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({
+  mode,
+  intent,
+}: {
+  mode: "login" | "signup";
+  intent?: AuthIntent;
+}) {
   const signup = mode === "signup";
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -53,7 +60,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           !("mfa_required" in result) || result.mfa_required !== true) {
         throw new Error("Authenticator setup or verification is required to sign in.");
       }
-      router.replace("/mfa");
+      router.replace(authPageHref("/mfa", intent));
       router.refresh();
     } catch (failure) {
       setError(
@@ -118,9 +125,11 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
             {signup ? "Make yourself at home." : "Good to have you back."}
           </h2>
           <p>
-            {signup
-              ? "Create your account, then set up your required authenticator."
-              : "Sign in with your password and authenticator to continue."}
+            {intent === "demo-call"
+              ? "Sign in or create an account, then complete authenticator verification to continue to your demo call."
+              : signup
+                ? "Create your account, then set up your required authenticator."
+                : "Sign in with your password and authenticator to continue."}
           </p>
           <form onSubmit={(event) => void submit(event)} aria-busy={busy}>
             {signup && (
@@ -202,7 +211,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
           </form>
           <p className="auth-switch">
             {signup ? "Already have an account?" : "New to HVACLine?"}{" "}
-            <Link href={signup ? "/login" : "/signup"}>
+            <Link href={authPageHref(signup ? "/login" : "/signup", intent)}>
               {signup ? "Sign in" : "Create an account"}
             </Link>
           </p>

@@ -1,7 +1,14 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { currentCustomer } from "@/features/customer/server";
 import { GET, POST } from "./route";
 
+vi.mock("@/features/customer/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/customer/server")>()),
+  currentCustomer: vi.fn(),
+}));
+
+const customerSession = vi.mocked(currentCustomer);
 const fetcher = vi.fn<typeof fetch>();
 const secret = "synthetic-outbound-bridge-secret-with-32-characters";
 const visitor = "v".repeat(43);
@@ -35,6 +42,15 @@ function post(body: unknown = payload, origin = "https://hvacline.example") {
 }
 
 beforeEach(() => {
+  customerSession.mockReset();
+  customerSession.mockResolvedValue({
+    status: "authenticated",
+    user: {
+      id: "synthetic-callback-customer",
+      full_name: "Synthetic Customer",
+      email: "synthetic@example.test",
+    },
+  });
   fetcher.mockReset();
   vi.stubGlobal("fetch", fetcher);
   vi.stubEnv("NODE_ENV", "test");
@@ -48,6 +64,55 @@ afterEach(() => {
 });
 
 describe("outbound demo bridge", () => {
+  it("requires sign-in before availability or creating a callback", async () => {
+    customerSession.mockResolvedValue({ status: "anonymous" });
+    const available = await GET(
+      new NextRequest("https://hvacline.example/api/outbound-demo"),
+    );
+    expect(available.status).toBe(401);
+    expect((await available.json()).error.code).toBe("CALLBACK_SIGN_IN_REQUIRED");
+    expect(available.cookies.get("hvacline-call-visitor")).toBeUndefined();
+    const response = await POST(post());
+    expect(response.status).toBe(401);
+    expect(await response.json()).toMatchObject({
+      error: { code: "CALLBACK_SIGN_IN_REQUIRED" },
+      request_not_created: true,
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("requires sign-in for saved status without claiming the call was never created", async () => {
+    customerSession.mockResolvedValue({ status: "anonymous" });
+    const response = await GET(new NextRequest(
+      `https://hvacline.example/api/outbound-demo?request_id=${requestId}`,
+      { headers: { Cookie: `hvacline-call-visitor=${visitor}` } },
+    ));
+    expect(response.status).toBe(401);
+    expect(await response.json()).not.toHaveProperty("request_not_created");
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when the account service cannot verify sign-in", async () => {
+    customerSession.mockResolvedValue({ status: "unavailable" });
+    const response = await POST(post());
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      error: { code: "CALLBACK_AUTH_UNAVAILABLE" }, request_not_created: true,
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("revalidates sign-in at submission after an earlier availability check", async () => {
+    fetcher.mockResolvedValueOnce(Response.json({ available: true }));
+    expect((await GET(new NextRequest(
+      "https://hvacline.example/api/outbound-demo",
+    ))).status).toBe(200);
+    customerSession.mockResolvedValue({ status: "anonymous" });
+    expect((await POST(post())).status).toBe(401);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0][1]?.method).toBe("GET");
+  });
+
   it("stays disabled without the explicit frontend gate", async () => {
     vi.stubEnv("OUTBOUND_DEMO_FORM_ENABLED", "false");
     expect(

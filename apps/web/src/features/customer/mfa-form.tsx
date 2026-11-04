@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Brand } from "@/components/brand";
 import { ProductIcon } from "@/components/product-icons";
+import { type AuthIntent, authPageHref, authReturnHref } from "./auth-continuation";
 import { AuthenticatorSetup } from "./authenticator-setup";
 import { parseMfaSetup } from "./mfa-setup";
 import type { MfaSetup } from "./mfa-setup";
@@ -57,7 +58,7 @@ async function loadMfa(): Promise<MfaState> {
   };
 }
 
-export function CustomerMfaForm() {
+export function CustomerMfaForm({ intent }: { intent?: AuthIntent }) {
   const router = useRouter();
   const leaving = useRef(false);
   const [stage, setStage] = useState<Stage>("loading");
@@ -115,7 +116,7 @@ export function CustomerMfaForm() {
         setStage("codes");
       } else {
         setSetup(undefined);
-        router.replace("/book");
+        router.replace(authReturnHref(intent));
         router.refresh();
       }
     } catch (failure) {
@@ -137,7 +138,7 @@ export function CustomerMfaForm() {
     setCode("");
     setCodes([]);
     await securityRequest("mfa-cancel", {}).catch(() => undefined);
-    router.replace("/login");
+    router.replace(authPageHref("/login", intent));
     router.refresh();
   }
 
@@ -289,11 +290,14 @@ export function CustomerMfaForm() {
                 disabled={!savedCodes}
                 onClick={() => {
                   setCodes([]);
-                  router.replace("/book");
+                  router.replace(authReturnHref(intent));
                   router.refresh();
                 }}
               >
-                Continue to my account <ProductIcon name="arrow" />
+                {intent === "demo-call"
+                  ? "Continue to demo call"
+                  : "Continue to my account"}
+                <ProductIcon name="arrow" />
               </button>
             </div>
           ) : (

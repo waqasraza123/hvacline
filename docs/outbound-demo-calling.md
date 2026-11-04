@@ -1,5 +1,18 @@
 # Outbound AI demo calling with human transfer
 
+## Callback sign-in gate — November 4, 2026 — UNVERIFIED
+
+Owner now requires sign-in before callback requests. The modal shows a sign-in
+prompt before phone/consent fields; the existing customer session/MFA flow returns
+to the callback modal using a fixed continuation intent. The website bridge checks
+the current customer session for availability, status and submission, rejecting
+missing/expired or unverified sessions before outbound access. Existing browser
+recovery keys/locks and calling policy gates remain; no admin credential is exposed
+or used to turn customer sign-in into admin dialing. No feature flag, provider
+setting or backend schema changes. Exact unrun checks and manual acceptance:
+`docs/homepage-hero.md`. Live activation still requires hosting/TLS acceptance and
+a deliberate customer-calling policy; `consented_us` remains admin-only.
+
 ## Rollout handoff and date removal — November 4, 2026
 
 Owner requests removing the November5 announcement and rolling out outbound
