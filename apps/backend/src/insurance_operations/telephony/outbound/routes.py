@@ -21,6 +21,11 @@ from insurance_operations.telephony.outbound.service import (
     unavailable,
 )
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
+from insurance_operations.telephony.outbound.verification_schemas import (
+    SmsChallengeResponse,
+    SmsStartInput,
+    SmsVerifyInput,
+)
 from insurance_operations.telephony.providers.elevenlabs import MAX_WEBHOOK_BYTES
 
 
@@ -133,6 +138,16 @@ def create_outbound_demo_router(
         if not settings.website_available:
             raise unavailable()
         return service.create(data, owner)
+
+    @router.post("/phone-verifications", response_model=SmsChallengeResponse)
+    def start_phone_verification(
+        data: SmsStartInput, owner: Visitor
+    ) -> SmsChallengeResponse:
+        return service.verification.start(data, owner)
+
+    @router.post("/phone-verifications/verify", response_model=SmsChallengeResponse)
+    def verify_phone(data: SmsVerifyInput, owner: Visitor) -> SmsChallengeResponse:
+        return service.verification.verify(data, owner)
 
     @router.get("/calls/{call_id}", response_model=DemoCallResponse)
     def visitor_status(call_id: UUID, owner: Visitor) -> DemoCallResponse:

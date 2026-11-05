@@ -13,15 +13,26 @@ export function requireSameOrigin(request: NextRequest) {
   }
 }
 
-export async function requestBody(request: NextRequest): Promise<string> {
+export async function requestBody(
+  request: Pick<NextRequest, "headers" | "body">,
+): Promise<string> {
   if (!request.headers.get("content-type")?.startsWith("application/json"))
     throw new CustomerBackendError(415, "Please send the form again.");
-  const body = await request.text();
-  if (body.length > 65_536)
-    throw new CustomerBackendError(
-      413,
-      "This conversation is too long to save. Please start a shorter conversation.",
-    );
+  const reader = request.body?.getReader();
+  if (!reader) throw new CustomerBackendError(400, "The form could not be read.");
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > 65_536) {
+      await reader.cancel();
+      throw new CustomerBackendError(413, "This request is too large. Send a smaller form.");
+    }
+    chunks.push(value);
+  }
+  const body = Buffer.concat(chunks).toString("utf8");
   try {
     JSON.parse(body);
   } catch {

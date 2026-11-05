@@ -1,5 +1,15 @@
 # Outbound AI demo calling with human transfer
 
+## Mobile-only hardening — November5,2026 — UNVERIFIED
+
+The production-readiness follow-up requires a verified US mobile number for every
+website call, separately from authenticator sign-in. New SMS proof/account limits
+need API-only Telnyx Verify configuration and forward migration0019. Older no-SMS,
+mobile/landline and no-new-migration descriptions below do not apply to this
+revision. It is untested; no hosting/provider settings changed. Exact
+release blockers, settings, commands and acceptance:
+[Public demo release](public-demo-production-readiness.md).
+
 ## Public callback policy — November 5, 2026 — UNVERIFIED
 
 Owner authorizes website callbacks with sign-in and authenticator MFA required.

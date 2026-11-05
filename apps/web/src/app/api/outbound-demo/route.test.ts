@@ -27,6 +27,7 @@ const payload = {
   scenario: "cooling",
   consent: true,
   consent_version: "outbound-demo-v1",
+  phone_verification_id: "10000000-0000-4000-8000-000000000003",
 };
 
 function post(body: unknown = payload, origin = "https://hvacline.example") {
@@ -145,7 +146,7 @@ describe("outbound demo bridge", () => {
     },
   );
 
-  it("forwards the stable request key and visitor only with server-side authorization", async () => {
+  it("forwards the stable request key with account-bound server authorization", async () => {
     fetcher.mockResolvedValueOnce(Response.json(call));
     const response = await POST(post());
     expect(response.status).toBe(200);
@@ -159,12 +160,73 @@ describe("outbound demo bridge", () => {
         cache: "no-store",
         headers: expect.objectContaining({
           "X-Outbound-Demo-Key": secret,
-          "X-Outbound-Visitor": visitor,
+          "X-Outbound-Visitor": expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
         }),
       }),
     );
     expect(response.headers.get("X-Outbound-Demo-Key")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBe("no-store");
+    const headers = fetcher.mock.calls[0][1]?.headers as Record<string, string>;
+    expect(headers["X-Outbound-Visitor"]).not.toBe(visitor);
+    expect(JSON.stringify(headers)).not.toContain("synthetic-callback-customer");
+  });
+
+  it("keeps the account owner stable across cookies and isolates other sign-ins", async () => {
+    fetcher.mockImplementation(async () => Response.json(call));
+    await POST(post());
+    const first = fetcher.mock.calls[0][1]?.headers as Record<string, string>;
+    const changedCookie = new NextRequest("https://hvacline.example/api/outbound-demo", {
+      method: "POST", headers: {
+        Origin: "https://hvacline.example", "Content-Type": "application/json",
+        Cookie: `hvacline-call-visitor=${"x".repeat(43)}`,
+      }, body: JSON.stringify(payload),
+    });
+    await POST(changedCookie);
+    const second = fetcher.mock.calls[1][1]?.headers as Record<string, string>;
+    expect(second["X-Outbound-Visitor"]).toBe(first["X-Outbound-Visitor"]);
+    customerSession.mockResolvedValue({ status: "authenticated", user: {
+      id: "other-synthetic-account", full_name: "Other Customer", email: "other@example.test",
+    } });
+    await POST(post());
+    const third = fetcher.mock.calls[2][1]?.headers as Record<string, string>;
+    expect(third["X-Outbound-Visitor"]).not.toBe(first["X-Outbound-Visitor"]);
+  });
+
+  it.each(["send_code", "verify_code"])("requires sign-in before SMS action %s", async (action) => {
+    customerSession.mockResolvedValue({ status: "anonymous" });
+    expect((await POST(post({ action }))).status).toBe(401);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("does not request a callback without a phone verification proof", async () => {
+    const { phone_verification_id: _proof, ...unverified } = payload;
+    expect((await POST(post(unverified))).status).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it("sends only the consented SMS request and never invokes the call route", async () => {
+    const challenge = {
+      challenge_id: payload.phone_verification_id,
+      expires_at: "2026-11-05T12:05:00Z", verified: false,
+    };
+    fetcher.mockResolvedValueOnce(Response.json(challenge));
+    const response = await POST(post({ action: "send_code", phone_number: "+12025550123",
+      sms_consent: true, sms_consent_version: "outbound-sms-v1" }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(challenge);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0][0]).toBe(
+      "https://api.hvacline.example/api/v1/outbound-demo/phone-verifications",
+    );
+  });
+
+  it.each([
+    { action: "send_code", phone_number: "+12025550123", sms_consent: false, sms_consent_version: "outbound-sms-v1" },
+    { action: "verify_code", challenge_id: payload.phone_verification_id, code: "12345" },
+    { action: "verify_code", challenge_id: payload.phone_verification_id, code: "123456", status: "accepted" },
+  ])("rejects missing SMS consent or invalid code actions %j", async (body) => {
+    expect((await POST(post(body))).status).toBe(400);
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("creates a private recovery cookie at availability", async () => {
@@ -208,6 +270,7 @@ describe("outbound demo bridge", () => {
 
   it.each([
     { status: 403, code: "DEMO_NUMBER_NOT_AUTHORIZED" },
+    { status: 403, code: "DEMO_PHONE_VERIFICATION_REQUIRED" },
     { status: 429, code: "DEMO_CALL_LIMIT" },
     { status: 422, code: "DEMO_PHONE_NUMBER_INVALID" },
     { status: 422, code: "DEMO_DESTINATION_UNSUPPORTED" },

@@ -40,13 +40,14 @@ TERMINAL_STATUSES = frozenset(
 
 
 class DemoCallInput(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", hide_input_in_errors=True)
 
     request_id: UUID
-    phone_number: str = Field(min_length=1, max_length=64)
+    phone_number: str = Field(min_length=1, max_length=64, repr=False)
     scenario: DemoScenario
     consent: Literal[True]
     consent_version: Literal["outbound-demo-v1"]
+    phone_verification_id: UUID | None = Field(default=None, exclude=True)
 
     @field_validator("phone_number")
     @classmethod

@@ -1,9 +1,10 @@
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSameOrigin } from "@/features/customer/proxy";
 import { currentCustomer } from "@/features/customer/server";
 import {
   isDemoCall,
+  isSmsChallenge,
   scenarios,
   UUID_PATTERN,
 } from "@/features/outbound-demo/contracts";
@@ -21,32 +22,44 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function rejected(message: string, status: number) {
-  return json({ error: { message }, request_not_created: true }, status);
-}
-
-async function customerGate(creating = false) {
-  const customer = await currentCustomer();
-  if (customer.status === "authenticated") return null;
-  const anonymous = customer.status === "anonymous";
+function rejected(message: string, status: number, code?: string) {
   return json(
-    {
-      error: {
-        code: anonymous ? "CALLBACK_SIGN_IN_REQUIRED" : "CALLBACK_AUTH_UNAVAILABLE",
-        message: anonymous
-          ? "Sign in to request a demo call or check its status."
-          : "We couldn’t check your sign-in. Please try again.",
-      },
-      ...(creating ? { request_not_created: true } : {}),
-    },
-    anonymous ? 401 : 503,
+    { error: { message, ...(code ? { code } : {}) }, request_not_created: true },
+    status,
   );
 }
 
-async function backend(path: string, token: string, body?: string) {
+async function customerGate(
+  creating = false,
+): Promise<{ customerId: string } | { denied: NextResponse }> {
+  const customer = await currentCustomer();
+  if (customer.status === "authenticated")
+    return { customerId: customer.user.id };
+  const anonymous = customer.status === "anonymous";
+  return {
+    denied: json(
+      {
+        error: {
+          code: anonymous ? "CALLBACK_SIGN_IN_REQUIRED" : "CALLBACK_AUTH_UNAVAILABLE",
+          message: anonymous
+            ? "Sign in to request a demo call or check its status."
+            : "We couldn’t check your sign-in. Please try again.",
+        },
+        ...(creating ? { request_not_created: true } : {}),
+      },
+      anonymous ? 401 : 503,
+    ),
+  };
+}
+
+async function backend(path: string, customerId: string, body?: string) {
   const secret = process.env.OUTBOUND_DEMO_SECRET;
   const raw = process.env.NEXT_PUBLIC_API_BASE_URL;
   if (!secret || secret.length < 32 || !raw) throw new Error("Unavailable");
+  const owner = createHmac("sha256", secret)
+    .update("hvacline/outbound-customer/v1\0")
+    .update(customerId)
+    .digest("base64url");
   const url = new URL(raw);
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -67,18 +80,90 @@ async function backend(path: string, token: string, body?: string) {
       headers: {
         "Content-Type": "application/json",
         "X-Outbound-Demo-Key": secret,
-        "X-Outbound-Visitor": token,
+        "X-Outbound-Visitor": owner,
       },
       signal: AbortSignal.timeout(40_000),
     },
   );
 }
 
+async function phoneVerification(
+  data: Record<string, unknown>,
+  customerId: string,
+) {
+  const sending = data.action === "send_code";
+  const keys = sending
+    ? ["action", "phone_number", "sms_consent", "sms_consent_version"]
+    : ["action", "challenge_id", "code"];
+  if (
+    (!sending && data.action !== "verify_code") ||
+    Object.keys(data).some((key) => !keys.includes(key)) ||
+    (sending
+      ? typeof data.phone_number !== "string" ||
+        !/^\+1[0-9]{10}$/.test(data.phone_number) ||
+        data.sms_consent !== true ||
+        data.sms_consent_version !== "outbound-sms-v1"
+      : typeof data.challenge_id !== "string" ||
+        !UUID_PATTERN.test(data.challenge_id) ||
+        typeof data.code !== "string" ||
+        !/^[0-9]{6}$/.test(data.code))
+  )
+    return rejected(
+      "Check your mobile number, text consent and verification code.",
+      400,
+    );
+  try {
+    const payload = sending
+      ? {
+          phone_number: data.phone_number,
+          sms_consent: true,
+          sms_consent_version: data.sms_consent_version,
+        }
+      : { challenge_id: data.challenge_id, code: data.code };
+    const response = await backend(
+      sending ? "phone-verifications" : "phone-verifications/verify",
+      customerId,
+      JSON.stringify(payload),
+    );
+    const value: unknown = await response.json();
+    if (!response.ok) {
+      const messages: Record<number, string> = {
+        403: "Start again with a new verification code.",
+        422: sending
+          ? "Use a US mobile number that can receive text messages."
+          : "That code is invalid or expired. Check the text and try again.",
+        429: "The text verification limit has been reached. Please try later.",
+      };
+      return json(
+        {
+          error: {
+            message: messages[response.status] ??
+              "Text verification is unavailable. Please try again later.",
+          },
+        },
+        response.status,
+      );
+    }
+    if (!isSmsChallenge(value)) throw new Error("Invalid response");
+    return json(value);
+  } catch {
+    return json(
+      {
+        error: {
+          message:
+            "Text verification is unconfirmed. Wait a minute before requesting another code.",
+        },
+      },
+      503,
+    );
+  }
+}
+
 export async function GET(request: NextRequest) {
   if (request.headers.get("sec-fetch-site") === "cross-site")
     return json({ available: false }, 403);
-  const denied = await customerGate();
-  if (denied) return denied;
+  const gate = await customerGate();
+  if ("denied" in gate) return gate.denied;
   const requestId = request.nextUrl.searchParams.get("request_id");
   const existing = request.cookies.get(COOKIE)?.value;
   if (
@@ -104,7 +189,7 @@ export async function GET(request: NextRequest) {
   try {
     const upstream = await backend(
       requestId ? `requests/${requestId}` : "availability",
-      token,
+      gate.customerId,
     );
     const value: unknown = await upstream.json();
     if (!upstream.ok)
@@ -157,8 +242,8 @@ export async function POST(request: NextRequest) {
   } catch {
     return rejected("Please use the demo form on this website.", 403);
   }
-  const denied = await customerGate(true);
-  if (denied) return denied;
+  const gate = await customerGate(true);
+  if ("denied" in gate) return gate.denied;
   if (process.env.OUTBOUND_DEMO_FORM_ENABLED !== "true")
     return rejected(
       "Phone demos aren’t available right now. Please try browser Voice.",
@@ -188,6 +273,8 @@ export async function POST(request: NextRequest) {
       chunks.push(value);
     }
     const data: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    if (typeof data === "object" && data !== null && "action" in data)
+      return phoneVerification(data as Record<string, unknown>, gate.customerId);
     if (
       typeof data !== "object" ||
       data === null ||
@@ -204,6 +291,9 @@ export async function POST(request: NextRequest) {
       data.consent !== true ||
       !("consent_version" in data) ||
       data.consent_version !== "outbound-demo-v1" ||
+      !("phone_verification_id" in data) ||
+      typeof data.phone_verification_id !== "string" ||
+      !UUID_PATTERN.test(data.phone_verification_id) ||
       Object.keys(data).some(
         (key) =>
           ![
@@ -212,14 +302,15 @@ export async function POST(request: NextRequest) {
             "scenario",
             "consent",
             "consent_version",
+            "phone_verification_id",
           ].includes(key),
       )
     )
       return rejected(
-        "Use an international phone number, choose a scenario and agree to one AI demo call.",
+        "Verify your US mobile number, choose a scenario and agree to one AI demo call.",
         400,
       );
-    const upstream = await backend("calls", token, JSON.stringify(data));
+    const upstream = await backend("calls", gate.customerId, JSON.stringify(data));
     const result: unknown = await upstream.json();
     if (!upstream.ok) {
       const code =
@@ -242,9 +333,13 @@ export async function POST(request: NextRequest) {
           429,
         );
       if (upstream.status === 422 && code === "DEMO_PHONE_NUMBER_INVALID")
-        return rejected("Enter a valid US mobile or landline number.", 422);
+        return rejected("Enter a valid US mobile number.", 422);
       if (upstream.status === 422 && code === "DEMO_DESTINATION_UNSUPPORTED")
-        return rejected("Only US mobile and landline numbers are supported.", 422);
+        return rejected("Only US mobile numbers are supported.", 422);
+      if (upstream.status === 403 && code === "DEMO_PHONE_VERIFICATION_REQUIRED")
+        return rejected(
+          "Verify your mobile number with a new text-message code first.", 403, code,
+        );
       const message =
         upstream.status === 403
           ? "This private demo is limited to numbers approved by the demo owner."

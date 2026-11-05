@@ -1,5 +1,15 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Mobile verification — November5,2026 — UNVERIFIED
+
+Callback source adds a separate opt-in SMS verification step for a US
+mobile number before call consent/submission. Changing the number clears proof
+and consent; code expiry and known proof rejection require verification again.
+Sign-in still requires authenticator MFA. Hosted activation/migration/provider
+setup and all execution checks remain pending. See
+[Public demo release](public-demo-production-readiness.md) for exact owner commands
+and mobile, keyboard, expiry and recovery checks.
+
 ## Public callbacks — November 5, 2026 — UNVERIFIED
 
 Signed-in visitors with completed authenticator MFA can use the website callback

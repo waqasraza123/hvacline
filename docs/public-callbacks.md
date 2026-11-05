@@ -1,5 +1,17 @@
 # Public callback requests — UNVERIFIED
 
+## Mobile-only production hardening — November5,2026 — UNVERIFIED
+
+Owner clarifies public fictional demo calls, with mobile numbers only. New
+source requires live mobile carrier lookup and SMS proof before every website
+call, independently of mandatory authenticator sign-in. Account-bound ownership,
+account call quotas and bounded SMS budgets replace cookie-only ownership. New
+migration0019 and API-only Telnyx Verify configuration are required. The earlier
+no-new-migration and mobile/landline activation instructions below describe
+`05da57e`; they do not cover this hardening. Keep public flags off until the new
+release is configured and accepted. Exact deployment, remaining blockers, owner
+commands and manual checks: [Public demo release](public-demo-production-readiness.md).
+
 The owner authorizes website callbacks for signed-in customers, with authenticator
 MFA required. `consented_us` now supports the existing website route without a
 recipient allowlist. Transfer remains disabled under this policy. `allowlist`

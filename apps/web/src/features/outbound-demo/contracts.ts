@@ -32,6 +32,24 @@ export type DemoCall = {
 export const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+export type SmsChallenge = {
+  challenge_id: string;
+  expires_at: string;
+  verified: boolean;
+};
+
+export function isSmsChallenge(value: unknown): value is SmsChallenge {
+  if (typeof value !== "object" || value === null) return false;
+  const challenge = value as Record<string, unknown>;
+  return (
+    typeof challenge.challenge_id === "string" &&
+    UUID_PATTERN.test(challenge.challenge_id) &&
+    typeof challenge.expires_at === "string" &&
+    Number.isFinite(Date.parse(challenge.expires_at)) &&
+    typeof challenge.verified === "boolean"
+  );
+}
+
 export function isDemoCall(value: unknown): value is DemoCall {
   if (typeof value !== "object" || value === null) return false;
   const call = value as Record<string, unknown>;

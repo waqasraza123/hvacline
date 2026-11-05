@@ -1,4 +1,5 @@
 from typing import Literal, Self
+from uuid import UUID
 
 from pydantic import Field, SecretStr, field_validator, model_validator
 
@@ -26,6 +27,14 @@ class OutboundDemoSettings(CommonSettings):
     outbound_demo_webhook_secret: SecretStr | None = Field(default=None, min_length=32)
     outbound_demo_daily_limit: int = Field(default=5, ge=1, le=10)
     outbound_demo_number_daily_limit: int = Field(default=1, ge=1, le=2)
+    outbound_demo_account_daily_limit: int = Field(default=1, ge=1, le=2)
+    outbound_demo_sms_daily_limit: int = Field(default=20, ge=1, le=100)
+    outbound_demo_sms_account_daily_limit: int = Field(default=3, ge=1, le=5)
+    outbound_demo_sms_number_daily_limit: int = Field(default=3, ge=1, le=5)
+    outbound_demo_sms_cooldown_seconds: int = Field(default=60, ge=60, le=3600)
+    outbound_demo_sms_ttl_seconds: int = Field(default=300, ge=120, le=600)
+    telnyx_verify_api_key: SecretStr | None = None
+    telnyx_verify_profile_id: UUID | None = None
     outbound_demo_cooldown_seconds: int = Field(default=300, ge=180, le=86400)
     outbound_demo_max_duration_seconds: int = Field(default=180, ge=30, le=180)
     outbound_demo_ringing_seconds: int = Field(default=25, ge=10, le=30)
@@ -41,6 +50,8 @@ class OutboundDemoSettings(CommonSettings):
         "elevenlabs_api_key",
         "elevenlabs_phone_agent_id",
         "elevenlabs_agent_id",
+        "telnyx_verify_api_key",
+        "telnyx_verify_profile_id",
         mode="before",
     )
     @classmethod
@@ -65,6 +76,8 @@ class OutboundDemoSettings(CommonSettings):
             self.outbound_demo_enabled
             and self.outbound_demo_website_enabled
             and self.outbound_demo_live_verified
+            and self.telnyx_verify_api_key is not None
+            and self.telnyx_verify_profile_id is not None
             and (
                 not self.outbound_demo_transfer_enabled
                 or self.outbound_demo_transfer_verified
@@ -86,7 +99,7 @@ class OutboundDemoSettings(CommonSettings):
         if self.outbound_demo_website_enabled and not self.website_available:
             raise ValueError(
                 "Website calling requires real outbound acceptance "
-                "and transfer acceptance when enabled"
+                "and transfer acceptance when enabled, plus Telnyx SMS configuration"
             )
         if not self.outbound_demo_enabled:
             return self

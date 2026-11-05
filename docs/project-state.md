@@ -1,5 +1,35 @@
 # Project State
 
+## Public mobile demo hardening — UNVERIFIED — 2026-11-05
+
+Owner requests production readiness, clarifies real visitors receiving fictional
+HVAC demo calls, and selects mobile numbers only. Initial callback implementation
+published as `05da57e`; canonical push accepted `8f4f65a..05da57e` on main after
+the old origin redirect failed. Hooks disabled and skip markers used; no checks
+or hosted activation accompanied that publication.
+
+Source retains authenticator MFA and adds account-derived owner tokens,
+per-account call quotas, Telnyx mobile carrier lookup and provider-generated SMS
+proof. Proofs bind tenant/account/destination, expire, limit attempts and consume
+with call reservation; replayed call keys preserve original fingerprints/outcomes.
+SMS sends/verification attempts commit before network operations and failures
+count toward persistent budgets. Website configuration now requires SMS credentials.
+No voice verification fallback. Raw numbers/codes are excluded from the new table.
+Forward migration `20261105_0019` is written, unapplied. Deployment template removes
+automatic seeding; customer JSON reads are bounded while streaming; frontend adds
+basic security headers. Outbound failure logging contains only phase/unknown flag
+and opaque call ID. Existing provider/TLS/webhook/privacy/transfer gates remain.
+
+Regression specifications are written/updated, unexecuted. Owner now authorizes
+committing and pushing this hardening to main with hooks disabled and skip markers,
+preserving unrelated inbound edits and historical notes. No verification commands,
+migrations, provider/hosting edits, SMS, calls or deployment commands ran.
+Production acceptance remains unestablished:
+Telnyx Verify setup,0019 release, owner checks, real SMS/call acceptance, operations
+and published privacy/retention decisions are pending. Demo backend identity stays
+development-scoped; no production-environment bypass was added. Exact commands,
+settings and manual checks: `docs/public-demo-production-readiness.md`.
+
 ## Signed-in public US callbacks — UNVERIFIED — 2026-11-05
 
 Owner authorizes public callback requests and explicitly retains sign-in with

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from threading import Lock
 from typing import Any
+from unittest.mock import Mock
 from uuid import UUID, uuid4
 
 import httpx
@@ -21,6 +22,9 @@ from insurance_operations.database.models.identity import (
     AppUser,
 )
 from insurance_operations.database.models.outbound_demo import OutboundDemoCall
+from insurance_operations.database.models.outbound_verification import (
+    OutboundPhoneVerification,
+)
 from insurance_operations.errors import ApiError, api_error_handler
 from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.outbound.provider import (
@@ -31,10 +35,19 @@ from insurance_operations.telephony.outbound.provider import (
 from insurance_operations.telephony.outbound.routes import create_outbound_demo_router
 from insurance_operations.telephony.outbound.schemas import (
     DemoCallInput,
+    DemoCallResponse,
     DemoCallStatus,
 )
 from insurance_operations.telephony.outbound.service import OutboundDemoService
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
+from insurance_operations.telephony.outbound.sms_provider import (
+    TelnyxVerificationProvider,
+    sms_unavailable,
+)
+from insurance_operations.telephony.outbound.verification_schemas import (
+    SmsStartInput,
+    SmsVerifyInput,
+)
 
 NUMBER = "+15559990002"
 HUMAN = "+15559990003"
@@ -69,6 +82,27 @@ class Context:
     provider: FakeProvider
     sessions: sessionmaker[Session]
     agency_id: UUID
+
+    def verified_input(self, request: DemoCallInput, owner: str) -> DemoCallInput:
+        if owner == "admin" or request.phone_verification_id is not None:
+            return request
+        now = datetime.now(UTC)
+        with self.sessions() as session, session.begin():
+            proof = OutboundPhoneVerification(
+                agency_id=self.agency_id,
+                owner_hash=self.service._hash("owner", owner),
+                destination_hash=self.service._hash("destination", request.phone_number),
+                consent_version="outbound-sms-v1",
+                created_at=now, expires_at=now + timedelta(minutes=5),
+                attempts=1, verified_at=now,
+                provider_verification_id=f"synthetic-verification-{uuid4()}",
+            )
+            session.add(proof)
+            session.flush()
+        return request.model_copy(update={"phone_verification_id": proof.id})
+
+    def create_verified(self, request: DemoCallInput, owner: str) -> DemoCallResponse:
+        return self.service.create(self.verified_input(request, owner), owner)
 
 
 @pytest.fixture
@@ -114,6 +148,8 @@ def context(
         outbound_demo_secret="synthetic-secret-for-outbound-at-least-32-characters",
         outbound_demo_webhook_secret="synthetic-webhook-for-outbound-at-least-32-characters",
         elevenlabs_api_key="synthetic-api-key",
+        telnyx_verify_api_key="synthetic-telnyx-verify-key",
+        telnyx_verify_profile_id=uuid4(),
     )
     provider = FakeProvider(settings)
     try:
@@ -128,6 +164,11 @@ def context(
         with sessions() as session, session.begin():
             session.execute(
                 delete(OutboundDemoCall).where(OutboundDemoCall.agency_id == agency.id)
+            )
+            session.execute(
+                delete(OutboundPhoneVerification).where(
+                    OutboundPhoneVerification.agency_id == agency.id
+                )
             )
 
 
@@ -155,8 +196,18 @@ def us_context(context: Context) -> Context:
         },
     )
     context.service.settings = config
+    context.service.verification.settings = config
     context.provider.settings = config
     return context
+
+
+@pytest.fixture
+def sms_provider(us_context: Context) -> Mock:
+    provider = Mock(spec=TelnyxVerificationProvider)
+    provider.send.side_effect = lambda _: str(uuid4())
+    provider.verify.return_value = "+12025550123"
+    us_context.service.verification.provider = provider
+    return provider
 
 
 def final_event(call_id: UUID, **overrides: Any) -> dict[str, Any]:
@@ -177,7 +228,7 @@ def test_parallel_duplicate_requests_dial_once(context: Context) -> None:
     request = data()
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = list(
-            executor.map(lambda _: context.service.create(request, OWNER), range(2))
+            executor.map(lambda _: context.create_verified(request, OWNER), range(2))
         )
     assert results[0].id == results[1].id
     assert context.provider.dial_count == 1
@@ -193,9 +244,9 @@ def test_conflicting_idempotency_keys_and_visitor_access_are_rejected(
     context: Context,
 ) -> None:
     request = data()
-    result = context.service.create(request, OWNER)
+    result = context.create_verified(request, OWNER)
     with pytest.raises(ApiError) as conflict:
-        context.service.create(
+        context.create_verified(
             data(request_id=request.request_id, scenario="heating"), OWNER
         )
     assert conflict.value.status_code == 409
@@ -209,7 +260,7 @@ def test_conflicting_idempotency_keys_and_visitor_access_are_rejected(
 
 def test_non_allowlisted_number_never_reaches_provider(context: Context) -> None:
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(phone_number="+15559990004"), OWNER)
+        context.create_verified(data(phone_number="+15559990004"), OWNER)
     assert caught.value.status_code == 403
     assert context.provider.dial_count == 0
 
@@ -218,11 +269,11 @@ def test_allowlist_still_accepts_only_the_configured_international_number(
     context: Context,
 ) -> None:
     context.service.settings.outbound_demo_allowed_numbers = SecretStr("+442079460123")
-    result = context.service.create(data(phone_number="+44 20 7946 0123"), OWNER)
+    result = context.create_verified(data(phone_number="+44 20 7946 0123"), OWNER)
     assert result.status is DemoCallStatus.DIALING
     assert context.provider.last_destination == "+442079460123"
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(phone_number="+12025550123"), OWNER)
+        context.create_verified(data(phone_number="+12025550123"), OWNER)
     assert caught.value.code == "DEMO_NUMBER_NOT_AUTHORIZED"
     assert context.provider.dial_count == 1
 
@@ -232,11 +283,11 @@ def test_consented_us_normalizes_and_replays_without_allowlisting(
     us_context: Context, owner: str
 ) -> None:
     request = data(phone_number="(202) 555-0123")
-    result = us_context.service.create(request, owner)
+    result = us_context.create_verified(request, owner)
     retry = data(request_id=request.request_id, phone_number="+1 202 555 0123")
-    assert us_context.service.create(retry, owner).id == result.id
+    assert us_context.create_verified(retry, owner).id == result.id
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(
+        us_context.create_verified(
             data(request_id=request.request_id, phone_number="+12125550123"), owner
         )
     assert caught.value.code == "DEMO_REQUEST_CONFLICT"
@@ -255,14 +306,14 @@ def test_consented_us_normalizes_and_replays_without_allowlisting(
 def test_consented_us_formatting_cannot_bypass_number_quota(
     us_context: Context, owner: str
 ) -> None:
-    result = us_context.service.create(data(phone_number="202-555-0123"), owner)
+    result = us_context.create_verified(data(phone_number="202-555-0123"), owner)
     us_context.service.webhook(final_event(result.id))
     with us_context.sessions() as session, session.begin():
         row = session.get(OutboundDemoCall, result.id)
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(data(phone_number="+1 (202) 555-0123"), owner)
+        us_context.create_verified(data(phone_number="+1 (202) 555-0123"), owner)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 1
 
@@ -273,11 +324,11 @@ def test_consented_us_unknown_outcome_blocks_all_destinations(
 ) -> None:
     us_context.provider.unknown = True
     request = data(phone_number="+12025550123")
-    result = us_context.service.create(request, owner)
+    result = us_context.create_verified(request, owner)
     assert result.status is DemoCallStatus.UNKNOWN
-    assert us_context.service.create(request, owner).id == result.id
+    assert us_context.create_verified(request, owner).id == result.id
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(data(phone_number="+12125550123"), owner)
+        us_context.create_verified(data(phone_number="+12125550123"), owner)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 1
 
@@ -296,7 +347,11 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
     application.include_router(
         create_outbound_demo_router(api, us_context.sessions, config, us_context.provider)
     )
-    request = data(phone_number="+12025550123")
+    request = us_context.verified_input(data(phone_number="+12025550123"), "a" * 43)
+    payload = {
+        **request.model_dump(mode="json"),
+        "phone_verification_id": str(request.phone_verification_id),
+    }
     assert config.outbound_demo_secret is not None
     headers = {
         "X-Outbound-Demo-Key": config.outbound_demo_secret.get_secret_value(),
@@ -310,12 +365,12 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
             headers=headers,
         ) as client:
             response = await client.post(
-                "/api/v1/outbound-demo/calls", json=request.model_dump(mode="json")
+                "/api/v1/outbound-demo/calls", json=payload
             )
             assert response.status_code == 200
             assert response.json()["status"] == "dialing"
             replay = await client.post(
-                "/api/v1/outbound-demo/calls", json=request.model_dump(mode="json")
+                "/api/v1/outbound-demo/calls", json=payload
             )
             assert replay.json()["id"] == response.json()["id"]
             path = f"/api/v1/outbound-demo/requests/{request.request_id}"
@@ -333,14 +388,14 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
 def test_consented_us_daily_budget_includes_failed_preflight(us_context: Context) -> None:
     us_context.service.settings.outbound_demo_daily_limit = 1
     us_context.provider.fail_preflight = True
-    result = us_context.service.create(data(phone_number="+12025550123"), "admin")
+    result = us_context.create_verified(data(phone_number="+12025550123"), "admin")
     assert result.status is DemoCallStatus.FAILED
     with us_context.sessions() as session, session.begin():
         row = session.get(OutboundDemoCall, result.id)
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(data(phone_number="+12125550123"), "admin")
+        us_context.create_verified(data(phone_number="+12125550123"), "admin")
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 0
 
@@ -348,7 +403,7 @@ def test_consented_us_daily_budget_includes_failed_preflight(us_context: Context
 def test_consented_us_parallel_requests_share_one_slot(us_context: Context) -> None:
     def attempt(number: str) -> str:
         try:
-            result = us_context.service.create(data(phone_number=number), "admin")
+            result = us_context.create_verified(data(phone_number=number), "admin")
             return result.status.value
         except ApiError as error:
             return error.code
@@ -362,7 +417,7 @@ def test_consented_us_parallel_requests_share_one_slot(us_context: Context) -> N
 def test_distinct_parallel_requests_share_one_active_slot(context: Context) -> None:
     def attempt(_: int) -> str:
         try:
-            return context.service.create(data(), OWNER).status.value
+            return context.create_verified(data(), OWNER).status.value
         except ApiError as error:
             return error.code
 
@@ -375,20 +430,162 @@ def test_distinct_parallel_requests_share_one_active_slot(context: Context) -> N
 def test_unknown_outcome_is_replayed_and_blocks_new_dial(context: Context) -> None:
     context.provider.unknown = True
     request = data()
-    result = context.service.create(request, OWNER)
+    result = context.create_verified(request, OWNER)
     assert result.status is DemoCallStatus.UNKNOWN
-    assert context.service.create(request, OWNER).id == result.id
+    assert context.create_verified(request, OWNER).id == result.id
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(), OWNER)
+        context.create_verified(data(), OWNER)
     assert caught.value.status_code == 429
     assert context.provider.dial_count == 1
 
 
 def test_preflight_failure_never_dials(context: Context) -> None:
     context.provider.fail_preflight = True
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     assert result.status is DemoCallStatus.FAILED
     assert context.provider.dial_count == 0
+
+
+def test_account_call_limit_survives_changing_destination(us_context: Context) -> None:
+    result = us_context.create_verified(data(phone_number="+12025550123"), OWNER)
+    us_context.service.webhook(final_event(result.id))
+    with us_context.sessions() as session, session.begin():
+        row = session.get(OutboundDemoCall, result.id)
+        assert row is not None
+        row.created_at = datetime.now(UTC) - timedelta(minutes=10)
+    with pytest.raises(ApiError) as caught:
+        us_context.create_verified(data(phone_number="+12125550123"), OWNER)
+    assert caught.value.code == "DEMO_CALL_LIMIT"
+    assert us_context.provider.dial_count == 1
+    other = us_context.create_verified(data(phone_number="+12125550123"), "other-account")
+    assert other.status == DemoCallStatus.DIALING
+
+
+def test_sms_verification_grants_one_account_and_destination_bound_call(
+    us_context: Context, sms_provider: Mock,
+) -> None:
+    verification = us_context.service.verification
+    challenge = verification.start(SmsStartInput(
+        phone_number="+12025550123", sms_consent=True,
+        sms_consent_version="outbound-sms-v1",
+    ), OWNER)
+    verify = SmsVerifyInput(challenge_id=challenge.challenge_id, code="123456")
+    with pytest.raises(ApiError):
+        verification.verify(verify, "other-account")
+    sms_provider.verify.assert_not_called()
+    assert verification.verify(verify, OWNER).verified
+    request = data(phone_number="+12025550123", phone_verification_id=challenge.challenge_id)
+    for changes, owner in [({"phone_number": "+12125550123"}, OWNER), ({}, "other-account")]:
+        with pytest.raises(ApiError) as caught:
+            us_context.service.create(request.model_copy(update=changes), owner)
+        assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
+    result = us_context.service.create(request, OWNER)
+    assert us_context.service.create(request, OWNER).id == result.id
+    assert us_context.provider.dial_count == 1
+    with us_context.sessions() as session:
+        row = session.get(OutboundPhoneVerification, challenge.challenge_id)
+        assert row is not None
+        assert row.consumed_by_request_id == request.request_id
+        assert row.destination_hash != request.phone_number
+        assert row.consent_version == "outbound-sms-v1"
+
+
+@pytest.mark.parametrize("problem", ["missing", "unverified", "expired", "consumed"])
+def test_website_cannot_dial_without_fresh_phone_proof(
+    us_context: Context, problem: str,
+) -> None:
+    request = data(phone_number="+12025550123")
+    if problem != "missing":
+        request = us_context.verified_input(request, OWNER)
+        with us_context.sessions() as session, session.begin():
+            row = session.get(OutboundPhoneVerification, request.phone_verification_id)
+            assert row is not None
+            if problem == "unverified":
+                row.verified_at = None
+            elif problem == "expired":
+                row.expires_at = datetime.now(UTC) - timedelta(seconds=1)
+            else:
+                row.consumed_by_request_id = uuid4()
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(request, OWNER)
+    assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
+    assert us_context.provider.dial_count == 0
+
+
+def test_sms_wrong_codes_and_provider_errors_consume_attempts(
+    us_context: Context, sms_provider: Mock,
+) -> None:
+    verification = us_context.service.verification
+    challenge = verification.start(SmsStartInput(
+        phone_number="+12025550123", sms_consent=True,
+        sms_consent_version="outbound-sms-v1",
+    ), OWNER)
+    sms_provider.verify.side_effect = [sms_unavailable(), None, None, None, None]
+    request = SmsVerifyInput(challenge_id=challenge.challenge_id, code="000000")
+    for _ in range(5):
+        with pytest.raises(ApiError):
+            verification.verify(request, OWNER)
+    with pytest.raises(ApiError) as caught:
+        verification.verify(request, OWNER)
+    assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
+    assert sms_provider.verify.call_count == 5
+    with us_context.sessions() as session:
+        row = session.get(OutboundPhoneVerification, challenge.challenge_id)
+        assert row is not None
+        assert row.attempts == 5
+        assert row.verified_at is None
+
+
+def test_consumed_phone_proof_cannot_dial_a_different_request(us_context: Context) -> None:
+    us_context.service.settings.outbound_demo_account_daily_limit = 2
+    us_context.service.settings.outbound_demo_number_daily_limit = 2
+    request = us_context.verified_input(data(phone_number="+12025550123"), OWNER)
+    result = us_context.service.create(request, OWNER)
+    us_context.service.webhook(final_event(result.id))
+    with us_context.sessions() as session, session.begin():
+        row = session.get(OutboundDemoCall, result.id)
+        assert row is not None
+        row.created_at = datetime.now(UTC) - timedelta(minutes=10)
+    with pytest.raises(ApiError) as caught:
+        us_context.service.create(request.model_copy(update={"request_id": uuid4()}), OWNER)
+    assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
+    assert us_context.service.create(request, OWNER).id == result.id
+    assert us_context.provider.dial_count == 1
+
+
+def test_sms_limits_share_number_account_and_business_budget(
+    us_context: Context, sms_provider: Mock,
+) -> None:
+    verification = us_context.service.verification
+    first = SmsStartInput(phone_number="+12025550123", sms_consent=True,
+                          sms_consent_version="outbound-sms-v1")
+    verification.start(first, OWNER)
+    for request, owner in [
+        (first, "other-account"),
+        (first.model_copy(update={"phone_number": "+12125550123"}), OWNER),
+    ]:
+        with pytest.raises(ApiError) as caught:
+            verification.start(request, owner)
+        assert caught.value.code == "DEMO_SMS_LIMIT"
+    verification.settings.outbound_demo_sms_daily_limit = 1
+    with pytest.raises(ApiError) as caught:
+        verification.start(first.model_copy(update={"phone_number": "+12125550123"}), "new-account")
+    assert caught.value.code == "DEMO_SMS_LIMIT"
+    assert sms_provider.send.call_count == 1
+
+
+def test_failed_sms_send_is_budgeted_and_is_not_automatically_retried(
+    us_context: Context, sms_provider: Mock,
+) -> None:
+    sms_provider.send.side_effect = sms_unavailable()
+    request = SmsStartInput(phone_number="+12025550123", sms_consent=True,
+                            sms_consent_version="outbound-sms-v1")
+    with pytest.raises(ApiError):
+        us_context.service.verification.start(request, OWNER)
+    with pytest.raises(ApiError) as caught:
+        us_context.service.verification.start(request, OWNER)
+    assert caught.value.code == "DEMO_SMS_LIMIT"
+    assert sms_provider.send.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -404,7 +601,7 @@ def test_preflight_failure_never_dials(context: Context) -> None:
 def test_failure_events_and_late_replay_cannot_revive_call(
     context: Context, code: int, status: str
 ) -> None:
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     event = {
         "type": "call_initiation_failure",
         "data": {
@@ -434,7 +631,7 @@ def test_failure_events_and_late_replay_cannot_revive_call(
 def test_terminal_lifecycle(
     context: Context, metadata: dict[str, Any], status: str
 ) -> None:
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     context.service.webhook(final_event(result.id, metadata=metadata))
     response = context.service.get(result.id, OWNER)
     assert response.status == status
@@ -444,7 +641,7 @@ def test_terminal_lifecycle(
 def test_sip_transfer_keeps_slot_until_carrier_end_confirmation(
     context: Context,
 ) -> None:
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     context.service.webhook(
         final_event(
             result.id,
@@ -502,17 +699,17 @@ def test_dial_error_does_not_erase_early_transfer_evidence(
         raise OutboundProviderError(outcome_unknown=outcome_unknown)
 
     monkeypatch.setattr(context.provider, "dial", dial)
-    response = context.service.create(data(), OWNER)
+    response = context.create_verified(data(), OWNER)
     assert response.status is DemoCallStatus.UNKNOWN
     assert response.transfer_status == "unconfirmed"
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(), OWNER)
+        context.create_verified(data(), OWNER)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert context.provider.dial_count == 1
 
 
 def test_malformed_webhook_does_not_release_active_slot(context: Context) -> None:
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     with pytest.raises(ApiError) as caught:
         context.service.webhook(
             final_event(result.id, transcript=[{"tool_results": True}])
@@ -524,14 +721,14 @@ def test_malformed_webhook_does_not_release_active_slot(context: Context) -> Non
 def test_number_limit_survives_cookies_terminal_calls_and_new_keys(
     context: Context,
 ) -> None:
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     context.service.webhook(final_event(result.id))
     with context.sessions() as session, session.begin():
         row = session.get(OutboundDemoCall, result.id)
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(), "fresh-cookie")
+        context.create_verified(data(), "fresh-cookie")
     assert caught.value.status_code == 429
     assert context.provider.dial_count == 1
 
@@ -543,19 +740,19 @@ def test_daily_budget_counts_failed_calls_across_destinations(context: Context) 
     )
     context.service.settings.outbound_demo_daily_limit = 1
     context.provider.fail_preflight = True
-    result = context.service.create(data(), OWNER)
+    result = context.create_verified(data(), OWNER)
     with context.sessions() as session, session.begin():
         row = session.get(OutboundDemoCall, result.id)
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        context.service.create(data(phone_number=other_number), "fresh-cookie")
+        context.create_verified(data(phone_number=other_number), "fresh-cookie")
     assert caught.value.status_code == 429
     assert context.provider.dial_count == 0
 
 
 def test_webhook_before_http_receipt_can_bind_reserved_call(context: Context) -> None:
-    call_id, _ = context.service._reserve(data(), OWNER)
+    call_id, _ = context.service._reserve(context.verified_input(data(), OWNER), OWNER)
     event = final_event(
         call_id,
         conversation_initiation_client_data={

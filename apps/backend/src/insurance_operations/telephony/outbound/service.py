@@ -1,6 +1,7 @@
 import hashlib
 import hmac
 import json
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal, cast
 from uuid import UUID, uuid4
@@ -29,6 +30,11 @@ from insurance_operations.telephony.outbound.schemas import (
     DemoCallStatus,
 )
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
+from insurance_operations.telephony.outbound.verification import (
+    PhoneVerificationService,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def unavailable() -> ApiError:
@@ -51,6 +57,9 @@ class OutboundDemoService:
         self.api = api
         self.settings = settings
         self.provider = provider
+        self.verification = PhoneVerificationService(
+            sessions, settings, self._agency, self._hash
+        )
 
     def _hash(self, purpose: str, value: str) -> str:
         secret = self.settings.outbound_demo_secret
@@ -95,10 +104,16 @@ class OutboundDemoService:
         call_id, existing = self._reserve(data, owner)
         if existing is not None:
             return existing
+        phase = "preflight"
         try:
             self.provider.preflight(data.phone_number)
+            phase = "dial"
             receipt = self.provider.dial(data, str(call_id))
         except OutboundProviderError as error:
+            logger.warning(
+                "Outbound demo %s failed (outcome_unknown=%s, call_id=%s)",
+                phase, error.outcome_unknown, call_id,
+            )
             with self.sessions() as session, session.begin():
                 row = self._owned(session, call_id, owner, lock=True)
                 if row.status == DemoCallStatus.RESERVED:
@@ -190,6 +205,18 @@ class OutboundDemoService:
                 )
                 or 0
             )
+            account_daily = (
+                session.scalar(
+                    select(func.count()).select_from(
+                        base.where(
+                            OutboundDemoCall.owner_hash == owner_hash,
+                            OutboundDemoCall.created_at >= now - timedelta(days=1),
+                        ).subquery()
+                    )
+                )
+                if owner != "admin"
+                else 0
+            ) or 0
             recent = session.scalar(
                 base.where(
                     OutboundDemoCall.created_at
@@ -202,6 +229,7 @@ class OutboundDemoService:
                 or recent is not None
                 or daily >= self.settings.outbound_demo_daily_limit
                 or number_daily >= self.settings.outbound_demo_number_daily_limit
+                or account_daily >= self.settings.outbound_demo_account_daily_limit
             ):
                 raise ApiError(
                     status_code=429,
@@ -209,6 +237,11 @@ class OutboundDemoService:
                     message=(
                         "The demo call limit has been reached. Please try browser Voice."
                     ),
+                )
+            if owner != "admin":
+                self.verification.consume(
+                    session, agency_id, owner_hash, destination,
+                    data.phone_verification_id, data.request_id,
                 )
             row = OutboundDemoCall(
                 agency_id=agency_id,

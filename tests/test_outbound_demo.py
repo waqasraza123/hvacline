@@ -61,6 +61,8 @@ def settings(**overrides: Any) -> OutboundDemoSettings:
             "outbound_demo_secret": SECRET,
             "outbound_demo_webhook_secret": WEBHOOK_SECRET,
             "elevenlabs_api_key": "synthetic-api-key",
+            "telnyx_verify_api_key": "synthetic-telnyx-verify-key",
+            "telnyx_verify_profile_id": uuid4(),
             **overrides,
         },
     )
@@ -138,6 +140,10 @@ def agent_config(transfer: bool = False) -> dict[str, Any]:
         {"outbound_demo_transfer_enabled": True},
         {"outbound_demo_max_duration_seconds": 181},
         {"app_environment": "production"},
+        {"outbound_demo_account_daily_limit": 0},
+        {"outbound_demo_account_daily_limit": 3},
+        {"outbound_demo_sms_daily_limit": 101},
+        {"outbound_demo_sms_cooldown_seconds": 1},
     ],
 )
 def test_configuration_fails_closed(overrides: dict[str, Any]) -> None:
@@ -752,6 +758,15 @@ def test_website_with_transfer_still_requires_transfer_acceptance() -> None:
             outbound_demo_transfer_enabled=True,
             outbound_demo_carrier_limit_confirmed=True,
         )
+
+
+@pytest.mark.parametrize("missing", ["telnyx_verify_api_key", "telnyx_verify_profile_id"])
+def test_public_callbacks_require_sms_configuration(missing: str) -> None:
+    with pytest.raises(ValidationError, match="Telnyx SMS configuration"):
+        settings(**{
+            "outbound_demo_website_enabled": True,
+            "outbound_demo_live_verified": True, missing: None,
+        })
 
 
 @pytest.mark.parametrize("credential", ["missing", "bridge", "visitor"])

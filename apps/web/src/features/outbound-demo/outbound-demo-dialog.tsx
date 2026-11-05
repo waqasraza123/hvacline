@@ -18,7 +18,9 @@ import { authPageHref } from "@/features/customer/auth-continuation";
 import {
   type DemoCall,
   type DemoScenario,
+  type SmsChallenge,
   isDemoCall,
+  isSmsChallenge,
   scenarios,
   UUID_PATTERN,
 } from "./contracts";
@@ -76,6 +78,12 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
   const [phone, setPhone] = useState("");
   const [scenario, setScenario] = useState<DemoScenario>("cooling");
   const [consent, setConsent] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
+  const [smsCode, setSmsCode] = useState("");
+  const [verification, setVerification] = useState<SmsChallenge | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [smsMessage, setSmsMessage] = useState("");
+  const smsPending = useRef(false);
   const [busy, setBusy] = useState(false);
   const [locked, setLocked] = useState(false);
   const [call, setCall] = useState<DemoCall | null>(null);
@@ -198,6 +206,86 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
     return () => window.clearInterval(timer);
   }, [callId, callTerminal, callStatus, checkStatus]);
 
+  useEffect(() => {
+    if (!verification || locked) return;
+    const timer = window.setTimeout(() => {
+      setVerification(null);
+      setSmsCode("");
+      setConsent(false);
+      setSmsMessage("Your code expired. Request a new verification text.");
+    }, Math.max(0, Date.parse(verification.expires_at) - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [verification, locked]);
+
+  async function verifyPhone(action: "send_code" | "verify_code") {
+    if (
+      smsPending.current || locked || busy || !available ||
+      authentication !== "authenticated" ||
+      (action === "send_code"
+        ? !smsConsent || !/^\+1[0-9]{10}$/.test(phone.trim())
+        : !verification || !/^[0-9]{6}$/.test(smsCode))
+    ) return;
+    smsPending.current = true;
+    setVerifying(true);
+    setSmsMessage(
+      action === "send_code"
+        ? "Requesting your verification text…"
+        : "Checking your code…",
+    );
+    try {
+      const response = await fetch("/api/outbound-demo", {
+        method: "POST",
+        signal: AbortSignal.timeout(45_000),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          action === "send_code"
+            ? {
+                action,
+                phone_number: phone.trim(),
+                sms_consent: true,
+                sms_consent_version: "outbound-sms-v1",
+              }
+            : { action, challenge_id: verification?.challenge_id, code: smsCode },
+        ),
+      });
+      const value: unknown = await response.json();
+      if (signInRequired(value)) {
+        setAuthentication("required");
+        setAvailable(false);
+        setVerification(null);
+        setConsent(false);
+        setSmsConsent(false);
+        setSmsCode("");
+        return;
+      }
+      if (!response.ok || !isSmsChallenge(value)) {
+        const error =
+          typeof value === "object" && value !== null && "error" in value
+            ? value.error : null;
+        setSmsMessage(
+          typeof error === "object" && error !== null && "message" in error &&
+          typeof error.message === "string"
+            ? error.message
+            : "Text verification is unavailable. Please try later.",
+        );
+        if (response.status === 403) setVerification(null);
+        return;
+      }
+      setVerification(value);
+      setSmsCode("");
+      setSmsMessage(
+        value.verified
+          ? "Mobile number verified. You can now request your demo call."
+          : "Enter the six-digit code from your text before it expires.",
+      );
+    } catch {
+      setSmsMessage("Text verification is unconfirmed. Wait a minute before requesting another code.");
+    } finally {
+      smsPending.current = false;
+      setVerifying(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
@@ -205,6 +293,9 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
       locked ||
       !available ||
       !consent ||
+      verifying ||
+      !verification?.verified ||
+      Date.parse(verification.expires_at) <= Date.now() ||
       authentication !== "authenticated"
     )
       return;
@@ -229,6 +320,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
           scenario,
           consent: true,
           consent_version: "outbound-demo-v1",
+          phone_verification_id: verification.challenge_id,
         }),
       });
       const data: unknown = await response.json();
@@ -249,6 +341,13 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
             ? error.message
             : "The call outcome is unconfirmed. Please check its status.",
         );
+        if (
+          typeof error === "object" && error !== null && "code" in error &&
+          error.code === "DEMO_PHONE_VERIFICATION_REQUIRED"
+        ) {
+          setVerification(null);
+          setSmsCode("");
+        }
         if (
           typeof data === "object" &&
           data !== null &&
@@ -363,7 +462,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                   onSubmit={submit}
                   aria-busy={busy}
                 >
-                  <label htmlFor="outbound-phone">Your phone number</label>
+                  <label htmlFor="outbound-phone">Your US mobile number</label>
                   <input
                     ref={phoneInput}
                     id="outbound-phone"
@@ -371,17 +470,84 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                     inputMode="tel"
                     autoComplete="tel"
                     placeholder="+12025550123"
-                    pattern="\+[1-9][0-9]{7,14}"
-                    maxLength={16}
+                    pattern="\+1[0-9]{10}"
+                    maxLength={12}
                     value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
+                    onChange={(event) => {
+                      setPhone(event.target.value);
+                      setVerification(null);
+                      setSmsCode("");
+                      setSmsConsent(false);
+                      setConsent(false);
+                      setSmsMessage("");
+                    }}
                     required
-                    disabled={locked}
+                    disabled={locked || verifying}
                     aria-describedby="outbound-phone-help"
                   />
                   <p id="outbound-phone-help" className="outbound-demo-help">
-                    Use a US mobile or landline number you control, including +1
-                    and the area code.
+                    Include +1 and the area code. We’ll verify your mobile number
+                    by text before calling. Landline and internet phone numbers
+                    aren’t supported.
+                  </p>
+                  <label className="outbound-demo-consent">
+                    <input
+                      type="checkbox"
+                      checked={smsConsent}
+                      onChange={(event) => setSmsConsent(event.target.checked)}
+                      disabled={locked || verifying || verification?.verified}
+                    />
+                    <span>
+                      I agree to receive a verification text at this number.
+                      Message and data rates may apply.
+                    </span>
+                  </label>
+                  {!verification?.verified && (
+                    <button
+                      type="button"
+                      className="outbound-demo-check"
+                      disabled={
+                        !available || !smsConsent || locked || verifying || busy ||
+                        !/^\+1[0-9]{10}$/.test(phone.trim())
+                      }
+                      onClick={() => void verifyPhone("send_code")}
+                    >
+                      {verifying
+                        ? "Please wait…"
+                        : verification ? "Send a new code" : "Text me a code"}
+                    </button>
+                  )}
+                  {verification && !verification.verified && (
+                    <>
+                      <label htmlFor="outbound-sms-code">Text verification code</label>
+                      <input
+                        id="outbound-sms-code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={6}
+                        pattern="[0-9]{6}"
+                        value={smsCode}
+                        onChange={(event) => setSmsCode(event.target.value)}
+                        disabled={locked || verifying}
+                        aria-describedby="outbound-sms-status"
+                      />
+                      <button
+                        type="button"
+                        className="outbound-demo-check"
+                        disabled={locked || verifying || !/^[0-9]{6}$/.test(smsCode)}
+                        onClick={() => void verifyPhone("verify_code")}
+                      >
+                        Verify mobile number
+                      </button>
+                    </>
+                  )}
+                  <p
+                    id="outbound-sms-status"
+                    className="outbound-demo-help"
+                    role="status"
+                  >
+                    {smsMessage}
                   </p>
                   <label htmlFor="outbound-scenario">Try a conversation</label>
                   <select
@@ -416,7 +582,10 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                   <button
                     className="product-button"
                     type="submit"
-                    disabled={!available || !consent || locked || busy}
+                    disabled={
+                      !available || !consent || !verification?.verified ||
+                      locked || busy || verifying
+                    }
                   >
                     {busy
                       ? "Please wait…"

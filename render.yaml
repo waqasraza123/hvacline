@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: starter
     buildCommand: pip install .
-    preDeployCommand: alembic upgrade head && insurance-operations-seed-development
+    preDeployCommand: alembic upgrade head
     startCommand: uvicorn insurance_operations.api:app --host 0.0.0.0 --port $PORT --no-access-log
     healthCheckPath: /ready
     autoDeployTrigger: checksPass
@@ -38,6 +38,10 @@ services:
       - key: CUSTOMER_PORTAL_SECRET
         sync: false
       - key: CUSTOMER_MFA_ENCRYPTION_KEY
+        sync: false
+      - key: TELNYX_VERIFY_API_KEY
+        sync: false
+      - key: TELNYX_VERIFY_PROFILE_ID
         sync: false
       - key: HOMEPAGE_CHAT_ENABLED
         value: false
