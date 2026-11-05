@@ -1,5 +1,16 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Public callbacks — November 5, 2026 — UNVERIFIED
+
+Signed-in visitors with completed authenticator MFA can use the website callback
+path under `consented_us` once hosted gates and real outbound acceptance are in
+place. Transfer is optional and remains off for this policy. UI copy no longer
+describes every request as an owner-approved private preview. Known US destination
+errors allow correction with renewed consent. Sign-in, callback continuation and
+unknown-outcome recovery remain in place. Source/runtime are unverified; hosted
+flags have not been changed. Exact activation settings, commands and manual
+checks: [Public callbacks](public-callbacks.md).
+
 ## Callback sign-in requirement — November 4, 2026 — UNVERIFIED
 
 The callback CTA now asks signed-out visitors to sign in before showing phone,

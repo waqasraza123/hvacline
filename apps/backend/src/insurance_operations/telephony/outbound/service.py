@@ -128,13 +128,9 @@ class OutboundDemoService:
     ) -> tuple[UUID, DemoCallResponse | None]:
         if not self.settings.outbound_demo_enabled:
             raise unavailable()
+        if owner != "admin" and not self.settings.website_available:
+            raise unavailable()
         if self.settings.outbound_demo_number_policy == "consented_us":
-            if owner != "admin":
-                raise ApiError(
-                    status_code=403,
-                    code="DEMO_ADMIN_AUTH_REQUIRED",
-                    message="Consented US calls require demo administrator authorization.",
-                )
             validate_us_destination(data.phone_number)
         elif data.phone_number not in self.settings.allowed_numbers:
             raise ApiError(
@@ -210,7 +206,9 @@ class OutboundDemoService:
                 raise ApiError(
                     status_code=429,
                     code="DEMO_CALL_LIMIT",
-                    message="The private demo call limit has been reached. Please try browser Voice.",
+                    message=(
+                        "The demo call limit has been reached. Please try browser Voice."
+                    ),
                 )
             row = OutboundDemoCall(
                 agency_id=agency_id,

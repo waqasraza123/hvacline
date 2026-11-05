@@ -241,6 +241,10 @@ export async function POST(request: NextRequest) {
           "The demo call limit has been reached. Please try browser Voice.",
           429,
         );
+      if (upstream.status === 422 && code === "DEMO_PHONE_NUMBER_INVALID")
+        return rejected("Enter a valid US mobile or landline number.", 422);
+      if (upstream.status === 422 && code === "DEMO_DESTINATION_UNSUPPORTED")
+        return rejected("Only US mobile and landline numbers are supported.", 422);
       const message =
         upstream.status === 403
           ? "This private demo is limited to numbers approved by the demo owner."

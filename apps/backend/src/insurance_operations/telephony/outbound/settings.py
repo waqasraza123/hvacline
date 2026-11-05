@@ -59,6 +59,18 @@ class OutboundDemoSettings(CommonSettings):
             if value.strip()
         )
 
+    @property
+    def website_available(self) -> bool:
+        return (
+            self.outbound_demo_enabled
+            and self.outbound_demo_website_enabled
+            and self.outbound_demo_live_verified
+            and (
+                not self.outbound_demo_transfer_enabled
+                or self.outbound_demo_transfer_verified
+            )
+        )
+
     @model_validator(mode="after")
     def validate_configuration(self) -> Self:
         if any(E164.fullmatch(number) is None for number in self.allowed_numbers):
@@ -66,20 +78,15 @@ class OutboundDemoSettings(CommonSettings):
         human = self.outbound_demo_human_number.get_secret_value()
         if human and E164.fullmatch(human) is None:
             raise ValueError("OUTBOUND_DEMO_HUMAN_NUMBER must use E.164")
-        if self.outbound_demo_number_policy == "consented_us" and (
-            self.outbound_demo_website_enabled or self.outbound_demo_transfer_enabled
-        ):
-            raise ValueError(
-                "Consented US calling requires website calling and transfer disabled"
-            )
-        if self.outbound_demo_website_enabled and not (
-            self.outbound_demo_enabled
-            and self.outbound_demo_live_verified
+        if (
+            self.outbound_demo_number_policy == "consented_us"
             and self.outbound_demo_transfer_enabled
-            and self.outbound_demo_transfer_verified
         ):
+            raise ValueError("Consented US calling requires transfer disabled")
+        if self.outbound_demo_website_enabled and not self.website_available:
             raise ValueError(
-                "Website calling requires real outbound and transfer acceptance"
+                "Website calling requires real outbound acceptance "
+                "and transfer acceptance when enabled"
             )
         if not self.outbound_demo_enabled:
             return self

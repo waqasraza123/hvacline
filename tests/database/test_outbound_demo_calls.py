@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -6,7 +7,9 @@ from threading import Lock
 from typing import Any
 from uuid import UUID, uuid4
 
+import httpx
 import pytest
+from fastapi import FastAPI
 from pydantic import SecretStr
 from sqlalchemy import delete, select
 from sqlalchemy.engine import Engine
@@ -18,13 +21,14 @@ from insurance_operations.database.models.identity import (
     AppUser,
 )
 from insurance_operations.database.models.outbound_demo import OutboundDemoCall
-from insurance_operations.errors import ApiError
+from insurance_operations.errors import ApiError, api_error_handler
 from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.outbound.provider import (
     ElevenLabsOutboundProvider,
     OutboundCallReceipt,
     OutboundProviderError,
 )
+from insurance_operations.telephony.outbound.routes import create_outbound_demo_router
 from insurance_operations.telephony.outbound.schemas import (
     DemoCallInput,
     DemoCallStatus,
@@ -101,6 +105,8 @@ def context(
         _env_file=None,
         app_environment="development",
         outbound_demo_enabled=True,
+        outbound_demo_website_enabled=True,
+        outbound_demo_live_verified=True,
         outbound_demo_agent_id="synthetic-outbound-agent",
         outbound_demo_phone_number_id="synthetic-number-id",
         outbound_demo_allowed_numbers=NUMBER,
@@ -221,16 +227,17 @@ def test_allowlist_still_accepts_only_the_configured_international_number(
     assert context.provider.dial_count == 1
 
 
+@pytest.mark.parametrize("owner", ["admin", OWNER])
 def test_consented_us_normalizes_and_replays_without_allowlisting(
-    us_context: Context,
+    us_context: Context, owner: str
 ) -> None:
     request = data(phone_number="(202) 555-0123")
-    result = us_context.service.create(request, "admin")
+    result = us_context.service.create(request, owner)
     retry = data(request_id=request.request_id, phone_number="+1 202 555 0123")
-    assert us_context.service.create(retry, "admin").id == result.id
+    assert us_context.service.create(retry, owner).id == result.id
     with pytest.raises(ApiError) as caught:
         us_context.service.create(
-            data(request_id=request.request_id, phone_number="+12125550123"), "admin"
+            data(request_id=request.request_id, phone_number="+12125550123"), owner
         )
     assert caught.value.code == "DEMO_REQUEST_CONFLICT"
     assert us_context.provider.dial_count == 1
@@ -241,32 +248,86 @@ def test_consented_us_normalizes_and_replays_without_allowlisting(
         assert row.consent_version == "outbound-demo-v1"
         assert row.consent_at is not None
         assert row.destination_hash != request.phone_number
-        assert row.owner_hash == us_context.service._hash("owner", "admin")
+        assert row.owner_hash == us_context.service._hash("owner", owner)
 
 
-def test_consented_us_formatting_cannot_bypass_number_quota(us_context: Context) -> None:
-    result = us_context.service.create(data(phone_number="202-555-0123"), "admin")
+@pytest.mark.parametrize("owner", ["admin", OWNER])
+def test_consented_us_formatting_cannot_bypass_number_quota(
+    us_context: Context, owner: str
+) -> None:
+    result = us_context.service.create(data(phone_number="202-555-0123"), owner)
     us_context.service.webhook(final_event(result.id))
     with us_context.sessions() as session, session.begin():
         row = session.get(OutboundDemoCall, result.id)
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(data(phone_number="+1 (202) 555-0123"), "admin")
+        us_context.service.create(data(phone_number="+1 (202) 555-0123"), owner)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 1
 
 
-def test_consented_us_unknown_outcome_blocks_all_destinations(us_context: Context) -> None:
+@pytest.mark.parametrize("owner", ["admin", OWNER])
+def test_consented_us_unknown_outcome_blocks_all_destinations(
+    us_context: Context, owner: str
+) -> None:
     us_context.provider.unknown = True
     request = data(phone_number="+12025550123")
-    result = us_context.service.create(request, "admin")
+    result = us_context.service.create(request, owner)
     assert result.status is DemoCallStatus.UNKNOWN
-    assert us_context.service.create(request, "admin").id == result.id
+    assert us_context.service.create(request, owner).id == result.id
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(data(phone_number="+12125550123"), "admin")
+        us_context.service.create(data(phone_number="+12125550123"), owner)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 1
+
+
+def test_public_us_callback_route_dials_once_and_isolates_status(
+    us_context: Context,
+) -> None:
+    config = us_context.service.settings
+    api = us_context.service.api.model_copy(
+        update={
+            "demo_admin_token": SecretStr("synthetic-admin-token-at-least-32-characters")
+        }
+    )
+    application = FastAPI()
+    application.add_exception_handler(ApiError, api_error_handler)  # type: ignore[arg-type]
+    application.include_router(
+        create_outbound_demo_router(api, us_context.sessions, config, us_context.provider)
+    )
+    request = data(phone_number="+12025550123")
+    assert config.outbound_demo_secret is not None
+    headers = {
+        "X-Outbound-Demo-Key": config.outbound_demo_secret.get_secret_value(),
+        "X-Outbound-Visitor": "a" * 43,
+    }
+
+    async def submit() -> None:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application),
+            base_url="http://test",
+            headers=headers,
+        ) as client:
+            response = await client.post(
+                "/api/v1/outbound-demo/calls", json=request.model_dump(mode="json")
+            )
+            assert response.status_code == 200
+            assert response.json()["status"] == "dialing"
+            replay = await client.post(
+                "/api/v1/outbound-demo/calls", json=request.model_dump(mode="json")
+            )
+            assert replay.json()["id"] == response.json()["id"]
+            path = f"/api/v1/outbound-demo/requests/{request.request_id}"
+            assert (await client.get(path)).status_code == 200
+            foreign = await client.get(
+                path, headers={"X-Outbound-Visitor": "b" * 43}
+            )
+            assert foreign.status_code == 404
+
+    asyncio.run(submit())
+    assert us_context.provider.dial_count == 1
+    assert not config.outbound_demo_transfer_enabled
 
 
 def test_consented_us_daily_budget_includes_failed_preflight(us_context: Context) -> None:

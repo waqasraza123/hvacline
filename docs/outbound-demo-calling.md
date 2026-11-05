@@ -1,5 +1,15 @@
 # Outbound AI demo calling with human transfer
 
+## Public callback policy — November 5, 2026 — UNVERIFIED
+
+Owner authorizes website callbacks with sign-in and authenticator MFA required.
+`consented_us` now permits website requests; transfer stays disabled. Website
+activation requires real outbound acceptance; transfer acceptance applies only
+when transfer is enabled. This supersedes older admin-only US and mandatory
+website-transfer instructions below. Hosted flags were not changed and successful
+end-to-end US calling remains unverified. Exact settings, owner commands and
+manual checks: [Public callbacks](public-callbacks.md).
+
 ## Callback sign-in gate — November 4, 2026 — UNVERIFIED
 
 Owner now requires sign-in before callback requests. The modal shows a sign-in
@@ -330,10 +340,10 @@ numbers and secrets out of source, notes, screenshots, shell history and git.
 | `DEVELOPMENT_ACTOR_USER_ID` | Existing active development business operator |
 | `DEMO_ADMIN_TOKEN` | Existing strong (>=32 character) admin token; always checked here |
 | `ELEVENLABS_API_KEY` | Existing account key; server only |
-| `OUTBOUND_DEMO_ENABLED` | `false`; enable only for approved admin tests |
+| `OUTBOUND_DEMO_ENABLED` | `false`; execution gate for admin tests and accepted website rollout |
 | `OUTBOUND_DEMO_AGENT_ID` | Dedicated private demo agent ID |
 | `OUTBOUND_DEMO_PHONE_NUMBER_ID` | Existing ElevenLabs imported Telnyx SIP resource ID |
-| `OUTBOUND_DEMO_NUMBER_POLICY` | `allowlist` (default) or `consented_us` (admin-only US mobile/landline destinations) |
+| `OUTBOUND_DEMO_NUMBER_POLICY` | `allowlist` (default) or `consented_us` (US mobile/landline destinations, admin or enabled website; transfer off) |
 | `OUTBOUND_DEMO_ALLOWED_NUMBERS` | Comma-separated exact E.164 recipients; required only in `allowlist` mode. Recipient control and one-time consent remain required in both modes |
 | `OUTBOUND_DEMO_HUMAN_NUMBER` | One authorized E.164 human destination |
 | `OUTBOUND_DEMO_SECRET` | Dedicated stable >=32-character secret; API and Next server only; keyed state hashes + bridge authentication |
@@ -347,7 +357,7 @@ numbers and secrets out of source, notes, screenshots, shell history and git.
 | `OUTBOUND_DEMO_CARRIER_LIMIT_CONFIRMED` | `false`; only attest after verifying all transferred-leg duration controls |
 | `OUTBOUND_DEMO_LIVE_VERIFIED` | `false`; true only after actual outbound acceptance |
 | `OUTBOUND_DEMO_TRANSFER_VERIFIED` | `false`; true only after human answers and two-way audio is verified |
-| `OUTBOUND_DEMO_WEBSITE_ENABLED` | `false`; requires both live acceptance flags and enabled transfer |
+| `OUTBOUND_DEMO_WEBSITE_ENABLED` | `false`; requires real outbound acceptance and, only if transfer is enabled, transfer acceptance |
 | `OUTBOUND_DEMO_FORM_ENABLED` | **Next server only**, `false`; website activation gate |
 | `NEXT_PUBLIC_API_BASE_URL` | Existing API base URL, reused by Next server proxy |
 
@@ -480,8 +490,8 @@ Admin API (all require `X-Demo-Admin-Token`, even when the general sandbox is of
    actual carrier behavior. If the AI retains the call, it must acknowledge tool
    failure and offer to continue/end without promising a callback. A blind REFER
    can detach the AI before the human answers: do not promise AI recovery. If that
-   carrier behavior cannot provide acceptable failure handling, leave website and
-   transfer disabled and report unsupported behavior.
+   carrier behavior cannot provide acceptable failure handling, leave transfer
+   disabled and report unsupported behavior. AI-only website calling is separate.
 7. Set live verification flags only after these results are recorded without
    personal data. Do not mark transfer verified from a transcript or tool's word
    “success.” This repository does not currently prove an answered human transfer
@@ -489,12 +499,13 @@ Admin API (all require `X-Demo-Admin-Token`, even when the general sandbox is of
 
 ## Website acceptance and operational limits
 
-Only after the above, enable the backend website gate and Next form gate with
-matching server-only bridge secrets. The form stays allowlist-only; this is
-**not** unrestricted public dialing and no OTP or SMS verification is implemented.
-Owner approval must establish number control out of band. Do not add numbers from
-anonymous requests. Public requests to new numbers require a separate ownership
-verification, anti-abuse and budget design before removing the allowlist.
+After real AI-only outbound acceptance, enable the backend website and Next form
+gates with matching server-only bridge secrets. Sign-in with authenticator MFA
+and explicit one-time recipient consent are required. `consented_us` supports US
+mobile/landline requests without an allowlist; `allowlist` retains exact approved
+recipients. No phone OTP/SMS verification is implemented; authenticator MFA protects
+the account and does not prove phone ownership. Transfer acceptance is required
+only when transfer is enabled. See [Public callbacks](public-callbacks.md).
 
 Manually check desktop/mobile layout, keyboard/focus, labels, readable disabled
 states, explicit unchecked consent, all three scenarios, incorrect international

@@ -118,7 +118,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
       if (!requestId.current)
         setMessage(
           data.available
-            ? "Private preview · approved numbers only · one call, up to three minutes."
+            ? "One-time AI demo · eligible numbers only · up to three minutes."
             : "Phone demos aren’t available right now. You can explore the form or try Line in your browser.",
         );
     } catch {
@@ -354,7 +354,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                 <Dialog.Description>
                   {authentication === "authenticated"
                     ? "Try our AI voice agent with an HVAC conversation. Enter your number and choose what you’d like to talk about."
-                    : "Sign in to your HVACLine account first. Then return here to choose your phone number and agree to one demo call."}
+                    : "Sign in to your HVACLine account with your authenticator. Then return here to choose your phone number and agree to one demo call."}
                 </Dialog.Description>
               </header>
               {authentication === "authenticated" ? (
@@ -380,8 +380,8 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                     aria-describedby="outbound-phone-help"
                   />
                   <p id="outbound-phone-help" className="outbound-demo-help">
-                    Include your country code, such as +1 for the US. When available,
-                    the private preview supports owner-approved numbers.
+                    Use a US mobile or landline number you control, including +1
+                    and the area code.
                   </p>
                   <label htmlFor="outbound-scenario">Try a conversation</label>
                   <select

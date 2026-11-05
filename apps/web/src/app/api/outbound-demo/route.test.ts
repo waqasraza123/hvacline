@@ -209,6 +209,8 @@ describe("outbound demo bridge", () => {
   it.each([
     { status: 403, code: "DEMO_NUMBER_NOT_AUTHORIZED" },
     { status: 429, code: "DEMO_CALL_LIMIT" },
+    { status: 422, code: "DEMO_PHONE_NUMBER_INVALID" },
+    { status: 422, code: "DEMO_DESTINATION_UNSUPPORTED" },
   ])(
     "permits form correction after a known rejection ($status)",
     async ({ status, code }) => {

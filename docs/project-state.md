@@ -1,5 +1,30 @@
 # Project State
 
+## Signed-in public US callbacks — UNVERIFIED — 2026-11-05
+
+Owner authorizes public callback requests and explicitly retains sign-in with
+authenticator MFA; no anonymous access. Source extends `consented_us` to the
+website path with transfer disabled. Website activation requires real outbound
+acceptance; transfer acceptance is conditional on enabled transfer. Availability,
+route and service share the website gate. Existing `auth/me` enforces verified
+current-factor MFA sessions; callback bridge session checks remain mandatory.
+Known US destination rejections unlock correction/renewed consent; uncertain
+outcomes retain recovery. All consent, destination, quota, idempotency, provider
+preflight and signed-event controls remain. No migration is introduced.
+
+This supersedes older admin-only US and mandatory-transfer website decisions.
+Regression specifications added/updated, unexecuted. No checks, services, calls,
+provider/hosted edits, deployment, commit or push ran. Hosted activation remains
+pending; no successful end-to-end US call is recorded. Do not fabricate live
+acceptance. Exact hosted settings, owner commands and manual checks:
+`docs/public-callbacks.md`. Existing unrelated inbound edits are preserved.
+
+Owner subsequently requests publishing the current callback implementation before
+the production-readiness review. Publish this feature, its regression specifications
+and guide to main with hooks disabled and skip markers. This does not authorize
+verification commands, hosted activation or calls; production readiness remains
+unestablished.
+
 ## Outbound prompt publication authorized — UNVERIFIED — 2026-11-04
 
 Owner requests pushing the synchronized outbound prompt/agent JSON and related

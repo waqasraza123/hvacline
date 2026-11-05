@@ -613,17 +613,21 @@ def test_admin_destination_errors_use_the_existing_api_envelope(
         ("+99912345678", "DEMO_PHONE_NUMBER_INVALID"),
     ],
 )
+@pytest.mark.parametrize("owner", ["admin", "synthetic-visitor"])
 def test_consented_us_rejections_are_structured_and_never_reach_persistence(
-    number: str, code: str
+    number: str, code: str, owner: str
 ) -> None:
     config = settings(
-        outbound_demo_number_policy="consented_us", outbound_demo_allowed_numbers=""
+        outbound_demo_number_policy="consented_us",
+        outbound_demo_allowed_numbers="",
+        outbound_demo_website_enabled=True,
+        outbound_demo_live_verified=True,
     )
     sessions = Mock(spec=sessionmaker[Session])
     provider = Mock(spec=ElevenLabsOutboundProvider)
     service = OutboundDemoService(sessions, Mock(spec=ApiSettings), config, provider)
     with pytest.raises(ApiError) as caught:
-        service.create(call_input(phone_number=number), "admin")
+        service.create(call_input(phone_number=number), owner)
     assert caught.value.status_code == 422
     assert caught.value.code == code
     assert caught.value.details == {"field": "phone_number"}
@@ -633,14 +637,14 @@ def test_consented_us_rejections_are_structured_and_never_reach_persistence(
     provider.dial.assert_not_called()
 
 
-def test_consented_us_rejects_visitor_calls_before_reserving() -> None:
+def test_consented_us_rejects_visitor_calls_when_website_is_disabled() -> None:
     config = settings(outbound_demo_number_policy="consented_us")
     sessions = Mock(spec=sessionmaker[Session])
     provider = Mock(spec=ElevenLabsOutboundProvider)
     service = OutboundDemoService(sessions, Mock(spec=ApiSettings), config, provider)
     with pytest.raises(ApiError) as caught:
         service.create(call_input(phone_number="+12025550123"), "synthetic-visitor")
-    assert caught.value.code == "DEMO_ADMIN_AUTH_REQUIRED"
+    assert caught.value.code == "OUTBOUND_DEMO_UNAVAILABLE"
     sessions.assert_not_called()
     provider.dial.assert_not_called()
 
@@ -689,7 +693,7 @@ def test_consented_us_admin_endpoint_requires_consent_fields(field: str) -> None
     sessions.assert_not_called()
 
 
-def test_consented_us_website_cannot_dial_even_if_flag_is_mutated() -> None:
+def test_consented_us_website_requires_live_acceptance_even_if_flag_is_mutated() -> None:
     config = settings(outbound_demo_number_policy="consented_us")
     config.outbound_demo_website_enabled = True
     application, sessions = outbound_application(config)
@@ -710,6 +714,83 @@ def test_consented_us_website_cannot_dial_even_if_flag_is_mutated() -> None:
     available, response = asyncio.run(request())
     assert available.json() == {"available": False}
     assert response.status_code == 503
+    sessions.assert_not_called()
+
+
+@pytest.mark.parametrize("policy", ["allowlist", "consented_us"])
+def test_website_supports_ai_only_calls_after_live_acceptance(policy: str) -> None:
+    config = settings(
+        outbound_demo_number_policy=policy,
+        outbound_demo_website_enabled=True,
+        outbound_demo_live_verified=True,
+    )
+    assert config.website_available
+    assert not config.outbound_demo_transfer_enabled
+    application, sessions = outbound_application(config)
+
+    async def request() -> httpx.Response:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            return await client.get(
+                "/api/v1/outbound-demo/availability",
+                headers={
+                    "X-Outbound-Demo-Key": SECRET,
+                    "X-Outbound-Visitor": "a" * 43,
+                },
+            )
+
+    assert asyncio.run(request()).json() == {"available": True}
+    sessions.assert_not_called()
+
+
+def test_website_with_transfer_still_requires_transfer_acceptance() -> None:
+    with pytest.raises(ValidationError, match="transfer acceptance when enabled"):
+        settings(
+            outbound_demo_website_enabled=True,
+            outbound_demo_live_verified=True,
+            outbound_demo_transfer_enabled=True,
+            outbound_demo_carrier_limit_confirmed=True,
+        )
+
+
+@pytest.mark.parametrize("credential", ["missing", "bridge", "visitor"])
+def test_public_callback_routes_require_bridge_and_visitor_credentials(
+    credential: str,
+) -> None:
+    application, sessions = outbound_application(
+        settings(
+            outbound_demo_number_policy="consented_us",
+            outbound_demo_website_enabled=True,
+            outbound_demo_live_verified=True,
+        )
+    )
+    headers = {"X-Outbound-Demo-Key": SECRET, "X-Outbound-Visitor": "a" * 43}
+    if credential == "missing":
+        headers = {}
+    elif credential == "bridge":
+        headers["X-Outbound-Demo-Key"] = "wrong"
+    else:
+        headers["X-Outbound-Visitor"] = "invalid"
+
+    async def request() -> tuple[httpx.Response, httpx.Response]:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=application),
+            base_url="http://test",
+            headers=headers,
+        ) as client:
+            return (
+                await client.get("/api/v1/outbound-demo/availability"),
+                await client.post(
+                    "/api/v1/outbound-demo/calls",
+                    json=call_input(phone_number="+12025550123").model_dump(
+                        mode="json"
+                    ),
+                ),
+            )
+
+    for response in asyncio.run(request()):
+        assert response.status_code == (400 if credential == "visitor" else 401)
     sessions.assert_not_called()
 
 
