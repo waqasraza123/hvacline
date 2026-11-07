@@ -1,5 +1,39 @@
 # Outbound AI demo calling with human transfer
 
+## Workflows and additional tools — November 7, 2026 — UNVERIFIED
+
+Owner authorizes outbound agents with workflows and additional tools. Backend
+preflight now allows workflow graphs, external tool IDs, MCP server references,
+inline client/webhook tools and additional native tools. It still requires the
+base prompt/first message, native End call, private agent authentication,
+recording off, retention zero, bounded duration and assigned signed-event webhook.
+Base knowledge bases, language presets, procedures and initiation webhooks remain
+rejected. SIP TLS/digest, caller loop protection, consent, destination policy,
+quotas and saved-request handling are unchanged.
+
+The existing fixed-destination/SIP REFER checks still apply to the main agent's
+native phone-transfer tool. Workflow routing, subagent overrides and external
+tool behavior are controlled by the hosted ElevenLabs configuration; the backend
+does not validate them or enforce its transfer flag on those paths. Review those
+paths in the outbound agent, including their effects when transfer is disabled.
+
+No migration or new environment setting is needed. Deploy the updated backend
+to Render for this change to affect hosted calls. No tests, diagnostic requests,
+hosted changes or calls were executed by Codex. Implementation remains unverified.
+Owner commands, supplied unexecuted, from the repository root:
+
+```sh
+.venv/bin/python -m pytest tests/test_outbound_demo.py
+PYTHONPATH=apps/backend/src .venv/bin/python scripts/diagnose-outbound-preflight.py
+```
+
+Manually confirm Render uses this backend revision, the diagnostic no longer
+reports workflow/tool presence as a failure, and all remaining comparisons pass.
+Inspect workflow routing and tool permissions; retain native End call. Supervised
+call acceptance still requires two-way audio, actual disconnection and signed
+terminal backend status. This source change does not establish carrier acceptance
+or resolve the older timed-out request.
+
 ## Mobile-only hardening — November5,2026 — UNVERIFIED
 
 The production-readiness follow-up requires a verified US mobile number for every
@@ -304,10 +338,13 @@ timer or daily spending cap is not a replacement for that limit.
    Keep maximum duration <=180, concurrency 1, daily limit <= the API limit,
    bursting off, recording off and retention 0. This fictional demo does not
    establish production privacy readiness.
-3. Use only native **End call** initially. Remove copied booking, webhook/client,
-   MCP and other tools; no external tool IDs, workflows, procedures, knowledge
-   base or language presets. Native tools are read from `built_in_tools` (or the
-   legacy inline `tools` array), not external tool IDs. Keep first-message
+3. Retain native **End call** in `built_in_tools` or the legacy inline `tools`
+   array; an external tool with the same name does not satisfy this requirement.
+   Workflows, external tool IDs, MCP references and additional tools are allowed.
+   Their behavior is managed in ElevenLabs; the backend validates the base agent
+   and its native phone-transfer tool, not workflow/tool side effects. Base-agent
+   procedures, knowledge bases and language presets remain unsupported.
+   Keep first-message
    interruptions allowed. Declare the prompt variables `demo_scenario`,
    `demo_transfer_enabled`, `demo_max_duration_seconds`; backend initiation data
    supplies them and `outbound_demo_call_id`. No client configuration overrides

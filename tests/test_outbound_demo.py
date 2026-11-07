@@ -129,6 +129,43 @@ def agent_config(transfer: bool = False) -> dict[str, Any]:
     }
 
 
+def agent_config_with_extensions(transfer: bool = False) -> dict[str, Any]:
+    config = agent_config(transfer)
+    prompt = config["conversation_config"]["agent"]["prompt"]
+    prompt["tool_ids"] = ["synthetic-external-tool"]
+    prompt["mcp_server_ids"] = ["synthetic-mcp-server"]
+    prompt["native_mcp_server_ids"] = ["synthetic-native-mcp-server"]
+    prompt["tools"] = [
+        {"type": "client", "name": "show_demo_details"},
+        {"type": "webhook", "name": "lookup_demo_details"},
+    ]
+    prompt["built_in_tools"]["skip_turn"] = {
+        "type": "system",
+        "name": "skip_turn",
+        "params": {"system_tool_type": "skip_turn"},
+    }
+    config["workflow"] = {
+        "nodes": {
+            "start_node": {"type": "start", "edge_order": ["start_to_demo"]},
+            "demo": {
+                "type": "override_agent",
+                "additional_prompt": "Ask one demo question at a time.",
+                "additional_tool_ids": ["synthetic-external-tool"],
+                "conversation_config": {},
+                "edge_order": [],
+            },
+        },
+        "edges": {
+            "start_to_demo": {
+                "source": "start_node",
+                "target": "demo",
+                "forward_condition": {"type": "unconditional"},
+            }
+        },
+    }
+    return config
+
+
 @pytest.mark.parametrize(
     "overrides",
     [
@@ -180,8 +217,8 @@ def test_blank_disabled_configuration_is_valid() -> None:
     )
 
 
-def test_preflight_accepts_fixed_native_sip_transfer_only() -> None:
-    config = agent_config(True)
+def test_preflight_requires_fixed_native_sip_transfer_with_additional_tools() -> None:
+    config = agent_config_with_extensions(True)
     enabled = settings(
         outbound_demo_transfer_enabled=True, outbound_demo_carrier_limit_confirmed=True
     )
@@ -200,6 +237,32 @@ def test_preflight_accepts_fixed_native_sip_transfer_only() -> None:
         validate_agent(config, settings())
 
 
+@pytest.mark.parametrize("legacy_tools", [False, True])
+def test_preflight_accepts_workflows_and_additional_tools(legacy_tools: bool) -> None:
+    config = agent_config_with_extensions()
+    if legacy_tools:
+        prompt = config["conversation_config"]["agent"]["prompt"]
+        prompt["tools"].extend(prompt.pop("built_in_tools").values())
+    validate_agent(config, settings())
+
+
+def test_preflight_still_requires_native_end_call_with_additional_tools() -> None:
+    config = agent_config_with_extensions()
+    prompt = config["conversation_config"]["agent"]["prompt"]
+    del prompt["built_in_tools"]["end_call"]
+    prompt["tools"].append({"type": "client", "name": "end_call"})
+    with pytest.raises(OutboundProviderError):
+        validate_agent(config, settings())
+
+
+@pytest.mark.parametrize("tools", [{"unexpected": "mapping"}, ["tool-id"], [None]])
+def test_preflight_rejects_malformed_inline_tools(tools: Any) -> None:
+    config = agent_config_with_extensions()
+    config["conversation_config"]["agent"]["prompt"]["tools"] = tools
+    with pytest.raises(OutboundProviderError):
+        validate_agent(config, settings())
+
+
 def test_dashboard_template_matches_the_enforced_prompt() -> None:
     config = json.loads(
         (
@@ -214,14 +277,16 @@ def test_dashboard_template_matches_the_enforced_prompt() -> None:
     "path,value",
     [
         (("conversation_config", "conversation", "max_duration_seconds"), 181),
-        (("conversation_config", "agent", "prompt", "tool_ids"), ["external-tool"]),
         (("conversation_config", "agent", "prompt", "prompt"), "Book a real service"),
+        (("conversation_config", "agent", "first_message"), "Different greeting"),
         (("platform_settings", "privacy", "record_voice"), True),
-        (("workflow",), {"nodes": {"arbitrary-transfer": {}}}),
+        (("platform_settings", "privacy", "retention_days"), 1),
+        (("platform_settings", "auth", "enable_auth"), False),
+        (("platform_settings", "workspace_overrides", "webhooks", "events"), []),
     ],
 )
 def test_preflight_rejects_agent_drift(path: tuple[str, ...], value: Any) -> None:
-    config = agent_config()
+    config = agent_config_with_extensions()
     target = config
     for key in path[:-1]:
         target = target[key]
@@ -835,7 +900,7 @@ def test_consented_us_preflight_preserves_tls_digest_and_caller_loop_protection(
     def handle(request: httpx.Request) -> httpx.Response:
         requests.append(request)
         if request.url.path.startswith("/v1/convai/agents/"):
-            return httpx.Response(200, json=agent_config())
+            return httpx.Response(200, json=agent_config_with_extensions())
         return httpx.Response(
             200,
             json={

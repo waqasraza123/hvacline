@@ -47,7 +47,6 @@ def validate_agent(agent: dict[str, Any], settings: OutboundDemoSettings) -> Non
     workspace = object_value(platform.get("workspace_overrides"))
     hooks = object_value(workspace.get("webhooks"))
     duration = conversation.get("max_duration_seconds")
-    workflow = object_value(agent.get("workflow"))
     if (
         agent.get("agent_id") != settings.outbound_demo_agent_id
         or type(duration) is not int
@@ -57,12 +56,8 @@ def validate_agent(agent: dict[str, Any], settings: OutboundDemoSettings) -> Non
         or privacy.get("record_voice") is not False
         or privacy.get("retention_days") != 0
         or object_value(platform.get("auth")).get("enable_auth") is not True
-        or prompt.get("tool_ids")
-        or prompt.get("mcp_server_ids")
-        or prompt.get("native_mcp_server_ids")
         or prompt.get("knowledge_base")
         or configuration.get("language_presets")
-        or workflow.get("nodes")
         or agent.get("procedures")
         or object_value(
             workspace.get("conversation_initiation_client_data_webhook")
@@ -73,7 +68,10 @@ def validate_agent(agent: dict[str, Any], settings: OutboundDemoSettings) -> Non
         )
     ):
         raise OutboundProviderError(outcome_unknown=False)
-    tools = list(prompt.get("tools") or [])
+    explicit_tools = prompt.get("tools") or []
+    if not isinstance(explicit_tools, list):
+        raise OutboundProviderError(outcome_unknown=False)
+    tools = list(explicit_tools)
     tools.extend(
         value
         for value in object_value(prompt.get("built_in_tools")).values()
@@ -81,16 +79,17 @@ def validate_agent(agent: dict[str, Any], settings: OutboundDemoSettings) -> Non
     )
     found: set[str] = set()
     for tool in tools:
-        config = object_value(tool)
+        if not isinstance(tool, dict):
+            raise OutboundProviderError(outcome_unknown=False)
+        config = tool
+        if config.get("type") != "system":
+            continue
         params = object_value(config.get("params"))
         kind = params.get("system_tool_type")
-        if config.get("type") != "system" or kind not in {
-            "end_call",
-            "transfer_to_number",
-        }:
-            raise OutboundProviderError(outcome_unknown=False)
-        found.add(kind)
+        if kind == "end_call":
+            found.add("end_call")
         if kind == "transfer_to_number":
+            found.add("transfer_to_number")
             transfers = params.get("transfers")
             if (
                 not settings.outbound_demo_transfer_enabled

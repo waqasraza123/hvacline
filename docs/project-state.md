@@ -1,5 +1,32 @@
 # Project State
 
+## Workflow/tool publication authorized — UNVERIFIED — 2026-11-07
+
+Owner requests pushing the workflow/tool support to main. Publish provider,
+regression specifications, GET-only diagnostic, runbook and relevant new notes;
+preserve earlier inbound/investigation edits and historical project-note changes.
+Use disabled local Git hooks and [skip ci] [skip render]. No checks, hosted
+configuration changes or call execution are authorized by this publication.
+Static review finds base prompt/first-message and knowledge/preset/procedure/
+initiation-hook restrictions remain; all corresponding owner diagnostic results
+passed. Old Render revision, saved terminal-failed request replay, quotas,
+cooldown or an active/unknown call can still prevent a new dial. Default failed
+reservations count toward budgets. No live outcome is established.
+
+## Workflow and additional-tool support — UNVERIFIED — 2026-11-07
+
+Owner authorizes outbound agents with workflows and tools. Local source removes
+blanket workflow, external-tool-ID and MCP-reference bans and accepts additional
+inline/native tools. Native End call remains mandatory. Main-agent native phone
+transfer retains fixed-destination/SIP REFER/enabled checks; workflow routing,
+overrides and external-tool effects are trusted hosted configuration and are not
+validated by that transfer gate. Other base prompt/privacy/auth/duration/webhook,
+SIP, consent, policy, quota and replay checks remain. No new migration or setting.
+Diagnostic updated to match; regression specifications written, unexecuted.
+No Codex checks, hosted changes, deploy or call ran. Render still needs the new
+backend revision; source support does not establish live acceptance or resolve
+the earlier timeout. Owner commands/manual checks: docs/outbound-demo-calling.md.
+
 ## Public mobile demo hardening — UNVERIFIED — 2026-11-05
 
 Owner requests production readiness, clarifies real visitors receiving fictional
