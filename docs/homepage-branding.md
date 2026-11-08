@@ -1,5 +1,14 @@
 # Homepage branding handoff
 
+## Header pricing label and providers — 2026-11-09 — UNVERIFIED
+
+The homepage navigation label is now Stripe Pricing, still linking to `/pricing`.
+Restored the Twilio header SVG at the owner's request; ElevenLabs, Twilio, Telnyx
+and WhatsApp are displayed. Changes are local and visual acceptance is pending.
+Owner command: `npm run verify:web`. Manually check the label/link, provider
+alignment, keyboard focus and absence of header overflow at desktop, tablet and
+320px mobile widths; confirm the Twilio symbol has its accessible name.
+
 ## ElevenLabs wordmark — 2026-11-09 — UNVERIFIED
 
 The homepage header now displays ElevenLabs as a bold text wordmark in place of

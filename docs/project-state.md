@@ -1,5 +1,39 @@
 # Project State
 
+## Remaining header changes publication authorized — UNVERIFIED — 2026-11-09
+
+Owner requests pushing all changes to main. Canonical main6b2bbad already contains
+the complete Stripe billing implementation, automatic business resolution,
+ElevenLabs wordmark and Twilio header logo; earlier SMS/inbound code and guides
+are also published. Comparing the original local changed/untracked files with
+main finds only the Stripe Pricing navigation label, header guide and release
+notes still unpublished. The label retains /pricing and Twilio stays displayed
+beside ElevenLabs, Telnyx and WhatsApp. Original branch/edits remain preserved.
+No tests, builds, lint/type checks, services, provider operations or deployment
+commands ran for this publication; hooks disabled and skip markers retained.
+Owner command/manual acceptance: npm run verify:web, then check pricing link,
+provider alignment/accessible names and desktop/tablet/320px header overflow.
+
+## Configured database billing schema at0020 — verified — 2026-11-09
+
+Owner-authorized bounded operation using published6b2bbad migration source and
+existing confirmed configuration finds20261108_0020 before and after, matching
+source head. Runtime/direct targets and roles match. All five billing tables and
+customer-account ownership uniqueness exist. No upgrade was needed; no pending
+migration remains for this configured database. Approved network escalation
+completed readback after sandbox connection failure. No schema/data mutation,
+seed, downgrade or customer-row access occurred. Payment/application runtime,
+Stripe configuration and deployment acceptance remain separate/pending.
+
+## Stripe and SMS publication status — 2026-11-09
+
+Canonical main accepted f858404..6b2bbad for full sandbox billing, automatic
+business resolution and ElevenLabs wordmark, without force. Earlier SMS/inbound
+publication accepted430c16d..f858404. These publications supersede the historical
+local-only billing restriction and unpublished-status notes. Runtime remains
+unverified; exact setup/checks: docs/maintenance-billing.md,
+docs/homepage-branding.md and docs/sms-capable-demo-numbers.md.
+
 ## Stripe billing publication authorized — runtime UNVERIFIED — 2026-11-09
 
 Owner requests pushing the current work and explicitly includes Stripe code.

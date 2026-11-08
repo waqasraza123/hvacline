@@ -48,7 +48,7 @@ export default function Home() {
         <nav className="product-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#services">Services</a>
-          <Link href="/pricing">Packages</Link>
+          <Link href="/pricing">Stripe Pricing</Link>
           <a href="#call-me">Calling</a>
         </nav>
         <div className="product-header-actions">
