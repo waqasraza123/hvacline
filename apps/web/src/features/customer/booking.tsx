@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/brand";
+import { AccountAvatar } from "@/components/account-avatar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
@@ -63,9 +64,7 @@ export function CustomerBooking({
           >
             My package
           </Link>
-          <span className="account-avatar" aria-hidden="true">
-            {user.full_name.slice(0, 1).toUpperCase()}
-          </span>
+          <AccountAvatar fullName={user.full_name} disabled={voiceActive} />
           <span>{user.full_name}</span>
           <button
             type="button"

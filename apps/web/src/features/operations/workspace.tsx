@@ -201,7 +201,7 @@ export function OperationsWorkspace({
                 key={name}
                 onClick={() => setTab(name)}
               >
-                {name}
+                {name === "knowledge" ? "knowledge base" : name}
               </button>
             ))}
           </div>

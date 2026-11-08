@@ -17,8 +17,9 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
         "maintenance",
         "Can I book HVAC maintenance?",
         "I can collect a maintenance request and check the booking calendar. "
-        "A staff member must confirm the specific work, pricing and equipment "
-        "requirements; no maintenance package or contract is promised here.",
+        "A staff member must confirm the specific work and equipment requirements. "
+        "Website maintenance packages use a separate Stripe sandbox checkout; "
+        "purchasing hours does not itself book an appointment.",
     ),
     (
         "equipment-brands",
@@ -81,9 +82,11 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "rescheduling",
         "Can I reschedule an existing appointment?",
-        "Existing appointment changes require staff assistance in this version. "
-        "I cannot change a confirmed appointment through the browser voice flow "
-        "or promise that a replacement appointment has been booked.",
+        "For a booking linked to your signed-in website account, open My "
+        "appointments to check whether rescheduling is available. Business "
+        "notice limits and calendar availability apply. A replacement time is "
+        "not booked until the scheduling system confirms the change. Ask staff "
+        "about bookings or changes unavailable in your account.",
     ),
     (
         "cancellation",
@@ -95,8 +98,8 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "pricing",
         "How much does HVAC service cost?",
-        "No service prices have been approved for this business. "
-        "A staff member must provide estimates, fees and final pricing. "
+        "Website maintenance package prices are draft Stripe sandbox rates. "
+        "A staff member must provide real service estimates, fees and final pricing. "
         "Booking a visit does not establish a repair price or authorize paid work.",
     ),
     (
@@ -116,8 +119,9 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "payments-financing",
         "What payment and financing options do you offer?",
-        "Payment methods and financing terms have not been approved here. "
-        "Staff must confirm any available options and conditions. "
+        "Website maintenance packages and extra hours use Stripe sandbox "
+        "checkout with test payments only. This does not establish real payment "
+        "methods or financing terms for the business; staff must confirm them. "
         "Do not provide card numbers, bank details or payment credentials to this assistant.",
     ),
     (
@@ -142,14 +146,17 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
         "For website bookings made while signed in, open My appointments to view "
         "the bookings associated with your account. Ask staff about bookings "
         "not linked to that account. A confirmed receipt means booked; "
-        "a temporary hold is waiting for confirmation. Email and SMS reminders "
-        "are not connected in this version.",
+        "a temporary hold is waiting for confirmation. Email confirmations and "
+        "reminders depend on the business enabling its email integration; "
+        "delivery is not guaranteed. SMS verification is not a booking reminder.",
     ),
     (
         "external-calendars",
         "Will my booking appear in Google Calendar or Outlook?",
         "Appointments are stored in the internal booking calendar. "
-        "Google Calendar and Outlook synchronization are not connected. "
+        "Google Calendar synchronization is optional and depends on a connected, "
+        "enabled business integration and successful synchronization. Outlook "
+        "synchronization is not implemented. "
         "For website bookings made while signed in, use My appointments to view "
         "the saved booking; other bookings require staff assistance.",
     ),

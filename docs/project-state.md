@@ -1,5 +1,64 @@
 # Project State
 
+## Knowledge base and account header publication authorized — 2026-11-09
+
+Owner requests commit and push to main. Prepared all remaining source/guide
+differences on canonical d2f2d35 from the isolated publication checkout. Includes
+knowledge-base alternate questions/retrieval/editor safeguards, migration0021
+and specifications, corrected starter-source content and session-aware account
+avatars. Existing approved content is preserved; no reseed or provider upload.
+The configured database already reached0021 in the prior authorized operation.
+
+Homepage/pricing headers use currentCustomer with the existing verified session;
+authenticated visitors receive a reusable circular initials link to /book.
+Billing reuses its resolved customer; booking retains its active-conversation
+navigation guard. Anonymous visitors see Sign in, pending lookup a neutral
+placeholder, and unavailable lookup My account. Names are not cached in browser
+storage. Styling follows existing light/dark tokens, focus and reduced motion.
+
+No verification execution, new database/provider action or deployment accompanies
+publication. Hooks disabled; [skip ci] [skip render] retained. Existing release
+v0.1.0-beta.1 stays pinned to595994f. Owner checks: npm run verify:web and commands/
+manual checks in docs/knowledge-base.md and docs/homepage-branding.md. Application
+and visual acceptance remain unverified; no Calendly/HubSpot work is active.
+
+## Knowledge base improved; migration0021 applied — 2026-11-09
+
+Owner stops the Calendly/HubSpot investigation and explicitly requests finishing
+only the knowledge-base task, applying its migration and then stopping. Existing
+agency-owned approved FAQs remain the shared source for browser/guest/phone
+tools. Local code adds up to eight validated alternate questions per answer,
+conservative ambiguity fallback, source/version preservation and legacy-update
+compatibility. Operations adds search/status filters/counts, clearer preview,
+loading/retry feedback, unsaved-edit activation guards and version-conflict
+recovery. Existing ownership, default-inactive creation and audits remain.
+Starter source content is corrected for current optional integrations/billing;
+existing approved records are preserved and no seed/content rewrite ran.
+
+Authorized bounded operation applies20261108_0020 →20261109_0021 and confirms
+head0021, the non-null JSONB variations column/default and validated shape/count
+constraint. Runtime/direct configured targets and roles match. Initial sandbox
+connection failed; approved network escalation completed migration/readback.
+Regression specifications are written but unexecuted; only source formatting ran.
+No tests/builds/lints/type checks, services, provider operations, dependency
+installation, commit/push or deployment ran. Code remains local/unpublished and
+runtime-unverified. Exact owner commands/manual checks: docs/knowledge-base.md.
+Work stops here as requested; no Calendly/HubSpot work is active.
+
+## Theme, hero and Voice Chat published — runtime UNVERIFIED — 2026-11-09
+
+Published d2f2d35 to canonical hvacline main; push accepted595994f..d2f2d35
+without force. Twenty-nine files publish animated customer light/dark themes,
+theme-aware customer/billing surfaces, hero platform/security/Stripe sandbox
+badges and direct Try Voice Chat actions with VOICE as the customer default.
+Text chat, consent/start gates and separate callback/phone options remain.
+All remaining application/guide differences are included; original branch/edits
+are preserved. Existing v0.1.0-beta.1 remains pinned to595994f. Hooks disabled and
+skip markers retained. No tests, builds, lint/type checks, services, live sessions,
+database/provider operations or deployment commands ran. No new migration or
+dependency. Owner command npm run verify:web; manual acceptance in
+docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
+
 ## Theme, hero badges and Voice Chat publication authorized — 2026-11-09
 
 Owner requests pushing all remaining changes to main. Prepared all source/guide

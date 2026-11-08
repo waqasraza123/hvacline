@@ -1,5 +1,30 @@
 # Homepage branding handoff
 
+## Signed-in header avatar — 2026-11-09 — UNVERIFIED
+
+The homepage and pricing headers now resolve the existing customer session on the
+server. Authenticated visitors see a circular, clickable first/last-name initials
+avatar linking to `/book`; anonymous visitors see Sign in. A neutral placeholder
+occupies the same space during lookup, and an unavailable lookup offers My
+account rather than claiming the visitor is signed out. Billing reuses its
+already-resolved customer, and the booking header uses the same avatar while
+retaining its existing active-conversation navigation guard.
+
+Initials and accessible labels come from the session-verified customer name.
+The existing HttpOnly cookie, MFA checks and uncached backend identity lookup
+remain authoritative; the avatar does not store identity in browser storage or
+change authentication. Styling follows light/dark tokens, includes a 44px target
+and keyboard focus, and respects reduced motion.
+
+Implementation is local/unpublished and **unverified**. No tests, builds, lint,
+type checks, previews, provider/database operations or deployment ran. No new
+dependency, migration or setting is required. Owner command: `npm run verify:web`.
+Manually check anonymous Sign in; completed sign-in/MFA → home/pricing initials;
+avatar click to the customer workspace; full-name accessible label; single-word,
+multi-word and Unicode initials; sign-out removing the old identity; unavailable
+identity lookup; and desktop/320px layout, focus and light/dark contrast. During
+an active booking conversation, the account avatar must not navigate away.
+
 ## Hero platform badges — 2026-11-09 — UNVERIFIED
 
 Added compact hero badges below the phone link for WebRTC real-time browser

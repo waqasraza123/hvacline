@@ -5,6 +5,7 @@ export type ApprovedFaq = Readonly<{
   agencyId: string;
   question: string;
   approvedAnswer: string;
+  questionVariations: readonly string[];
   status: ApprovedFaqStatus;
   rowVersion: number;
   createdAt: string;
@@ -14,6 +15,7 @@ export type ApprovedFaq = Readonly<{
 export type ApprovedFaqDraft = Readonly<{
   question: string;
   approvedAnswer: string;
+  questionVariations: readonly string[];
 }>;
 
 export type ApprovedFaqSource = Readonly<{

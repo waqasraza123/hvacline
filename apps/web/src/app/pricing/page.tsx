@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { AccountAvatarPlaceholder } from "@/components/account-avatar";
+import { HeaderAccount } from "@/components/header-account";
 import { Brand } from "@/components/brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Pricing } from "@/features/billing/pricing";
@@ -17,6 +20,9 @@ export default function PricingPage() {
         </nav>
         <div className="product-page-actions">
           <ThemeToggle />
+          <Suspense fallback={<AccountAvatarPlaceholder />}>
+            <HeaderAccount />
+          </Suspense>
           <Link className="product-button button-small" href="/billing">
             My package ↗
           </Link>

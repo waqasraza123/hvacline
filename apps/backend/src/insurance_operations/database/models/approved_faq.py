@@ -1,7 +1,8 @@
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, Index, Text, UniqueConstraint, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from insurance_operations.database.models.base import (
@@ -43,6 +44,11 @@ class AgencyApprovedFaq(
             name="status_valid",
         ),
         CheckConstraint("row_version > 0", name="row_version_positive"),
+        CheckConstraint(
+            "jsonb_typeof(question_variations) = 'array' "
+            "AND jsonb_array_length(question_variations) <= 8",
+            name="question_variations_valid",
+        ),
         UniqueConstraint(
             "agency_id",
             "normalized_question",
@@ -62,6 +68,9 @@ class AgencyApprovedFaq(
     )
     question: Mapped[str] = mapped_column(Text, nullable=False)
     normalized_question: Mapped[str] = mapped_column(Text, nullable=False)
+    question_variations: Mapped[list[str]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default=text("'[]'::jsonb")
+    )
     approved_answer: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[str] = mapped_column(
         Text,

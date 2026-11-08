@@ -209,6 +209,89 @@ def test_approved_faq_lifecycle_and_safe_preview_lookup(
     assert error["code"] == "APPROVED_FAQ_VERSION_CONFLICT"
 
 
+def test_variations_follow_activation_and_survive_legacy_updates(
+    development_faq_api: DevelopmentFaqApi,
+) -> None:
+    application = development_faq_api.application
+    path = "/api/v1/development/approved-faqs"
+    query = "Could a human assist me?"
+    status_code, created = asyncio.run(
+        request_json(
+            application,
+            "POST",
+            path,
+            {
+                "question": "How do I contact staff?",
+                "approved_answer": "Synthetic staff assistance is available through the business.",
+                "question_variations": [query],
+            },
+        )
+    )
+    assert status_code == 201
+    assert isinstance(created, dict)
+    assert created["status"] == "INACTIVE"
+    faq_id = created["id"]
+    assert isinstance(faq_id, str)
+    _status, inactive = asyncio.run(
+        request_json(application, "POST", path + "/lookup", {"query": query})
+    )
+    assert isinstance(inactive, dict)
+    assert inactive["matched"] is False
+    status_code, activated = asyncio.run(
+        request_json(
+            application,
+            "POST",
+            f"{path}/{faq_id}/activate",
+            {"expected_row_version": created["row_version"]},
+        )
+    )
+    assert status_code == 200
+    assert isinstance(activated, dict)
+    _status, matched = asyncio.run(
+        request_json(application, "POST", path + "/lookup", {"query": query})
+    )
+    assert isinstance(matched, dict)
+    assert matched["matched"] is True
+    assert isinstance(matched["source"], dict)
+    assert matched["source"]["faq_id"] == faq_id
+    status_code, updated = asyncio.run(
+        request_json(
+            application,
+            "PUT",
+            f"{path}/{faq_id}",
+            {
+                "question": "How do I contact staff?",
+                "approved_answer": "Updated synthetic approved answer.",
+                "expected_row_version": activated["row_version"],
+            },
+        )
+    )
+    assert status_code == 200
+    assert isinstance(updated, dict)
+    assert updated["question_variations"] == [query]
+    status_code, cleared = asyncio.run(
+        request_json(
+            application,
+            "PUT",
+            f"{path}/{faq_id}",
+            {
+                "question": "How do I contact staff?",
+                "approved_answer": "Updated synthetic approved answer.",
+                "question_variations": [],
+                "expected_row_version": updated["row_version"],
+            },
+        )
+    )
+    assert status_code == 200
+    assert isinstance(cleared, dict)
+    assert cleared["question_variations"] == []
+    _status, unmatched = asyncio.run(
+        request_json(application, "POST", path + "/lookup", {"query": query})
+    )
+    assert isinstance(unmatched, dict)
+    assert unmatched["matched"] is False
+
+
 def test_live_lookup_requires_active_session_and_audits_source_only(
     development_faq_api: DevelopmentFaqApi,
     migrated_database: Engine,

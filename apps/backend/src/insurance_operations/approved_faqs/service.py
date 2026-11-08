@@ -2,12 +2,14 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID
 
+from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
 from insurance_operations.approved_faqs.schemas import (
+    ApprovedFaqContent,
     ApprovedFaqCreateInput,
     ApprovedFaqLookupResponse,
     ApprovedFaqResponse,
@@ -15,6 +17,7 @@ from insurance_operations.approved_faqs.schemas import (
     ApprovedFaqStatusInput,
     ApprovedFaqUpdateInput,
 )
+from insurance_operations.approved_faqs.text import normalize_faq_question
 from insurance_operations.database.models.approved_faq import (
     AgencyApprovedFaq,
     ApprovedFaqStatus,
@@ -88,6 +91,7 @@ class ApprovedFaqService:
             agency_id=actor.agency_id,
             question=request.question,
             normalized_question=normalize_faq_question(request.question),
+            question_variations=request.question_variations,
             approved_answer=request.approved_answer,
             status=request.status,
             created_by=actor.app_user_id,
@@ -123,9 +127,27 @@ class ApprovedFaqService:
             with self._session_factory() as session, session.begin():
                 faq = self._get_owned_for_update(session, actor, faq_id)
                 require_faq_version(faq, request.expected_row_version)
+                variations = (
+                    request.question_variations
+                    if "question_variations" in request.model_fields_set
+                    else faq.question_variations
+                )
+                try:
+                    content = ApprovedFaqContent(
+                        question=request.question,
+                        approved_answer=request.approved_answer,
+                        question_variations=variations,
+                    )
+                except ValidationError as error:
+                    raise ApiError(
+                        status_code=422,
+                        code="APPROVED_FAQ_VARIATIONS_INVALID",
+                        message="Review the question variations; each must be distinct from the main question.",
+                    ) from error
                 faq.question = request.question
                 faq.normalized_question = normalize_faq_question(request.question)
                 faq.approved_answer = request.approved_answer
+                faq.question_variations = content.question_variations
                 faq.updated_by = actor.app_user_id
                 session.flush()
                 session.refresh(faq)
@@ -196,7 +218,8 @@ class ApprovedFaqService:
                 conversation_session is None
                 or conversation_session.agency_id != actor.agency_id
                 or conversation_session.initiated_by != actor.app_user_id
-                or conversation_session.status not in {
+                or conversation_session.status
+                not in {
                     ConversationSessionStatus.AUTHORIZED.value,
                     ConversationSessionStatus.CONFIRMED.value,
                 }
@@ -351,19 +374,22 @@ class ApprovedFaqService:
         return faq
 
 
-def normalize_faq_question(value: str) -> str:
-    characters = [
-        character.casefold() if character.isalnum() else " " for character in value
-    ]
-    return " ".join("".join(characters).split())
-
-
 def select_faq_match(
     query: str,
     faqs: Sequence[AgencyApprovedFaq],
 ) -> AgencyApprovedFaq | None:
     scored = sorted(
-        ((faq_match_score(query, faq.question), str(faq.id), faq) for faq in faqs),
+        (
+            (
+                max(
+                    faq_match_score(query, question)
+                    for question in [faq.question, *(faq.question_variations or [])]
+                ),
+                str(faq.id),
+                faq,
+            )
+            for faq in faqs
+        ),
         key=lambda item: (-item[0], item[1]),
     )
     if not scored or scored[0][0] < _MINIMUM_MATCH_SCORE:
@@ -411,6 +437,7 @@ def faq_response(faq: AgencyApprovedFaq) -> ApprovedFaqResponse:
         agency_id=faq.agency_id,
         question=faq.question,
         approved_answer=faq.approved_answer,
+        question_variations=faq.question_variations,
         status=faq.status,
         row_version=faq.row_version,
         created_at=faq.created_at,
