@@ -1,9 +1,12 @@
-# Public mobile demo release — UNVERIFIED
+# Public SMS-verified demo release — UNVERIFIED
 
-Scope confirmed November 5, 2026: real visitors request a fictional HVAC demo
-call on a US mobile number. Sign-in with authenticator MFA remains mandatory.
+Scope updated November 7, 2026: real visitors request a fictional HVAC demo
+call on a US number that can receive SMS, including VoIP and landline numbers.
+Sign-in with authenticator MFA remains mandatory.
 SMS verification proves control of the callback number; it never replaces MFA.
-No real appointment, human transfer, landline or VoIP callback is part of launch.
+No real appointment or human transfer is part of launch. The owner authorizes
+relaxing the earlier mobile-only policy; [implementation and owner checks](sms-capable-demo-numbers.md)
+remain unverified.
 
 **Not production ready yet.** The earlier website implementation is published as
 `05da57e`. The owner authorizes publishing this hardening; implementation and
@@ -17,9 +20,10 @@ live calls or deployment commands ran for this work.
   another account using the same browser cannot read the first account's call.
   A separate browser cookie still guards request/recovery initialization.
 - Website callers must explicitly request a verification text, pass live Telnyx
-  carrier lookup with type `mobile`, and prove their provider-generated six-digit
-  code. Missing/unknown line types, landlines and VoIP fail closed before SMS.
-  Existing US numbering-plan/region validation remains an earlier check.
+  lookup identity/US-region/carrier-error checks, and prove their provider-generated
+  six-digit code. Carrier line type no longer restricts SMS requests; delivery and
+  code acceptance are required for mobile, landline and VoIP numbers alike.
+  US numbering-plan/region validation remains an earlier check and includes VoIP.
 - Phone proofs bind tenant, account and destination, expire from initial send
   time, allow at most five verification attempts and are consumed atomically with
   call reservation. Replaying the same call key returns its saved result; a new
@@ -155,16 +159,17 @@ APP_ENVIRONMENT=test GOOGLE_CALENDAR_ENABLED=false BOOKING_EMAIL_ENABLED=false D
 Manual acceptance after the owner starts/deploys the compatible apps:
 
 Plan quota headroom first: earlier admin/failed calls count. Use a fresh consented
-mobile, wait for limits to reset, or deliberately select an allowed limit within
-the existing bounds. Do not erase records or bypass an unknown call. A virtual
-Telnyx receiving number/softphone is not a substitute for a real mobile in this flow.
+SMS-capable US number, wait for limits to reset, or deliberately select an allowed
+limit within the existing bounds. Do not erase records or bypass an unknown call. A virtual
+receiving number/softphone must actually receive the SMS and verify its code.
 
 1. Signed-out, password-only, MFA-pending/failed, expired and revoked sessions
    cannot send SMS, verify a code, dial or read status. Login/signup/recovery return
    through the authenticator before reopening the modal; returning never dials.
 2. One explicit SMS consent/action sends one code. No opening, typing, checkbox,
-   modal dismissal or code verification sends a call. Invalid/non-US, landline,
-   VoIP, missing/failed carrier lookups reject. Test no mobile-to-voice fallback.
+   modal dismissal or code verification sends a call. Invalid/non-US and
+   mismatched/failed carrier lookups reject. SMS-capable landline/VoIP numbers
+   can verify; unknown line type alone does not reject. Test no voice-code fallback.
 3. Wrong/expired codes and five attempts fail. Provider timeouts/failed sends count
    without automatic retries. Changing phone/account invalidates access; resetting
    cookies does not reset account limits. Another account cannot reuse a proof.

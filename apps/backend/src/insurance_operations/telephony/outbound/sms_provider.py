@@ -60,12 +60,11 @@ class TelnyxVerificationProvider:
             lookup.get("phone_number") != number
             or lookup.get("country_code") not in US_REGIONS
             or not isinstance(carrier, dict)
-            or carrier.get("type") != "mobile"
             or carrier.get("error_code") is not None
         ):
             raise ApiError(
-                status_code=422, code="DEMO_MOBILE_REQUIRED",
-                message="Use a US mobile number that can receive text messages.",
+                status_code=422, code="DEMO_SMS_NUMBER_UNSUPPORTED",
+                message="Use a US phone number that can receive text messages.",
             )
         data = self._request(
             "POST", "/v2/verifications/sms",

@@ -1,10 +1,34 @@
 # Inbound phone webhook repair — 2026-10-30
 
+## Subsequent hosted provisioning repair
+
+The owner supplied fresh logs showing initialization 404 and post-call 422 for a
+missing UUID. An unauthenticated request to the exact configured initialization
+endpoint returned 401, confirming that the HTTP route exists. After the owner
+made the matching deployed operator token available locally, authenticated APIs
+confirmed that the business had **zero inbound numbers and no call policy**.
+
+The assigned number was confirmed against the inbound phone-agent metadata and
+registered ACTIVE through the existing audited backend API. The missing policy
+was created using existing development defaults: UTC daily reception windows,
+two concurrent calls, ten daily calls, callback fallback, and no human transfer
+destination. Policy fallback wording reuses the business's stored approved
+escalation message. Readback confirmed active canonical number ownership and an
+enabled policy in the same business. Tokens, phone numbers, payloads and caller
+identifiers were not logged or copied into notes/code.
+
+This was a live application-configuration correction. No migration, deployment,
+Telnyx/ElevenLabs settings change or fake call record was required. **A fresh real
+call is still needed** to observe the hosted initiation 200/UUID and successful
+audio/tools/post-call finalization. Do not manufacture a UUID for earlier failed
+calls to suppress their downstream 422.
+
 Focused automated checks have passed; **live Render acceptance remains
 UNVERIFIED**. The owner authorized executing the checks and treating the current
 database as disposable. An existing isolated test target was reachable, so the
-current runtime database was preserved. No deployment, outbound call or provider
-setting change was performed. The owner reports Render revision `ab69756`, successful
+current runtime database was preserved during testing. No deployment, outbound
+call or provider-setting change was performed. The later hosted configuration
+correction is recorded above. The owner reports Render revision `ab69756`, successful
 Telnyx → ElevenLabs SIP routing, enabled/registered phone routes, repaired
 initiation authorization, and 422 on both webhooks. The owner dials with `+`;
 ElevenLabs displays caller/receiver numbers without it. Neither observation proves

@@ -27,7 +27,7 @@ from insurance_operations.telephony.outbound.verification_schemas import (
 def verification_required() -> ApiError:
     return ApiError(
         status_code=403, code="DEMO_PHONE_VERIFICATION_REQUIRED",
-        message="Verify your mobile number with a new text-message code first.",
+        message="Verify your phone number with a new text-message code first.",
     )
 
 

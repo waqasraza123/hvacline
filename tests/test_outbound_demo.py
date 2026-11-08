@@ -639,6 +639,18 @@ def test_consented_us_accepts_mobile_and_landline_examples(kind: int) -> None:
     validate_us_destination(value)
 
 
+def test_consented_us_accepts_us_voip_classification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        phonenumbers, "number_type", lambda _: phonenumbers.PhoneNumberType.VOIP
+    )
+    validate_us_destination("+12025550123")
+    with pytest.raises(ApiError) as caught:
+        validate_us_destination("+14165550123")
+    assert caught.value.code == "DEMO_DESTINATION_UNSUPPORTED"
+
+
 @pytest.mark.parametrize(
     "number,code",
     [

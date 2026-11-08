@@ -35,6 +35,7 @@ def validate_us_destination(value: str) -> None:
         phonenumbers.PhoneNumberType.FIXED_LINE,
         phonenumbers.PhoneNumberType.MOBILE,
         phonenumbers.PhoneNumberType.FIXED_LINE_OR_MOBILE,
+        phonenumbers.PhoneNumberType.VOIP,
     }
     if (
         number.country_code != 1
@@ -44,7 +45,7 @@ def validate_us_destination(value: str) -> None:
         raise ApiError(
             status_code=422,
             code="DEMO_DESTINATION_UNSUPPORTED",
-            message="Only US mobile and landline destinations are supported.",
+            message="Only US mobile, landline and VoIP destinations are supported.",
             details={"field": "phone_number"},
         )
 

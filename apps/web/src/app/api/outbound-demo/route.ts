@@ -109,7 +109,7 @@ async function phoneVerification(
         !/^[0-9]{6}$/.test(data.code))
   )
     return rejected(
-      "Check your mobile number, text consent and verification code.",
+      "Check your phone number, text consent and verification code.",
       400,
     );
   try {
@@ -130,7 +130,7 @@ async function phoneVerification(
       const messages: Record<number, string> = {
         403: "Start again with a new verification code.",
         422: sending
-          ? "Use a US mobile number that can receive text messages."
+          ? "Use a US phone number that can receive text messages."
           : "That code is invalid or expired. Check the text and try again.",
         429: "The text verification limit has been reached. Please try later.",
       };
@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
       )
     )
       return rejected(
-        "Verify your US mobile number, choose a scenario and agree to one AI demo call.",
+        "Verify your US phone number, choose a scenario and agree to one AI demo call.",
         400,
       );
     const upstream = await backend("calls", gate.customerId, JSON.stringify(data));
@@ -333,12 +333,15 @@ export async function POST(request: NextRequest) {
           429,
         );
       if (upstream.status === 422 && code === "DEMO_PHONE_NUMBER_INVALID")
-        return rejected("Enter a valid US mobile number.", 422);
+        return rejected("Enter a valid US phone number.", 422);
       if (upstream.status === 422 && code === "DEMO_DESTINATION_UNSUPPORTED")
-        return rejected("Only US mobile numbers are supported.", 422);
+        return rejected(
+          "Only US mobile, landline and internet phone numbers are supported.",
+          422,
+        );
       if (upstream.status === 403 && code === "DEMO_PHONE_VERIFICATION_REQUIRED")
         return rejected(
-          "Verify your mobile number with a new text-message code first.", 403, code,
+          "Verify your phone number with a new text-message code first.", 403, code,
         );
       const message =
         upstream.status === 403

@@ -1,5 +1,25 @@
 # Project State
 
+## SMS/inbound publication authorized — runtime UNVERIFIED — 2026-11-08
+
+Owner requests publishing the pending US SMS-capability changes and inbound/setup
+investigation documents. The publication is isolated on the existing remote main
+revision; unrelated local feature commits are excluded. Carrier line-type gating
+is relaxed while provider code verification, MFA, consent, US/carrier identity,
+quotas and unknown-call recovery remain. Inbound changes here document earlier
+provisioning and setup; no new inbound handler is added. No new migration or
+setting is required. No checks, services, provider actions or deployment commands
+ran. Owner commands/manual checks: docs/sms-capable-demo-numbers.md and
+respective inbound/incident guides. Runtime acceptance remains pending.
+
+## Hero inbound number publication completed — UNVERIFIED runtime — 2026-11-08
+
+Published430c16d to canonical hvacline main; push accepted ecd8b13..430c16d
+without force. Four scoped files restore the hero phone link and document owner
+checks. Unrelated SMS and historical inbound edits remain local. Hooks disabled;
+[skip ci] [skip render] retained. No checks, deployment or calls ran. Frontend
+deployment, visual/dial-link acceptance and live inbound acceptance remain pending.
+
 ## Hero inbound number restoration authorized — UNVERIFIED — 2026-11-08
 
 Owner supplies the public business number and requests restoring it in the hero,
@@ -13,6 +33,117 @@ docs/telnyx-sip-setup.md. Live inbound acceptance remains pending.
 Owner authorizes publishing this hero change to main with hooks disabled and
 [skip ci] [skip render] markers; unrelated SMS/inbound investigation edits remain
 local. No verification execution or hosted configuration change is authorized.
+
+## SMS-capable US numbers authorized and implemented — UNVERIFIED — 2026-11-07
+
+Owner explicitly requests easing the check so SMS can reach the receiving number.
+This supersedes the earlier mobile-only decision. Source removes the carrier
+line-type restriction, retaining lookup identity/US-region/carrier-error checks;
+mobile, landline, VoIP and unknown/missing types can attempt provider SMS. Shared
+US destination validation includes explicit VoIP classifications. Correct six-digit
+provider verification, MFA, consent, proof binding/expiry/single use, quotas and
+activation remain required. UI/bridge wording updated; regression specifications
+written but unexecuted. No new setting, dependency or migration. Changes are local,
+unpublished and undeployed; no tests/builds/provider requests/SMS/calls ran. Delivery
+and hosted acceptance remain unverified. Exact owner commands/manual checks:
+docs/sms-capable-demo-numbers.md. The historical422 cause remains unknown.
+
+## Hosted website reaches SMS endpoint; rejected request — 2026-11-07
+
+Owner-supplied Render log shows successful build/startup, readiness/auth and
+outbound availability HTTP200, followed by SMS-start422 and a retry429 about14
+seconds later. Availability response body and exact422 error are absent; no SMS
+delivery or app-bound proof acceptance is established. Source rejects invalid/US
+ineligible inputs and carrier lookup failures with422; provider HTTP failures map
+503. Lookup rejection precedes SMS send. Reservations commit before lookup and
+failed attempts count toward cooldown/budgets; default cooldown is60 seconds.
+Sonetel/VoIP rejection remains a possible cause, not confirmed by these logs.
+No Codex live request, verification command, provider/configuration change or
+application-code change ran for this review.
+
+## Existing SMS flow reviewed; provider console acceptance reported — 2026-11-07
+
+Owner reports six-digit delivery/accepted verification through Telnyx Learn &
+Build on the existing profile. Static source uses the same SMS-send endpoint
+and official saved-verification-ID verify equivalent. Homepage, Next bridge,
+backend challenge/verification and proof consumption are connected in source;
+hosted application acceptance remains unverified. Mobile carrier lookup is an
+additional app gate: SMS-capable VoIP can still be rejected under mobile-only
+policy. SMS routes also share website/live-voice activation gates.
+
+New authenticated profile GET HTTP200 matches configured ID/name and reports
+code_length6, consistent with earlier authorized PATCH. Earlier null readback
+alone did not establish a failure; the app never checks this field. Exact
+unset-profile default is not established by available request evidence/docs;
+no further profile mutation is justified merely by null. No SMS, call, code
+change, test suite or hosted activation ran. Report and remaining requirements:
+docs/sms-verification-flow-review.md. Prior0019 confirmation remains valid.
+
+## Existing Verify profile SMS code length6 — verified — 2026-11-07
+
+Owner authorizes updating the existing named HVACLine Public Demo OTP profile.
+Authenticated GET/PATCH/GET each returns HTTP200; initial identity/name match,
+final sms.code_length is integer6. PATCH copies the current SMS object and changes
+only code_length. Before/after comparisons confirm all other SMS settings and
+voice/flashcall/WhatsApp/spend configuration unchanged; other profile settings
+are identical apart from updated_at metadata. Earlier null code length is resolved.
+No SMS, call, new profile, application-code change or public activation occurred.
+Local credentials/raw responses are not retained in notes. Live delivery and code
+acceptance remain pending a real consented US mobile; database0019 is confirmed.
+
+## Configured database already at0019 — verified — 2026-11-07
+
+Owner updates local database URLs to the current intended Render target and
+confirms completion. Local runtime/direct URLs normalize to the same Neon
+endpoint/database. Authorized bounded database operation reads revision0019
+before and after and confirms outbound_phone_verifications exists. No upgrade
+was necessary; no seed, downgrade, data reset or business-row access occurred.
+Initial sandbox connection failed; approved network escalation completed the
+readback. This establishes the configured target schema, not live SMS acceptance.
+Local Verify key/profile remain absent; hosted settings were not inspected.
+No SMS/call, tests, public activation or deployment ran. SMS next requires a
+six-digit Verify profile and real consented US mobile, with provider delivery/
+code validation followed by the gated website flow.
+
+## US outbound reaches voicemail — owner provider evidence — 2026-11-07
+
+Owner supplies an ElevenLabs SIP outbound conversation at18:58Pakistan matching
+the latest attempt window/destination. Provider reports Successful, eight seconds,
+two messages, a receiving voicemail greeting and agent-initiated ending. This
+establishes an actual SIP call with media for that attempt despite the earlier
+unknown admin response. Human ringing/answer/two-way acceptance, independent
+carrier finalization and backend signed terminal state remain unverified. Next:
+owner runs the known-call read-only status GET after the accepted webhook; do
+not infer completed solely from provider Successful or retry while unknown.
+Opaque provider IDs are in the local investigation report; no recipient or
+transcript text retained. No Codex live action, code or flag change ran.
+
+## New outbound attempt reaches dial; outcome unknown — 2026-11-07
+
+Owner supplies admin HTTP200 with unknown/nonterminal status and matching
+Render dial-failed/outcome_unknown true warning, created13:58:06Z. This confirms
+preflight returned successfully and the dial path was attempted; carrier outcome
+is unestablished. Later webhook POST HTTP200 is shown, but access logs alone do
+not correlate it to this call or establish finalization. Next is owner read-only
+GET of this known local call, plus provider initiation/history and carrier evidence.
+No redial or slot clearing. Exact opaque IDs and bounded status GET are recorded
+in docs/outbound-call-timeout-investigation.md. Source masks dial HTTP/network/
+receipt causes; its receipt requires both provider IDs although official response
+schema permits absent IDs. This is a possible classification path, not the
+established incident cause. No Codex checks, live requests or code changes ran.
+
+## Workflow/tool support published — UNVERIFIED runtime — 2026-11-07
+
+Published ecd8b13 to canonical hvacline main; push accepted c42a8b8..ecd8b13
+without force. Five scoped files include provider, regression specifications,
+GET-only diagnostic, runbook and selected current notes. Hooks disabled and
+[skip ci] [skip render] markers retained. Earlier inbound/investigation documents
+and historical project-note changes remain local. No verification, hosted
+configuration change, deployment or call ran. Owner must deploy this backend
+revision on Render; no migration or new setting is required for this change.
+Other printed agent/SIP checks passed in prior owner diagnostic; quotas,
+cooldown, active/unknown reservations, saved failed keys and provider/carrier
+availability remain independent blockers. Earlier timeout outcome is unresolved.
 
 ## Workflow/tool publication authorized — UNVERIFIED — 2026-11-07
 
@@ -40,6 +171,73 @@ Diagnostic updated to match; regression specifications written, unexecuted.
 No Codex checks, hosted changes, deploy or call ran. Render still needs the new
 backend revision; source support does not establish live acceptance or resolve
 the earlier timeout. Owner commands/manual checks: docs/outbound-demo-calling.md.
+
+## Current outbound preflight blocker — workflow nodes — 2026-11-07
+
+Owner-run GET-only diagnostic returns agent/phone HTTP200 and all printed
+comparisons PASS except agent no_workflow_nodes. Source validate_agent rejects
+any truthy top-level workflow.nodes before dialing. This establishes a current
+configuration blocker for the supplied inputs; matching incident/runtime values
+and historical causation remain unverified. Node contents and edges are unknown.
+The guard covers workflows that can override base prompt/tools or route calls;
+it also rejects a harmless default start node. Inspect the outbound agent's
+workflow before choosing configuration removal or narrowly validated support.
+No backend relaxation, hosted change, Codex verification or call ran. Earlier
+timed-out request remains separately unresolved.
+
+## Subsequent outbound attempt — owner reports terminal failed — 2026-11-06
+
+Owner supplies a separate admin POST result created2026-11-05T20:47:26Z:
+HTTP200 with terminal failed and no transfer requested. This establishes a
+recorded application-level failure, not a client timeout or carrier success.
+Owner then supplies matching Render preflight-failed warning with unknown=false,
+confirming this attempt stopped before provider dial POST. Exact GET/network or
+configuration rejection remains masked. Unexecuted owner GET-only comparison
+is documented in the investigation report. Earlier timed-out request remains unknown:
+owner changed database afterward and cannot access the previous target. No
+Codex call/query/verification or code fix ran. Evidence and next read-only
+actions: `docs/outbound-call-timeout-investigation.md`.
+
+## Outbound timeout investigation — outcome UNVERIFIED — 2026-11-06
+
+Static trace at c42a8b8 confirms the admin route validates destination before
+database reservation; tenant-locked persistent replay protection precedes two
+provider preflight GETs and one dial POST. Each provider operation creates an
+HTTPX client with a12-second operation timeout; no overall endpoint deadline or
+explicit database connect/statement/lock deadline is configured in source.
+Provider errors retain only unknown-outcome classification. Admin status GET
+requires the local call UUID; there is no admin GET by request UUID. A POST replay
+can create a call when the original never reserved, including after a policy fix.
+
+Owner-supplied Render page reports c42a8b8 Live on Free, unlike the Starter
+Blueprint. Owner confirms allowlist omitted the US destination, then reports
+adding it and redeploying. Incident configuration/timing, reservation/provider
+evidence and timeout cause remain unverified. No application changes, call/replay,
+hosted changes, database queries or verification execution ran. Report, source
+locations, missing evidence and safe owner-run recovery commands:
+`docs/outbound-call-timeout-investigation.md`. Recover outcome before redial.
+
+Owner subsequently runs the read-only request lookup in the selected Neon
+database: zero matching reservations, provider conversations or SIP IDs. Given
+source commit-before-dial behavior, this rules out a dial by that request if the
+selected branch matches the incident runtime database and records were retained.
+Runtime target matching and the timeout mechanism remain unverified; no Codex
+database query or call ran.
+
+Owner then confirms the runtime database setting changed after the call attempt.
+The zero-row lookup on the new target cannot resolve the original request;
+recover the previous target and inspect it read-only. Persistent request keys,
+active-call slots and quotas are database-local and are not carried over merely
+by changing DATABASE_URL. Preserve both databases; hold outbound replay.
+
+## Mobile hardening publication completed — UNVERIFIED runtime — 2026-11-05
+
+Published `c42a8b8`; canonical hvacline push accepted `05da57e..c42a8b8` to main
+without force. Twenty-nine implementation/migration/specification/guide files
+published, with hooks disabled and skip markers. Prior inbound documentation and
+historical project-note edits remain local. No verification commands, migration,
+provider changes, deployment commands, SMS or calls ran; production acceptance
+remains pending as documented in `docs/public-demo-production-readiness.md`.
 
 ## Public mobile demo hardening — UNVERIFIED — 2026-11-05
 
@@ -95,6 +293,34 @@ the production-readiness review. Publish this feature, its regression specificat
 and guide to main with hooks disabled and skip markers. This does not authorize
 verification commands, hosted activation or calls; production readiness remains
 unestablished.
+
+## Telnyx Pakistan destination blocked — owner screenshot — 2026-11-05
+
+Owner screenshot shows Paid account and explicit upgrade-required restriction for
+PK in the outbound profile. Pakistan carrier access is blocked at that account
+level; the earlier diagnostic PASS does not establish Telnyx destination access
+or explain the previous failed attempt. Source also rejects Pakistani destinations
+under `consented_us`; allowlist mode separately requires exact owner approval.
+The dedicated outbound connection has no assigned numbers while inbound retains
+one, consistent with the documented split: number assignment controls inbound
+routing, outbound uses digest authentication/profile and the account-owned caller ID.
+Profile screenshot appears to select Record All Outbound Calls; saved state is
+unverified. Owner must select Do Not Record and save before further calling.
+Next: resolve carrier destination/account access and backend destination policy,
+then inspect existing failure evidence before another authorized call. No provider
+changes, verification commands or calls ran.
+
+## Outbound diagnostic checks pass — owner evidence — 2026-11-05
+
+Latest owner-run GET-only diagnostic reports agent/phone HTTP200 and PASS for
+all printed checks: local first-message/system-prompt match, auth, recording off,
+zero-day retention, <=180-second duration, webhook assignment/events, native End
+call and SIP resource/provider/Telnyx address/TLS/digest. This supersedes the
+earlier first-message/privacy mismatches. The diagnostic covers selected checks,
+not full deployed preflight or live acceptance. Next is one owner-run consented
+admin AI-only call if configured cooldown/quotas allow it. Previous failed attempt
+counts toward limits and its terminal request key cannot redial. No Codex check,
+provider edit or call ran; deployed alignment and carrier acceptance remain unverified.
 
 ## Outbound prompt publication authorized — UNVERIFIED — 2026-11-04
 
@@ -402,6 +628,28 @@ Exact owner command and responsive, keyboard, consent and chat checks:
 `docs/homepage-hero.md`. Earlier phone-CTA activation instructions are superseded.
 The owner subsequently authorized committing and pushing this frontend change to
 `main`; no test execution or hosting deployment command was requested.
+
+## Live inbound-number provisioning corrected — fresh-call acceptance pending — 2026-10-30
+
+After the owner supplied the existing deployed operator token locally,
+authenticated hosted APIs confirmed zero inbound numbers and no call policy for
+the configured business. This establishes the provisioning gap behind the new
+initialization 404. The existing FastAPI endpoint had already been confirmed by
+its unauthenticated 401 response; no endpoint or tenant-validation bypass was
+needed.
+
+Registered the provider-confirmed assigned number as ACTIVE using the existing
+audited, tenant-scoped API. Created the missing inbound policy using established
+development defaults: UTC daily reception windows, two concurrent calls, ten
+daily calls, callback fallback and no human transfer destination. Fallback wording
+reuses the business's approved stored escalation message. Authenticated readback
+confirmed that the exact canonical called number and enabled policy belong to
+the same business. No credential, phone number or caller payload is stored here.
+
+No Telnyx/ElevenLabs setting changes, migrations, deployment or simulated call
+records were required. A fresh real inbound call must still confirm hosted
+initialization 200 with the persisted UUID, audio/tools and signed finalization.
+Older failed calls remain unbound; never synthesize their UUIDs or confirmations.
 
 ## Inbound phone webhook repair — checks passed, live acceptance pending — 2026-10-30
 

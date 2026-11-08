@@ -25,31 +25,38 @@ def config(monkeypatch: pytest.MonkeyPatch) -> OutboundDemoSettings:
     )
 
 
-@pytest.mark.parametrize("line_type", ["landline", "voip", None, "unknown"])
-def test_nonmobile_lookup_never_sends_an_sms(
-    config: OutboundDemoSettings, line_type: str | None,
+@pytest.mark.parametrize("lookup", [
+    {"phone_number": "+12125550123", "country_code": "US", "carrier": {}},
+    {"phone_number": NUMBER, "country_code": "CA", "carrier": {}},
+    {"phone_number": NUMBER, "country_code": None, "carrier": {}},
+    {"phone_number": NUMBER, "country_code": "US", "carrier": None},
+    {"phone_number": NUMBER, "country_code": "US", "carrier": []},
+    {"phone_number": NUMBER, "country_code": "US", "carrier": {
+        "type": "voip", "error_code": "synthetic-carrier-error",
+    }},
+])
+def test_invalid_lookup_never_sends_an_sms(
+    config: OutboundDemoSettings, lookup: dict[str, object],
 ) -> None:
     requests: list[httpx.Request] = []
 
     def respond(request: httpx.Request) -> httpx.Response:
         requests.append(request)
-        return httpx.Response(200, json={"data": {
-            "phone_number": NUMBER, "country_code": "US",
-            "carrier": {"type": line_type, "error_code": None},
-        }})
+        return httpx.Response(200, json={"data": lookup})
 
     with httpx.Client(
         base_url="https://api.telnyx.com", transport=httpx.MockTransport(respond)
     ) as client:
         with pytest.raises(ApiError) as caught:
             TelnyxVerificationProvider(config, client).send(NUMBER)
-    assert caught.value.code == "DEMO_MOBILE_REQUIRED"
+    assert caught.value.code == "DEMO_SMS_NUMBER_UNSUPPORTED"
     assert len(requests) == 1
     assert requests[0].method == "GET"
 
 
-def test_sms_uses_provider_generated_code_and_verifies_only_by_saved_id(
-    config: OutboundDemoSettings,
+@pytest.mark.parametrize("line_type", ["mobile", "landline", "voip", None, "unknown"])
+def test_sms_accepts_line_types_but_requires_provider_code_verification(
+    config: OutboundDemoSettings, line_type: str | None,
 ) -> None:
     verification_id = str(uuid4())
     requests: list[httpx.Request] = []
@@ -59,7 +66,7 @@ def test_sms_uses_provider_generated_code_and_verifies_only_by_saved_id(
         if request.method == "GET":
             return httpx.Response(200, json={"data": {
                 "phone_number": NUMBER, "country_code": "US",
-                "carrier": {"type": "mobile", "error_code": None},
+                "carrier": {"type": line_type, "error_code": None},
             }})
         if request.url.path.endswith("/sms"):
             body = json.loads(request.content)

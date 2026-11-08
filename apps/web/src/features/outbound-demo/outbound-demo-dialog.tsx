@@ -275,7 +275,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
       setSmsCode("");
       setSmsMessage(
         value.verified
-          ? "Mobile number verified. You can now request your demo call."
+          ? "Phone number verified. You can now request your demo call."
           : "Enter the six-digit code from your text before it expires.",
       );
     } catch {
@@ -462,7 +462,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                   onSubmit={submit}
                   aria-busy={busy}
                 >
-                  <label htmlFor="outbound-phone">Your US mobile number</label>
+                  <label htmlFor="outbound-phone">Your US phone number</label>
                   <input
                     ref={phoneInput}
                     id="outbound-phone"
@@ -486,9 +486,9 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                     aria-describedby="outbound-phone-help"
                   />
                   <p id="outbound-phone-help" className="outbound-demo-help">
-                    Include +1 and the area code. We’ll verify your mobile number
-                    by text before calling. Landline and internet phone numbers
-                    aren’t supported.
+                    Include +1 and the area code. We’ll verify your number by text
+                    before calling. Mobile, landline and internet phone numbers
+                    must be able to receive texts.
                   </p>
                   <label className="outbound-demo-consent">
                     <input
@@ -538,7 +538,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
                         disabled={locked || verifying || !/^[0-9]{6}$/.test(smsCode)}
                         onClick={() => void verifyPhone("verify_code")}
                       >
-                        Verify mobile number
+                        Verify phone number
                       </button>
                     </>
                   )}
