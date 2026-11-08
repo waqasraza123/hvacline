@@ -7,6 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
+from insurance_operations.billing.routes import create_billing_customer_router
+from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.approved_faqs import ApprovedFaqLookupInput, ApprovedFaqLookupResponse, ApprovedFaqService
 from insurance_operations.conversations.booking import create_browser_booking_router
 from insurance_operations.conversations.schemas import ConversationEndInput, ConversationEndResponse, ConversationIntakeConfirmationInput, ConversationIntakeResponse, ConversationSessionCreateInput, ConversationSessionResponse
@@ -31,6 +33,7 @@ def create_customer_router(
     settings: ApiSettings,
     sessions: sessionmaker[Session],
     conversations: ConversationService | None,
+    billing_settings: BillingSettings | None = None,
 ) -> APIRouter:
     router = APIRouter(prefix="/api/v1/customer")
     access = CustomerAccessService(sessions, settings)
@@ -62,6 +65,9 @@ def create_customer_router(
     ) -> ActorContext:
         return access.identity(session_token(authorization))[0]
 
+    router.include_router(create_billing_customer_router(
+        billing_settings or BillingSettings(app_environment=settings.app_environment, web_origin=settings.web_origin), sessions, actor,
+    ))
     Actor = Annotated[ActorContext, Depends(actor)]
     Portal = Annotated[None, Depends(portal)]
 

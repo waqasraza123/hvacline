@@ -4,6 +4,12 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "billing_accounts": ("billing", "agency_id"),
+    "billing_checkouts": ("billing", "agency_id"),
+    "billing_events": ("billing", "agency_id"),
+    "billing_topups": ("billing", "agency_id"),
+    "billing_labor": ("billing", "agency_id"),
+
     "outbound_phone_verifications": ("telephony", "agency_id"),
     "outbound_demo_calls": ("telephony", "agency_id"),
     "homepage_chat_visitors": ("homepage_chat", "agency_id"),

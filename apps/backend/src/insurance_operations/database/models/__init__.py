@@ -5,6 +5,9 @@ from insurance_operations.database.models.approved_faq import (
     ApprovedFaqStatus,
 )
 from insurance_operations.database.models.base import Base
+from insurance_operations.database.models.billing import (
+    BillingAccount, BillingCheckout, BillingEvent, BillingTopUp, BillingLabor,
+)
 from insurance_operations.database.models.booking_integrations import (
     BookingEmailEvent,
     BookingNotification,
@@ -83,6 +86,12 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "billing_accounts": TableOwnership(module="billing", agency_column="agency_id"),
+    "billing_checkouts": TableOwnership(module="billing", agency_column="agency_id"),
+    "billing_events": TableOwnership(module="billing", agency_column="agency_id"),
+    "billing_topups": TableOwnership(module="billing", agency_column="agency_id"),
+    "billing_labor": TableOwnership(module="billing", agency_column="agency_id"),
+
     "outbound_phone_verifications": TableOwnership(
         module="telephony", agency_column="agency_id"
     ),
@@ -181,6 +190,7 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "BillingAccount", "BillingCheckout", "BillingEvent", "BillingTopUp", "BillingLabor",
     "OutboundPhoneVerification",
     "OutboundDemoCall",
     "HomepageChatDailyUsage",

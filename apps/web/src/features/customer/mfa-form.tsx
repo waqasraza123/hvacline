@@ -4,9 +4,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Brand } from "@/components/brand";
 import { ProductIcon } from "@/components/product-icons";
-import { type AuthIntent, authPageHref, authReturnHref } from "./auth-continuation";
+import {
+  type AuthIntent,
+  authPageHref,
+  authReturnHref,
+} from "./auth-continuation";
 import { AuthenticatorSetup } from "./authenticator-setup";
 import { parseMfaSetup } from "./mfa-setup";
 import type { MfaSetup } from "./mfa-setup";
@@ -170,15 +175,17 @@ export function CustomerMfaForm({ intent }: { intent?: AuthIntent }) {
         ];
   const currentStep = stage === "codes" ? 2 : stage === "verify" ? 1 : 0;
   const title =
-    stage === "enroll"
-      ? "Set up your authenticator"
-      : stage === "codes"
-        ? "Your backup plan, ready."
-        : recovering
-          ? "Let’s get you back in."
-          : stage === "loading"
-            ? "Getting things ready…"
-            : "Good to have you back.";
+    stage === "enroll" ? (
+      "Set up your authenticator"
+    ) : stage === "codes" ? (
+      "Your backup plan, ready."
+    ) : recovering ? (
+      "Let’s get you back in."
+    ) : stage === "loading" ? (
+      <LoadingSpinner label="Getting things ready…" />
+    ) : (
+      "Good to have you back."
+    );
   const description =
     stage === "enroll"
       ? "Connect an authenticator app, then enter its code below to finish setup."
@@ -360,11 +367,13 @@ export function CustomerMfaForm({ intent }: { intent?: AuthIntent }) {
                   type="submit"
                   disabled={busy || !validCode}
                 >
-                  {busy
-                    ? "Verifying…"
-                    : recovering
-                      ? "Continue to replacement setup"
-                      : "Verify & continue"}
+                  {busy ? (
+                    <LoadingSpinner label="Verifying…" />
+                  ) : recovering ? (
+                    "Continue to replacement setup"
+                  ) : (
+                    "Verify & continue"
+                  )}
                   {!busy && <ProductIcon name="arrow" />}
                 </button>
                 {stage === "verify" && (

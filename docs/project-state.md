@@ -1,5 +1,35 @@
 # Project State
 
+## Homeowner maintenance billing — implementation UNVERIFIED — 2026-11-08
+
+Owner specifies fixed technician maintenance-hour packages for homeowners, upfront
+initial payment and a new separate checkout for additional hours on the existing
+account. Website billing is restricted to Stripe sandbox/test; this supersedes the
+early AI-voice-time interpretation. Local source adapts DwellCall customer binding,
+checkout reservations, gateway, signed receipts and reconciliation to HVACLine's
+customer/MFA and agency ownership. Draft 3/5/10-hour monthly packages and extra-hour
+rates share one editable catalog. Amounts are editable draft demonstration rates.
+
+Source adds account package/purchased-hour balances, one-time extra-hours checkout,
+payment-confirmed credit, current paid-period allowances, completed-labor debits,
+portal cancellation at period end, cancellation of unpaid checkouts, unknown-write
+recovery and refund/dispute holds.
+Purchased hours remain until used; package hours reset per paid monthly period.
+Booking itself never consumes labor. New /pricing and /billing pages, homepage
+package section, billing auth continuation and shared circular loading states use
+the existing charcoal/orange design. Live keys/mode/events/rows are rejected.
+
+Migration20261108_0020 and Stripe dependency are written, unapplied/uninstalled by
+Codex. Regression specifications are unexecuted. No tests/builds/lints/type checks,
+services, Stripe setup/payment, deployment or publication ran. Existing customer,
+privacy, development and launch gates remain. Exact setup, owner commands and
+manual checks: docs/maintenance-billing.md. Runtime and sandbox acceptance remain
+pending; source does not establish payment success.
+
+
+Owner requests a local commit only, with no push. Runtime verification, Stripe
+setup and deployment remain pending; no execution checks are authorized.
+
 ## Hero inbound number restoration authorized — UNVERIFIED — 2026-11-08
 
 Owner supplies the public business number and requests restoring it in the hero,

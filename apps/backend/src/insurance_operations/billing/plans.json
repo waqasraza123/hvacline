@@ -1,0 +1,26 @@
+[
+  {
+    "key": "essential",
+    "name": "Essential",
+    "amount": 24900,
+    "included_hours": 3,
+    "hourly_amount": 8500,
+    "description": "A focused package for routine home HVAC care."
+  },
+  {
+    "key": "comfort",
+    "name": "Comfort",
+    "amount": 37900,
+    "included_hours": 5,
+    "hourly_amount": 7500,
+    "description": "More maintenance time for a home with more to look after."
+  },
+  {
+    "key": "complete",
+    "name": "Complete",
+    "amount": 69900,
+    "included_hours": 10,
+    "hourly_amount": 6500,
+    "description": "Extra maintenance time for larger homes and multiple systems."
+  }
+]

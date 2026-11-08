@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { LaborRecorder } from "@/features/billing/labor-recorder";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Brand } from "@/components/brand";
 import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
 import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
@@ -113,8 +115,8 @@ export function OperationsWorkspace({
         >
           <h2>Connect to your workspace</h2>
           <p className="section-help">
-            Enter the configured admin token. It stays in this page’s
-            memory and is sent only to your backend.
+            Enter the configured admin token. It stays in this page’s memory and
+            is sent only to your backend.
           </p>
           <label>
             Admin token
@@ -126,7 +128,7 @@ export function OperationsWorkspace({
             />
           </label>
           <button className="primary-link" disabled={busy}>
-            {busy ? "Connecting…" : "Open workspace"}
+            {busy ? <LoadingSpinner label="Connecting…" /> : "Open workspace"}
           </button>
         </form>
       )}
@@ -190,6 +192,7 @@ export function OperationsWorkspace({
               "scheduling",
               "receptionist",
               "knowledge",
+              "maintenance hours",
               ...(conversationAiEnabled ? ["browser voice"] : []),
             ].map((name) => (
               <button
@@ -202,6 +205,13 @@ export function OperationsWorkspace({
               </button>
             ))}
           </div>
+          {tab === "maintenance hours" && (
+            <LaborRecorder
+              apiBaseUrl={apiBaseUrl}
+              token={token}
+              appointments={data.appointments}
+            />
+          )}
           {tab === "requests" && (
             <section className="ops-card">
               <h2>Service requests</h2>

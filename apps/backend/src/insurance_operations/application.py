@@ -55,6 +55,8 @@ from insurance_operations.conversations.schemas import (
     ConversationSessionResponse,
 )
 from insurance_operations.conversations.service import ConversationService
+from insurance_operations.billing.routes import create_billing_public_router, create_billing_admin_router
+from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.customer_access.routes import create_customer_router
 from insurance_operations.database.connection import (
     DatabaseReadinessError,
@@ -129,7 +131,9 @@ def create_app(
     database_engine: Engine,
     conversation_provider: ConversationProvider | None = None,
     outbound_settings: OutboundDemoSettings | None = None,
+    billing_settings: BillingSettings | None = None,
 ) -> FastAPI:
+    billing_settings = billing_settings or BillingSettings(app_environment=settings.app_environment, web_origin=settings.web_origin)
     session_factory = sessionmaker(
         bind=database_engine,
         class_=Session,
@@ -192,6 +196,7 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.integration_settings = settings
+    application.include_router(create_billing_public_router(billing_settings, session_factory))
     application.include_router(
         create_outbound_demo_router(
             settings,
@@ -831,6 +836,7 @@ def create_app(
             response.headers["Idempotent-Replayed"] = "true"
         return result
 
+    application.include_router(create_billing_admin_router(settings, billing_settings, session_factory, development_actor))
     application.include_router(create_hvac_router(session_factory, development_actor))
     application.include_router(
         create_booking_integration_router(settings, session_factory, development_actor)
@@ -839,7 +845,7 @@ def create_app(
         create_browser_booking_router(session_factory, conversation_actor)
     )
     application.include_router(
-        create_customer_router(settings, session_factory, conversation_service)
+        create_customer_router(settings, session_factory, conversation_service, billing_settings)
     )
 
     return application
