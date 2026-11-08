@@ -1,5 +1,44 @@
 # Project State
 
+## Stripe billing publication authorized — runtime UNVERIFIED — 2026-11-09
+
+Owner requests pushing the current work and explicitly includes Stripe code.
+This supersedes the earlier local-only restriction for billing commit1297b0a.
+Prepared from canonical main f858404 in an isolated checkout, including the full
+billing feature, automatic business resolution and ElevenLabs text wordmark.
+Existing published SMS/inbound changes are retained; unrelated original working
+edits and historical notes are preserved. Use disabled Git hooks and existing
+[skip ci] [skip render] markers. No verification execution, migration, Stripe
+setup/payment or hosted deployment is authorized by this publication.
+
+## Automatic billing business resolution — implementation UNVERIFIED — 2026-11-09
+
+Billing derives ownership from the authenticated customer's persisted account;
+administrator labor uses the existing authenticated actor's business. Removed
+BILLING_MERCHANT_AGENCY_ID from settings/startup/readiness and added account/business
+matching when locking billing rows. Existing customer/MFA, admin authentication,
+appointment ownership, composite foreign keys, saved Stripe customer binding and
+sandbox-only restrictions remain. No additional migration or dependency beyond
+the original billing feature. Regression specifications are unexecuted.
+
+## Sandbox homeowner maintenance billing — implementation UNVERIFIED — 2026-11-09
+
+One editable catalog defines draft3/5/10-hour monthly technician-maintenance
+packages and separate extra-hour rates. Initial payment and paid renewal grant
+current-period package hours; purchased extras remain until used. Booking alone
+does not consume labor. Signed webhook reconciliation, persistent checkout retries,
+unknown-write recovery, customer portal period-end cancellation, refund/dispute
+holds and administrator completed-labor entries use existing customer/agency
+ownership. One Stripe sandbox account is configured; live keys/events/rows are
+rejected. This does not add Stripe Connect or production identity support.
+
+Includes /pricing, /billing, homepage packages, billing auth continuation, shared
+loading spinners, Stripe dependency and forward migration20261108_0020. No tests,
+builds, lint/type checks, migrations, services, Stripe objects/payments or deployment
+commands ran. Runtime/sandbox acceptance and existing customer/privacy launch gates
+remain pending. Exact setup, owner commands and manual checks:
+docs/maintenance-billing.md. Wordmark checks: docs/homepage-branding.md.
+
 ## SMS/inbound publication authorized — runtime UNVERIFIED — 2026-11-08
 
 Owner requests publishing the pending US SMS-capability changes and inbound/setup

@@ -17,6 +17,7 @@ dependencies = [
     "pydantic-settings==2.14.2",
     "psycopg[binary]>=3.3.2,<4",
     "SQLAlchemy>=2.0.46,<2.1",
+    "stripe==16.1.0",
     "twilio==9.10.9",
     "uvicorn==0.52.1",
     "websockets==17.3",
@@ -43,7 +44,7 @@ package-dir = {"" = "apps/backend/src"}
 where = ["apps/backend/src"]
 
 [tool.setuptools.package-data]
-insurance_operations = ["py.typed"]
+insurance_operations = ["py.typed", "billing/plans.json"]
 
 [tool.ruff]
 target-version = "py313"

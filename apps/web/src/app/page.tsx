@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Pricing } from "@/features/billing/pricing";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
@@ -47,20 +48,12 @@ export default function Home() {
         <nav className="product-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#services">Services</a>
+          <Link href="/pricing">Packages</Link>
           <a href="#call-me">Calling</a>
         </nav>
         <div className="product-header-actions">
           <div className="product-provider-logos">
-            <svg
-              role="img"
-              aria-label="ElevenLabs"
-              width="16"
-              height="20"
-              viewBox="0 0 16 20"
-              fill="currentColor"
-            >
-              <path d="M2 0h4v20H2zM10 0h4v20h-4z" />
-            </svg>
+            <span className="product-provider-wordmark">ElevenLabs</span>
             <svg
               role="img"
               aria-label="Twilio"
@@ -317,6 +310,7 @@ export default function Home() {
             </details>
           </div>
         </section>
+        <Pricing compact />
         <section className="product-final-cta product-container">
           <div>
             <p className="product-eyebrow">TRY THE BOOKING CONVERSATION</p>
@@ -337,6 +331,7 @@ export default function Home() {
         <nav aria-label="Footer navigation">
           <Link href="/login">Sign in</Link>
           <Link href="/signup">Create an account</Link>
+          <Link href="/billing">My package</Link>
         </nav>
       </footer>
       <HomepageChatLink

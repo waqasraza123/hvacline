@@ -1,5 +1,14 @@
 # Homepage branding handoff
 
+## ElevenLabs wordmark — 2026-11-09 — UNVERIFIED
+
+The homepage header now displays ElevenLabs as a bold text wordmark in place of
+the two-bar symbol, using the existing muted provider color. Implementation is
+local; no verification commands, previews or deployment ran. Owner command:
+`npm run verify:web`. Manually inspect `/` at desktop, tablet and 320px mobile
+widths for readable text, aligned provider symbols, header wrapping and horizontal
+overflow; confirm assistive technology reads ElevenLabs once.
+
 The homepage presents HVACLine with the Line AI voice-receptionist identity, electric blue/navy colors, responsive layouts, a matching favicon, and keyboard/reduced-motion support. The October 27 copy update targets HVAC business owners with missed-call/job loss, live appointment availability and caller-confirmed booking. Sections follow hero, three-step workflow, services, FAQ and final CTA. Demo entry points reuse the existing customer booking route. Full copy, three ranked hero options and current owner checks are in `docs/homepage-copy.md`. No performance metrics, reviews or customer counts are invented.
 
 Booking/sign-in links target `/book`, `/login` and `/signup`. These customer routes and their draft authentication remain development-only and owner-unverified; they require the private portal configuration and customer-access migration before use. `/operations` remains a separate protected administrator workspace. Do not give customers the administrator token or treat the customer draft as production authentication.

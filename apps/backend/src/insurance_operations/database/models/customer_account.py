@@ -9,7 +9,10 @@ from insurance_operations.database.models.base import Base, UuidPrimaryKeyMixin
 
 class CustomerAccount(UuidPrimaryKeyMixin, Base):
     __tablename__ = "customer_accounts"
-    __table_args__ = (UniqueConstraint("agency_id", "email", name="uq_customer_accounts_email"),)
+    __table_args__ = (
+        UniqueConstraint("agency_id", "email", name="uq_customer_accounts_email"),
+        UniqueConstraint("agency_id", "id", name="uq_customer_accounts_agency_id"),
+    )
 
     agency_id: Mapped[UUID] = mapped_column(ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False)
     app_user_id: Mapped[UUID] = mapped_column(ForeignKey("app_users.id", ondelete="RESTRICT"), nullable=False, unique=True)

@@ -158,6 +158,13 @@
   display: block;
   flex-shrink: 0;
 }
+.product-provider-wordmark {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  white-space: nowrap;
+}
 .product-github-link {
   display: inline-flex;
   align-items: center;

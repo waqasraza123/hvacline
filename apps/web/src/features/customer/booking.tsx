@@ -52,6 +52,15 @@ export function CustomerBooking({
       <header className="product-header product-container">
         <Brand />
         <div className="customer-account">
+          <Link
+            href="/billing"
+            aria-disabled={voiceActive}
+            onClick={(event) => {
+              if (voiceActive) event.preventDefault();
+            }}
+          >
+            My package
+          </Link>
           <span className="account-avatar" aria-hidden="true">
             {user.full_name.slice(0, 1).toUpperCase()}
           </span>

@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { authPageHref, authReturnHref, parseAuthIntent } from "./auth-continuation";
+import {
+  authPageHref,
+  authReturnHref,
+  parseAuthIntent,
+} from "./auth-continuation";
 
 describe("callback sign-in continuation", () => {
+  it("returns a package purchase to billing after login, signup and MFA", () => {
+    const intent = parseAuthIntent("billing");
+    expect(authPageHref("/login", intent)).toBe("/login?intent=billing");
+    expect(authPageHref("/signup", intent)).toBe("/signup?intent=billing");
+    expect(authPageHref("/mfa", intent)).toBe("/mfa?intent=billing");
+    expect(authReturnHref(intent)).toBe("/billing");
+  });
   it("preserves the callback intent through login, signup and MFA", () => {
     const intent = parseAuthIntent("demo-call");
     expect(authPageHref("/login", intent)).toBe("/login?intent=demo-call");

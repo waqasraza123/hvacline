@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import { Brand } from "@/components/brand";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { type AuthIntent, authPageHref } from "./auth-continuation";
@@ -56,9 +57,15 @@ export function AuthForm({
         throw new Error(message);
       }
       const result: unknown = await response.json();
-      if (typeof result !== "object" || result === null ||
-          !("mfa_required" in result) || result.mfa_required !== true) {
-        throw new Error("Authenticator setup or verification is required to sign in.");
+      if (
+        typeof result !== "object" ||
+        result === null ||
+        !("mfa_required" in result) ||
+        result.mfa_required !== true
+      ) {
+        throw new Error(
+          "Authenticator setup or verification is required to sign in.",
+        );
       }
       router.replace(authPageHref("/mfa", intent));
       router.refresh();
@@ -201,11 +208,13 @@ export function AuthForm({
               disabled={busy}
               type="submit"
             >
-              {busy
-                ? "Just a moment…"
-                : signup
-                  ? "Create account & set up authenticator"
-                  : "Continue to authenticator"}
+              {busy ? (
+                <LoadingSpinner label="Just a moment…" />
+              ) : signup ? (
+                "Create account & set up authenticator"
+              ) : (
+                "Continue to authenticator"
+              )}
               {!busy && <ProductIcon name="arrow" />}
             </button>
           </form>

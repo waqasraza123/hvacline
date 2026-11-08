@@ -11,7 +11,9 @@ export const CUSTOMER_COOKIE =
     ? "__Host-hvacline-session"
     : "hvacline-session";
 export const CUSTOMER_MFA_COOKIE =
-  process.env.NODE_ENV === "production" ? "__Host-hvacline-mfa" : "hvacline-mfa";
+  process.env.NODE_ENV === "production"
+    ? "__Host-hvacline-mfa"
+    : "hvacline-mfa";
 
 export class CustomerBackendError extends Error {
   constructor(
@@ -39,8 +41,11 @@ export async function completeCustomerLogout(
     maxAge: 0,
   });
   response.cookies.set(CUSTOMER_MFA_COOKIE, "", {
-    httpOnly: true, secure: process.env.NODE_ENV === "production",
-    sameSite: "strict", path: "/", maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 0,
   });
   return response;
 }
@@ -70,6 +75,7 @@ export async function customerBackend(
   body?: string,
   idempotencyKey?: string,
   authScope: "session" | "mfa" = "session",
+  timeoutMs = 20_000,
 ): Promise<Response> {
   const rawBase = process.env.NEXT_PUBLIC_API_BASE_URL;
   const secret = process.env.CUSTOMER_PORTAL_SECRET;
@@ -79,7 +85,11 @@ export async function customerBackend(
       "Customer booking is not available yet. Please try again later.",
     );
   const base = new URL(rawBase);
-  if (process.env.NODE_ENV === "production" && base.protocol !== "https:") throw new CustomerBackendError(503, "Customer booking is temporarily unavailable.");
+  if (process.env.NODE_ENV === "production" && base.protocol !== "https:")
+    throw new CustomerBackendError(
+      503,
+      "Customer booking is temporarily unavailable.",
+    );
   if (
     !["http:", "https:"].includes(base.protocol) ||
     base.username ||
@@ -107,7 +117,7 @@ export async function customerBackend(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
       },
-      signal: AbortSignal.timeout(20_000),
+      signal: AbortSignal.timeout(timeoutMs),
     },
   );
 }

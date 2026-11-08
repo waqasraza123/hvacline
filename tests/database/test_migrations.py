@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "billing_accounts", "billing_checkouts", "billing_events", "billing_topups", "billing_labor",
     "outbound_phone_verifications",
     "outbound_demo_calls",
     "homepage_chat_visitors", "homepage_chat_daily_usage",
@@ -76,6 +77,22 @@ EXPECTED_TABLES = {
 }
 
 EXPECTED_COLUMNS = {
+    "billing_accounts": {
+        "account_id", "agency_id", "review_required", "customer_id", "customer_started_at", "livemode", "subscription_id", "price_id", "plan", "status", "period_start", "period_end", "paid_through", "cancel_at_period_end", "last_synced_at", "created_at",
+    },
+    "billing_checkouts": {
+        "id", "account_id", "agency_id", "plan", "session_id", "url", "expires_at", "status", "created_at",
+    },
+    "billing_events": {
+        "event_id", "account_id", "agency_id", "event_type", "customer_id", "object_id", "processed_at", "created_at",
+    },
+    "billing_topups": {
+        "id", "account_id", "agency_id", "subscription_id", "plan", "minutes", "hourly_amount", "amount", "session_id", "url", "expires_at", "status", "created_at", "credited_at",
+    },
+    "billing_labor": {
+        "id", "account_id", "agency_id", "appointment_id", "minutes", "package_minutes", "purchased_minutes", "subscription_id", "period_start", "created_at",
+    },
+
     "outbound_phone_verifications": {
         "id", "agency_id", "owner_hash", "destination_hash", "consent_version",
         "provider_verification_id", "created_at", "expires_at", "attempts",
