@@ -399,9 +399,7 @@ function VoiceTestExperience({
   const sessionDeadlineRef = useRef<number | undefined>(undefined);
   const [confirmationLocked, setConfirmationLocked] = useState(false);
   const [blockedSessionId, setBlockedSessionId] = useState<string>();
-  const [inputMode, setInputMode] = useState<ConversationInputMode>(
-    presentation === "customer" ? "TEXT" : "VOICE",
-  );
+  const [inputMode, setInputMode] = useState<ConversationInputMode>("VOICE");
   const textOnly = inputMode === "TEXT";
   const confirmationKeyRef = useRef<string | undefined>(undefined);
   const finishConversationRef = useRef<() => Promise<void>>(
@@ -791,8 +789,9 @@ function VoiceTestExperience({
             </button>
           </div>
           <p>
-            Your next message is ready below. Accept the conversation
-            permissions and start Chat to continue.
+            Your next message is ready below. Use Voice chat to speak, or choose
+            Text chat to keep typing. Accept the conversation permissions, then
+            start when you’re ready.
           </p>
           {homepageHandoff.message && (
             <div className="homepage-history-turn">
@@ -835,20 +834,20 @@ function VoiceTestExperience({
           aria-label="Conversation mode"
         >
           <button
-            aria-pressed={textOnly}
-            disabled={!canStart || isBusy}
-            onClick={() => setInputMode("TEXT")}
-            type="button"
-          >
-            <ProductIcon name="chat" /> Chat
-          </button>
-          <button
             aria-pressed={!textOnly}
             disabled={!canStart || isBusy}
             onClick={() => setInputMode("VOICE")}
             type="button"
           >
-            <ProductIcon name="mic" /> Voice
+            <ProductIcon name="mic" /> Voice chat
+          </button>
+          <button
+            aria-pressed={textOnly}
+            disabled={!canStart || isBusy}
+            onClick={() => setInputMode("TEXT")}
+            type="button"
+          >
+            <ProductIcon name="chat" /> Text chat
           </button>
         </div>
         <p className="section-help">
@@ -965,7 +964,7 @@ function VoiceTestExperience({
                 : customerView
                   ? textOnly
                     ? "Start chatting with Line"
-                    : "Start talking to Line"
+                    : "Start Voice Chat"
                   : "Start conversation"}
             </button>
           )}

@@ -25,6 +25,16 @@
   --customer-warning-border: #b45309;
   --customer-warning-surface: #fef3c7;
   --customer-warning-ink: #78350f;
+  --customer-on-dark: #fafaf9;
+  --customer-error-ink: #a12730;
+  --customer-error-surface: #fff1f1;
+  --customer-error-border: #f1d4d7;
+  --customer-success-ink: #22613f;
+  --customer-success-surface: #e8f5ed;
+  --customer-success-border: #d5e9dc;
+  --customer-info-ink: #4338a0;
+  --customer-info-surface: #f3f1ff;
+  --customer-info-border: #e0dcff;
   --ink: var(--customer-ink);
   --muted: var(--customer-muted);
   --line: var(--customer-border);
@@ -34,12 +44,54 @@
   --surface: var(--customer-surface);
   --orange: var(--customer-accent-ink);
   color: var(--ink);
+  color-scheme: light;
   background:
     radial-gradient(circle at 90% 8%, rgb(249 115 22 / 7%), transparent 32rem),
     var(--customer-canvas);
   min-height: 100dvh;
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition:
+    background-color 240ms ease,
+    color 240ms ease;
+}
+:root[data-theme="dark"] .product-site,
+:root[data-theme="dark"] .customer-shell {
+  --customer-accent-hover: #fb923c;
+  --customer-accent-ink: #fb923c;
+  --customer-accent-shadow: #fdba74;
+  --customer-accent-soft: #302219;
+  --customer-accent-border: #704020;
+  --customer-ink: #fafaf9;
+  --customer-muted: #b8b2ac;
+  --customer-canvas: #111113;
+  --customer-surface: #1c1c1f;
+  --customer-subtle: #252528;
+  --customer-border: #39393e;
+  --customer-control-border: #71717a;
+  --customer-panel: #202023;
+  --customer-panel-border: #62626b;
+  --customer-shadow: rgb(0 0 0 / 30%);
+  --customer-shadow-soft: rgb(0 0 0 / 12%);
+  --customer-warning-border: #b77928;
+  --customer-warning-surface: #342719;
+  --customer-warning-ink: #fcd590;
+  --customer-error-ink: #fda4af;
+  --customer-error-surface: #351d25;
+  --customer-error-border: #793044;
+  --customer-success-ink: #86efac;
+  --customer-success-surface: #193125;
+  --customer-success-border: #2b6844;
+  --customer-info-ink: #c4b5fd;
+  --customer-info-surface: #27223e;
+  --customer-info-border: #55477d;
+  color-scheme: dark;
+}
+@media (prefers-reduced-motion: reduce) {
+  .product-site,
+  .customer-shell {
+    transition: none;
+  }
 }
 .product-site .line-introduction :focus-visible,
 .product-site .product-final-cta :focus-visible {
@@ -63,8 +115,8 @@
   background: var(--customer-accent-soft);
 }
 .customer-shell .error-message {
-  background: #fff1f1;
-  color: #a12730;
+  background: var(--customer-error-surface);
+  color: var(--customer-error-ink);
 }
 .customer-shell .customer-tabs button:hover:not(:disabled):not([aria-current]) {
   background: var(--customer-accent-soft);
@@ -116,6 +168,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
+  flex-wrap: wrap;
+  row-gap: 1rem;
+  padding-block: 1rem;
   border-bottom: 1px solid var(--line);
 }
 .product-site .brand-link,
@@ -133,6 +188,7 @@
 .product-site .brand-line,
 .customer-shell .brand-line {
   font-weight: 400;
+  color: var(--customer-accent-ink);
 }
 .product-site .brand-link em,
 .customer-shell .brand-link em {
@@ -189,6 +245,17 @@
   display: flex;
   gap: 2rem;
   align-items: center;
+}
+.product-header-actions,
+.product-page-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.product-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .product-nav a,
 .product-login,
@@ -297,6 +364,37 @@
   gap: 1.8rem;
   margin-top: 2rem;
 }
+.hero-voice-note {
+  max-width: 48ch;
+  margin: 1rem 0 0;
+  color: var(--customer-muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.hero-contact-options {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  margin-top: 1.25rem;
+}
+.hero-contact-options .hero-inbound-call {
+  margin-top: 0;
+}
+.hero-contact-options .outbound-demo-trigger {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hero-contact-options .outbound-demo-trigger svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
 .hero-inbound-call {
   display: flex;
   align-items: center;
@@ -320,6 +418,58 @@
 .hero-inbound-call:focus-visible > strong {
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+.hero-trust-badges {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0;
+  margin: 1.5rem 0 0;
+  list-style: none;
+}
+.hero-trust-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 60px;
+  max-width: 100%;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--customer-border);
+  border-radius: 12px;
+  background: var(--customer-surface);
+  box-shadow: 0 2px 8px var(--customer-shadow-soft);
+}
+.hero-trust-badge > svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  color: var(--customer-accent-ink);
+}
+.hero-trust-badge > span {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+.hero-trust-badge small {
+  color: var(--customer-muted);
+  font-size: 0.6rem;
+  line-height: 1.4;
+}
+.hero-trust-badge strong {
+  color: var(--customer-ink);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.hero-trust-badge .hero-stripe-wordmark {
+  width: fit-content;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 1;
+  transform: skewX(-8deg);
 }
 .product-text-link {
   color: var(--ink);
@@ -364,9 +514,9 @@
 .line-introduction {
   position: relative;
   border-radius: 22px;
-  background: var(--customer-ink);
+  background: var(--customer-panel);
   padding: 1.8rem 2rem 1.4rem;
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
   box-shadow: 15px 15px 0 var(--customer-accent-border);
   text-align: center;
   overflow: hidden;
@@ -1594,9 +1744,9 @@
   }
 }
 .customer-error {
-  color: #a12730;
-  background: #fff1f1;
-  border: 1px solid #f1d4d7;
+  color: var(--customer-error-ink);
+  background: var(--customer-error-surface);
+  border: 1px solid var(--customer-error-border);
   padding: 0.85rem 1rem;
   border-radius: 8px;
   font-size: 0.75rem;
@@ -1655,9 +1805,9 @@
   text-align: center;
 }
 .status-confirmed {
-  background: #e8f5ed;
-  border-color: #d5e9dc;
-  color: #22613f;
+  background: var(--customer-success-surface);
+  border-color: var(--customer-success-border);
+  color: var(--customer-success-ink);
 }
 .status-held {
   background: var(--customer-warning-surface);
@@ -2010,7 +2160,7 @@
 .line-experience .ops-card button {
   border-radius: 7px;
   border: 1px solid var(--customer-control-border);
-  background: white;
+  background: var(--customer-surface);
   color: var(--customer-accent-ink);
   font-size: 0.75rem;
 }

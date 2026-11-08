@@ -273,7 +273,7 @@ export function HomepageChat() {
           aria-pressed={mode === "voice"}
           onClick={() => setMode("voice")}
         >
-          <ProductIcon name="mic" /> Voice AI
+          <ProductIcon name="mic" /> Voice chat
         </button>
         <button
           type="button"
@@ -292,7 +292,7 @@ export function HomepageChat() {
             SPEAK NATURALLY. LINE TAKES IT FROM HERE.
           </p>
           <h3>
-            Talk it through.
+            Try Voice Chat.
             <br />
             Book with Line.
           </h3>
@@ -306,7 +306,7 @@ export function HomepageChat() {
             <ProductIcon name="arrow" />
           </Link>
           <p className={styles.voiceHelp}>
-            Sign in, then choose Voice to get started.
+            Sign in to start. Connect your microphone when you’re ready.
           </p>
         </div>
       ) : (

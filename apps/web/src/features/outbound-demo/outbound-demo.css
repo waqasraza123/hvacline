@@ -235,7 +235,7 @@
   gap: 1.25rem;
   padding: 3rem 2rem;
   background: var(--customer-panel);
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
 }
 .outbound-demo-agent-mark {
   display: grid;

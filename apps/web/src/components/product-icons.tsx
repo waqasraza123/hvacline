@@ -13,7 +13,10 @@ type IconName =
   | "chat"
   | "close"
   | "calendar"
-  | "logout";
+  | "logout"
+  | "sun"
+  | "moon"
+  | "lock";
 
 const paths: Record<IconName, string> = {
   arrow: "M5 12h14m-6-6 6 6-6 6",
@@ -31,6 +34,9 @@ const paths: Record<IconName, string> = {
   calendar:
     "M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 10h2m4 0h2m-8 4h2",
   logout: "M9 4H4v16h5m5-12 4 4-4 4m-6-4h12",
+  sun: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5",
+  moon: "M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z",
+  lock: "M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5V10Zm7 4v3",
 };
 
 export function ProductIcon({

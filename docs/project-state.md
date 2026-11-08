@@ -1,5 +1,64 @@
 # Project State
 
+## Theme, hero badges and Voice Chat publication authorized — 2026-11-09
+
+Owner requests pushing all remaining changes to main. Prepared all source/guide
+differences on canonical595994f in the isolated publication checkout. Includes
+animated customer light/dark switching, theme-aware customer/billing surfaces,
+WebRTC/authenticator/Stripe sandbox hero badges and Try Voice Chat as primary
+action with Voice as the customer workspace default. Text chat and separate
+phone/callback options remain; consent and deliberate connection are required.
+Current release remains v0.1.0-beta.1 at595994f; do not move its tag.
+No migration/dependency/backend setting change. No tests, builds, lint/type
+checks, previews, live sessions, provider/database operations or deployment
+commands ran. Hooks disabled and [skip ci] [skip render] retained. Runtime remains
+unverified; owner command npm run verify:web and manual checks in
+docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
+
+## Voice chat primary/default — implementation UNVERIFIED — 2026-11-09
+
+Owner requests clear Try Voice Chat hero wording and Voice as default. Local
+source makes hero/header/launcher link directly to /book with that wording,
+retains the homepage Voice preview and changes the customer workspace's initial
+mode from TEXT to VOICE. Voice chat is the first mode choice; Text chat remains
+available. AI disclosure/microphone consent remain unchecked and explicit Start
+Voice Chat is still required; navigation alone does not connect/request audio.
+Callback/inbound phone options remain separate. Text handoff/drafts, active-session
+mode locks and existing confirmation gates remain. No backend/provider/config or
+migration change. No checks, services, live sessions, commits/push or deployment
+ran; implementation is local/unverified. Owner command: npm run verify:web.
+Exact manual checks: docs/homepage-hero.md and docs/customer-chat.md.
+
+## Customer light/dark switch — implementation UNVERIFIED — 2026-11-09
+
+Owner requests an animated dark/white switch in the top bar. Local source adds
+a reusable accessible sun/moon control to product/customer headers, shared
+white/charcoal/orange theme variables, and theme-aware billing/cards/dialogs/
+customer panels/loading states. A static root initialization script reads a valid
+browser preference before content renders; client subscription synchronizes
+controls, system preference changes and storage events. Explicit choices persist
+when storage is available; blocked storage retains current-page switching.
+Reduced-motion styles disable switch animation. Customer styles stay scoped;
+existing charcoal feature panels and the white MFA QR background are preserved.
+
+No dependency/configuration/migration change. Changes remain local/unpublished;
+no tests, builds, lint/type checks, previews, services, provider/database operations
+or deployment ran. Owner command: npm run verify:web. Exact cross-route,
+persistence/system/storage, visual, keyboard/accessibility and reduced-motion
+manual checks: docs/homepage-branding.md. Runtime remains unverified.
+
+## First GitHub prerelease published — 2026-11-09
+
+Owner requests a release. Published v0.1.0-beta.1 on canonical hvacline, titled
+HVACLine v0.1.0-beta.1 — Stripe billing and maintenance packages. Release/tag
+readback confirms published (not draft), prerelease=true and exact source
+595994f57feb9e01c9ecc0795f8b694012fcc41d. Created with latest=false and no binary
+assets. Release notes cover current app/billing/header features, configured0020
+confirmation, sandbox-only limits and pending setup/runtime acceptance. No tests,
+builds, lint/type checks, new database/provider operations, services or deployment
+commands ran. URL:
+https://github.com/waqasraza123/hvacline/releases/tag/v0.1.0-beta.1
+
 ## Remaining header changes publication authorized — UNVERIFIED — 2026-11-09
 
 Owner requests pushing all changes to main. Canonical main6b2bbad already contains

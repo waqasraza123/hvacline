@@ -12,7 +12,7 @@
   background:
     radial-gradient(ellipse at 90% 0%, rgb(249 115 22 / 20%), transparent 65%),
     var(--customer-panel);
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
 }
 .eyebrow {
   display: block;

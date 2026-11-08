@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { CustomerBooking } from "@/features/customer/booking";
 import { currentCustomer } from "@/features/customer/server";
 import "../product.css";
@@ -15,6 +16,7 @@ export default async function BookPage() {
       <div className="customer-shell">
         <header className="product-header product-container">
           <Brand />
+          <ThemeToggle />
         </header>
         <main className="customer-empty product-container">
           <h1>We’ll be right back.</h1>

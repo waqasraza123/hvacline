@@ -4,7 +4,18 @@ Implementation is unverified. The owner reported that voice works on October 25,
 
 ## Behavior
 
-Customer `/book` defaults to **Chat**. Chat accepts typed messages and returns text without microphone access or spoken replies. **Voice** retains live speech and also accepts typed messages; replies in Voice can still be spoken. Finish the current conversation and start a new one to switch modes. Enter sends a message; Shift + Enter adds a line. Messages are limited to 2,000 characters. Typing sends activity signals without sending the draft text. The editor stays mounted and editable during disconnects/retries, and Send is enabled only during a connected active conversation. Retrying does not erase an unsent message; leaving the page or explicitly starting over can discard browser-only drafts.
+Customer `/book` defaults to **Voice chat** as requested on November 9, 2026.
+Voice is selected first, but microphone consent and AI disclosure remain unchecked;
+the visitor must accept them and choose Start Voice Chat before connection begins.
+**Text chat** remains available before starting. Chat accepts typed messages and
+returns text without microphone access or spoken replies. Voice retains live
+speech and also accepts typed messages; replies in Voice can still be spoken.
+Finish the current conversation and start a new one to switch modes. Enter sends
+a message; Shift + Enter adds a line. Messages are limited to 2,000 characters.
+Typing sends activity signals without sending the draft text. The editor stays
+mounted and editable during disconnects/retries, and Send is enabled only during
+a connected active conversation. Retrying does not erase an unsent message;
+leaving the page or explicitly starting over can discard browser-only drafts.
 
 Both modes use the existing authenticated customer proxy, private browser agent, eight blocking client tools, approved database FAQs and internal calendar. Both retain AI disclosure, shared limits, hazard handling and backend confirmation gates. Only Voice asks for microphone consent. Fictional-data acknowledgement was removed by the owner on October 29; apply migration `20261029_0016` and follow [deployment and owner checks](customer-data-requirements.md). Each complete current readback must be followed by a clear affirmative response before saving or booking. A typed correction, refusal or ambiguous answer cannot confirm it. A temporary hold is never a confirmed appointment.
 
@@ -62,6 +73,14 @@ APP_ENVIRONMENT=test alembic check
 The database fixture downgrades/rebuilds its target; never point these tests at the configured development or hosted database.
 
 Manual acceptance, using fictional information:
+
+0. From the homepage Try Voice Chat hero/header/launcher, complete sign-in/MFA
+   if needed. Confirm `/book` initially selects Voice chat with unchecked consent
+   and no microphone access, audio, provider connection or phone call merely
+   from navigation. Accept both permissions and deliberately start to connect;
+   denial must show a recoverable error. Switch to Text chat before starting and
+   perform the silent-Chat checks below. Existing active conversations must keep
+   their mode until finished.
 
 1. Start Chat with browser microphone access blocked. Confirm there is no permission prompt, microphone indicator or audible greeting/reply. Confirm AI disclosure is required and no fictional-data acknowledgement appears. Confirm Chat uses the signed WebSocket connection and Voice uses its WebRTC token.
 2. Type continuously through the greeting/replies and several countdown ticks. Confirm focus, cursor position and draft remain stable, with no automatic mode changes or disconnect. Send with Enter, click Send, add a line with Shift + Enter, and try a blank or overlong message. Each sent message and each agent reply should appear once. Disconnect while an unsent draft exists: the editor must stay visible/editable, sending must stop, and the draft must survive a deliberate retry. Send it only after reconnection. Saved outcomes must survive disconnects too.

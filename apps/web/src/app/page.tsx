@@ -1,16 +1,14 @@
 import Link from "next/link";
 import { Pricing } from "@/features/billing/pricing";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
 import {
   OutboundDemoDialog,
   OutboundDemoTrigger,
 } from "@/features/outbound-demo/outbound-demo-dialog";
-import {
-  HomepageChat,
-  HomepageChatLink,
-} from "@/features/homepage-chat/homepage-chat";
+import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 
@@ -52,6 +50,7 @@ export default function Home() {
           <a href="#call-me">Calling</a>
         </nav>
         <div className="product-header-actions">
+          <ThemeToggle />
           <div className="product-provider-logos">
             <span className="product-provider-wordmark">ElevenLabs</span>
             <svg
@@ -129,9 +128,9 @@ export default function Home() {
           <Link className="product-login" href="/login">
             Sign in
           </Link>
-          <HomepageChatLink className="product-button button-small">
-            Try Line <ProductIcon name="arrow" />
-          </HomepageChatLink>
+          <Link className="product-button button-small" href="/book">
+            Try Voice Chat <ProductIcon name="arrow" />
+          </Link>
         </div>
       </header>
       <main id="main-content" className="product-main">
@@ -150,16 +149,54 @@ export default function Home() {
               appointments in one natural conversation.
             </p>
             <div className="product-hero-actions">
-              <OutboundDemoTrigger />
+              <Link className="product-button" href="/book">
+                <ProductIcon name="mic" /> Try Voice Chat
+                <ProductIcon name="arrow" />
+              </Link>
               <a className="product-text-link" href="#how-it-works">
                 See how it works <span>↗</span>
               </a>
             </div>
-            <a className="hero-inbound-call" href="tel:+12014097805">
-              <ProductIcon name="phone" />
-              <span>Call Line:</span>
-              <strong>+1 201 409 7805</strong>
-            </a>
+            <p className="hero-voice-note">
+              Talk to Line in your browser. Sign in, then connect when you’re
+              ready.
+            </p>
+            <div className="hero-contact-options">
+              <OutboundDemoTrigger className="product-text-link">
+                Request a demo call
+              </OutboundDemoTrigger>
+              <a className="hero-inbound-call" href="tel:+12014097805">
+                <ProductIcon name="phone" />
+                <span>Call Line:</span>
+                <strong>+1 201 409 7805</strong>
+              </a>
+            </div>
+            <ul
+              className="hero-trust-badges"
+              aria-label="Voice, account and payment features"
+            >
+              <li className="hero-trust-badge">
+                <ProductIcon name="mic" />
+                <span>
+                  <small>Real-time voice</small>
+                  <strong>WebRTC</strong>
+                </span>
+              </li>
+              <li className="hero-trust-badge">
+                <ProductIcon name="shield" />
+                <span>
+                  <small>Protected by</small>
+                  <strong>Google Authenticator</strong>
+                </span>
+              </li>
+              <li className="hero-trust-badge">
+                <ProductIcon name="lock" />
+                <span>
+                  <small>Secure payments · Sandbox</small>
+                  <strong className="hero-stripe-wordmark">stripe</strong>
+                </span>
+              </li>
+            </ul>
           </div>
           <div className="hero-chat-composition">
             <HomepageChat />
@@ -334,18 +371,19 @@ export default function Home() {
           <Link href="/billing">My package</Link>
         </nav>
       </footer>
-      <HomepageChatLink
+      <Link
+        href="/book"
         className="voice-launcher"
-        label="Try Line’s voice AI on this page"
+        aria-label="Try Voice Chat with Line"
       >
         <span className="launcher-mark">
           <VoiceSymbol />
         </span>
         <span>
-          Try Line<small>AI VOICE RECEPTIONIST FOR HVAC</small>
+          Try Voice Chat<small>AI VOICE RECEPTIONIST FOR HVAC</small>
         </span>
         <ProductIcon name="arrow" />
-      </HomepageChatLink>
+      </Link>
     </OutboundDemoDialog>
   );
 }

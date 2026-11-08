@@ -1,5 +1,24 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Try Voice Chat is primary — November 9, 2026 — UNVERIFIED
+
+The hero now clearly offers Try Voice Chat as its primary action and explains
+that visitors speak in the browser after sign-in. Header and floating-launcher
+actions use the same wording and link directly to `/book`. The homepage card
+retains its Voice chat default; the customer workspace now defaults to Voice
+chat too, with Text chat still available before starting. Callback and inbound
+phone choices remain separate secondary hero actions.
+
+AI disclosure and microphone consent stay unchecked. Navigation does not request
+microphone access, start a provider connection or place a phone call. Existing
+session mode locks, text handoff/drafts and confirmations remain. No migration,
+environment or provider change is required. Source is local/unpublished and
+runtime-unverified; no tests/builds/lints/type checks, services or live sessions
+ran. Owner command: `npm run verify:web`. Manually check hero/header/launcher
+links, sign-in/MFA continuation, Voice default, consent/start/denied-mic behavior,
+silent Text chat, preserved drafts, active-session mode lock, callback separation
+and desktop/mobile light/dark layouts.
+
 ## Mobile verification — November5,2026 — UNVERIFIED
 
 Callback source adds a separate opt-in SMS verification step for a US

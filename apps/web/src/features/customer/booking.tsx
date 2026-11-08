@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import type { Customer } from "./server";
@@ -51,6 +52,7 @@ export function CustomerBooking({
     <div className="customer-shell">
       <header className="product-header product-container">
         <Brand />
+        <ThemeToggle />
         <div className="customer-account">
           <Link
             href="/billing"

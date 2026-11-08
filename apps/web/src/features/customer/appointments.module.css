@@ -52,7 +52,7 @@
   background:
     radial-gradient(ellipse at 100% 0%, rgb(249 115 22 / 17%), transparent 65%),
     var(--customer-panel);
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
 }
 .featureHeader {
   display: flex;
@@ -110,7 +110,7 @@
   color: var(--customer-accent-light);
 }
 .featured .dateTile > strong {
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
   font-size: 2.5rem;
 }
 .appointmentContent {

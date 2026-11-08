@@ -21,7 +21,7 @@
   background:
     radial-gradient(circle at 100% 0%, rgb(249 115 22 / 15%), transparent 65%),
     var(--customer-panel);
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
 }
 
 .storyIcon,
@@ -101,7 +101,7 @@
 }
 
 .steps li[aria-current] {
-  color: var(--customer-surface);
+  color: var(--customer-on-dark);
   font-weight: 700;
 }
 
@@ -451,10 +451,10 @@
 .error {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 1px solid #fecaca;
+  border: 1px solid var(--customer-error-border);
   border-radius: 10px;
-  background: #fff1f2;
-  color: #9f1239;
+  background: var(--customer-error-surface);
+  color: var(--customer-error-ink);
   font-size: 0.78rem;
   line-height: 1.7;
 }

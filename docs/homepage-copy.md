@@ -1,5 +1,15 @@
 # HVACLine homepage copy
 
+## Voice chat priority — November 9, 2026 — UNVERIFIED
+
+Primary hero/header/launcher CTA: **Try Voice Chat**, linking to `/book`.
+Supporting hero text: Talk to Line in your browser. Sign in, then connect when
+you’re ready. The customer workspace selects Voice chat by default; Text chat
+remains available. AI/microphone consent and explicit connection remain required.
+The callback request and inbound phone link are secondary choices. This
+supersedes the earlier choose-Voice-after-sign-in guidance below. Owner command:
+`npm run verify:web`; manual acceptance: [homepage hero](homepage-hero.md).
+
 Applied to the homepage source with option 1. Implementation is owner-unverified. Trust wording uses live scheduling and explicit confirmation; no answer-rate, booking-time, uptime or revenue metrics are asserted.
 
 ## Hero options, ranked
