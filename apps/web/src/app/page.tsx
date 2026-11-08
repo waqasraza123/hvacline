@@ -162,6 +162,11 @@ export default function Home() {
                 See how it works <span>↗</span>
               </a>
             </div>
+            <a className="hero-inbound-call" href="tel:+12014097805">
+              <ProductIcon name="phone" />
+              <span>Call Line:</span>
+              <strong>+1 201 409 7805</strong>
+            </a>
           </div>
           <div className="hero-chat-composition">
             <HomepageChat />

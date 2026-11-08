@@ -1,5 +1,19 @@
 # Project State
 
+## Hero inbound number restoration authorized — UNVERIFIED — 2026-11-08
+
+Owner supplies the public business number and requests restoring it in the hero,
+superseding the October31 homepage removal. Local source adds a visible phone
+link below existing actions using the supplied number and canonical tel target,
+shared phone icon and responsive styles. No new setting or backend/provider
+change. Unpublished/undeployed; no checks or calls ran. Owner command:
+`npm run verify:web`; manual desktop/mobile, keyboard and dial-target checks:
+docs/telnyx-sip-setup.md. Live inbound acceptance remains pending.
+
+Owner authorizes publishing this hero change to main with hooks disabled and
+[skip ci] [skip render] markers; unrelated SMS/inbound investigation edits remain
+local. No verification execution or hosted configuration change is authorized.
+
 ## Workflow/tool publication authorized — UNVERIFIED — 2026-11-07
 
 Owner requests pushing the workflow/tool support to main. Publish provider,

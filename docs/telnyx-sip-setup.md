@@ -189,10 +189,26 @@ frontend already reads these call/appointment tables and needs no Telnyx changes
 Hosting deployment and provider configuration remain separate from the
 owner-authorized main publication.
 
-## Public phone number hidden — 2026-10-31
+## Public phone number restored in hero — UNVERIFIED — 2026-11-08
 
-The owner requested removing the public business phone number. The homepage no
-longer renders a phone panel or dial link, regardless of earlier configuration.
+Owner requests restoring the supplied public business number in the homepage
+hero. Source now displays a phone icon, “Call Line:” and the number below the
+existing actions, with a canonical `tel:` link. This supersedes the October31
+homepage removal below. No frontend environment variable or backend/provider
+configuration change is required. Local implementation is unpublished,
+undeployed and unverified; no checks or calls ran.
+
+Owner command from the repository root: `npm run verify:web`.
+After frontend deployment, check the hero at desktop and 320px mobile widths,
+confirm the supplied number is legible without overflow, Tab to the link and
+check its focus indicator, and confirm its dialer target is the supplied number.
+A successful real inbound call with tools and signed finalization remains a
+separate pending acceptance check.
+
+## Previous public phone number removal — 2026-10-31
+
+The owner requested removing the public business phone number. At that point,
+the homepage stopped rendering a phone panel or dial link.
 `HOMEPAGE_PHONE_NUMBER_E164` and `TELNYX_INBOUND_CALLING_VERIFIED` are no longer
 used and can be removed from the frontend project. The sandbox phone-status page
 also omits the number and dial link, while retaining its existing access gates.

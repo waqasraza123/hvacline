@@ -290,6 +290,30 @@
   gap: 1.8rem;
   margin-top: 2rem;
 }
+.hero-inbound-call {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  width: fit-content;
+  min-height: 44px;
+  margin-top: 1.25rem;
+  color: var(--customer-accent-ink);
+  font-size: 0.9rem;
+}
+.hero-inbound-call > svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.hero-inbound-call > strong {
+  white-space: nowrap;
+}
+.hero-inbound-call:hover > strong,
+.hero-inbound-call:focus-visible > strong {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .product-text-link {
   color: var(--ink);
   font-size: 0.8rem;
