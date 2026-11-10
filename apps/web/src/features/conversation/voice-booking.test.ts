@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from "vitest";
 
 import { VoiceBookingSession } from "./voice-booking";
+import { customerMemoryTools } from "./customer-memory";
 import type { BookingProgress } from "./booking-progress";
 
 afterEach(() => vi.unstubAllGlobals());
@@ -227,6 +228,45 @@ it("publishes saved, availability, held and confirmed results without repeating 
   await booking.execute("confirm_appointment", { explicit_confirmation: true });
   expect(fetcher).toHaveBeenCalledTimes(5);
   expect(latest()?.failure).toBeUndefined();
+});
+
+it("completes booking when optional memory retrieval and saving fail", async () => {
+  const confirmed = {
+    ...heldResponse,
+    appointment: { ...heldResponse.appointment, status: "CONFIRMED" },
+  };
+  const fetcher = vi
+    .fn()
+    .mockRejectedValueOnce(new TypeError("memory unavailable"))
+    .mockResolvedValueOnce(
+      Response.json({ readback: "Read back the fictional details." }),
+    )
+    .mockResolvedValueOnce(Response.json(intakeResponse))
+    .mockResolvedValueOnce(new Response(null, { status: 503 }))
+    .mockResolvedValueOnce(Response.json(availabilityResponse))
+    .mockResolvedValueOnce(Response.json(heldResponse))
+    .mockResolvedValueOnce(Response.json(confirmed));
+  vi.stubGlobal("fetch", fetcher);
+  const memory = customerMemoryTools({
+    sessionId: () => "session-1",
+    transcript: () => [],
+  });
+  await memory.loadContext(vi.fn());
+  const { booking, onAppointment } = progressSession();
+  await saveRequest(booking);
+  expect(
+    JSON.parse(
+      await memory.remember_customer_memory({ request_id: "memory-save" }),
+    ),
+  ).toMatchObject({ available: false });
+  await booking.execute("check_appointment_availability", {
+    day: "2026-11-03",
+  });
+  await booking.execute("reserve_appointment", availabilityResponse.slots[0]);
+  booking.recordTurn("AGENT", heldResponse.readback);
+  booking.recordTurn("USER", "Yes");
+  await booking.execute("confirm_appointment", { explicit_confirmation: true });
+  expect(onAppointment).toHaveBeenLastCalledWith(confirmed);
 });
 
 it("retains an unresolved reservation and its retry key until the same action succeeds", async () => {

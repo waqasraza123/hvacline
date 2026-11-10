@@ -5,11 +5,11 @@ import {
   useConversation,
   useConversationControls,
 } from "@elevenlabs/react";
-import { useRef } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import { sessionConnection } from "./connection";
+import { customerMemorySession } from "./customer-memory";
 import { customerMessage, PendingTextEchoes } from "./text-messages";
-import { appendTranscript } from "./review";
 import type { VoiceBookingTool } from "./voice-booking";
 
 import type {
@@ -17,7 +17,6 @@ import type {
   ConversationClient,
   ConversationDraft,
   ConversationSpeaker,
-  ConversationTurn,
 } from "./contracts";
 
 export type AdapterProperties = Readonly<{
@@ -69,49 +68,13 @@ function AdapterBridge({
   onBookingTool,
 }: AdapterProperties) {
   const controls = useConversationControls();
-  const pendingTextEchoes = useRef(new PendingTextEchoes());
-  const memorySessionId = useRef<string | undefined>(undefined);
-  const memoryTurns = useRef<ConversationTurn[]>([]);
-  async function memoryTool(
-    action: "context" | "readback" | "remember",
-    parameters: Record<string, unknown> = {},
-  ): Promise<string> {
-    const sessionId = memorySessionId.current;
-    if (!sessionId) return JSON.stringify({ available: false });
-    try {
-      const response = await fetch(
-        `/api/v1/development/conversation-sessions/${encodeURIComponent(sessionId)}/memory/${action}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(15000),
-          body: JSON.stringify(
-            action === "remember"
-              ? { ...parameters, transcript: memoryTurns.current }
-              : parameters,
-          ),
-        },
-      );
-      if (!response.ok)
-        return JSON.stringify({
-          available: false,
-          message:
-            "Memory was not saved or retrieved. Continue booking or use Memory settings.",
-        });
-      return response.status === 204
-        ? JSON.stringify({ saved: true })
-        : await response.text();
-    } catch {
-      return JSON.stringify({ available: false });
-    }
-  }
+  const [pendingTextEchoes] = useState(() => new PendingTextEchoes());
+  const [memory] = useState(customerMemorySession);
   const conversation = useConversation({
     clientTools: {
-      retrieve_customer_memory: () => memoryTool("context"),
-      prepare_customer_memory: (parameters: Record<string, unknown>) =>
-        memoryTool("readback", parameters),
-      remember_customer_memory: (parameters: Record<string, unknown>) =>
-        memoryTool("remember", parameters),
+      retrieve_customer_memory: memory.retrieve_customer_memory,
+      prepare_customer_memory: memory.prepare_customer_memory,
+      remember_customer_memory: memory.remember_customer_memory,
       lookup_approved_faq: async (parameters: ApprovedFaqToolParameters) => {
         const query = optionalString(parameters.query);
         if (query === undefined) {
@@ -180,14 +143,12 @@ function AdapterBridge({
         onBookingTool("release_appointment_hold", parameters),
     },
     onDisconnect: () => {
-      memorySessionId.current = undefined;
-      memoryTurns.current = [];
-      pendingTextEchoes.current.clear();
+      memory.end();
+      pendingTextEchoes.clear();
       onDisconnect();
     },
     onError: (message) => {
-      memorySessionId.current = undefined;
-      memoryTurns.current = [];
+      memory.end();
       onError(
         typeof message === "string"
           ? message
@@ -199,13 +160,8 @@ function AdapterBridge({
       const speaker = message.source === "user" ? "USER" : "AGENT";
       const text = message.message.trim();
       if (text) {
-        if (speaker === "USER" && pendingTextEchoes.current.consume(text))
-          return;
-        memoryTurns.current = appendTranscript(
-          memoryTurns.current,
-          speaker,
-          text,
-        ).slice(-60);
+        if (speaker === "USER" && pendingTextEchoes.consume(text)) return;
+        memory.record(speaker, text);
         onTranscript(speaker, text);
       }
     },
@@ -217,20 +173,20 @@ function AdapterBridge({
     mode: conversation.mode,
     isMuted: conversation.isMuted,
     start: async (authorization, backgroundContext) => {
-      memorySessionId.current = authorization.sessionId;
-      memoryTurns.current = [];
-      pendingTextEchoes.current.clear();
       const connection = sessionConnection(authorization);
+      memory.start(authorization.sessionId);
+      pendingTextEchoes.clear();
+      let memoryStarted = false;
       await new Promise<void>((resolve, reject) => {
         const timer = window.setTimeout(() => {
+          memory.end();
           controls.endSession();
           reject(
             new Error("Conversation connection timed out. Try a new session."),
           );
         }, 20_000);
         const fail = () => {
-          memorySessionId.current = undefined;
-          memoryTurns.current = [];
+          memory.end();
           window.clearTimeout(timer);
           reject(
             new Error("Conversation connection could not be established."),
@@ -241,6 +197,12 @@ function AdapterBridge({
             ...connection,
             dynamicVariables: { homepage_guest: false },
             onConnect: () => {
+              if (!memoryStarted) {
+                memoryStarted = true;
+                void memory.loadContext((context) =>
+                  controls.sendContextualUpdate(context),
+                );
+              }
               if (backgroundContext) {
                 try {
                   controls.sendContextualUpdate(backgroundContext);
@@ -256,33 +218,29 @@ function AdapterBridge({
             onDisconnect: fail,
           });
         } catch (failure) {
+          memory.end();
           window.clearTimeout(timer);
           reject(failure);
         }
       });
     },
     end: async () => {
-      memorySessionId.current = undefined;
-      memoryTurns.current = [];
-      pendingTextEchoes.current.clear();
+      memory.end();
+      pendingTextEchoes.clear();
       await conversation.endSession();
     },
     sendText: (value) => {
       if (conversation.status !== "connected")
         throw new Error("Connect to Line before sending a message.");
       const text = customerMessage(value);
-      pendingTextEchoes.current.add(text);
+      pendingTextEchoes.add(text);
       try {
         conversation.sendUserMessage(text);
       } catch (error) {
-        pendingTextEchoes.current.consume(text);
+        pendingTextEchoes.consume(text);
         throw error;
       }
-      memoryTurns.current = appendTranscript(
-        memoryTurns.current,
-        "USER",
-        text,
-      ).slice(-60);
+      memory.record("USER", text);
       onTranscript("USER", text);
     },
     notifyTyping: () => {

@@ -1,5 +1,19 @@
 # Homepage branding handoff
 
+## Full-width website containers — 2026-11-10 — UNVERIFIED
+
+Removed the shared product/customer container's 1240px width cap. It now uses
+100% width with responsive inner gutters: 3rem on desktop, 2rem at1100px and
+below, and1.25rem at640px and below. Pricing uses the same gutter and full-width
+layout; its page main no longer inherits the global1180px cap. Existing content
+grids, typography, form/dialog reading widths, themes and actions are retained.
+
+No tests, builds, lints, type checks, previews or services ran, per the owner's
+coding-only instruction. Implementation is unverified. On a future authorized
+run, use `npm run verify:web`. Manually inspect home, pricing, billing and Book
+at320/640/1100/1440/1920px: full-width alignment, comfortable gutters, no horizontal
+overflow, badge/card wrapping, usable Voice CTA and both light/dark themes.
+
 ## Signed-in header avatar — 2026-11-09 — UNVERIFIED
 
 The homepage and pricing headers now resolve the existing customer session on the

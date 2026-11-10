@@ -3,8 +3,9 @@
   padding-block: 3rem 4rem;
 }
 .pricing {
-  width: min(1160px, calc(100% - 3rem));
+  width: 100%;
   margin-inline: auto;
+  padding-inline: var(--product-page-gutter);
 }
 .sectionTop,
 .subheading,

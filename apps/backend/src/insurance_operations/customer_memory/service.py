@@ -14,17 +14,25 @@ from insurance_operations.actors import ActorContext
 from insurance_operations.conversations.schemas import ConversationTurn
 from insurance_operations.conversations.spoken import normalized_speech
 from insurance_operations.customer_memory.schemas import (
-    FACT_OPTIONS, MemoryFactInput, MemoryFactSaveInput, MemoryMutation, fact_label,
+    FACT_OPTIONS,
+    MemoryFactInput,
+    MemoryFactSaveInput,
+    MemoryMutation,
+    fact_label,
 )
 from insurance_operations.database.models.conversation import (
-    ConversationIntake, ConversationSession,
+    ConversationIntake,
+    ConversationSession,
 )
 from insurance_operations.database.models.customer_account import CustomerAccount
-from insurance_operations.database.models.customer_mfa import CustomerMfaFactor
 from insurance_operations.database.models.customer_memory import (
-    CustomerMemoryFact, CustomerMemoryPairing, CustomerMemoryPolicy,
-    CustomerMemorySummary, CustomerWhatsAppIdentity,
+    CustomerMemoryFact,
+    CustomerMemoryPairing,
+    CustomerMemoryPolicy,
+    CustomerMemorySummary,
+    CustomerWhatsAppIdentity,
 )
+from insurance_operations.database.models.customer_mfa import CustomerMfaFactor
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.database.models.identity import Agency, AppUser
 from insurance_operations.database.models.operations import AuditEvent
@@ -38,17 +46,62 @@ def memory_error(message: str, code: str = "MEMORY_NOT_AVAILABLE") -> ApiError:
 
 
 def supported_facts(intake: ConversationIntake) -> list[MemoryFactInput]:
-    user_text = " ".join(
-        normalized_speech(str(turn.get("text", "")))
-        for turn in intake.confirmed_transcript if turn.get("speaker") == "USER"
+    uncertain = re.compile(
+        r"\b(no|not|never|maybe|unsure|if|don t|dont|doesn t|doesnt|"
+        r"can t|cant|cannot|used to|instead of|rather than)\b"
     )
+    statements = [
+        (
+            normalized_speech(str(turn.get("text", ""))),
+            "?" in str(turn.get("text", ""))
+            or bool(uncertain.search(normalized_speech(str(turn.get("text", ""))))),
+        )
+        for turn in intake.confirmed_transcript
+        if turn.get("speaker") == "USER"
+    ]
+    aliases = {
+        "appointment_time": {
+            "MORNING": ("weekday mornings", "weekend mornings", "prefer mornings"),
+            "AFTERNOON": (
+                "weekday afternoons",
+                "weekend afternoons",
+                "prefer afternoons",
+            ),
+        },
+        "appointment_days": {
+            "WEEKDAYS": ("weekday mornings", "weekday afternoons", "prefer weekdays"),
+            "WEEKENDS": ("weekend mornings", "weekend afternoons", "prefer weekends"),
+        },
+    }
     matches: list[MemoryFactInput] = []
     for key, choices in FACT_OPTIONS.items():
-        values = [
-            value for value, label in choices.items()
-            if f" {normalized_speech(label)} " in f" {user_text} "
-        ]
-        if len(values) == 1:
+        values: list[str] = []
+        ambiguous = False
+        for value, label in choices.items():
+            phrases = (label, *aliases.get(key, {}).get(value, ()))
+            if key == "equipment_brand":
+                phrases = (
+                    f"brand is {label}",
+                    f"brand {label}",
+                    *(
+                        f"{label} {equipment}"
+                        for equipment in FACT_OPTIONS["equipment_type"].values()
+                    ),
+                )
+            evidence = [
+                is_uncertain
+                for text, is_uncertain in statements
+                if any(
+                    f" {normalized_speech(phrase)} " in f" {text} "
+                    for phrase in phrases
+                )
+            ]
+            if any(evidence):
+                ambiguous = True
+                break
+            if evidence:
+                values.append(value)
+        if not ambiguous and len(values) == 1:
             matches.append(MemoryFactInput(key=key, value=values[0]))
     return matches
 
@@ -153,18 +206,37 @@ class CustomerMemoryService:
 
     @staticmethod
     def begin_mutation(
-        policy: CustomerMemoryPolicy, data: MemoryMutation, operation: str,
+        policy: CustomerMemoryPolicy,
+        data: MemoryMutation,
+        operation: str,
     ) -> bool:
-        content = data.model_dump(mode="json", exclude={"request_id", "expected_revision"})
-        digest = hashlib.sha256(json.dumps(
-            [operation, content], sort_keys=True, separators=(",", ":")
-        ).encode()).hexdigest()
+        content = data.model_dump(
+            mode="json", exclude={"request_id", "expected_revision"}
+        )
+        if isinstance(data, MemoryFactSaveInput):
+            content = {
+                "facts": sorted(
+                    [fact.model_dump() for fact in data.facts],
+                    key=lambda fact: fact["key"],
+                ),
+                "source_intake_id": str(data.source_intake_id)
+                if data.source_intake_id
+                else None,
+                "explicit_confirmation": data.explicit_confirmation,
+            }
+        digest = hashlib.sha256(
+            json.dumps(
+                [operation, content], sort_keys=True, separators=(",", ":")
+            ).encode()
+        ).hexdigest()
         if policy.last_request_id == data.request_id:
             if policy.last_fingerprint != digest:
                 raise memory_error("This request ID has different details")
             return False
         if policy.revision != data.expected_revision:
-            raise memory_error("Memory changed. Refresh and review your choices", "MEMORY_CONFLICT")
+            raise memory_error(
+                "Memory changed. Refresh and review your choices", "MEMORY_CONFLICT"
+            )
         policy.revision += 1
         policy.updated_at = datetime.now(UTC)
         policy.last_request_id = data.request_id
@@ -190,7 +262,10 @@ class CustomerMemoryService:
             ))
 
     def set_consent(
-        self, actor: ActorContext, data: MemoryMutation, enabled: bool | None,
+        self,
+        actor: ActorContext,
+        data: MemoryMutation,
+        enabled: bool | None,
         correlation_id: UUID,
     ) -> None:
         if enabled is True:
@@ -210,14 +285,30 @@ class CustomerMemoryService:
                 policy.retention_days = self.settings.customer_memory_retention_days
             if enabled is not None:
                 policy.enabled = enabled
-            self.audit(session, account, "CUSTOMER_MEMORY_ERASED" if enabled is None
-                       else "CUSTOMER_MEMORY_CONSENT_CHANGED", correlation_id,
-                       {"enabled": policy.enabled, "revision": policy.revision,
-                        "consent_scope": "CONFIRMED_HISTORY_AND_SELECTED_FACTS"})
+            else:
+                policy.enabled = False
+            self.audit(
+                session,
+                account,
+                "CUSTOMER_MEMORY_ERASED"
+                if enabled is None
+                else "CUSTOMER_MEMORY_CONSENT_CHANGED",
+                correlation_id,
+                {
+                    "enabled": policy.enabled,
+                    "revision": policy.revision,
+                    "consent_scope": "CONFIRMED_HISTORY_AND_SELECTED_FACTS",
+                },
+            )
 
     def save(
-        self, actor: ActorContext, data: MemoryFactSaveInput, correlation_id: UUID,
-        *, session_id: UUID | None = None, whatsapp: bool = False,
+        self,
+        actor: ActorContext,
+        data: MemoryFactSaveInput,
+        correlation_id: UUID,
+        *,
+        session_id: UUID | None = None,
+        whatsapp: bool = False,
         whatsapp_binding_id: UUID | None = None,
     ) -> None:
         self.enabled()
@@ -237,41 +328,70 @@ class CustomerMemoryService:
                     session, account, session_id, whatsapp=whatsapp
                 )
                 if policy.enabled and conversation.created_at < policy.history_after:
-                    raise memory_error("Start a new conversation after changing consent")
+                    raise memory_error(
+                        "Start a new conversation after changing consent"
+                    )
             if not self.begin_mutation(policy, data, "save"):
                 return
             if data.source_intake_id is not None:
                 source = self.source(session, account, data.source_intake_id)
                 allowed = {(fact.key, fact.value) for fact in supported_facts(source)}
-                if session_id is not None and source.conversation_session_id != session_id:
+                if (
+                    session_id is not None
+                    and source.conversation_session_id != session_id
+                ):
                     raise memory_error("The source must belong to this conversation")
-                if source.confirmed_at < policy.history_after:
-                    raise memory_error("This source predates your current memory consent")
+                if source.confirmed_at < max(
+                    policy.history_after,
+                    datetime.now(UTC) - timedelta(days=policy.retention_days),
+                ):
+                    raise memory_error(
+                        "This source is outside your current memory retention"
+                    )
                 if any((fact.key, fact.value) not in allowed for fact in data.facts):
-                    raise memory_error("Only facts supported by the customer's words may be saved")
+                    raise memory_error(
+                        "Only facts supported by the customer's words may be saved"
+                    )
             elif session_id is not None:
-                raise memory_error("Confirm the conversation intake before saving memory")
+                raise memory_error(
+                    "Confirm the conversation intake before saving memory"
+                )
             now = datetime.now(UTC)
             for fact in data.facts:
-                row = session.scalar(select(CustomerMemoryFact).where(
-                    CustomerMemoryFact.account_id == account.id,
-                    CustomerMemoryFact.agency_id == account.agency_id,
-                    CustomerMemoryFact.key == fact.key,
-                ).with_for_update())
+                row = session.scalar(
+                    select(CustomerMemoryFact)
+                    .where(
+                        CustomerMemoryFact.account_id == account.id,
+                        CustomerMemoryFact.agency_id == account.agency_id,
+                        CustomerMemoryFact.key == fact.key,
+                    )
+                    .with_for_update()
+                )
                 if row is None:
                     row = CustomerMemoryFact(
-                        account_id=account.id, agency_id=account.agency_id,
-                        key=fact.key, created_at=now,
+                        account_id=account.id,
+                        agency_id=account.agency_id,
+                        key=fact.key,
+                        created_at=now,
                     )
                     session.add(row)
                 row.value = fact.value
                 row.source_intake_id = data.source_intake_id
-                row.source_kind = "CONVERSATION" if data.source_intake_id else "CUSTOMER_CONTROL"
+                row.source_kind = (
+                    "CONVERSATION" if data.source_intake_id else "CUSTOMER_CONTROL"
+                )
                 row.updated_at = now
                 row.expires_at = now + timedelta(days=policy.retention_days)
-            self.audit(session, account, "CUSTOMER_MEMORY_SAVED", correlation_id,
-                       {"fields": [fact.key for fact in data.facts],
-                        "revision": policy.revision})
+            self.audit(
+                session,
+                account,
+                "CUSTOMER_MEMORY_SAVED",
+                correlation_id,
+                {
+                    "fields": [fact.key for fact in data.facts],
+                    "revision": policy.revision,
+                },
+            )
 
     def remove_fact(
         self, actor: ActorContext, key: str, data: MemoryMutation, correlation_id: UUID,
@@ -421,8 +541,12 @@ class CustomerMemoryService:
             }
 
     def prepare(
-        self, actor: ActorContext, session_id: UUID, facts: list[MemoryFactInput],
-        *, whatsapp_binding_id: UUID | None = None,
+        self,
+        actor: ActorContext,
+        session_id: UUID,
+        facts: list[MemoryFactInput],
+        *,
+        whatsapp_binding_id: UUID | None = None,
     ) -> tuple[int, UUID]:
         self.enabled()
         with self.sessions() as session, session.begin():
@@ -439,16 +563,30 @@ class CustomerMemoryService:
             )
             if conversation.created_at < policy.history_after:
                 raise memory_error("Start a new conversation after changing consent")
-            intake_id = session.scalar(select(ConversationIntake.id).where(
-                ConversationIntake.agency_id == account.agency_id,
-                ConversationIntake.conversation_session_id == session_id,
-            ))
+            intake_id = session.scalar(
+                select(ConversationIntake.id).where(
+                    ConversationIntake.agency_id == account.agency_id,
+                    ConversationIntake.conversation_session_id == session_id,
+                )
+            )
             if intake_id is None:
-                raise memory_error("Confirm your intake before saving conversation memory")
+                raise memory_error(
+                    "Confirm your intake before saving conversation memory"
+                )
             intake = self.source(session, account, intake_id)
+            if intake.confirmed_at < max(
+                policy.history_after,
+                datetime.now(UTC) - timedelta(days=policy.retention_days),
+            ):
+                raise memory_error(
+                    "This source is outside your current memory retention"
+                )
             supported = {(fact.key, fact.value) for fact in supported_facts(intake)}
             if any((fact.key, fact.value) not in supported for fact in facts):
-                raise memory_error("These details need customer evidence; use Memory settings to enter a correction")
+                raise memory_error(
+                    "These details need customer evidence; "
+                    "use Memory settings to enter a correction"
+                )
             return policy.revision, intake.id
 
     def require_whatsapp_link(

@@ -176,7 +176,7 @@ export default function Home() {
             </div>
             <ul
               className="hero-trust-badges"
-              aria-label="Voice, account and payment features"
+              aria-label="Voice, memory, account and payment features"
             >
               <li className="hero-trust-badge">
                 <ProductIcon name="mic" />
@@ -190,6 +190,13 @@ export default function Home() {
                 <span>
                   <small>Protected by</small>
                   <strong>Google Authenticator</strong>
+                </span>
+              </li>
+              <li className="hero-trust-badge">
+                <ProductIcon name="home" />
+                <span>
+                  <small>Customer-controlled · Preview</small>
+                  <strong>Persistent Memory</strong>
                 </span>
               </li>
               <li className="hero-trust-badge">

@@ -166,5 +166,172 @@
       "properties": {},
       "required": []
     }
+  },
+  {
+    "type": "client",
+    "name": "retrieve_customer_memory",
+    "description": "Retrieve optional account-authorized preferences. Empty or unavailable memory is normal; continue booking. Reconfirm relevance and never infer identity, availability, pricing or booking status from memory.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "prepare_customer_memory",
+    "description": "After the intake is confirmed, prepare only customer-stated catalog facts. Read the returned memory readback verbatim and wait for a fresh clear yes. Copy the returned preparation metadata exactly.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "facts": {
+          "type": "array",
+          "description": "Customer-stated supported preferences only. Copy the same key/value pairs from preparation when saving. The server validates each key/value pairing.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "enum": [
+                  "appointment_time",
+                  "appointment_days",
+                  "contact_preference",
+                  "equipment_type",
+                  "equipment_brand",
+                  "equipment_fuel",
+                  "arrival_preference",
+                  "site_access"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "AFTERNOON",
+                  "AMANA",
+                  "BOILER",
+                  "BRYANT",
+                  "CALL_FIRST",
+                  "CARRIER",
+                  "CENTRAL_AC",
+                  "DAIKIN",
+                  "ELECTRIC",
+                  "EMAIL",
+                  "FURNACE",
+                  "GAS",
+                  "GATE",
+                  "GOODMAN",
+                  "HEAT_PUMP",
+                  "LENNOX",
+                  "MINI_SPLIT",
+                  "MITSUBISHI",
+                  "MORNING",
+                  "OIL",
+                  "PETS",
+                  "PHONE",
+                  "RHEEM",
+                  "TRANE",
+                  "WEEKDAYS",
+                  "WEEKENDS",
+                  "YORK"
+                ]
+              }
+            },
+            "required": ["key", "value"]
+          }
+        }
+      },
+      "required": ["facts"]
+    }
+  },
+  {
+    "type": "client",
+    "name": "remember_customer_memory",
+    "description": "Save only after a fresh clear yes to the complete memory readback. Copy facts and preparation metadata exactly. On an uncertain response retry the identical request. Claim remembered only after saved=true. Failure must not interrupt booking.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "facts": {
+          "type": "array",
+          "description": "Customer-stated supported preferences only. Copy the same key/value pairs from preparation when saving. The server validates each key/value pairing.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "enum": [
+                  "appointment_time",
+                  "appointment_days",
+                  "contact_preference",
+                  "equipment_type",
+                  "equipment_brand",
+                  "equipment_fuel",
+                  "arrival_preference",
+                  "site_access"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "enum": [
+                  "AFTERNOON",
+                  "AMANA",
+                  "BOILER",
+                  "BRYANT",
+                  "CALL_FIRST",
+                  "CARRIER",
+                  "CENTRAL_AC",
+                  "DAIKIN",
+                  "ELECTRIC",
+                  "EMAIL",
+                  "FURNACE",
+                  "GAS",
+                  "GATE",
+                  "GOODMAN",
+                  "HEAT_PUMP",
+                  "LENNOX",
+                  "MINI_SPLIT",
+                  "MITSUBISHI",
+                  "MORNING",
+                  "OIL",
+                  "PETS",
+                  "PHONE",
+                  "RHEEM",
+                  "TRANE",
+                  "WEEKDAYS",
+                  "WEEKENDS",
+                  "YORK"
+                ]
+              }
+            },
+            "required": ["key", "value"]
+          }
+        },
+        "source_intake_id": {
+          "type": "string",
+          "description": "Exact source_intake_id from prepare_customer_memory."
+        },
+        "expected_revision": {
+          "type": "integer",
+          "description": "Exact expected_revision from prepare_customer_memory."
+        },
+        "request_id": {
+          "type": "string",
+          "description": "Exact request_id from prepare_customer_memory; reuse on retries."
+        },
+        "explicit_confirmation": {
+          "type": "boolean",
+          "description": "True only after a fresh clear yes to the complete returned memory readback."
+        }
+      },
+      "required": [
+        "facts",
+        "source_intake_id",
+        "expected_revision",
+        "request_id",
+        "explicit_confirmation"
+      ]
+    }
   }
 ]

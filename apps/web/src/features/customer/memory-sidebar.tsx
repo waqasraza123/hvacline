@@ -191,7 +191,8 @@ export function MemorySidebar({
             onClick={() =>
               onAction({
                 title: "Clear your optional memory?",
-                description: `This deletes saved details, optional summaries, and WhatsApp links. Memory will ${view.enabled ? "stay enabled for future confirmed conversations" : "stay off"}. Confirmed business records are kept.`,
+                description:
+                  "This deletes saved details, optional summaries, and WhatsApp links, and turns memory off. Enable it again before saving new preferences. Confirmed business records are kept.",
                 label: "Delete optional memory",
                 path: "delete",
               })

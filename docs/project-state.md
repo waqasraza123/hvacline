@@ -1,5 +1,22 @@
 # Project State
 
+## Persistent memory and full-width website publication — 2026-11-10
+
+Owner authorizes committing/pushing all pending changes to main. Compared all86
+changed/untracked paths against canonical e5cf2c2; previously published changes
+already match, leaving19 publication files. Includes persistent-memory startup/
+retry/consent/evidence fixes and specifications, prepared ElevenLabs tools/prompt,
+Preview hero badge and full-width shared website/pricing containers. Existing
+published source/history and original divergent checkout edits are preserved.
+
+Publish from /private/tmp/hvacline-memory-publish-20261110 with hooks disabled
+and [skip ci] [skip render]. The latest owner instruction keeps tests/builds/lints
+and other execution checks stopped. No new migration, environment/provider/data
+operation or deployment. Final source/runtime and hosted memory/Neon/device/
+retention scheduling acceptance remain unverified. Existing release/tag remains
+unchanged. Future owner commands/manual checks: docs/customer-memory.md and
+docs/homepage-branding.md. Publication outcome is recorded in local session notes.
+
 ## Knowledge base and account header publication authorized — 2026-11-09
 
 Owner requests commit and push to main. Prepared all remaining source/guide
@@ -21,6 +38,129 @@ publication. Hooks disabled; [skip ci] [skip render] retained. Existing release
 v0.1.0-beta.1 stays pinned to595994f. Owner checks: npm run verify:web and commands/
 manual checks in docs/knowledge-base.md and docs/homepage-branding.md. Application
 and visual acceptance remain unverified; no Calendly/HubSpot work is active.
+
+## Theme, hero badges and Voice Chat publication authorized — 2026-11-09
+
+Owner requests pushing all remaining changes to main. Prepared all source/guide
+differences on canonical595994f in the isolated publication checkout. Includes
+animated customer light/dark switching, theme-aware customer/billing surfaces,
+WebRTC/authenticator/Stripe sandbox hero badges and Try Voice Chat as primary
+action with Voice as the customer workspace default. Text chat and separate
+phone/callback options remain; consent and deliberate connection are required.
+Current release remains v0.1.0-beta.1 at595994f; do not move its tag.
+No migration/dependency/backend setting change. No tests, builds, lint/type
+checks, previews, live sessions, provider/database operations or deployment
+commands ran. Hooks disabled and [skip ci] [skip render] retained. Runtime remains
+unverified; owner command npm run verify:web and manual checks in
+docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
+
+## Remaining header changes publication authorized — UNVERIFIED — 2026-11-09
+
+Owner requests pushing all changes to main. Canonical main6b2bbad already contains
+the complete Stripe billing implementation, automatic business resolution,
+ElevenLabs wordmark and Twilio header logo; earlier SMS/inbound code and guides
+are also published. Comparing the original local changed/untracked files with
+main finds only the Stripe Pricing navigation label, header guide and release
+notes still unpublished. The label retains /pricing and Twilio stays displayed
+beside ElevenLabs, Telnyx and WhatsApp. Original branch/edits remain preserved.
+No tests, builds, lint/type checks, services, provider operations or deployment
+commands ran for this publication; hooks disabled and skip markers retained.
+Owner command/manual acceptance: npm run verify:web, then check pricing link,
+provider alignment/accessible names and desktop/tablet/320px header overflow.
+
+## Stripe and SMS publication status — 2026-11-09
+
+Canonical main accepted f858404..6b2bbad for full sandbox billing, automatic
+business resolution and ElevenLabs wordmark, without force. Earlier SMS/inbound
+publication accepted430c16d..f858404. These publications supersede the historical
+local-only billing restriction and unpublished-status notes. Runtime remains
+unverified; exact setup/checks: docs/maintenance-billing.md,
+docs/homepage-branding.md and docs/sms-capable-demo-numbers.md.
+
+## Stripe billing publication authorized — runtime UNVERIFIED — 2026-11-09
+
+Owner requests pushing the current work and explicitly includes Stripe code.
+This supersedes the earlier local-only restriction for billing commit1297b0a.
+Prepared from canonical main f858404 in an isolated checkout, including the full
+billing feature, automatic business resolution and ElevenLabs text wordmark.
+Existing published SMS/inbound changes are retained; unrelated original working
+edits and historical notes are preserved. Use disabled Git hooks and existing
+[skip ci] [skip render] markers. No verification execution, migration, Stripe
+setup/payment or hosted deployment is authorized by this publication.
+
+## Sandbox homeowner maintenance billing — implementation UNVERIFIED — 2026-11-09
+
+One editable catalog defines draft3/5/10-hour monthly technician-maintenance
+packages and separate extra-hour rates. Initial payment and paid renewal grant
+current-period package hours; purchased extras remain until used. Booking alone
+does not consume labor. Signed webhook reconciliation, persistent checkout retries,
+unknown-write recovery, customer portal period-end cancellation, refund/dispute
+holds and administrator completed-labor entries use existing customer/agency
+ownership. One Stripe sandbox account is configured; live keys/events/rows are
+rejected. This does not add Stripe Connect or production identity support.
+
+Includes /pricing, /billing, homepage packages, billing auth continuation, shared
+loading spinners, Stripe dependency and forward migration20261108_0020. No tests,
+builds, lint/type checks, migrations, services, Stripe objects/payments or deployment
+commands ran. Runtime/sandbox acceptance and existing customer/privacy launch gates
+remain pending. Exact setup, owner commands and manual checks:
+docs/maintenance-billing.md. Wordmark checks: docs/homepage-branding.md.
+
+## SMS/inbound publication authorized — runtime UNVERIFIED — 2026-11-08
+
+Owner requests publishing the pending US SMS-capability changes and inbound/setup
+investigation documents. The publication is isolated on the existing remote main
+revision; unrelated local feature commits are excluded. Carrier line-type gating
+is relaxed while provider code verification, MFA, consent, US/carrier identity,
+quotas and unknown-call recovery remain. Inbound changes here document earlier
+provisioning and setup; no new inbound handler is added. No new migration or
+setting is required. No checks, services, provider actions or deployment commands
+ran. Owner commands/manual checks: docs/sms-capable-demo-numbers.md and
+respective inbound/incident guides. Runtime acceptance remains pending.
+
+## Persistent customer memory completed locally; hosted acceptance pending — 2026-11-10
+
+Existing PostgreSQL account/agency memory tables, consent revisions, APIs,
+customer controls, verified WhatsApp identity and ElevenLabs1.12.0 are reused.
+Browser Voice/Text now request bounded authorized context after connection,
+independently of booking. Save retries preserve confirmed payloads and use
+canonical fact/source fingerprints. Clear deletes optional data and disables
+retention until fresh opt-in; expired evidence cannot refresh facts. Conservative
+evidence handling supports weekday mornings and rejects negative/ambiguous
+claims; the final explicit-brand refinement remains unverified.
+
+Evidence collected during implementation:47 backend unit/API/provider checks,
+52 disposable PostgreSQL channel/booking/ownership checks and204 web tests
+passed; production web build passed. Final11 memory tests include committed
+preference retrieval by a fresh Python process, new connections and concurrent
+retry/conflict handling. Static hero checks passed320/390/1440px in both themes.
+These establish local behavior only. Full verify:web remains blocked by16
+existing formatting failures; standalone typecheck has2 existing proxy-test
+generic errors and broader migration expectations omit prior FAQ0021 changes.
+Node24 validation, hosted agent/Neon/device acceptance and retention scheduling
+remain pending. Final source has not been fully revalidated: owner subsequently
+stopped tests/builds/lints and requested coding only; that stop is honored.
+
+Hero adds customer-controlled Persistent Memory visibly marked Preview, retaining
+heading/Voice CTA/styles. No new migration/environment variable/dependency
+declaration or lockfile, and no configured Neon/customer data was changed.
+No services, live calls/messages, hosted agent changes, deployments, commits or
+pushes. Exact prepared private-browser tools/prompt, changed files, future owner
+commands and real end-to-end acceptance: docs/customer-memory.md.
+
+## Knowledge base and account avatars published — runtime UNVERIFIED — 2026-11-09
+
+Published e5cf2c2 to canonical hvacline main; push accepted d2f2d35..e5cf2c2
+without force. Twenty-seven files include approved-question variations, retrieval/
+editor improvements, migration0021/specifications/guide, corrected starter-source
+content and session-aware clickable initials avatars in customer headers. All
+pending application/guide differences are included; original branch/working
+edits are preserved. Configured database already reached0021 in the prior
+authorized operation; no new database action occurred. Hooks disabled and skip
+markers retained. Existing prerelease stays pinned to595994f. No tests, builds,
+lint/type checks, services, provider actions or deployment commands ran. Deploy
+backend/frontend deliberately; owner commands/manual checks remain in
+docs/knowledge-base.md and docs/homepage-branding.md. Runtime remains unverified.
 
 ## Knowledge base improved; migration0021 applied — 2026-11-09
 
@@ -57,21 +197,6 @@ are preserved. Existing v0.1.0-beta.1 remains pinned to595994f. Hooks disabled a
 skip markers retained. No tests, builds, lint/type checks, services, live sessions,
 database/provider operations or deployment commands ran. No new migration or
 dependency. Owner command npm run verify:web; manual acceptance in
-docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
-
-## Theme, hero badges and Voice Chat publication authorized — 2026-11-09
-
-Owner requests pushing all remaining changes to main. Prepared all source/guide
-differences on canonical595994f in the isolated publication checkout. Includes
-animated customer light/dark switching, theme-aware customer/billing surfaces,
-WebRTC/authenticator/Stripe sandbox hero badges and Try Voice Chat as primary
-action with Voice as the customer workspace default. Text chat and separate
-phone/callback options remain; consent and deliberate connection are required.
-Current release remains v0.1.0-beta.1 at595994f; do not move its tag.
-No migration/dependency/backend setting change. No tests, builds, lint/type
-checks, previews, live sessions, provider/database operations or deployment
-commands ran. Hooks disabled and [skip ci] [skip render] retained. Runtime remains
-unverified; owner command npm run verify:web and manual checks in
 docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
 
 ## Voice chat primary/default — implementation UNVERIFIED — 2026-11-09
@@ -118,90 +243,114 @@ builds, lint/type checks, new database/provider operations, services or deployme
 commands ran. URL:
 https://github.com/waqasraza123/hvacline/releases/tag/v0.1.0-beta.1
 
-## Remaining header changes publication authorized — UNVERIFIED — 2026-11-09
+## All remaining changes published — runtime UNVERIFIED — 2026-11-09
 
-Owner requests pushing all changes to main. Canonical main6b2bbad already contains
-the complete Stripe billing implementation, automatic business resolution,
-ElevenLabs wordmark and Twilio header logo; earlier SMS/inbound code and guides
-are also published. Comparing the original local changed/untracked files with
-main finds only the Stripe Pricing navigation label, header guide and release
-notes still unpublished. The label retains /pricing and Twilio stays displayed
-beside ElevenLabs, Telnyx and WhatsApp. Original branch/edits remain preserved.
-No tests, builds, lint/type checks, services, provider operations or deployment
-commands ran for this publication; hooks disabled and skip markers retained.
-Owner command/manual acceptance: npm run verify:web, then check pricing link,
-provider alignment/accessible names and desktop/tablet/320px header overflow.
+Published595994f to canonical hvacline main; push accepted6b2bbad..595994f
+without force. Publishes Stripe Pricing navigation label, header guide and
+verified0020/release-status notes. Twilio remains in the header. All other local
+application changes already matched main, including Stripe billing, automatic
+business resolution, ElevenLabs wordmark and prior SMS/inbound work. Original
+branch/working edits are preserved; isolated publication source is committed.
+Hooks disabled and skip markers retained. No tests, builds, lint/type checks,
+new database/provider operations, services or hosted deployment commands ran.
+Owner checks: npm run verify:web and manual header/link/provider/accessibility/
+overflow acceptance from docs/homepage-branding.md. Runtime remains unverified.
 
 ## Configured database billing schema at0020 — verified — 2026-11-09
 
-Owner-authorized bounded operation using published6b2bbad migration source and
-existing confirmed configuration finds20261108_0020 before and after, matching
-source head. Runtime/direct targets and roles match. All five billing tables and
-customer-account ownership uniqueness exist. No upgrade was needed; no pending
-migration remains for this configured database. Approved network escalation
-completed readback after sandbox connection failure. No schema/data mutation,
-seed, downgrade or customer-row access occurred. Payment/application runtime,
-Stripe configuration and deployment acceptance remain separate/pending.
+Owner authorizes completing pending migrations. Bounded operation using published
+6b2bbad migration source and existing owner-confirmed local database configuration
+finds20261108_0020 before and after; no upgrade is necessary. Runtime/direct
+targets and roles match. Confirms billing_accounts, billing_checkouts,
+billing_events, billing_topups and billing_labor exist, plus customer account
+ownership uniqueness. Current source head is0020; no pending migration remains
+for this configured database. Initial sandbox connection failed; approved network
+escalation completed readback. No seed, downgrade, schema/data mutation, customer
+row access, tests, service, Stripe operation or deployment ran. Payment/application
+runtime and hosted deployment acceptance remain unverified.
 
-## Stripe and SMS publication status — 2026-11-09
+## Stripe billing publication completed — runtime UNVERIFIED — 2026-11-09
 
-Canonical main accepted f858404..6b2bbad for full sandbox billing, automatic
-business resolution and ElevenLabs wordmark, without force. Earlier SMS/inbound
-publication accepted430c16d..f858404. These publications supersede the historical
-local-only billing restriction and unpublished-status notes. Runtime remains
-unverified; exact setup/checks: docs/maintenance-billing.md,
-docs/homepage-branding.md and docs/sms-capable-demo-numbers.md.
+Published6b2bbad to canonical hvacline main; push accepted f858404..6b2bbad
+without force from an isolated checkout. Forty-eight scoped files include the
+full sandbox maintenance-billing feature, automatic business resolution and
+ElevenLabs text wordmark. Earlier local-only billing restriction is superseded.
+Existing published SMS/inbound code remains; original branch/working edits are
+preserved. Hooks disabled; [skip ci] [skip render] retained. No tests, builds,
+lint/type checks, migrations, services, Stripe setup/payments or hosted deployment
+commands ran. Install dependency/apply0020, configure sandbox Stripe, deploy both
+apps and perform owner acceptance per docs/maintenance-billing.md and
+docs/homepage-branding.md. Runtime remains unverified.
 
-## Stripe billing publication authorized — runtime UNVERIFIED — 2026-11-09
+## Stripe billing publication authorized — 2026-11-09
 
-Owner requests pushing the current work and explicitly includes Stripe code.
-This supersedes the earlier local-only restriction for billing commit1297b0a.
-Prepared from canonical main f858404 in an isolated checkout, including the full
-billing feature, automatic business resolution and ElevenLabs text wordmark.
-Existing published SMS/inbound changes are retained; unrelated original working
-edits and historical notes are preserved. Use disabled Git hooks and existing
-[skip ci] [skip render] markers. No verification execution, migration, Stripe
-setup/payment or hosted deployment is authorized by this publication.
+Owner requests pushing current work and explicitly includes Stripe code. This
+supersedes the earlier local-only restriction for billing commit1297b0a. Publish
+the complete billing feature, automatic business resolution and ElevenLabs text
+wordmark on canonical main from an isolated checkout based on f858404. Preserve
+published SMS/inbound behavior, unrelated original working edits and historical
+notes. Hooks disabled and [skip ci] [skip render] retained. No verification,
+migration, provider action or hosted deployment execution is authorized.
 
 ## Automatic billing business resolution — implementation UNVERIFIED — 2026-11-09
 
-Billing derives ownership from the authenticated customer's persisted account;
-administrator labor uses the existing authenticated actor's business. Removed
-BILLING_MERCHANT_AGENCY_ID from settings/startup/readiness and added account/business
+Owner requests removing manual BILLING_MERCHANT_AGENCY_ID configuration. Local
+source now derives billing ownership from the authenticated customer's persisted
+account; administrator labor uses the existing authenticated actor's business.
+Removed the setting/startup/readiness requirement and added account/business
 matching when locking billing rows. Existing customer/MFA, admin authentication,
 appointment ownership, composite foreign keys, saved Stripe customer binding and
-sandbox-only restrictions remain. No additional migration or dependency beyond
-the original billing feature. Regression specifications are unexecuted.
+sandbox-only restrictions remain. One configured Stripe sandbox account is still
+used; this does not add Stripe Connect or production identity support.
 
-## Sandbox homeowner maintenance billing — implementation UNVERIFIED — 2026-11-09
+Updated environment template, setup guide and unexecuted regression specifications
+for configuration, admin authorization and same/other-business account isolation.
+No new migration/dependency; original billing migration0020 remains required.
+Changes are local/unpublished/undeployed. No tests, builds, lint/type checks,
+migrations, services, provider actions or deployment ran. Owner commands and
+manual acceptance: docs/maintenance-billing.md. Runtime remains unverified.
 
-One editable catalog defines draft3/5/10-hour monthly technician-maintenance
-packages and separate extra-hour rates. Initial payment and paid renewal grant
-current-period package hours; purchased extras remain until used. Booking alone
-does not consume labor. Signed webhook reconciliation, persistent checkout retries,
-unknown-write recovery, customer portal period-end cancellation, refund/dispute
-holds and administrator completed-labor entries use existing customer/agency
-ownership. One Stripe sandbox account is configured; live keys/events/rows are
-rejected. This does not add Stripe Connect or production identity support.
+## SMS/inbound publication completed — runtime UNVERIFIED — 2026-11-08
 
-Includes /pricing, /billing, homepage packages, billing auth continuation, shared
-loading spinners, Stripe dependency and forward migration20261108_0020. No tests,
-builds, lint/type checks, migrations, services, Stripe objects/payments or deployment
-commands ran. Runtime/sandbox acceptance and existing customer/privacy launch gates
-remain pending. Exact setup, owner commands and manual checks:
-docs/maintenance-billing.md. Wordmark checks: docs/homepage-branding.md.
+Publishedf858404 to canonical hvacline main; push accepted430c16d..f858404 without
+force from an isolated checkout. Sixteen scoped files publish SMS-capable US
+number support, corresponding specifications and inbound/incident guides/notes.
+Local billing commit1297b0a is excluded and remains unpublished. Original local
+main and remote main intentionally diverge; preserve the original working edits.
+Hooks disabled and skip markers retained. No tests, migration, services, provider
+requests or deployment commands ran. Backend/frontend deployment and runtime
+acceptance remain pending; owner commands/manual checks are documented in
+docs/sms-capable-demo-numbers.md and the corresponding inbound/incident guides.
 
-## SMS/inbound publication authorized — runtime UNVERIFIED — 2026-11-08
+## Homeowner maintenance billing — implementation UNVERIFIED — 2026-11-08
 
-Owner requests publishing the pending US SMS-capability changes and inbound/setup
-investigation documents. The publication is isolated on the existing remote main
-revision; unrelated local feature commits are excluded. Carrier line-type gating
-is relaxed while provider code verification, MFA, consent, US/carrier identity,
-quotas and unknown-call recovery remain. Inbound changes here document earlier
-provisioning and setup; no new inbound handler is added. No new migration or
-setting is required. No checks, services, provider actions or deployment commands
-ran. Owner commands/manual checks: docs/sms-capable-demo-numbers.md and
-respective inbound/incident guides. Runtime acceptance remains pending.
+Owner specifies fixed technician maintenance-hour packages for homeowners, upfront
+initial payment and a new separate checkout for additional hours on the existing
+account. Website billing is restricted to Stripe sandbox/test; this supersedes the
+early AI-voice-time interpretation. Local source adapts DwellCall customer binding,
+checkout reservations, gateway, signed receipts and reconciliation to HVACLine's
+customer/MFA and agency ownership. Draft 3/5/10-hour monthly packages and extra-hour
+rates share one editable catalog. Amounts are editable draft demonstration rates.
+
+Source adds account package/purchased-hour balances, one-time extra-hours checkout,
+payment-confirmed credit, current paid-period allowances, completed-labor debits,
+portal cancellation at period end, cancellation of unpaid checkouts, unknown-write
+recovery and refund/dispute holds.
+Purchased hours remain until used; package hours reset per paid monthly period.
+Booking itself never consumes labor. New /pricing and /billing pages, homepage
+package section, billing auth continuation and shared circular loading states use
+the existing charcoal/orange design. Live keys/mode/events/rows are rejected.
+
+Migration20261108_0020 and Stripe dependency are written, unapplied/uninstalled by
+Codex. Regression specifications are unexecuted. No tests/builds/lints/type checks,
+services, Stripe setup/payment, deployment or publication ran. Existing customer,
+privacy, development and launch gates remain. Exact setup, owner commands and
+manual checks: docs/maintenance-billing.md. Runtime and sandbox acceptance remain
+pending; source does not establish payment success.
+
+
+Owner requests a local commit only, with no push. Runtime verification, Stripe
+setup and deployment remain pending; no execution checks are authorized.
 
 ## Hero inbound number publication completed — UNVERIFIED runtime — 2026-11-08
 

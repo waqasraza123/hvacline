@@ -28,7 +28,7 @@ export default function PricingPage() {
           </Link>
         </div>
       </header>
-      <main>
+      <main className="product-main">
         <Pricing />
       </main>
       <footer className="product-footer product-container">
