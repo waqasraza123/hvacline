@@ -23,6 +23,11 @@
 
 HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job.
 
+The codebase also includes a Phase 1 multi-product website collection: three
+independent visual templates share typed configuration and routing. The existing
+HVACLine product remains intact; a full website editor and per-business voice
+provisioning are future phases.
+
 ## What it does
 
 - **Meet customers where they are.** Browser chat and voice, with telephone and inbound WhatsApp voice integrations.
@@ -39,6 +44,36 @@ HVACLine collects service requests, answers business-approved questions, and gui
 3. The customer confirms, and the saved appointment appears in the operations workspace.
 
 Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
+
+## Explore Voice AI Demos
+
+The homepage's **Explore Voice AI Demos** gallery opens three complete example
+websites. Each uses its own layout, content, theme and metadata:
+
+| Website | Route | Design | Conversation boundary |
+| --- | --- | --- | --- |
+| HVACLine AI | `/demos/hvac` | Charcoal/orange industrial, equipment illustration and service workflow | Written example; existing `/book` account entry, with Voice/Text checked in the existing flow |
+| Alder & Stone | `/demos/real-estate` | Warm editorial luxury, serif headlines and asymmetric architectural collection | Fictional brand and illustrated properties; no agent or inquiries submitted |
+| Morrow Studio | `/demos/appointments` | Soft sage, spacious appointment studio and friendly welcome | Fictional studio; no agent, customer data or bookings |
+
+Gallery artwork reuses the original local illustrations from the actual demos.
+There are no third-party website screenshots, active property listings or
+simulated successful bookings. Other demo businesses never default to the HVAC
+agent. Connection links preserve existing authentication, consent and backend
+availability checks; the new pages themselves do not start sessions.
+
+`WebsiteTemplate`, `WebsiteConfiguration` and server-only `AgentConfiguration`
+remain separate. Validated static records feed a shared source interface and
+component registry, with three distinct layout components. Section order, brand,
+approved asset references, colors, allowlisted fonts, content, navigation, CTAs
+and SEO live in structured configuration. CSS Modules isolate template styling.
+There is no database migration, new dependency, editor, upload endpoint or
+publishing service in Phase 1.
+
+**Implementation is unverified.** Focused regression tests were added but no
+checks were executed under the active owner policy. Exact commands, manual
+acceptance and the Phase 2/3 implementation plan:
+[Multi-product website foundation](docs/multi-product-websites.md).
 
 ## Dashboard demo
 

@@ -1,5 +1,36 @@
 # Project State
 
+## Multi-product website publication authorized — runtime UNVERIFIED — 2026-11-12
+
+Owner explicitly requests push to main, authorizing commit/publication of the
+completed Phase1 feature. This supersedes the preceding task's coding-only
+publication restriction; tests/builds/lints/type checks/services remain stopped.
+Publish from current canonical main using an isolated checkout, preserve original
+divergent edits and canonical history, disable hooks and retain [skip ci]
+[skip render]. No deployment, migration or provider/data operation is requested.
+Runtime/visual acceptance remains unverified; owner checks and Phase2/3 plans
+are in docs/multi-product-websites.md.
+
+## Multi-product website foundation — source implemented, UNVERIFIED — 2026-11-12
+
+Owner authorizes Phase1 coding only, superseding prior publication authorization
+for this new task. Existing homepage/functional CTAs are preserved; a gallery
+adds /demos/hvac, /demos/real-estate and /demos/appointments. Three distinct
+industrial/editorial/calm layouts share validated template/website contracts,
+scoped primitives, local original SVG artwork and an async configuration-source
+boundary. Server-only agent bindings separate presentation from provider/business
+configuration; no provider IDs/secrets are placed in website content. Fictional
+real estate/studio sites are written previews only. HVAC links into the existing
+authenticated account flow; backend availability remains authoritative.
+
+No new API/dependency/database schema/editor/publishing service. Existing backend
+still uses development membership/business resolution and one server-configured
+browser provider; this is not production multi-tenancy. Focused test source is
+added but unexecuted. No tests/builds/lints/type checks/formatters/services/live
+provider actions/migrations/commits/pushes/deployments ran. Runtime and visual
+acceptance remain unverified. Exact future commands/manual checks and concrete
+Phase2/3 dependencies/migrations/slices: docs/multi-product-websites.md.
+
 ## TailAdmin operations dashboard demo — implementation UNVERIFIED — 2026-11-12
 
 Owner selects TailAdmin, requests HVACLine colors, demo content, README update

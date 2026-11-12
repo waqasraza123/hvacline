@@ -12,6 +12,7 @@ import {
   OutboundDemoTrigger,
 } from "@/features/outbound-demo/outbound-demo-dialog";
 import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
+import { DemoGallery } from "@/features/websites/demo-gallery";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 
@@ -49,6 +50,7 @@ export default function Home() {
         <nav className="product-nav" aria-label="Main navigation">
           <a href="#how-it-works">How it works</a>
           <a href="#services">Services</a>
+          <a href="#voice-demos">Voice AI demos</a>
           <Link href="/operations">Dashboard demo</Link>
           <Link href="/pricing">Stripe Pricing</Link>
           <a href="#call-me">Calling</a>
@@ -213,6 +215,7 @@ export default function Home() {
             <HomepageChat />
           </div>
         </section>
+        <DemoGallery />
         <section id="how-it-works" className="how-section product-container">
           <div className="section-heading">
             <div>
