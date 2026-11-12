@@ -156,7 +156,7 @@ export function DashboardShell({
           </div>
           <div className={styles.headerActions}>
             <ThemeToggle />
-            <Link href="/phone-demo" className={styles.phoneLink}>
+            <Link href="/#call-me" className={styles.phoneLink}>
               <ProductIcon name="phone" /><span>Phone receptionist</span>
             </Link>
           </div>

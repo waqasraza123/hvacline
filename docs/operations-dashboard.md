@@ -43,6 +43,8 @@ Manual acceptance:
 1. Open the homepage Dashboard demo link. Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
+   The top-right Phone receptionist link must open the homepage Calling section
+   (`/#call-me`), rather than the sandbox-gated `/phone-demo` route.
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
    horizontally scrollable tables, wrapped request details and no page overflow.
 3. Use keyboard-only navigation: skip link, desktop collapse/expand, mobile drawer
