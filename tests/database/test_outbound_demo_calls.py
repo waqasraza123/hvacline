@@ -91,10 +91,14 @@ class Context:
             proof = OutboundPhoneVerification(
                 agency_id=self.agency_id,
                 owner_hash=self.service._hash("owner", owner),
-                destination_hash=self.service._hash("destination", request.phone_number),
+                destination_hash=self.service._hash(
+                    "destination", request.phone_number
+                ),
                 consent_version="outbound-sms-v1",
-                created_at=now, expires_at=now + timedelta(minutes=5),
-                attempts=1, verified_at=now,
+                created_at=now,
+                expires_at=now + timedelta(minutes=5),
+                attempts=1,
+                verified_at=now,
                 provider_verification_id=f"synthetic-verification-{uuid4()}",
             )
             session.add(proof)
@@ -339,13 +343,17 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
     config = us_context.service.settings
     api = us_context.service.api.model_copy(
         update={
-            "demo_admin_token": SecretStr("synthetic-admin-token-at-least-32-characters")
+            "demo_admin_token": SecretStr(
+                "synthetic-admin-token-at-least-32-characters"
+            )
         }
     )
     application = FastAPI()
     application.add_exception_handler(ApiError, api_error_handler)  # type: ignore[arg-type]
     application.include_router(
-        create_outbound_demo_router(api, us_context.sessions, config, us_context.provider)
+        create_outbound_demo_router(
+            api, us_context.sessions, config, us_context.provider
+        )
     )
     request = us_context.verified_input(data(phone_number="+12025550123"), "a" * 43)
     payload = {
@@ -364,20 +372,14 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
             base_url="http://test",
             headers=headers,
         ) as client:
-            response = await client.post(
-                "/api/v1/outbound-demo/calls", json=payload
-            )
+            response = await client.post("/api/v1/outbound-demo/calls", json=payload)
             assert response.status_code == 200
             assert response.json()["status"] == "dialing"
-            replay = await client.post(
-                "/api/v1/outbound-demo/calls", json=payload
-            )
+            replay = await client.post("/api/v1/outbound-demo/calls", json=payload)
             assert replay.json()["id"] == response.json()["id"]
             path = f"/api/v1/outbound-demo/requests/{request.request_id}"
             assert (await client.get(path)).status_code == 200
-            foreign = await client.get(
-                path, headers={"X-Outbound-Visitor": "b" * 43}
-            )
+            foreign = await client.get(path, headers={"X-Outbound-Visitor": "b" * 43})
             assert foreign.status_code == 404
 
     asyncio.run(submit())
@@ -385,7 +387,9 @@ def test_public_us_callback_route_dials_once_and_isolates_status(
     assert not config.outbound_demo_transfer_enabled
 
 
-def test_consented_us_daily_budget_includes_failed_preflight(us_context: Context) -> None:
+def test_consented_us_daily_budget_includes_failed_preflight(
+    us_context: Context,
+) -> None:
     us_context.service.settings.outbound_demo_daily_limit = 1
     us_context.provider.fail_preflight = True
     result = us_context.create_verified(data(phone_number="+12025550123"), "admin")
@@ -457,25 +461,37 @@ def test_account_call_limit_survives_changing_destination(us_context: Context) -
         us_context.create_verified(data(phone_number="+12125550123"), OWNER)
     assert caught.value.code == "DEMO_CALL_LIMIT"
     assert us_context.provider.dial_count == 1
-    other = us_context.create_verified(data(phone_number="+12125550123"), "other-account")
+    other = us_context.create_verified(
+        data(phone_number="+12125550123"), "other-account"
+    )
     assert other.status == DemoCallStatus.DIALING
 
 
 def test_sms_verification_grants_one_account_and_destination_bound_call(
-    us_context: Context, sms_provider: Mock,
+    us_context: Context,
+    sms_provider: Mock,
 ) -> None:
     verification = us_context.service.verification
-    challenge = verification.start(SmsStartInput(
-        phone_number="+12025550123", sms_consent=True,
-        sms_consent_version="outbound-sms-v1",
-    ), OWNER)
+    challenge = verification.start(
+        SmsStartInput(
+            phone_number="+12025550123",
+            sms_consent=True,
+            sms_consent_version="outbound-sms-v1",
+        ),
+        OWNER,
+    )
     verify = SmsVerifyInput(challenge_id=challenge.challenge_id, code="123456")
     with pytest.raises(ApiError):
         verification.verify(verify, "other-account")
     sms_provider.verify.assert_not_called()
     assert verification.verify(verify, OWNER).verified
-    request = data(phone_number="+12025550123", phone_verification_id=challenge.challenge_id)
-    for changes, owner in [({"phone_number": "+12125550123"}, OWNER), ({}, "other-account")]:
+    request = data(
+        phone_number="+12025550123", phone_verification_id=challenge.challenge_id
+    )
+    for changes, owner in [
+        ({"phone_number": "+12125550123"}, OWNER),
+        ({}, "other-account"),
+    ]:
         with pytest.raises(ApiError) as caught:
             us_context.service.create(request.model_copy(update=changes), owner)
         assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
@@ -492,7 +508,8 @@ def test_sms_verification_grants_one_account_and_destination_bound_call(
 
 @pytest.mark.parametrize("problem", ["missing", "unverified", "expired", "consumed"])
 def test_website_cannot_dial_without_fresh_phone_proof(
-    us_context: Context, problem: str,
+    us_context: Context,
+    problem: str,
 ) -> None:
     request = data(phone_number="+12025550123")
     if problem != "missing":
@@ -513,13 +530,18 @@ def test_website_cannot_dial_without_fresh_phone_proof(
 
 
 def test_sms_wrong_codes_and_provider_errors_consume_attempts(
-    us_context: Context, sms_provider: Mock,
+    us_context: Context,
+    sms_provider: Mock,
 ) -> None:
     verification = us_context.service.verification
-    challenge = verification.start(SmsStartInput(
-        phone_number="+12025550123", sms_consent=True,
-        sms_consent_version="outbound-sms-v1",
-    ), OWNER)
+    challenge = verification.start(
+        SmsStartInput(
+            phone_number="+12025550123",
+            sms_consent=True,
+            sms_consent_version="outbound-sms-v1",
+        ),
+        OWNER,
+    )
     sms_provider.verify.side_effect = [sms_unavailable(), None, None, None, None]
     request = SmsVerifyInput(challenge_id=challenge.challenge_id, code="000000")
     for _ in range(5):
@@ -536,7 +558,9 @@ def test_sms_wrong_codes_and_provider_errors_consume_attempts(
         assert row.verified_at is None
 
 
-def test_consumed_phone_proof_cannot_dial_a_different_request(us_context: Context) -> None:
+def test_consumed_phone_proof_cannot_dial_a_different_request(
+    us_context: Context,
+) -> None:
     us_context.service.settings.outbound_demo_account_daily_limit = 2
     us_context.service.settings.outbound_demo_number_daily_limit = 2
     request = us_context.verified_input(data(phone_number="+12025550123"), OWNER)
@@ -547,18 +571,24 @@ def test_consumed_phone_proof_cannot_dial_a_different_request(us_context: Contex
         assert row is not None
         row.created_at = datetime.now(UTC) - timedelta(minutes=10)
     with pytest.raises(ApiError) as caught:
-        us_context.service.create(request.model_copy(update={"request_id": uuid4()}), OWNER)
+        us_context.service.create(
+            request.model_copy(update={"request_id": uuid4()}), OWNER
+        )
     assert caught.value.code == "DEMO_PHONE_VERIFICATION_REQUIRED"
     assert us_context.service.create(request, OWNER).id == result.id
     assert us_context.provider.dial_count == 1
 
 
 def test_sms_limits_share_number_account_and_business_budget(
-    us_context: Context, sms_provider: Mock,
+    us_context: Context,
+    sms_provider: Mock,
 ) -> None:
     verification = us_context.service.verification
-    first = SmsStartInput(phone_number="+12025550123", sms_consent=True,
-                          sms_consent_version="outbound-sms-v1")
+    first = SmsStartInput(
+        phone_number="+12025550123",
+        sms_consent=True,
+        sms_consent_version="outbound-sms-v1",
+    )
     verification.start(first, OWNER)
     for request, owner in [
         (first, "other-account"),
@@ -569,17 +599,23 @@ def test_sms_limits_share_number_account_and_business_budget(
         assert caught.value.code == "DEMO_SMS_LIMIT"
     verification.settings.outbound_demo_sms_daily_limit = 1
     with pytest.raises(ApiError) as caught:
-        verification.start(first.model_copy(update={"phone_number": "+12125550123"}), "new-account")
+        verification.start(
+            first.model_copy(update={"phone_number": "+12125550123"}), "new-account"
+        )
     assert caught.value.code == "DEMO_SMS_LIMIT"
     assert sms_provider.send.call_count == 1
 
 
 def test_failed_sms_send_is_budgeted_and_is_not_automatically_retried(
-    us_context: Context, sms_provider: Mock,
+    us_context: Context,
+    sms_provider: Mock,
 ) -> None:
     sms_provider.send.side_effect = sms_unavailable()
-    request = SmsStartInput(phone_number="+12025550123", sms_consent=True,
-                            sms_consent_version="outbound-sms-v1")
+    request = SmsStartInput(
+        phone_number="+12025550123",
+        sms_consent=True,
+        sms_consent_version="outbound-sms-v1",
+    )
     with pytest.raises(ApiError):
         us_context.service.verification.start(request, OWNER)
     with pytest.raises(ApiError) as caught:

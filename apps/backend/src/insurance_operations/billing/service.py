@@ -169,7 +169,10 @@ class BillingService:
                     raise billing_error(
                         409,
                         "billing_customer_unconfirmed",
-                        "A previous customer creation is unconfirmed. The owner must reconcile it before retrying.",
+                        (
+                            "A previous customer creation is unconfirmed. The "
+                            "owner must reconcile it before retrying."
+                        ),
                     )
                 result = self.gateway.create_customer(account_id, email)
                 if (
@@ -421,7 +424,10 @@ class BillingService:
                             raise billing_error(
                                 409,
                                 "checkout_pending",
-                                "Your payment is being confirmed. Refresh billing before trying again.",
+                                (
+                                    "Your payment is being confirmed. Refresh billing "
+                                    "before trying again."
+                                ),
                             )
                         attempt.status = "complete"
                     elif status == "expired":
@@ -437,7 +443,10 @@ class BillingService:
                         raise billing_error(
                             409,
                             "checkout_pending",
-                            "Checkout status is unconfirmed. Keep this request and refresh billing.",
+                            (
+                                "Checkout status is unconfirmed. Keep this request "
+                                "and refresh billing."
+                            ),
                         )
                 elif attempt.plan == plan:
                     chosen = attempt
@@ -445,7 +454,10 @@ class BillingService:
                     raise billing_error(
                         409,
                         "checkout_pending",
-                        "Another checkout is unconfirmed. Keep that request before choosing a different plan.",
+                        (
+                            "Another checkout is unconfirmed. Keep that "
+                            "request before choosing a different plan."
+                        ),
                     )
             if chosen is None:
                 if existing is not None:
@@ -487,7 +499,10 @@ class BillingService:
                 raise billing_error(
                     409,
                     "checkout_unconfirmed",
-                    "This checkout is unconfirmed and cannot be recreated. The owner must reconcile it.",
+                    (
+                        "This checkout is unconfirmed and cannot be "
+                        "recreated. The owner must reconcile it."
+                    ),
                 )
             if any(
                 item.get("status") not in TERMINAL_SUBSCRIPTIONS
@@ -651,7 +666,10 @@ class BillingService:
                 raise billing_error(
                     409,
                     "billing_binding_conflict",
-                    "The customer does not belong to this HVACLine account and Stripe mode.",
+                    (
+                        "The customer does not belong to this HVACLine "
+                        "account and Stripe mode."
+                    ),
                 )
             account.customer_id = customer_id
             session.commit()
@@ -667,10 +685,8 @@ class BillingService:
                 )
             account = self._account(session, initial.account_id)
             attempt = session.get(BillingCheckout, request_id, populate_existing=True)
-            if (
-                attempt is None
-                or attempt.session_id
-                and attempt.session_id != session_id
+            if attempt is None or (
+                attempt.session_id and attempt.session_id != session_id
             ):
                 raise billing_error(
                     409,
@@ -698,7 +714,7 @@ class BillingService:
         self, session: Session, account: BillingAccount | None
     ) -> dict[str, Any]:
         plan = active_plan(account)
-        package = PLANS[cast(PaidPlanKey, plan)] if plan != "none" else None
+        package = PLANS[plan] if plan != "none" else None
         included = package.included_minutes if package else 0
         used_package = 0
         purchased = used_purchased = 0
@@ -838,14 +854,20 @@ class BillingService:
                         raise billing_error(
                             409,
                             "topup_pending",
-                            "Your previous payment is still being confirmed. Refresh billing.",
+                            (
+                                "Your previous payment is still being confirmed. "
+                                "Refresh billing."
+                            ),
                         )
                 if attempt.minutes != hours * 60 or attempt.amount != accepted_amount:
                     session.commit()
                     raise billing_error(
                         409,
                         "topup_pending",
-                        "Finish or cancel the pending extra-hours checkout before changing the quantity.",
+                        (
+                            "Finish or cancel the pending extra-hours checkout "
+                            "before changing the quantity."
+                        ),
                     )
                 chosen = attempt
                 break
@@ -854,7 +876,10 @@ class BillingService:
                 raise billing_error(
                     409,
                     "topup_finished",
-                    "This checkout has finished. Refresh billing before a deliberate new purchase.",
+                    (
+                        "This checkout has finished. Refresh billing "
+                        "before a deliberate new purchase."
+                    ),
                 )
             if chosen and chosen.session_id:
                 session.commit()
@@ -868,7 +893,7 @@ class BillingService:
                         "package_required",
                         "Buy and activate a maintenance package before adding hours.",
                     )
-                package = PLANS[cast(PaidPlanKey, plan)]
+                package = PLANS[plan]
                 amount = hours * package.hourly_amount
                 if accepted_amount != amount:
                     raise billing_error(
@@ -906,7 +931,10 @@ class BillingService:
                     raise billing_error(
                         409,
                         "topup_unconfirmed",
-                        "This checkout needs business reconciliation; it cannot be recreated.",
+                        (
+                            "This checkout needs business reconciliation; it "
+                            "cannot be recreated."
+                        ),
                     )
                 remote = self.gateway.topup(
                     cast(str, account.customer_id),
@@ -995,7 +1023,10 @@ class BillingService:
                 raise billing_error(
                     409,
                     "billing_booking_ineligible",
-                    "Record completed labor only for a confirmed visit that has started.",
+                    (
+                        "Record completed labor only for a confirmed visit "
+                        "that has started."
+                    ),
                 )
             account = self._account(session, customer.id)
             self._reconcile(session, account)
@@ -1022,7 +1053,10 @@ class BillingService:
                     raise billing_error(
                         409,
                         "labor_request_conflict",
-                        "The saved labor record does not match. Ask the business to review it.",
+                        (
+                            "The saved labor record does not match. Ask the "
+                            "business to review it."
+                        ),
                     )
                 session.commit()
                 return LaborRead.model_validate(row)
@@ -1033,7 +1067,10 @@ class BillingService:
                 raise billing_error(
                     409,
                     "maintenance_hours_insufficient",
-                    "The homeowner must purchase enough additional hours before this work can be recorded.",
+                    (
+                        "The homeowner must purchase enough additional "
+                        "hours before this work can be recorded."
+                    ),
                 )
             row = BillingLabor(
                 id=data.request_id,
@@ -1089,7 +1126,7 @@ class BillingService:
                 )
             account = self._account(session, initial.account_id)
             topup = session.get(BillingTopUp, request_id, populate_existing=True)
-            if topup is None or topup.session_id and topup.session_id != session_id:
+            if topup is None or (topup.session_id and topup.session_id != session_id):
                 raise billing_error(
                     409,
                     "billing_binding_conflict",

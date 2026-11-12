@@ -67,7 +67,6 @@ export function CustomerMemory() {
     window.addEventListener("focus", focus);
     return () => {
       mounted.current = false;
-      ++version.current;
       window.removeEventListener("focus", focus);
     };
   }, [refresh]);

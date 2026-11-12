@@ -15,11 +15,6 @@ const links = [
     description: "Explore the collection",
   },
   {
-    href: "/#how-it-works",
-    label: "How it works",
-    description: "From conversation to booking",
-  },
-  {
     href: "/operations",
     label: "Dashboard",
     description: "See your service workspace",

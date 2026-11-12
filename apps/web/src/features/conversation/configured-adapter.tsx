@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 import {
   ElevenLabsConversationAdapter,
@@ -46,20 +46,24 @@ function AdapterSelector({
   const [provider, setProvider] = useState<"elevenlabs" | "local">(
     "elevenlabs",
   );
-  const providerRef = useRef(provider);
   const selected = provider === "local" ? localClient : elevenLabsClient;
-  const activeClient = () =>
-    providerRef.current === "local" ? localClient : elevenLabsClient;
   return children({
     ...selected,
     start: async (authorization, backgroundContext) => {
-      providerRef.current = authorization.provider ?? "elevenlabs";
-      setProvider(providerRef.current);
-      await activeClient().start(authorization, backgroundContext);
+      const next = authorization.provider ?? "elevenlabs";
+      setProvider(next);
+      await (next === "local" ? localClient : elevenLabsClient).start(
+        authorization,
+        backgroundContext,
+      );
     },
-    end: () => activeClient().end(),
-    sendText: (text) => activeClient().sendText(text),
-    notifyTyping: () => activeClient().notifyTyping(),
-    setMuted: (muted) => activeClient().setMuted(muted),
+    end: async () => {
+      const results = await Promise.allSettled([
+        localClient.end(),
+        elevenLabsClient.end(),
+      ]);
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure?.status === "rejected") throw failure.reason;
+    },
   });
 }

@@ -48,6 +48,16 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
             name="website_capabilities_object",
         ),
         ForeignKeyConstraint(
+            ["website_version_id", "website_id", "agency_id"],
+            [
+                "website_versions.id",
+                "website_versions.website_id",
+                "website_versions.agency_id",
+            ],
+            name="fk_conversation_sessions_owned_website_version",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
             ["website_id", "agency_id"],
             ["websites.id", "websites.agency_id"],
             name="fk_conversation_sessions_owned_website",
@@ -60,7 +70,13 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
             ondelete="RESTRICT",
         ),
         CheckConstraint(
-            "(website_id IS NULL AND website_agent_binding_id IS NULL) OR (website_id IS NOT NULL AND website_agent_binding_id IS NOT NULL)",
+            (
+                "(website_id IS NULL AND website_agent_binding_id "
+                "IS NULL AND website_version_id IS NULL) OR "
+                "(website_id IS NOT NULL AND "
+                "website_agent_binding_id IS NOT NULL AND "
+                "website_version_id IS NOT NULL)"
+            ),
             name="website_binding_consistent",
         ),
         CheckConstraint(
@@ -128,6 +144,7 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
         nullable=False,
     )
     website_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    website_version_id: Mapped[UUID | None] = mapped_column(nullable=True)
     website_agent_binding_id: Mapped[UUID | None] = mapped_column(nullable=True)
     website_capabilities: Mapped[dict[str, bool]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")

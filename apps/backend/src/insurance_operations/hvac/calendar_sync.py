@@ -41,7 +41,9 @@ def calendar_error(error: CalendarUnavailable) -> ApiError:
             "Choose another time or contact staff."
         )
         if isinstance(error, CalendarConflict)
-        else "The connected calendar could not be verified. Retry or request a callback.",
+        else (
+            "The connected calendar could not be verified. Retry or request a callback."
+        ),
     )
 
 

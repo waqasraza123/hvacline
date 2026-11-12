@@ -1,4 +1,7 @@
-from insurance_operations.customer_access.passwords import hash_password, verify_password
+from insurance_operations.customer_access.passwords import (
+    hash_password,
+    verify_password,
+)
 
 
 def test_customer_password_hashes_are_salted_and_verified() -> None:

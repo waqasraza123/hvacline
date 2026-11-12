@@ -19,6 +19,7 @@ from insurance_operations.settings import ApiSettings
 from insurance_operations.websites.guards import website_unavailable
 from insurance_operations.websites.schemas import (
     WebsiteInquiry,
+    WebsitePublication,
     WebsiteSave,
     WebsiteSessionCreateInput,
 )
@@ -38,7 +39,26 @@ def create_website_router(
         session_factory=sessions, settings=settings, provider=None
     )
     faqs = ApprovedFaqService(session_factory=sessions)
-    Owner = Annotated[ActorContext, Depends(owner_dependency)]
+
+    def managed_owner(
+        actor: Annotated[ActorContext, Depends(owner_dependency)],
+        token: Annotated[str | None, Header(alias="X-Demo-Admin-Token")] = None,
+    ) -> ActorContext:
+        websites.enabled()
+        secret = settings.demo_admin_token
+        if (
+            secret is None
+            or not token
+            or not secrets.compare_digest(token.encode(), secret.get_secret_value().encode())
+        ):
+            raise ApiError(
+                status_code=401,
+                code="WEBSITE_OWNER_AUTH_REQUIRED",
+                message="Connect an authorized administrator workspace.",
+            )
+        return actor
+
+    Owner = Annotated[ActorContext, Depends(managed_owner)]
 
     def customer(
         authorization: Annotated[str | None, Header()] = None,
@@ -84,6 +104,31 @@ def create_website_router(
         website_id: UUID, data: WebsiteSave, owner: Owner
     ) -> dict[str, object]:
         return websites.save(owner, data, website_id)
+
+    @router.post("/api/v1/development/websites/{website_id}/publish")
+    def publish(website_id: UUID, data: WebsitePublication, owner: Owner) -> object:
+        return websites.publication(owner, website_id, data.expected_row_version)
+
+    @router.post("/api/v1/development/websites/{website_id}/unpublish")
+    def unpublish(website_id: UUID, data: WebsitePublication, owner: Owner) -> object:
+        return websites.publication(
+            owner, website_id, data.expected_row_version, unpublish=True
+        )
+
+    @router.get("/api/v1/development/websites/{website_id}/versions")
+    def versions(website_id: UUID, owner: Owner, response: Response) -> object:
+        response.headers["Cache-Control"] = "no-store"
+        return websites.versions(owner, website_id)
+
+    @router.post(
+        "/api/v1/development/websites/{website_id}/versions/{version_id}/restore"
+    )
+    def restore(
+        website_id: UUID, version_id: UUID, data: WebsitePublication, owner: Owner
+    ) -> object:
+        return websites.publication(
+            owner, website_id, data.expected_row_version, restore_version_id=version_id
+        )
 
     @router.post(
         "/api/v1/customer/websites/{slug}/conversation-sessions", status_code=201

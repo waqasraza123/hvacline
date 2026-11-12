@@ -22,7 +22,15 @@ async function handle(request: NextRequest, context: Context) {
     if (
       (request.method === "GET" && !["me", "mfa-status"].includes(action)) ||
       (request.method === "POST" &&
-        !["signup", "login", "logout", "mfa-setup", "mfa-verify", "mfa-recover", "mfa-cancel"].includes(action))
+        ![
+          "signup",
+          "login",
+          "logout",
+          "mfa-setup",
+          "mfa-verify",
+          "mfa-recover",
+          "mfa-cancel",
+        ].includes(action))
     )
       throw new CustomerBackendError(404, "Page not found.");
     if (request.method === "POST") requireSameOrigin(request);
@@ -32,14 +40,21 @@ async function handle(request: NextRequest, context: Context) {
       const response = await completeCustomerLogout(
         Promise.all([
           customerBackend("auth/logout", request.method, body),
-          customerBackend("auth/mfa/cancel", "POST", "{}", undefined, "mfa").catch(() => undefined),
+          customerBackend(
+            "auth/mfa/cancel",
+            "POST",
+            "{}",
+            undefined,
+            "mfa",
+          ).catch(() => undefined),
         ]).then(([revocation]) => revocation),
       );
       return response;
     }
-    if (action === "mfa-cancel") return completeCustomerLogout(
-      customerBackend("auth/mfa/cancel", "POST", "{}", undefined, "mfa"),
-    );
+    if (action === "mfa-cancel")
+      return completeCustomerLogout(
+        customerBackend("auth/mfa/cancel", "POST", "{}", undefined, "mfa"),
+      );
     const mfa = action.startsWith("mfa-");
     const upstream = await customerBackend(
       mfa ? `auth/mfa/${action.slice(4)}` : `auth/${action}`,
@@ -55,30 +70,50 @@ async function handle(request: NextRequest, context: Context) {
         headers: { "Cache-Control": "no-store" },
       });
     if (action === "mfa-status" || action === "mfa-setup") {
-      return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json(data, {
+        headers: { "Cache-Control": "no-store" },
+      });
     }
     if (action === "signup" || action === "login" || action === "mfa-recover") {
-      if (typeof data !== "object" || data === null || !("mfa_required" in data) ||
-          data.mfa_required !== true || !("challenge_token" in data) ||
-          typeof data.challenge_token !== "string" ||
-          !/^[A-Za-z0-9_-]{32,128}$/.test(data.challenge_token) ||
-          !("next_action" in data) || !["enroll", "verify"].includes(String(data.next_action)) ||
-          !("expires_in" in data) || typeof data.expires_in !== "number" ||
-          !Number.isInteger(data.expires_in) || data.expires_in < 1 || data.expires_in > 600 ||
-          "session_token" in data) {
-        throw new CustomerBackendError(502, "Authenticator sign-in could not be started. Try again.");
+      if (
+        typeof data !== "object" ||
+        data === null ||
+        !("mfa_required" in data) ||
+        data.mfa_required !== true ||
+        !("challenge_token" in data) ||
+        typeof data.challenge_token !== "string" ||
+        !/^[A-Za-z0-9_-]{32,128}$/.test(data.challenge_token) ||
+        !("next_action" in data) ||
+        !["enroll", "verify"].includes(String(data.next_action)) ||
+        !("expires_in" in data) ||
+        typeof data.expires_in !== "number" ||
+        !Number.isInteger(data.expires_in) ||
+        data.expires_in < 1 ||
+        data.expires_in > 600 ||
+        "session_token" in data
+      ) {
+        throw new CustomerBackendError(
+          502,
+          "Authenticator sign-in could not be started. Try again.",
+        );
       }
       const response = NextResponse.json(
         { mfa_required: true, next_action: data.next_action },
         { status: upstream.status, headers: { "Cache-Control": "no-store" } },
       );
       response.cookies.set(CUSTOMER_COOKIE, "", {
-        httpOnly: true, secure: process.env.NODE_ENV === "production",
-        sameSite: "lax", path: "/", maxAge: 0,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 0,
       });
       response.cookies.set(CUSTOMER_MFA_COOKIE, data.challenge_token, {
-        httpOnly: true, secure: process.env.NODE_ENV === "production",
-        sameSite: "strict", path: "/", maxAge: data.expires_in,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        path: "/",
+        maxAge: data.expires_in,
       });
       return response;
     }
@@ -86,7 +121,8 @@ async function handle(request: NextRequest, context: Context) {
       action !== "mfa-verify" ||
       typeof data !== "object" ||
       data === null ||
-      !("mfa_verified" in data) || data.mfa_verified !== true ||
+      !("mfa_verified" in data) ||
+      data.mfa_verified !== true ||
       !("user" in data) ||
       !("session_token" in data) ||
       typeof data.session_token !== "string" ||
@@ -103,12 +139,23 @@ async function handle(request: NextRequest, context: Context) {
         502,
         "We could not finish signing you in. Please try again.",
       );
-    const recoveryCodes = "recovery_codes" in data ? data.recovery_codes : undefined;
-    if (recoveryCodes !== undefined && recoveryCodes !== null &&
-        (!Array.isArray(recoveryCodes) || recoveryCodes.length !== 10 ||
-          !recoveryCodes.every((item: unknown) => typeof item === "string" &&
-            /^[a-f0-9]{8}(-[a-f0-9]{8}){3}$/.test(item)))) {
-      throw new CustomerBackendError(502, "Recovery codes could not be read. Sign in again.");
+    const recoveryCodes =
+      "recovery_codes" in data ? data.recovery_codes : undefined;
+    if (
+      recoveryCodes !== undefined &&
+      recoveryCodes !== null &&
+      (!Array.isArray(recoveryCodes) ||
+        recoveryCodes.length !== 10 ||
+        !recoveryCodes.every(
+          (item: unknown) =>
+            typeof item === "string" &&
+            /^[a-f0-9]{8}(-[a-f0-9]{8}){3}$/.test(item),
+        ))
+    ) {
+      throw new CustomerBackendError(
+        502,
+        "Recovery codes could not be read. Sign in again.",
+      );
     }
     const response = NextResponse.json(
       { user: parseCustomer(data.user), recovery_codes: recoveryCodes ?? null },
@@ -122,8 +169,11 @@ async function handle(request: NextRequest, context: Context) {
       maxAge: data.expires_in,
     });
     response.cookies.set(CUSTOMER_MFA_COOKIE, "", {
-      httpOnly: true, secure: process.env.NODE_ENV === "production",
-      sameSite: "strict", path: "/", maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 0,
     });
     return response;
   } catch (error) {

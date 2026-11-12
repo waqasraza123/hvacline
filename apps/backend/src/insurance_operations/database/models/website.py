@@ -1,12 +1,16 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Integer,
     Text,
     UniqueConstraint,
+    func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -52,6 +56,17 @@ class Website(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
         UniqueConstraint("slug", name="uq_websites_slug"),
         UniqueConstraint("id", "agency_id", name="uq_websites_id_agency"),
         ForeignKeyConstraint(
+            ["published_version_id", "id", "agency_id"],
+            [
+                "website_versions.id",
+                "website_versions.website_id",
+                "website_versions.agency_id",
+            ],
+            name="fk_websites_published_version",
+            use_alter=True,
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
             ["agent_binding_id", "agency_id"],
             ["website_agent_bindings.id", "website_agent_bindings.agency_id"],
             name="fk_websites_owned_agent",
@@ -77,6 +92,7 @@ class Website(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
     )
     slug: Mapped[str] = mapped_column(Text)
     template_id: Mapped[str] = mapped_column(Text)
+    published_version_id: Mapped[UUID | None] = mapped_column(nullable=True)
     status: Mapped[str] = mapped_column(Text, default="draft", server_default="draft")
     configuration: Mapped[dict[str, object]] = mapped_column(JSONB)
     agent_binding_id: Mapped[UUID | None] = mapped_column(nullable=True)
@@ -88,4 +104,49 @@ class Website(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
     )
     lead_capture_enabled: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="false"
+    )
+
+
+class WebsiteVersion(UuidPrimaryKeyMixin, Base):
+    __tablename__ = "website_versions"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["website_id", "agency_id"],
+            ["websites.id", "websites.agency_id"],
+            name="fk_website_versions_owned_website",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["agent_binding_id", "agency_id"],
+            ["website_agent_bindings.id", "website_agent_bindings.agency_id"],
+            name="fk_website_versions_owned_agent",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint(
+            "id", "website_id", "agency_id", name="uq_website_versions_owned_id"
+        ),
+        UniqueConstraint("website_id", "number", name="uq_website_versions_number"),
+        CheckConstraint("number > 0", name="number_positive"),
+        CheckConstraint(
+            "jsonb_typeof(configuration) = 'object'", name="configuration_object"
+        ),
+        CheckConstraint(
+            "jsonb_typeof(knowledge_faq_ids) = 'array'", name="knowledge_array"
+        ),
+    )
+    agency_id: Mapped[UUID] = mapped_column(
+        ForeignKey("agencies.id", ondelete="RESTRICT")
+    )
+    website_id: Mapped[UUID]
+    number: Mapped[int] = mapped_column(Integer)
+    configuration: Mapped[dict[str, object]] = mapped_column(JSONB)
+    agent_binding_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    knowledge_faq_ids: Mapped[list[str]] = mapped_column(JSONB)
+    voice_enabled: Mapped[bool]
+    lead_capture_enabled: Mapped[bool]
+    created_by: Mapped[UUID | None] = mapped_column(
+        ForeignKey("app_users.id", ondelete="RESTRICT"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )

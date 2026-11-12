@@ -1,7 +1,15 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, Integer, Text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from insurance_operations.database.models.base import Base, UuidPrimaryKeyMixin
@@ -11,11 +19,17 @@ class CustomerMfaFactor(Base):
     __tablename__ = "customer_mfa_factors"
     __table_args__ = (
         CheckConstraint("version > 0", name="version_valid"),
-        CheckConstraint("last_counter IS NULL OR last_counter >= 0", name="counter_valid"),
+        CheckConstraint(
+            "last_counter IS NULL OR last_counter >= 0", name="counter_valid"
+        ),
         CheckConstraint("failed_attempts BETWEEN 0 AND 5", name="attempts_valid"),
         CheckConstraint(
-            "(enabled_at IS NULL AND secret_ciphertext IS NULL AND last_counter IS NULL) OR "
-            "(enabled_at IS NOT NULL AND secret_ciphertext IS NOT NULL AND last_counter IS NOT NULL)",
+            (
+                "(enabled_at IS NULL AND secret_ciphertext IS NULL "
+                "AND last_counter IS NULL) OR (enabled_at IS NOT "
+                "NULL AND secret_ciphertext IS NOT NULL AND "
+                "last_counter IS NOT NULL)"
+            ),
             name="enrollment_consistent",
         ),
     )
@@ -37,7 +51,9 @@ class CustomerMfaFactor(Base):
 class CustomerMfaChallenge(UuidPrimaryKeyMixin, Base):
     __tablename__ = "customer_mfa_challenges"
     __table_args__ = (
-        CheckConstraint("purpose IN ('ENROLL', 'VERIFY', 'REPLACE')", name="purpose_valid"),
+        CheckConstraint(
+            "purpose IN ('ENROLL', 'VERIFY', 'REPLACE')", name="purpose_valid"
+        ),
         CheckConstraint("attempts BETWEEN 0 AND 5", name="attempts_valid"),
         CheckConstraint("factor_version > 0", name="version_valid"),
         CheckConstraint(
@@ -60,8 +76,12 @@ class CustomerMfaChallenge(UuidPrimaryKeyMixin, Base):
     secret_ciphertext: Mapped[str | None] = mapped_column(Text)
     factor_version: Mapped[int] = mapped_column(Integer, nullable=False)
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
@@ -76,5 +96,7 @@ class CustomerMfaRecoveryCode(UuidPrimaryKeyMixin, Base):
         ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False
     )
     code_hash: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

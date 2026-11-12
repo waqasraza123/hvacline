@@ -53,7 +53,8 @@ def create_outbound_demo_router(
         or len(api.demo_admin_token.get_secret_value()) < 32
     ):
         raise ValueError(
-            "Outbound demo requires DEVELOPMENT_ACTOR_USER_ID and a strong DEMO_ADMIN_TOKEN"
+            "Outbound demo requires DEVELOPMENT_ACTOR_USER_ID "
+            "and a strong DEMO_ADMIN_TOKEN"
         )
     router = APIRouter(prefix="/api/v1/outbound-demo")
     service = OutboundDemoService(

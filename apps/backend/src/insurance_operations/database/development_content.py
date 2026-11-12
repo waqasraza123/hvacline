@@ -2,9 +2,13 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "air-conditioning-repair",
         "Can I request air conditioning repair?",
-        "I can collect an air conditioning repair request and check available "
-        "appointments. Describe the issue in your own words; a technician must "
-        "assess the equipment. I cannot diagnose the fault or provide repair instructions.",
+        (
+            "I can collect an air conditioning repair request "
+            "and check available appointments. Describe the "
+            "issue in your own words; a technician must assess "
+            "the equipment. I cannot diagnose the fault or "
+            "provide repair instructions."
+        ),
     ),
     (
         "heating-repair",
@@ -119,10 +123,14 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "payments-financing",
         "What payment and financing options do you offer?",
-        "Website maintenance packages and extra hours use Stripe sandbox "
-        "checkout with test payments only. This does not establish real payment "
-        "methods or financing terms for the business; staff must confirm them. "
-        "Do not provide card numbers, bank details or payment credentials to this assistant.",
+        (
+            "Website maintenance packages and extra hours use "
+            "Stripe sandbox checkout with test payments only. "
+            "This does not establish real payment methods or "
+            "financing terms for the business; staff must "
+            "confirm them. Do not provide card numbers, bank "
+            "details or payment credentials to this assistant."
+        ),
     ),
     (
         "technician-arrival",
@@ -177,15 +185,23 @@ DEVELOPMENT_ADDITIONAL_FAQS: tuple[tuple[str, str, str], ...] = (
     (
         "emergency-response",
         "Do you guarantee an emergency technician or urgent response?",
-        "This AI booking flow does not guarantee emergency dispatch, an urgent "
-        "response time or a delivered emergency alert. Reported hazards require "
-        "human attention and cannot be booked as routine service through this assistant.",
+        (
+            "This AI booking flow does not guarantee emergency "
+            "dispatch, an urgent response time or a delivered "
+            "emergency alert. Reported hazards require human "
+            "attention and cannot be booked as routine service "
+            "through this assistant."
+        ),
     ),
     (
         "confirmation-privacy",
         "When are my service details and transcript saved?",
-        "The application saves service details and confirmed transcript text "
-        "only after explicit confirmation. For website voice, draft details "
-        "remain in browser memory before saving. The application does not store raw audio.",
+        (
+            "The application saves service details and "
+            "confirmed transcript text only after explicit "
+            "confirmation. For website voice, draft details "
+            "remain in browser memory before saving. The "
+            "application does not store raw audio."
+        ),
     ),
 )

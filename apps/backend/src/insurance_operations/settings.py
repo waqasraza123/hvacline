@@ -202,7 +202,8 @@ class DatabaseSettings(DatabaseConnectionSettings):
                 or uri.path != "/api/v1/development/hvac/integrations/google/callback"
             ):
                 raise ValueError(
-                    "GOOGLE_REDIRECT_URI must be an HTTPS callback URL (HTTP loopback is allowed)"
+                    "GOOGLE_REDIRECT_URI must be an HTTPS callback URL "
+                    "(HTTP loopback is allowed)"
                 )
         if self.booking_email_enabled and not (
             self.resend_api_key
@@ -215,7 +216,8 @@ class DatabaseSettings(DatabaseConnectionSettings):
             and "\r" not in self.booking_email_from
         ):
             raise ValueError(
-                "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and BOOKING_EMAIL_FROM are required"
+                "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and "
+                "BOOKING_EMAIL_FROM are required"
             )
         if self.booking_email_enabled and self.resend_webhook_secret:
             try:
@@ -451,7 +453,8 @@ class JobRunnerSettings(WorkerSettings):
         secret = value.get_secret_value()
         if len(secret) < 32 or any(character.isspace() for character in secret):
             raise ValueError(
-                "BOOKING_JOBS_SECRET must contain at least 32 characters without whitespace"
+                "BOOKING_JOBS_SECRET must contain at least 32 "
+                "characters without whitespace"
             )
         return value
 

@@ -10,7 +10,8 @@ from insurance_operations.telephony.outbound.settings import OutboundDemoSetting
 
 def sms_unavailable() -> ApiError:
     return ApiError(
-        status_code=503, code="DEMO_SMS_UNAVAILABLE",
+        status_code=503,
+        code="DEMO_SMS_UNAVAILABLE",
         message="Phone verification is unavailable. Please try again later.",
     )
 
@@ -23,8 +24,12 @@ class TelnyxVerificationProvider:
         self.client = client
 
     def _request(
-        self, method: str, path: str, payload: dict[str, object] | None = None,
-        *, invalid_code: bool = False,
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, object] | None = None,
+        *,
+        invalid_code: bool = False,
     ) -> dict[str, Any]:
         key = self.settings.telnyx_verify_api_key
         if key is None:
@@ -34,7 +39,9 @@ class TelnyxVerificationProvider:
         )
         try:
             response = client.request(
-                method, path, json=payload,
+                method,
+                path,
+                json=payload,
                 headers={"Authorization": f"Bearer {key.get_secret_value()}"},
             )
             if invalid_code and response.status_code in {400, 404}:
@@ -63,11 +70,13 @@ class TelnyxVerificationProvider:
             or carrier.get("error_code") is not None
         ):
             raise ApiError(
-                status_code=422, code="DEMO_SMS_NUMBER_UNSUPPORTED",
+                status_code=422,
+                code="DEMO_SMS_NUMBER_UNSUPPORTED",
                 message="Use a US phone number that can receive text messages.",
             )
         data = self._request(
-            "POST", "/v2/verifications/sms",
+            "POST",
+            "/v2/verifications/sms",
             {
                 "phone_number": number,
                 "verify_profile_id": str(self.settings.telnyx_verify_profile_id),
@@ -95,7 +104,9 @@ class TelnyxVerificationProvider:
             invalid_code=True,
         )
         if data.get("response_code") in {
-            "rejected", "expired", "max_attempts_exceeded",
+            "rejected",
+            "expired",
+            "max_attempts_exceeded",
         }:
             return None
         number = data.get("phone_number")

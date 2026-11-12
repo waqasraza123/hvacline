@@ -45,6 +45,7 @@ export function BrowserBooking({
   const reservationRef = useRef<{ slot: string; key: string } | undefined>(
     undefined,
   );
+  const [reservationSlot, setReservationSlot] = useState<string>();
   const busyRef = useRef(false);
   const requestStartedRef = useRef(false);
   const [now, setNow] = useState(() => Date.now());
@@ -111,6 +112,7 @@ export function BrowserBooking({
       );
     if (reservationRef.current?.slot !== identity) {
       reservationRef.current = { slot: identity, key: crypto.randomUUID() };
+      setReservationSlot(identity);
     }
     let result: Appointment;
     try {
@@ -124,8 +126,10 @@ export function BrowserBooking({
       if (
         failure instanceof OperationsApiError &&
         [400, 404, 409, 410, 422].includes(failure.status)
-      )
+      ) {
         reservationRef.current = undefined;
+        setReservationSlot(undefined);
+      }
       throw failure;
     }
     setAppointment(result);
@@ -240,8 +244,7 @@ export function BrowserBooking({
               disabled={
                 busy ||
                 (failureState?.uncertain &&
-                  reservationRef.current?.slot !==
-                    slot.team_key + slot.starts_at)
+                  reservationSlot !== slot.team_key + slot.starts_at)
               }
               onClick={() =>
                 void act("reserve_appointment", () => reserve(slot))

@@ -17,8 +17,8 @@ def require_demo_admin_token(
         expected is None
         or supplied_token is None
         or not secrets.compare_digest(
-            supplied_token,
-            expected.get_secret_value(),
+            supplied_token.encode(),
+            expected.get_secret_value().encode(),
         )
     ):
         raise ApiError(

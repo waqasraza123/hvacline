@@ -1,8 +1,8 @@
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -19,7 +19,12 @@ from insurance_operations.conversations.service import ConversationService
 from insurance_operations.database.models.approved_faq import AgencyApprovedFaq
 from insurance_operations.database.models.conversation import ConversationSession
 from insurance_operations.database.models.identity import Agency
-from insurance_operations.database.models.website import Website, WebsiteAgentBinding
+from insurance_operations.database.models.operations import AuditActorType, AuditEvent
+from insurance_operations.database.models.website import (
+    Website,
+    WebsiteAgentBinding,
+    WebsiteVersion,
+)
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings, RuntimeEnvironment
 from insurance_operations.websites.guards import website_unavailable
@@ -56,15 +61,14 @@ class WebsiteService:
             raise website_unavailable()
         return site
 
-    def available(self, session: Session, site: Website) -> bool:
+    def available(self, session: Session, site: WebsiteVersion) -> bool:
         agent = (
             session.get(WebsiteAgentBinding, site.agent_binding_id)
             if site.agent_binding_id
             else None
         )
         return bool(
-            site.status == "published"
-            and site.voice_enabled
+            site.voice_enabled
             and agent
             and agent.agency_id == site.agency_id
             and agent.enabled
@@ -92,15 +96,22 @@ class WebsiteService:
             )
             if site is None:
                 raise website_unavailable()
+            version = (
+                session.get(WebsiteVersion, site.published_version_id)
+                if site.published_version_id
+                else None
+            )
+            if version is None:
+                raise website_unavailable()
             return {
                 "id": str(site.id),
                 "slug": site.slug,
                 "configuration": WebsiteDocument.model_validate(
-                    site.configuration
+                    version.configuration
                 ).model_dump(mode="json"),
-                "voice_available": self.available(session, site),
+                "voice_available": self.available(session, version),
                 "capabilities": {
-                    "lead_capture": site.lead_capture_enabled,
+                    "lead_capture": version.lead_capture_enabled,
                     "booking": False,
                     "memory": False,
                 },
@@ -113,6 +124,9 @@ class WebsiteService:
             "configuration": site.configuration,
             "status": site.status,
             "row_version": site.row_version,
+            "published_version_id": str(site.published_version_id)
+            if site.published_version_id
+            else None,
             "agent_binding_id": str(site.agent_binding_id)
             if site.agent_binding_id
             else None,
@@ -214,11 +228,12 @@ class WebsiteService:
                             message="The website slug cannot change after creation.",
                         )
                     site.row_version += 1
-                site.status = data.status
+                if website_id is None:
+                    site.status = "draft"
+                if data.status == "disabled":
+                    site.status = "disabled"
                 site.configuration = data.configuration.model_copy(
-                    update={
-                        "status": "published" if data.status == "published" else "demo"
-                    }
+                    update={"status": "demo"}
                 ).model_dump(mode="json")
                 site.template_id = data.configuration.templateId
                 site.agent_binding_id = data.agent_binding_id
@@ -229,6 +244,9 @@ class WebsiteService:
                 )
                 site.updated_at = datetime.now(UTC)
                 session.flush()
+                if data.status == "published":
+                    self._publish(session, actor, site, site)
+                self._audit(session, actor, site, "WEBSITE_DRAFT_SAVED")
                 return self.owner_view(site)
         except IntegrityError as error:
             raise ApiError(
@@ -247,6 +265,162 @@ class WebsiteService:
             code="WEBSITE_VERSION_CONFLICT",
             message="The website changed. Reload it before saving again.",
         )
+
+    @staticmethod
+    def _audit(
+        session: Session, actor: ActorContext, site: Website, event: str
+    ) -> None:
+        session.add(
+            AuditEvent(
+                agency_id=actor.agency_id,
+                actor_type=AuditActorType.STAFF.value,
+                actor_user_id=actor.app_user_id,
+                event_type=event,
+                occurred_at=datetime.now(UTC),
+                summary="Website configuration changed",
+                details={
+                    "website_id": str(site.id),
+                    "row_version": site.row_version,
+                    "published_version_id": str(site.published_version_id)
+                    if site.published_version_id
+                    else None,
+                },
+                correlation_id=uuid4(),
+            )
+        )
+
+    def _publish(
+        self,
+        session: Session,
+        actor: ActorContext,
+        site: Website,
+        source: Website | WebsiteVersion,
+    ) -> None:
+        document = WebsiteDocument.model_validate(source.configuration)
+        if source.agent_binding_id:
+            binding = session.get(WebsiteAgentBinding, source.agent_binding_id)
+            if binding is None or binding.agency_id != actor.agency_id:
+                raise website_unavailable()
+            if source.voice_enabled and (
+                not binding.enabled or not binding.browser_tools_confirmed
+            ):
+                raise ApiError(
+                    status_code=422,
+                    code="WEBSITE_AGENT_UNAVAILABLE",
+                    message="Enable and review this agent before publishing voice.",
+                )
+        elif source.voice_enabled:
+            raise ApiError(
+                status_code=422,
+                code="WEBSITE_AGENT_REQUIRED",
+                message="Choose an authorized agent before publishing voice.",
+            )
+        if source.knowledge_faq_ids:
+            selected = [UUID(value) for value in source.knowledge_faq_ids]
+            owned = set(
+                session.scalars(
+                    select(AgencyApprovedFaq.id).where(
+                        AgencyApprovedFaq.id.in_(selected),
+                        AgencyApprovedFaq.agency_id == actor.agency_id,
+                        AgencyApprovedFaq.status == "ACTIVE",
+                    )
+                )
+            )
+            if owned != set(selected):
+                raise website_unavailable()
+        number = (
+            session.scalar(
+                select(func.max(WebsiteVersion.number)).where(
+                    WebsiteVersion.website_id == site.id
+                )
+            )
+            or 0
+        ) + 1
+        version = WebsiteVersion(
+            website_id=site.id,
+            agency_id=site.agency_id,
+            number=number,
+            configuration=document.model_copy(
+                update={"status": "published"}
+            ).model_dump(mode="json"),
+            agent_binding_id=source.agent_binding_id,
+            knowledge_faq_ids=list(source.knowledge_faq_ids),
+            voice_enabled=source.voice_enabled,
+            lead_capture_enabled=source.lead_capture_enabled,
+            created_by=actor.app_user_id,
+        )
+        session.add(version)
+        session.flush()
+        site.published_version_id = version.id
+        site.status = "published"
+        session.flush()
+        self._audit(session, actor, site, "WEBSITE_PUBLISHED")
+
+    def versions(
+        self, actor: ActorContext, website_id: UUID
+    ) -> Sequence[dict[str, object]]:
+        self.enabled()
+        with self.sessions() as session:
+            site = self._owned(session, actor, website_id)
+            versions = session.scalars(
+                select(WebsiteVersion)
+                .where(
+                    WebsiteVersion.website_id == site.id,
+                    WebsiteVersion.agency_id == actor.agency_id,
+                )
+                .order_by(WebsiteVersion.number.desc())
+            )
+            return [
+                {
+                    "id": str(version.id),
+                    "number": version.number,
+                    "created_at": version.created_at.isoformat(),
+                    "active": site.status == "published"
+                    and version.id == site.published_version_id,
+                    "brand_name": WebsiteDocument.model_validate(
+                        version.configuration
+                    ).brand.name,
+                }
+                for version in versions
+            ]
+
+    def publication(
+        self,
+        actor: ActorContext,
+        website_id: UUID,
+        expected_row_version: int,
+        *,
+        unpublish: bool = False,
+        restore_version_id: UUID | None = None,
+    ) -> dict[str, object]:
+        self.enabled()
+        with self.sessions() as session, session.begin():
+            site = self._owned(session, actor, website_id)
+            if site.row_version != expected_row_version:
+                raise self.conflict()
+            site.row_version += 1
+            site.updated_at = datetime.now(UTC)
+            if unpublish:
+                site.status = "disabled"
+                self._audit(session, actor, site, "WEBSITE_UNPUBLISHED")
+            else:
+                source: Website | WebsiteVersion = site
+                if restore_version_id:
+                    previous = session.scalar(
+                        select(WebsiteVersion).where(
+                            WebsiteVersion.id == restore_version_id,
+                            WebsiteVersion.website_id == site.id,
+                            WebsiteVersion.agency_id == actor.agency_id,
+                        )
+                    )
+                    if previous is None:
+                        raise website_unavailable()
+                    source = previous
+                self._publish(session, actor, site, source)
+                if restore_version_id:
+                    self._audit(session, actor, site, "WEBSITE_ROLLED_BACK")
+            session.flush()
+            return self.owner_view(site)
 
     def owned_session(self, actor: ActorContext, slug: str, session_id: UUID) -> None:
         self.enabled()
@@ -277,15 +451,19 @@ class WebsiteService:
                     Website.status == "published",
                 )
             )
+            if site is None or site.published_version_id is None:
+                raise website_unavailable()
+            version = session.get(WebsiteVersion, site.published_version_id)
             if (
-                site is None
-                or not self.available(session, site)
-                or site.agent_binding_id is None
+                version is None
+                or not self.available(session, version)
+                or version.agent_binding_id is None
             ):
                 raise website_unavailable()
-            binding = session.get(WebsiteAgentBinding, site.agent_binding_id)
+            binding = session.get(WebsiteAgentBinding, version.agent_binding_id)
             if binding is None or binding.agency_id != actor.agency_id:
                 raise website_unavailable()
+            version_id = version.id
             site_id, binding_id, provider_agent_id = (
                 site.id,
                 binding.id,
@@ -309,6 +487,7 @@ class WebsiteService:
                 request=data,
                 website_id=site_id,
                 website_agent_binding_id=binding_id,
+                website_version_id=version_id,
             )
         finally:
             provider.close()

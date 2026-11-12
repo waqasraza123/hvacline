@@ -342,7 +342,7 @@ def test_automatic_business_resolution_keeps_customer_billing_isolated(
 
             cancel = await client.post(f"/billing/topups/{request_id}/cancel")
             assert cancel.status_code == 404
-            assert cancel.json()["error"]["code"] == "topup_missing"
+            assert cancel.json()["error"]["code"] == "TOPUP_MISSING"
 
             mismatched = replace(owner, agency_id=uuid4())
             application.dependency_overrides[actor] = lambda: mismatched

@@ -10,7 +10,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
-from insurance_operations.websites.guards import session_website
 from insurance_operations.conversations.schemas import ConversationTurn
 from insurance_operations.conversations.service import CONFIRM_INTAKE_ROUTE_KEY
 from insurance_operations.conversations.spoken import (
@@ -40,6 +39,7 @@ from insurance_operations.hvac.schemas import (
     ServiceRequestInput,
 )
 from insurance_operations.hvac.service import SchedulingService, unavailable
+from insurance_operations.websites.guards import session_website
 
 
 class BrowserIntakeDraft(BaseModel):
@@ -199,7 +199,9 @@ def create_browser_booking_router(
             raise ApiError(
                 status_code=422,
                 code="INTAKE_INCOMPLETE",
-                message="Complete the callback number, U.S. address and service details.",
+                message=(
+                    "Complete the callback number, U.S. address and service details."
+                ),
             ) from error
         configuration = scheduling.configuration(actor.agency_id)["configuration"]
         timezone = (

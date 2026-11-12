@@ -61,8 +61,8 @@ export default function Home() {
                 <ProductIcon name="mic" /> Try Voice Chat
                 <ProductIcon name="arrow" />
               </Link>
-              <a className="product-text-link" href="#how-it-works">
-                See how it works <span>↗</span>
+              <a className="product-text-link" href="#voice-demos">
+                Explore Voice AI demos <span>↗</span>
               </a>
             </div>
             <p className="hero-voice-note">
@@ -118,134 +118,7 @@ export default function Home() {
           </div>
         </section>
         <DemoGallery />
-        <section id="how-it-works" className="how-section product-container">
-          <div className="section-heading">
-            <div>
-              <p className="product-eyebrow">HOW LINE BOOKS AN APPOINTMENT</p>
-              <h2>
-                Three steps.
-                <br />
-                <span>One confirmed appointment.</span>
-              </h2>
-            </div>
-            <p>
-              Homeowners describe the problem, choose an available time, and
-              confirm. Your team skips the scheduling callbacks.
-            </p>
-          </div>
-          <ol className="booking-journey">
-            <li>
-              <span className="journey-number">01</span>
-              <div className="journey-graphic journey-words">
-                <span>“The AC isn’t cooling.”</span>
-                <VoiceSymbol />
-              </div>
-              <h3>Line hears the problem.</h3>
-              <p>
-                The homeowner explains what’s wrong. Line collects the service
-                needed, address, and contact details in a natural conversation.
-              </p>
-            </li>
-            <li>
-              <span className="journey-number">02</span>
-              <div className="journey-graphic journey-calendar">
-                <ProductIcon name="calendar" />
-                <span>Live appointment slots</span>
-                <span className="calendar-option">
-                  Caller chooses <ProductIcon name="check" />
-                </span>
-              </div>
-              <h3>Line offers available times.</h3>
-              <p>
-                Line checks the business’s schedule and service area, then reads
-                out available appointment slots. The homeowner picks a time.
-              </p>
-            </li>
-            <li>
-              <span className="journey-number">03</span>
-              <div className="journey-graphic journey-confirm">
-                <span>
-                  <ProductIcon name="check" />
-                </span>
-                <strong>Details read back.</strong>
-                <p>Caller confirms the booking.</p>
-              </div>
-              <h3>The caller confirms. Line books.</h3>
-              <p>
-                Line reads back the appointment details and asks for explicit
-                confirmation before saving the booking.
-              </p>
-            </li>
-          </ol>
-        </section>
         <OutboundDemo />
-        <section className="product-faq product-container">
-          <div>
-            <p className="product-eyebrow">FAQ</p>
-            <h2>What HVAC owners need to know.</h2>
-          </div>
-          <div className="product-faq-list">
-            <details>
-              <summary>
-                How can I try a demo call?<span>+</span>
-              </summary>
-              <p>
-                Choose Request an AI demo call to enter your number, pick a
-                scenario and check phone-demo availability. You can also try
-                Line’s Voice AI in your browser.
-              </p>
-            </details>
-            <details>
-              <summary>
-                Who is HVACLine for?<span>+</span>
-              </summary>
-              <p>
-                HVAC businesses losing appointment opportunities to missed calls
-                and phone tag. Line handles the booking conversation, from the
-                homeowner’s first description to a confirmed appointment.
-              </p>
-            </details>
-            <details>
-              <summary>
-                Can homeowners speak naturally?<span>+</span>
-              </summary>
-              <p>
-                Yes. Homeowners explain the problem in their own words. Line
-                asks for the details needed to schedule the visit and offers
-                available appointment times during the conversation.
-              </p>
-            </details>
-            <details>
-              <summary>
-                Are the appointment times real?<span>+</span>
-              </summary>
-              <p>
-                Yes. Line checks live availability against the business’s
-                configured schedule and service area before offering times.
-              </p>
-            </details>
-            <details>
-              <summary>
-                When does an appointment become a booking?<span>+</span>
-              </summary>
-              <p>
-                After Line reads back the appointment details and the caller
-                explicitly confirms. A suggested time or temporary hold is not a
-                confirmed booking.
-              </p>
-            </details>
-            <details>
-              <summary>
-                Can I try the conversation?<span>+</span>
-              </summary>
-              <p>
-                Yes. Ask Line one question here without an account. Sign in to
-                continue the conversation, or choose Voice in the booking
-                workspace to speak with Line.
-              </p>
-            </details>
-          </div>
-        </section>
         <section className="product-final-cta product-container">
           <div>
             <p className="product-eyebrow">TRY THE BOOKING CONVERSATION</p>

@@ -102,13 +102,17 @@ export function HomepageChat() {
 
   useEffect(() => {
     mounted.current = true;
-    const saved = readHomepageHandoff();
-    if (saved) {
-      setExchange({ message: saved.message, reply: saved.reply });
-      setDraft(saved.pendingMessage);
-    }
-    setRestored(true);
-    void refreshStatus();
+    const restore = async () => {
+      await refreshStatus();
+      if (!mounted.current) return;
+      const saved = readHomepageHandoff();
+      if (saved) {
+        setExchange({ message: saved.message, reply: saved.reply });
+        setDraft(saved.pendingMessage);
+      }
+      setRestored(true);
+    };
+    void restore();
     const refresh = () => {
       if (!sending.current) void refreshStatus();
     };
@@ -122,9 +126,7 @@ export function HomepageChat() {
   useEffect(() => {
     if (restored) {
       if (draft || exchange.message)
-        setStorageAvailable(
-          saveHomepageHandoff(exchange.message, exchange.reply, draft),
-        );
+        saveHomepageHandoff(exchange.message, exchange.reply, draft);
       else clearHomepageHandoff();
     }
   }, [draft, exchange, restored]);

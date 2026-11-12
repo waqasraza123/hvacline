@@ -190,7 +190,11 @@ class BillingLabor(Base):
             ondelete="RESTRICT",
         ),
         CheckConstraint(
-            "minutes BETWEEN 1 AND 1440 AND package_minutes >= 0 AND purchased_minutes >= 0 AND minutes = package_minutes + purchased_minutes",
+            (
+                "minutes BETWEEN 1 AND 1440 AND package_minutes >= "
+                "0 AND purchased_minutes >= 0 AND minutes = "
+                "package_minutes + purchased_minutes"
+            ),
             name="minutes_valid",
         ),
         CheckConstraint(

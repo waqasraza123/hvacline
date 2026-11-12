@@ -12,12 +12,17 @@ const context = (path: string) => ({
 
 it("does not forward cross-origin memory or account-link changes", async () => {
   const path = "memory/whatsapp/link";
-  const response = await POST(new NextRequest(
-    `https://hvacline.example/api/v1/development/${path}`, {
-      method: "POST", headers: { Origin: "https://another.example", "Content-Type": "application/json" },
+  const response = await POST(
+    new NextRequest(`https://hvacline.example/api/v1/development/${path}`, {
+      method: "POST",
+      headers: {
+        Origin: "https://another.example",
+        "Content-Type": "application/json",
+      },
       body: "{}",
-    },
-  ), context(path));
+    }),
+    context(path),
+  );
   expect(response.status).toBe(403);
   expect(fetcher).not.toHaveBeenCalled();
 });

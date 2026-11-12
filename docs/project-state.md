@@ -1,5 +1,53 @@
 # Project State
 
+## Final builder publication authorized — 2026-11-13
+
+Owner explicitly requests push to main after the coding-only handoff, authorizing
+commit/publication while keeping tests/builds/checks stopped. Prepared from
+canonical `a109bbf` in `/private/tmp/hvacline-final-publish-20261113`.
+All253 pending source paths were compared:131 already match main,122 contain
+the final builder, homepage removals, stabilization and documentation changes.
+Original divergent source/history and unrelated work remain preserved. Publish
+without force or hooks and retain `[skip ci] [skip render]`. Final source remains
+unverified; deployment, target migrations and provider operations remain separate.
+
+## Final local builder/stabilization work — verification stopped — 2026-11-13
+
+Owner authorizes local completion, then explicitly stops tests/builds/checks and
+requests a quick coding-only conclusion. No further verification may run without
+new specific authorization. No commit/push/deploy, configured database/provider
+operation, real call or SMS is authorized for this task.
+
+Source adds structured content/typography/section/action editing, private drafts,
+immutable publications/history, atomic publish/rollback/unpublish and share links.
+Revision20261113_0023 adds version snapshots/pointers and conversation version
+context; migrations ran only on newly created local disposable
+hvacline_final_test_20261113. Website tools use the published snapshot; draft
+bindings do not affect live sessions. Administrator-token management is mandatory
+even outside the optional sandbox gate. Customer sign-in does not confer ownership.
+
+Before the stop, aggregate verify:web passed (256 tests, full web formatting/lint,
+TypeScript and production build); focused backend39 passed; full Ruff lint reached
+passing. Broader pytest completed596 passed/9 failed; related source/fixture fixes
+are unverified. Full mypy reported81 errors; three production typing corrections
+were made afterward, while strict test typing remains unresolved. Final changes
+have not been rerun. No live browser/provider/visual acceptance was performed.
+Documentation is consolidated in website-platform-phase2.md with exact commands,
+owner deployment/agent setup and acceptance, without another implementation phase.
+Production onboarding remains insufficient; restricted development/test gates stay.
+
+## Homepage section cleanup — source implemented, runtime unverified — 2026-11-13
+
+Owner removes the homepage HVAC-owner FAQ and three-step booking walkthrough.
+Root page omits both sections; desktop/mobile navigation drops How it works and
+the hero secondary link targets the demo gallery. Packages remain only on the
+separate `/pricing` page; their homepage block was already removed in `a109bbf`.
+No tests/builds/services or deployment ran for this follow-up. Owner checks:
+`npm run verify:web`; manually confirm absent sections, gallery links and mobile
+navigation on the homepage, and packages on `/pricing`. This source change is
+unverified. The prior publication retained `[skip render]`; it did not request a
+deployment, and the hosted page has not been inspected.
+
 ## Phase 2 publication authorized — 2026-11-13
 
 Owner explicitly requests push to main, authorizing the Phase 2 and homepage

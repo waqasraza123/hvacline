@@ -102,7 +102,10 @@ class ElevenLabsHomepageProvider:
                                 {
                                     "available": False,
                                     "code": "SIGN_IN_REQUIRED",
-                                    "message": "Sign in to continue with booking or account services. No action was taken.",
+                                    "message": (
+                                        "Sign in to continue with booking or account "
+                                        "services. No action was taken."
+                                    ),
                                 }
                             )
                         socket.send(

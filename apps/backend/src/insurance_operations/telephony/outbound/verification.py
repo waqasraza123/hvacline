@@ -26,15 +26,19 @@ from insurance_operations.telephony.outbound.verification_schemas import (
 
 def verification_required() -> ApiError:
     return ApiError(
-        status_code=403, code="DEMO_PHONE_VERIFICATION_REQUIRED",
+        status_code=403,
+        code="DEMO_PHONE_VERIFICATION_REQUIRED",
         message="Verify your phone number with a new text-message code first.",
     )
 
 
 class PhoneVerificationService:
     def __init__(
-        self, sessions: sessionmaker[Session], settings: OutboundDemoSettings,
-        agency: Callable[[Session], UUID], digest: Callable[[str, str], str],
+        self,
+        sessions: sessionmaker[Session],
+        settings: OutboundDemoSettings,
+        agency: Callable[[Session], UUID],
+        digest: Callable[[str, str], str],
         provider: TelnyxVerificationProvider | None = None,
     ) -> None:
         self.sessions, self.settings = sessions, settings
@@ -50,7 +54,8 @@ class PhoneVerificationService:
             and data.phone_number not in self.settings.allowed_numbers
         ):
             raise ApiError(
-                status_code=403, code="DEMO_NUMBER_NOT_AUTHORIZED",
+                status_code=403,
+                code="DEMO_NUMBER_NOT_AUTHORIZED",
                 message="This number is not approved for the private demo.",
             )
         owner_hash = self.digest("owner", owner)
@@ -72,7 +77,8 @@ class PhoneVerificationService:
                         select(func.count()).select_from(
                             base.where(*conditions).subquery()
                         )
-                    ) or 0
+                    )
+                    or 0
                 )
 
             recent = session.scalar(
@@ -81,7 +87,9 @@ class PhoneVerificationService:
                         OutboundPhoneVerification.owner_hash == owner_hash,
                         OutboundPhoneVerification.destination_hash == destination,
                     ),
-                    OutboundPhoneVerification.created_at >= now - timedelta(
+                    OutboundPhoneVerification.created_at
+                    >= now
+                    - timedelta(
                         seconds=self.settings.outbound_demo_sms_cooldown_seconds
                     ),
                 ).limit(1)
@@ -95,42 +103,49 @@ class PhoneVerificationService:
                 >= self.settings.outbound_demo_sms_number_daily_limit
             ):
                 raise ApiError(
-                    status_code=429, code="DEMO_SMS_LIMIT",
+                    status_code=429,
+                    code="DEMO_SMS_LIMIT",
                     message="The text verification limit has been reached. Try later.",
                 )
             row = OutboundPhoneVerification(
-                agency_id=agency_id, owner_hash=owner_hash,
-                destination_hash=destination, created_at=now,
-                expires_at=now + timedelta(
-                    seconds=self.settings.outbound_demo_sms_ttl_seconds
-                ), attempts=0, consent_version=data.sms_consent_version,
+                agency_id=agency_id,
+                owner_hash=owner_hash,
+                destination_hash=destination,
+                created_at=now,
+                expires_at=now
+                + timedelta(seconds=self.settings.outbound_demo_sms_ttl_seconds),
+                attempts=0,
+                consent_version=data.sms_consent_version,
             )
             session.add(row)
             session.flush()
             challenge_id = row.id
         provider_id = self.provider.send(data.phone_number)
         with self.sessions() as session, session.begin():
-            row = session.get(
+            verified = session.get(
                 OutboundPhoneVerification, challenge_id, with_for_update=True
             )
-            if row is None or row.expires_at <= datetime.now(UTC):
+            if verified is None or verified.expires_at <= datetime.now(UTC):
                 raise sms_unavailable()
-            row.provider_verification_id = provider_id
-            return self._response(row)
+            verified.provider_verification_id = provider_id
+            return self._response(verified)
 
     def verify(self, data: SmsVerifyInput, owner: str) -> SmsChallengeResponse:
         if not self.settings.website_available:
             raise sms_unavailable()
         with self.sessions() as session, session.begin():
             row = session.scalar(
-                select(OutboundPhoneVerification).where(
+                select(OutboundPhoneVerification)
+                .where(
                     OutboundPhoneVerification.id == data.challenge_id,
                     OutboundPhoneVerification.agency_id == self.agency(session),
                     OutboundPhoneVerification.owner_hash == self.digest("owner", owner),
-                ).with_for_update()
+                )
+                .with_for_update()
             )
             if (
-                row is None or row.expires_at <= datetime.now(UTC)
+                row is None
+                or row.expires_at <= datetime.now(UTC)
                 or row.provider_verification_id is None
                 or row.consumed_by_request_id is not None
             ):
@@ -149,7 +164,8 @@ class PhoneVerificationService:
                 OutboundPhoneVerification, data.challenge_id, with_for_update=True
             )
             if (
-                row is None or row.expires_at <= datetime.now(UTC)
+                row is None
+                or row.expires_at <= datetime.now(UTC)
                 or row.consumed_by_request_id is not None
             ):
                 raise verification_required()
@@ -157,27 +173,35 @@ class PhoneVerificationService:
                 row.verified_at = datetime.now(UTC)
                 return self._response(row)
         raise ApiError(
-            status_code=422, code="DEMO_SMS_CODE_INVALID",
+            status_code=422,
+            code="DEMO_SMS_CODE_INVALID",
             message="That code is invalid or expired. Check the text and try again.",
         )
 
     @staticmethod
     def consume(
-        session: Session, agency_id: UUID, owner_hash: str, destination: str,
-        challenge_id: UUID | None, request_id: UUID,
+        session: Session,
+        agency_id: UUID,
+        owner_hash: str,
+        destination: str,
+        challenge_id: UUID | None,
+        request_id: UUID,
     ) -> None:
         if challenge_id is None:
             raise verification_required()
         row = session.scalar(
-            select(OutboundPhoneVerification).where(
+            select(OutboundPhoneVerification)
+            .where(
                 OutboundPhoneVerification.id == challenge_id,
                 OutboundPhoneVerification.agency_id == agency_id,
                 OutboundPhoneVerification.owner_hash == owner_hash,
                 OutboundPhoneVerification.destination_hash == destination,
-            ).with_for_update()
+            )
+            .with_for_update()
         )
         if (
-            row is None or row.verified_at is None
+            row is None
+            or row.verified_at is None
             or row.expires_at <= datetime.now(UTC)
             or row.consumed_by_request_id is not None
         ):
@@ -187,6 +211,7 @@ class PhoneVerificationService:
     @staticmethod
     def _response(row: OutboundPhoneVerification) -> SmsChallengeResponse:
         return SmsChallengeResponse(
-            challenge_id=row.id, expires_at=row.expires_at,
+            challenge_id=row.id,
+            expires_at=row.expires_at,
             verified=row.verified_at is not None,
         )

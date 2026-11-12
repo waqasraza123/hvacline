@@ -337,14 +337,14 @@ def test_outbound_uses_official_sip_contract_without_retry() -> None:
 def test_provider_rejections_and_ambiguous_responses(
     status: int, unknown: bool
 ) -> None:
-    with httpx.Client(
-        base_url="https://api.elevenlabs.io",
-        transport=httpx.MockTransport(lambda _: httpx.Response(status, json={})),
-    ) as client:
-        with pytest.raises(OutboundProviderError) as caught:
-            ElevenLabsOutboundProvider(settings(), client).dial(
-                call_input(), str(uuid4())
-            )
+    with (
+        httpx.Client(
+            base_url="https://api.elevenlabs.io",
+            transport=httpx.MockTransport(lambda _: httpx.Response(status, json={})),
+        ) as client,
+        pytest.raises(OutboundProviderError) as caught,
+    ):
+        ElevenLabsOutboundProvider(settings(), client).dial(call_input(), str(uuid4()))
     assert caught.value.outcome_unknown is unknown
 
 
@@ -355,13 +355,13 @@ def test_post_timeout_is_unknown_and_never_retried() -> None:
         requests.append(request)
         raise httpx.ReadTimeout("Synthetic timeout", request=request)
 
-    with httpx.Client(
-        base_url="https://api.elevenlabs.io", transport=httpx.MockTransport(timeout)
-    ) as client:
-        with pytest.raises(OutboundProviderError) as caught:
-            ElevenLabsOutboundProvider(settings(), client).dial(
-                call_input(), str(uuid4())
-            )
+    with (
+        httpx.Client(
+            base_url="https://api.elevenlabs.io", transport=httpx.MockTransport(timeout)
+        ) as client,
+        pytest.raises(OutboundProviderError) as caught,
+    ):
+        ElevenLabsOutboundProvider(settings(), client).dial(call_input(), str(uuid4()))
     assert caught.value.outcome_unknown is True
     assert len(requests) == 1
 
@@ -594,7 +594,7 @@ def test_destination_normalization_precedes_request_hashing(value: str) -> None:
         "+12025550123,123",
         "+12025550123#",
         "sip:+12025550123@example.test",
-        "+１２０２５５５０１２３",
+        "+\uff11\uff12\uff10\uff12\uff15\uff15\uff15\uff10\uff11\uff12\uff13",
         "2" * 65,
     ],
 )
@@ -622,7 +622,9 @@ def test_consented_us_rejects_other_nanp_regions(region: str) -> None:
 
 
 @pytest.mark.parametrize("region", ["US", "AS", "GU", "MP", "PR", "VI"])
-def test_consented_us_accepts_us_and_territory_numbering_assignments(region: str) -> None:
+def test_consented_us_accepts_us_and_territory_numbering_assignments(
+    region: str,
+) -> None:
     number = phonenumbers.example_number(region)
     assert number is not None
     value = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
@@ -630,7 +632,8 @@ def test_consented_us_accepts_us_and_territory_numbering_assignments(region: str
 
 
 @pytest.mark.parametrize(
-    "kind", [phonenumbers.PhoneNumberType.FIXED_LINE, phonenumbers.PhoneNumberType.MOBILE]
+    "kind",
+    [phonenumbers.PhoneNumberType.FIXED_LINE, phonenumbers.PhoneNumberType.MOBILE],
 )
 def test_consented_us_accepts_mobile_and_landline_examples(kind: int) -> None:
     number = phonenumbers.example_number_for_type("US", kind)
@@ -776,7 +779,9 @@ def test_consented_us_admin_endpoint_requires_consent_fields(field: str) -> None
     sessions.assert_not_called()
 
 
-def test_consented_us_website_requires_live_acceptance_even_if_flag_is_mutated() -> None:
+def test_consented_us_website_requires_live_acceptance_even_if_flag_is_mutated() -> (
+    None
+):
     config = settings(outbound_demo_number_policy="consented_us")
     config.outbound_demo_website_enabled = True
     application, sessions = outbound_application(config)
@@ -837,13 +842,18 @@ def test_website_with_transfer_still_requires_transfer_acceptance() -> None:
         )
 
 
-@pytest.mark.parametrize("missing", ["telnyx_verify_api_key", "telnyx_verify_profile_id"])
+@pytest.mark.parametrize(
+    "missing", ["telnyx_verify_api_key", "telnyx_verify_profile_id"]
+)
 def test_public_callbacks_require_sms_configuration(missing: str) -> None:
     with pytest.raises(ValidationError, match="Telnyx SMS configuration"):
-        settings(**{
-            "outbound_demo_website_enabled": True,
-            "outbound_demo_live_verified": True, missing: None,
-        })
+        settings(
+            **{
+                "outbound_demo_website_enabled": True,
+                "outbound_demo_live_verified": True,
+                missing: None,
+            }
+        )
 
 
 @pytest.mark.parametrize("credential", ["missing", "bridge", "visitor"])
@@ -939,4 +949,6 @@ def test_consented_us_preflight_preserves_tls_digest_and_caller_loop_protection(
                 provider.preflight("+12025550123")
             assert caught.value.outcome_unknown is False
     assert all(request.method == "GET" for request in requests)
-    assert all(request.headers["xi-api-key"] == "synthetic-api-key" for request in requests)
+    assert all(
+        request.headers["xi-api-key"] == "synthetic-api-key" for request in requests
+    )

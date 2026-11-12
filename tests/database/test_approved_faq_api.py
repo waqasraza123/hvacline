@@ -222,7 +222,9 @@ def test_variations_follow_activation_and_survive_legacy_updates(
             path,
             {
                 "question": "How do I contact staff?",
-                "approved_answer": "Synthetic staff assistance is available through the business.",
+                "approved_answer": (
+                    "Synthetic staff assistance is available through the business."
+                ),
                 "question_variations": [query],
             },
         )

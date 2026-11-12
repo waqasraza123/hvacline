@@ -56,14 +56,18 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
       ),
       billingRequest<History>("history"),
     ]);
-    setCatalog(plans);
-    setBilling(summary);
+
     const latestRecords = refresh
       ? await billingRequest<History>("history")
       : records;
-    setHistory(latestRecords);
-    return { summary, records: latestRecords };
+    return { plans, summary, records: latestRecords };
   }, []);
+  const refreshBilling = async () => {
+    const data = await load(true);
+    setCatalog(data.plans);
+    setBilling(data.summary);
+    setHistory(data.records);
+  };
   useEffect(() => {
     const returned = new URLSearchParams(window.location.search);
     const success = ["checkout", "topup"].some(
@@ -71,8 +75,11 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
     );
     let active = true;
     void load(success)
-      .then(({ summary, records }) => {
+      .then(({ plans, summary, records }) => {
         if (!active) return;
+        setCatalog(plans);
+        setBilling(summary);
+        setHistory(records);
         if (success)
           setMessage(
             summary.sync_pending || summary.checkout_pending
@@ -207,7 +214,7 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
           disabled={loading || !!busy}
           onClick={() =>
             void act("refresh", async () => {
-              await load(true);
+              await refreshBilling();
               setMessage("Your package and payment history are up to date.");
             })
           }
@@ -268,7 +275,7 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
                         {},
                       );
                       if (pending?.plan) remember(undefined);
-                      await load(true);
+                      await refreshBilling();
                       setMessage(
                         "The unpaid package checkout was canceled. Choose a package when you are ready.",
                       );
@@ -516,7 +523,7 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
                 disabled={!!busy}
                 onClick={() =>
                   void act("resolve", async () => {
-                    await load(true);
+                    await refreshBilling();
                     const latest = await billingRequest<History>("history");
                     const unresolved = latest.topups.some(
                       (item) =>
@@ -668,7 +675,7 @@ export function BillingDashboard({ accountId }: { accountId: string }) {
                                       );
                                       if (pending?.request_id === item.id)
                                         remember(undefined);
-                                      await load(true);
+                                      await refreshBilling();
                                       setMessage(
                                         "The unpaid extra-hours checkout was canceled.",
                                       );

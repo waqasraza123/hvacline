@@ -164,7 +164,8 @@ def deliver_notification(
         if candidate is None:
             return
         agency_id = candidate.agency_id
-    # Persist the first attempt before contacting a provider with a bounded deduplication window.
+    # Persist the first attempt before contacting a provider with a bounded
+    # deduplication window.
     with sessions() as session, session.begin():
         lock_business_schedule(session, agency_id)
         row = session.scalar(

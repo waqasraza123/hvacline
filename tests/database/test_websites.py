@@ -222,6 +222,10 @@ def test_persistence_public_projection_and_version_conflicts(
     with pytest.raises(ApiError) as conflict:
         platform.service.save(platform.owner, data, UUID(str(saved["id"])))
     assert conflict.value.status_code == 409
+    assert platform.service.public(website_document.slug)["voice_available"] is True
+    platform.service.publication(
+        platform.owner, UUID(str(saved["id"])), 2, unpublish=True
+    )
     with pytest.raises(ApiError):
         platform.service.public(website_document.slug)
 
@@ -295,9 +299,26 @@ def test_knowledge_is_scoped_even_through_legacy_lookup(
         knowledge_faq_ids=[],
     )
     platform.service.save(platform.owner, data, UUID(str(saved["id"])))
-    result = lookup.conversation_lookup(
+    with pytest.raises(ApiError):
+        lookup.conversation_lookup(
+            actor=platform.owner,
+            conversation_session_id=grant.session_id,
+            query="What sessions are offered?",
+            correlation_id=uuid4(),
+        )
+    ConversationService(
+        session_factory=platform.sessions,
+        settings=platform.service.settings,
+        provider=None,
+    ).end_session(
         actor=platform.owner,
         conversation_session_id=grant.session_id,
+        outcome=ConversationEndOutcome.COMPLETED,
+    )
+    next_grant = authorize(platform, website_document.slug)
+    result = lookup.conversation_lookup(
+        actor=platform.owner,
+        conversation_session_id=next_grant.session_id,
         query="What sessions are offered?",
         correlation_id=uuid4(),
     )
@@ -536,6 +557,11 @@ def test_concurrent_owner_edits_have_one_winner(
     finally:
         with sessions() as session, session.begin():
             session.execute(delete(Website).where(Website.id == site_id))
+            from insurance_operations.database.models.operations import AuditEvent
+
+            session.execute(
+                delete(AuditEvent).where(AuditEvent.agency_id == actor.agency_id)
+            )
             session.execute(delete(AppUser).where(AppUser.id == actor.app_user_id))
             session.execute(delete(Agency).where(Agency.id == actor.agency_id))
 
@@ -657,3 +683,149 @@ def test_http_session_authorization_uses_existing_mfa_identity(
             assert len(platform.routed) == 1
 
     asyncio.run(exercise())
+
+
+def test_drafts_publications_history_restore_and_unpublish(
+    platform: Platform, website_document: WebsiteDocument
+) -> None:
+    from insurance_operations.database.models.website import WebsiteVersion
+
+    original = create(platform, website_document)
+    site_id = UUID(str(original["id"]))
+    first_version = UUID(str(original["published_version_id"]))
+    public_before = platform.service.public(website_document.slug)
+    grant = authorize(platform, website_document.slug)
+    edited = website_document.model_copy(
+        update={
+            "hero": website_document.hero.model_copy(
+                update={"title": "A revised studio"}
+            )
+        }
+    )
+    draft = platform.service.save(
+        platform.owner,
+        WebsiteSave(
+            expected_row_version=1,
+            configuration=edited,
+            status="draft",
+            agent_binding_id=platform.agents[0],
+            voice_enabled=True,
+            knowledge_faq_ids=[],
+            lead_capture_enabled=False,
+        ),
+        site_id,
+    )
+    assert draft["status"] == "published" and draft["row_version"] == 2
+    assert platform.service.public(website_document.slug) == public_before
+    assert len(platform.service.versions(platform.owner, site_id)) == 1
+    with platform.sessions() as session:
+        assert (
+            session.get(ConversationSession, grant.session_id).website_version_id
+            == first_version
+        )
+    published = platform.service.publication(platform.owner, site_id, 2)
+    assert published["row_version"] == 3
+    assert (
+        platform.service.public(website_document.slug)["configuration"]["hero"]["title"]
+        == "A revised studio"
+    )
+    with pytest.raises(ApiError):
+        ApprovedFaqService(session_factory=platform.sessions).conversation_lookup(
+            actor=platform.owner,
+            conversation_session_id=grant.session_id,
+            query="What sessions are offered?",
+            correlation_id=uuid4(),
+        )
+    platform.service.owned_session(
+        platform.owner, website_document.slug, grant.session_id
+    )
+    restored = platform.service.publication(
+        platform.owner, site_id, 3, restore_version_id=first_version
+    )
+    assert restored["row_version"] == 4
+    assert restored["configuration"]["hero"]["title"] == "A revised studio"
+    assert platform.service.public(website_document.slug) == public_before
+    versions = platform.service.versions(platform.owner, site_id)
+    assert [version["number"] for version in versions] == [3, 2, 1]
+    assert versions[0]["active"] is True
+    with platform.sessions() as session:
+        assert (
+            session.get(WebsiteVersion, first_version).configuration["hero"]["title"]
+            == website_document.hero.title
+        )
+    platform.service.publication(platform.owner, site_id, 4, unpublish=True)
+    with pytest.raises(ApiError):
+        platform.service.public(website_document.slug)
+    with pytest.raises(ApiError):
+        authorize(platform, website_document.slug)
+    assert len(platform.service.versions(platform.owner, site_id)) == 3
+    platform.service.publication(
+        platform.owner, site_id, 5, restore_version_id=first_version
+    )
+    assert platform.service.public(website_document.slug) == public_before
+
+
+def test_publication_conflicts_ownership_and_revoked_bindings(
+    platform: Platform, website_document: WebsiteDocument
+) -> None:
+    saved = create(platform, website_document)
+    site_id = UUID(str(saved["id"]))
+    version_id = UUID(str(saved["published_version_id"]))
+    with pytest.raises(ApiError) as duplicate:
+        create(platform, website_document)
+    assert duplicate.value.status_code == 409
+    with pytest.raises(ApiError) as stale:
+        platform.service.publication(platform.owner, site_id, 99)
+    assert stale.value.code == "WEBSITE_VERSION_CONFLICT"
+    for mutation in (
+        lambda: platform.service.publication(platform.foreign, site_id, 1),
+        lambda: platform.service.publication(
+            platform.foreign, site_id, 1, unpublish=True
+        ),
+        lambda: platform.service.versions(platform.foreign, site_id),
+        lambda: platform.service.publication(
+            platform.owner, site_id, 1, restore_version_id=uuid4()
+        ),
+    ):
+        with pytest.raises(ApiError):
+            mutation()
+    second = create(
+        platform, website_document.model_copy(update={"slug": "another-studio"})
+    )
+    with pytest.raises(ApiError):
+        platform.service.publication(
+            platform.owner, UUID(str(second["id"])), 1, restore_version_id=version_id
+        )
+    with platform.sessions() as session, session.begin():
+        session.get(WebsiteAgentBinding, platform.agents[0]).enabled = False
+    with pytest.raises(ApiError) as revoked:
+        platform.service.publication(
+            platform.owner, site_id, 1, restore_version_id=version_id
+        )
+    assert revoked.value.code == "WEBSITE_AGENT_UNAVAILABLE"
+    assert platform.service.list(platform.owner)["websites"][1]["row_version"] == 1
+
+
+def test_published_versions_are_immutable_and_pointers_cannot_cross_sites(
+    platform: Platform, website_document: WebsiteDocument
+) -> None:
+    from sqlalchemy import delete, update
+    from sqlalchemy.exc import DBAPIError
+
+    from insurance_operations.database.models.website import WebsiteVersion
+
+    first = create(platform, website_document)
+    second = create(
+        platform, website_document.model_copy(update={"slug": "different-studio"})
+    )
+    version_id = UUID(str(first["published_version_id"]))
+    for statement in (
+        update(WebsiteVersion).where(WebsiteVersion.id == version_id).values(number=99),
+        delete(WebsiteVersion).where(WebsiteVersion.id == version_id),
+    ):
+        with pytest.raises(DBAPIError), platform.sessions() as session, session.begin():
+            session.execute(statement)
+    with pytest.raises(IntegrityError), platform.sessions() as session, session.begin():
+        site = session.get(Website, UUID(str(second["id"])))
+        site.published_version_id = version_id
+        session.flush()

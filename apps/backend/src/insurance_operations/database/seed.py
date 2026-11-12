@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from insurance_operations.approved_faqs.schemas import ApprovedFaqContent
-from insurance_operations.approved_faqs.service import normalize_faq_question
+from insurance_operations.approved_faqs.text import normalize_faq_question
 from insurance_operations.database.connection import create_database_engine
 from insurance_operations.database.development_content import (
     DEVELOPMENT_ADDITIONAL_FAQS,
@@ -81,14 +81,15 @@ DEVELOPMENT_FAQ_CONTENT: tuple[tuple[UUID, str, str, str], ...] = (
         "I can collect your contact details and HVAC service needs. "
         "A service team member must provide estimates and pricing.",
     ),
-) + tuple(
-    (
-        uuid5(DEVELOPMENT_AGENCY_ID, f"approved-faq:{key}"),
-        question,
-        normalize_faq_question(question),
-        answer,
-    )
-    for key, question, answer in DEVELOPMENT_ADDITIONAL_FAQS
+    *tuple(
+        (
+            uuid5(DEVELOPMENT_AGENCY_ID, f"approved-faq:{key}"),
+            question,
+            normalize_faq_question(question),
+            answer,
+        )
+        for key, question, answer in DEVELOPMENT_ADDITIONAL_FAQS
+    ),
 )
 
 
@@ -267,8 +268,11 @@ def seed_development_foundation(
                     AgencyReceptionistSettings.agency_id == DEVELOPMENT_AGENCY_ID,
                     AgencyReceptionistSettings.escalation_message.in_(
                         (
-                            "A service team member will follow up for urgent requests, "
-                            "hazards, estimates, or any request I cannot safely answer.",
+                            (
+                                "A service team member will follow up for urgent "
+                                "requests, hazards, estimates, or any request I "
+                                "cannot safely answer."
+                            ),
                             "A service team member will follow up for urgent requests, "
                             "hazards, estimates, or questions I cannot safely answer.",
                         )
@@ -291,9 +295,9 @@ def seed_development_foundation(
                     )
                 )
             created_faq_ids = [
-                faq_id
+                created_faq_id
                 for statement in approved_faq_statements
-                if (faq_id := connection.scalar(statement)) is not None
+                if (created_faq_id := connection.scalar(statement)) is not None
             ]
             approved_faqs_created = len(created_faq_ids)
             if created_faq_ids:
@@ -322,8 +326,8 @@ def seed_development_foundation(
         business_schedule_created = configure_development_schedule(database_engine)
         call_policy_configured, inbound_number_configured = False, False
         if include_telephony:
-            call_policy_configured, inbound_number_configured = configure_demo_telephony(
-                database_engine, settings
+            call_policy_configured, inbound_number_configured = (
+                configure_demo_telephony(database_engine, settings)
             )
         return DevelopmentSeedResult(
             agency_created=agency_created,
@@ -342,9 +346,7 @@ def seed_development_foundation(
 def configure_development_schedule(database_engine: Engine) -> bool:
     with Session(database_engine) as session, session.begin():
         agency = session.scalar(
-            select(Agency)
-            .where(Agency.id == DEVELOPMENT_AGENCY_ID)
-            .with_for_update()
+            select(Agency).where(Agency.id == DEVELOPMENT_AGENCY_ID).with_for_update()
         )
         if (
             agency is None

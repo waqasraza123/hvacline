@@ -101,7 +101,9 @@ def collect_booking_jobs(
                     CalendarBooking.status.not_in(["CANCELLED", "COMPLETED"]),
                     CalendarBooking.next_attempt_at <= now,
                 )
-                .order_by(CalendarBooking.next_attempt_at, CalendarBooking.appointment_id)
+                .order_by(
+                    CalendarBooking.next_attempt_at, CalendarBooking.appointment_id
+                )
                 .limit(batch_size)
             ).all()
         )
@@ -122,7 +124,9 @@ def collect_booking_jobs(
                 .where(
                     CalendarConnection.status == "CONNECTED",
                     CalendarConnection.last_checked_at.is_(None)
-                    | (CalendarConnection.last_checked_at <= now - timedelta(minutes=5)),
+                    | (
+                        CalendarConnection.last_checked_at <= now - timedelta(minutes=5)
+                    ),
                 )
                 .order_by(
                     CalendarConnection.last_checked_at.nulls_first(),
@@ -138,10 +142,14 @@ def collect_booking_jobs(
         if notification is not None:
             jobs.append(partial(deliver_notification, sessions, notification))
         if binding is not None:
-            jobs.append(partial(reconcile_booking_job, sessions, binding[0], binding[1]))
+            jobs.append(
+                partial(reconcile_booking_job, sessions, binding[0], binding[1])
+            )
         if connection is not None:
             jobs.append(
-                partial(reconcile_connection_job, sessions, connection[0], connection[1])
+                partial(
+                    reconcile_connection_job, sessions, connection[0], connection[1]
+                )
             )
     return jobs
 

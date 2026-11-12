@@ -7,7 +7,7 @@ from types import FrameType
 
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from insurance_operations.booking_jobs import process_booking_jobs
 from insurance_operations.database.connection import (

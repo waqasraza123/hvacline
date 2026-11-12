@@ -106,9 +106,9 @@ class HomepageChatService:
                 code="HOMEPAGE_CHAT_OUTCOME_UNKNOWN"
                 if error.message_sent
                 else "HOMEPAGE_CHAT_UNAVAILABLE",
-                message="Line’s reply was interrupted. Sign in to continue."
+                message="Line\u2019s reply was interrupted. Sign in to continue."
                 if error.message_sent
-                else "Line couldn’t connect. Your message is kept; please retry.",
+                else "Line couldn\u2019t connect. Your message is kept; please retry.",
                 details={"remaining": 0 if error.message_sent else 1},
             ) from error
         except Exception:
@@ -197,7 +197,10 @@ class HomepageChatService:
                 raise ApiError(
                     status_code=429,
                     code="HOMEPAGE_CHAT_BUSY",
-                    message="Line is busy right now. Please retry shortly or sign in to continue.",
+                    message=(
+                        "Line is busy right now. Please retry shortly or "
+                        "sign in to continue."
+                    ),
                     headers={"Retry-After": "30"},
                 )
             if usage is None:

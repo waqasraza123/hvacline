@@ -22,7 +22,9 @@ from insurance_operations.telephony.providers.elevenlabs import MAX_WEBHOOK_BYTE
 def test_post_call_stream_is_bounded_before_finalization(oversized: bool) -> None:
     ingress = Mock(spec=TelephonyIngressService)
     app = FastAPI()
-    app.include_router(create_phone_tools_router(cast(TelephonyIngressService, ingress)))
+    app.include_router(
+        create_phone_tools_router(cast(TelephonyIngressService, ingress))
+    )
 
     @app.middleware("http")
     async def correlation_id(

@@ -35,6 +35,11 @@ from insurance_operations.approved_faqs import (
     ApprovedFaqStatusInput,
     ApprovedFaqUpdateInput,
 )
+from insurance_operations.billing.routes import (
+    create_billing_admin_router,
+    create_billing_public_router,
+)
+from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.conversations.booking import create_browser_booking_router
 from insurance_operations.conversations.contracts import ConversationProvider
 from insurance_operations.conversations.local_session import (
@@ -55,10 +60,7 @@ from insurance_operations.conversations.schemas import (
     ConversationSessionResponse,
 )
 from insurance_operations.conversations.service import ConversationService
-from insurance_operations.billing.routes import create_billing_public_router, create_billing_admin_router
-from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.customer_access.routes import create_customer_router
-from insurance_operations.websites.routes import create_website_router
 from insurance_operations.database.connection import (
     DatabaseReadinessError,
     check_database_readiness,
@@ -115,6 +117,7 @@ from insurance_operations.telephony.demo import (
 from insurance_operations.telephony.outbound.routes import create_outbound_demo_router
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
 from insurance_operations.telephony.routes import create_development_telephony_router
+from insurance_operations.websites.routes import create_website_router
 
 
 class HealthResponse(BaseModel):
@@ -134,7 +137,9 @@ def create_app(
     outbound_settings: OutboundDemoSettings | None = None,
     billing_settings: BillingSettings | None = None,
 ) -> FastAPI:
-    billing_settings = billing_settings or BillingSettings(app_environment=settings.app_environment, web_origin=settings.web_origin)
+    billing_settings = billing_settings or BillingSettings(
+        app_environment=settings.app_environment, web_origin=settings.web_origin
+    )
     session_factory = sessionmaker(
         bind=database_engine,
         class_=Session,
@@ -197,7 +202,9 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.integration_settings = settings
-    application.include_router(create_billing_public_router(billing_settings, session_factory))
+    application.include_router(
+        create_billing_public_router(billing_settings, session_factory)
+    )
     application.include_router(
         create_outbound_demo_router(
             settings,
@@ -837,9 +844,15 @@ def create_app(
             response.headers["Idempotent-Replayed"] = "true"
         return result
 
-    application.include_router(create_billing_admin_router(settings, billing_settings, session_factory, development_actor))
+    application.include_router(
+        create_billing_admin_router(
+            settings, billing_settings, session_factory, development_actor
+        )
+    )
     application.include_router(create_hvac_router(session_factory, development_actor))
-    application.include_router(create_website_router(settings, session_factory, development_actor))
+    application.include_router(
+        create_website_router(settings, session_factory, development_actor)
+    )
     application.include_router(
         create_booking_integration_router(settings, session_factory, development_actor)
     )
@@ -847,7 +860,9 @@ def create_app(
         create_browser_booking_router(session_factory, conversation_actor)
     )
     application.include_router(
-        create_customer_router(settings, session_factory, conversation_service, billing_settings)
+        create_customer_router(
+            settings, session_factory, conversation_service, billing_settings
+        )
     )
 
     return application

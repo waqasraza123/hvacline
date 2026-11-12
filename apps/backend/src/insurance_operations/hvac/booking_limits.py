@@ -133,7 +133,8 @@ def require_customer_booking_capacity(
             code="CUSTOMER_APPOINTMENT_LIMIT_REACHED",
             message=(
                 f"Your active appointment limit is {limits.max_active_appointments}. "
-                "Unexpired holds also use a place. Open your existing booking to make a change."
+                "Unexpired holds also use a place. "
+                "Open your existing booking to make a change."
             ),
             details=limits.model_dump(mode="json"),
         )
@@ -175,6 +176,9 @@ def require_customer_booking_change(
         raise ApiError(
             status_code=409,
             code="CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED",
-            message=f"You have used {allowance.used} of {allowance.maximum} allowed date/time changes. Contact the business for further changes.",
+            message=(
+                f"You have used {allowance.used} of {allowance.maximum} "
+                "allowed date/time changes. Contact the business for further changes."
+            ),
             details=allowance.model_dump(),
         )

@@ -68,6 +68,7 @@ class ConversationService:
         request: ConversationSessionCreateInput,
         website_id: UUID | None = None,
         website_agent_binding_id: UUID | None = None,
+        website_version_id: UUID | None = None,
     ) -> ConversationSessionResponse:
         if not request.ai_disclosure_accepted:
             raise ApiError(
@@ -102,10 +103,14 @@ class ConversationService:
             self._enforce_daily_limit(session, actor.agency_id, now)
             capabilities: dict[str, bool] = {}
             if website_id is not None:
-                if website_agent_binding_id is None:
+                if website_agent_binding_id is None or website_version_id is None:
                     raise self._session_state_conflict()
                 website = active_website(
-                    session, actor.agency_id, website_id, website_agent_binding_id
+                    session,
+                    actor.agency_id,
+                    website_id,
+                    website_agent_binding_id,
+                    website_version_id,
                 )
                 capabilities = {
                     "knowledge": True,
@@ -116,6 +121,7 @@ class ConversationService:
             conversation_session = ConversationSession(
                 website_id=website_id,
                 website_agent_binding_id=website_agent_binding_id,
+                website_version_id=website_version_id,
                 website_capabilities=capabilities,
                 agency_id=actor.agency_id,
                 initiated_by=actor.app_user_id,
@@ -173,7 +179,9 @@ class ConversationService:
                 raise ApiError(
                     status_code=409,
                     code="CONVERSATION_SESSION_NOT_ACTIVE",
-                    message="The conversation was closed before authorization completed",
+                    message=(
+                        "The conversation was closed before authorization completed"
+                    ),
                 )
             authorized_session.status = ConversationSessionStatus.AUTHORIZED.value
             authorized_session.authorized_at = authorized_at

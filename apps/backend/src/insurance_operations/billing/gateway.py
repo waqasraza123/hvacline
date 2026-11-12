@@ -1,15 +1,20 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
-from typing import Any
+from typing import Any, Literal, cast
 from uuid import UUID
 
 import stripe
+from stripe.params.checkout import SessionCreateParams
 
 from insurance_operations.billing.catalog import PLANS, PaidPlanKey
 from insurance_operations.billing.errors import billing_error
 from insurance_operations.billing.settings import BillingSettings
 
 type StripeData = dict[str, Any]
+
+
+class CardCheckoutParams(SessionCreateParams):
+    payment_method_types: list[Literal["card"]]
 
 
 class StripeGateway:
@@ -72,7 +77,7 @@ class StripeGateway:
                 502, "stripe_unavailable", "Stripe is unavailable. Please try again."
             ) from error
         finally:
-            transport.close()
+            cast(Callable[[], None], transport.close)()
 
     def create_customer(self, account_id: UUID, email: str) -> StripeData:
         with self.client() as client:
@@ -128,21 +133,22 @@ class StripeGateway:
                     "billing_price_mismatch",
                     "The configured subscription price needs review.",
                 )
-            result = client.v1.checkout.sessions.create(
-                {
-                    "mode": "subscription",
-                    "customer": customer_id,
-                    "payment_method_types": ["card"],
-                    "client_reference_id": str(account_id),
-                    "line_items": [{"price": self.price(plan), "quantity": 1}],
-                    "adaptive_pricing": {"enabled": False},
-                    "subscription_data": {
-                        "metadata": {"hvacline_account_id": str(account_id)}
-                    },
-                    "metadata": {"hvacline_account_id": str(account_id), "plan": plan},
-                    "success_url": f"{origin}/billing?checkout=success",
-                    "cancel_url": f"{origin}/billing?checkout=canceled",
+            parameters: CardCheckoutParams = {
+                "mode": "subscription",
+                "customer": customer_id,
+                "payment_method_types": ["card"],
+                "client_reference_id": str(account_id),
+                "line_items": [{"price": self.price(plan), "quantity": 1}],
+                "adaptive_pricing": {"enabled": False},
+                "subscription_data": {
+                    "metadata": {"hvacline_account_id": str(account_id)}
                 },
+                "metadata": {"hvacline_account_id": str(account_id), "plan": plan},
+                "success_url": f"{origin}/billing?checkout=success",
+                "cancel_url": f"{origin}/billing?checkout=canceled",
+            }
+            result = client.v1.checkout.sessions.create(
+                parameters,
                 options={
                     "idempotency_key": f"hvacline:checkout:{account_id}:{request_id}"
                 },
@@ -211,7 +217,7 @@ class StripeGateway:
             raise billing_error(
                 400, "billing_mode_mismatch", "Webhook mode does not match."
             )
-        return event.to_dict()
+        return cast(StripeData, event.to_dict())
 
     def topup(
         self,
@@ -224,34 +230,39 @@ class StripeGateway:
     ) -> StripeData:
         origin = self.settings.web_origin.rstrip("/")
         with self.client() as client:
-            return client.v1.checkout.sessions.create(
-                {
-                    "mode": "payment",
-                    "customer": customer_id,
-                    "invoice_creation": {"enabled": True},
-                    "payment_method_types": ["card"],
-                    "client_reference_id": str(request_id),
-                    "adaptive_pricing": {"enabled": False},
-                    "metadata": {
-                        "hvacline_account_id": str(account_id),
-                        "hvacline_topup_id": str(request_id),
-                    },
-                    "line_items": [
-                        {
-                            "price_data": {
-                                "currency": "usd",
-                                "unit_amount": amount,
-                                "product_data": {
-                                    "name": f"{hours} extra HVAC maintenance hours",
-                                    "description": f"Additional technician labor for your {PLANS[plan].name} package. Parts and materials excluded.",
-                                },
-                            },
-                            "quantity": 1,
-                        }
-                    ],
-                    "success_url": f"{origin}/billing?topup=success",
-                    "cancel_url": f"{origin}/billing?topup=canceled",
+            parameters: CardCheckoutParams = {
+                "mode": "payment",
+                "customer": customer_id,
+                "invoice_creation": {"enabled": True},
+                "payment_method_types": ["card"],
+                "client_reference_id": str(request_id),
+                "adaptive_pricing": {"enabled": False},
+                "metadata": {
+                    "hvacline_account_id": str(account_id),
+                    "hvacline_topup_id": str(request_id),
                 },
+                "line_items": [
+                    {
+                        "price_data": {
+                            "currency": "usd",
+                            "unit_amount": amount,
+                            "product_data": {
+                                "name": f"{hours} extra HVAC maintenance hours",
+                                "description": (
+                                    f"Additional technician labor for your "
+                                    f"{PLANS[plan].name} "
+                                    "package. Parts and materials excluded."
+                                ),
+                            },
+                        },
+                        "quantity": 1,
+                    }
+                ],
+                "success_url": f"{origin}/billing?topup=success",
+                "cancel_url": f"{origin}/billing?topup=canceled",
+            }
+            return client.v1.checkout.sessions.create(
+                parameters,
                 options={
                     "idempotency_key": f"hvacline:topup:{account_id}:{request_id}"
                 },

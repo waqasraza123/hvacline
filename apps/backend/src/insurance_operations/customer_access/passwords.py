@@ -4,8 +4,13 @@ import secrets
 
 def _derive(password: str, salt: bytes) -> bytes:
     return hashlib.scrypt(
-        password.encode("utf-8"), salt=salt, n=32768, r=8, p=3,
-        dklen=64, maxmem=64 * 1024 * 1024,
+        password.encode("utf-8"),
+        salt=salt,
+        n=32768,
+        r=8,
+        p=3,
+        dklen=64,
+        maxmem=64 * 1024 * 1024,
     )
 
 

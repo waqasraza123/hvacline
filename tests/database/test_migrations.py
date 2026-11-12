@@ -38,14 +38,26 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
-    "websites", "website_agent_bindings",
-    "billing_accounts", "billing_checkouts", "billing_events", "billing_topups", "billing_labor",
+    "websites",
+    "website_agent_bindings",
+    "website_versions",
+    "billing_accounts",
+    "billing_checkouts",
+    "billing_events",
+    "billing_topups",
+    "billing_labor",
     "outbound_phone_verifications",
     "outbound_demo_calls",
-    "homepage_chat_visitors", "homepage_chat_daily_usage",
-    "customer_mfa_factors", "customer_mfa_challenges", "customer_mfa_recovery_codes",
-    "customer_memory_policies", "customer_memory_facts", "customer_memory_summaries",
-    "customer_whatsapp_identities", "customer_memory_pairings",
+    "homepage_chat_visitors",
+    "homepage_chat_daily_usage",
+    "customer_mfa_factors",
+    "customer_mfa_challenges",
+    "customer_mfa_recovery_codes",
+    "customer_memory_policies",
+    "customer_memory_facts",
+    "customer_memory_summaries",
+    "customer_whatsapp_identities",
+    "customer_memory_pairings",
     "whatsapp_conversations",
     "calendar_connections",
     "calendar_authorizations",
@@ -79,31 +91,102 @@ EXPECTED_TABLES = {
 
 EXPECTED_COLUMNS = {
     "billing_accounts": {
-        "account_id", "agency_id", "review_required", "customer_id", "customer_started_at", "livemode", "subscription_id", "price_id", "plan", "status", "period_start", "period_end", "paid_through", "cancel_at_period_end", "last_synced_at", "created_at",
+        "account_id",
+        "agency_id",
+        "review_required",
+        "customer_id",
+        "customer_started_at",
+        "livemode",
+        "subscription_id",
+        "price_id",
+        "plan",
+        "status",
+        "period_start",
+        "period_end",
+        "paid_through",
+        "cancel_at_period_end",
+        "last_synced_at",
+        "created_at",
     },
     "billing_checkouts": {
-        "id", "account_id", "agency_id", "plan", "session_id", "url", "expires_at", "status", "created_at",
+        "id",
+        "account_id",
+        "agency_id",
+        "plan",
+        "session_id",
+        "url",
+        "expires_at",
+        "status",
+        "created_at",
     },
     "billing_events": {
-        "event_id", "account_id", "agency_id", "event_type", "customer_id", "object_id", "processed_at", "created_at",
+        "event_id",
+        "account_id",
+        "agency_id",
+        "event_type",
+        "customer_id",
+        "object_id",
+        "processed_at",
+        "created_at",
     },
     "billing_topups": {
-        "id", "account_id", "agency_id", "subscription_id", "plan", "minutes", "hourly_amount", "amount", "session_id", "url", "expires_at", "status", "created_at", "credited_at",
+        "id",
+        "account_id",
+        "agency_id",
+        "subscription_id",
+        "plan",
+        "minutes",
+        "hourly_amount",
+        "amount",
+        "session_id",
+        "url",
+        "expires_at",
+        "status",
+        "created_at",
+        "credited_at",
     },
     "billing_labor": {
-        "id", "account_id", "agency_id", "appointment_id", "minutes", "package_minutes", "purchased_minutes", "subscription_id", "period_start", "created_at",
+        "id",
+        "account_id",
+        "agency_id",
+        "appointment_id",
+        "minutes",
+        "package_minutes",
+        "purchased_minutes",
+        "subscription_id",
+        "period_start",
+        "created_at",
     },
-
     "outbound_phone_verifications": {
-        "id", "agency_id", "owner_hash", "destination_hash", "consent_version",
-        "provider_verification_id", "created_at", "expires_at", "attempts",
-        "verified_at", "consumed_by_request_id",
+        "id",
+        "agency_id",
+        "owner_hash",
+        "destination_hash",
+        "consent_version",
+        "provider_verification_id",
+        "created_at",
+        "expires_at",
+        "attempts",
+        "verified_at",
+        "consumed_by_request_id",
     },
     "outbound_demo_calls": {
-        "id", "agency_id", "request_id", "owner_hash", "destination_hash",
-        "request_hash", "scenario", "consent_version", "consent_at", "created_at",
-        "status", "transfer_status", "conversation_id", "sip_call_id",
-        "last_event_hash", "finalized_at",
+        "id",
+        "agency_id",
+        "request_id",
+        "owner_hash",
+        "destination_hash",
+        "request_hash",
+        "scenario",
+        "consent_version",
+        "consent_at",
+        "created_at",
+        "status",
+        "transfer_status",
+        "conversation_id",
+        "sip_call_id",
+        "last_event_hash",
+        "finalized_at",
     },
     "homepage_chat_visitors": {
         "agency_id",
@@ -117,33 +200,84 @@ EXPECTED_COLUMNS = {
     },
     "homepage_chat_daily_usage": {"agency_id", "day", "generations"},
     "customer_mfa_factors": {
-        "account_id", "agency_id", "secret_ciphertext", "enabled_at", "last_counter",
-        "version", "failed_attempts", "locked_until",
+        "account_id",
+        "agency_id",
+        "secret_ciphertext",
+        "enabled_at",
+        "last_counter",
+        "version",
+        "failed_attempts",
+        "locked_until",
     },
     "customer_mfa_challenges": {
-        "id", "account_id", "agency_id", "token_hash", "purpose", "secret_ciphertext",
-        "factor_version", "attempts", "created_at", "expires_at", "consumed_at",
+        "id",
+        "account_id",
+        "agency_id",
+        "token_hash",
+        "purpose",
+        "secret_ciphertext",
+        "factor_version",
+        "attempts",
+        "created_at",
+        "expires_at",
+        "consumed_at",
     },
     "customer_mfa_recovery_codes": {
-        "id", "account_id", "agency_id", "code_hash", "created_at", "used_at",
+        "id",
+        "account_id",
+        "agency_id",
+        "code_hash",
+        "created_at",
+        "used_at",
     },
     "customer_memory_policies": {
-        "account_id", "agency_id", "enabled", "revision", "history_after",
-        "updated_at", "last_request_id", "last_fingerprint", "retention_days",
+        "account_id",
+        "agency_id",
+        "enabled",
+        "revision",
+        "history_after",
+        "updated_at",
+        "last_request_id",
+        "last_fingerprint",
+        "retention_days",
     },
     "customer_memory_facts": {
-        "id", "agency_id", "account_id", "key", "value", "source_intake_id",
-        "source_kind", "created_at", "updated_at", "expires_at",
+        "id",
+        "agency_id",
+        "account_id",
+        "key",
+        "value",
+        "source_intake_id",
+        "source_kind",
+        "created_at",
+        "updated_at",
+        "expires_at",
     },
     "customer_memory_summaries": {
-        "intake_id", "agency_id", "account_id", "summary", "created_at", "expires_at",
+        "intake_id",
+        "agency_id",
+        "account_id",
+        "summary",
+        "created_at",
+        "expires_at",
     },
     "customer_whatsapp_identities": {
-        "id", "agency_id", "account_id", "phone_number_id", "caller_digest",
-        "verified_at", "expires_at", "mfa_version",
+        "id",
+        "agency_id",
+        "account_id",
+        "phone_number_id",
+        "caller_digest",
+        "verified_at",
+        "expires_at",
+        "mfa_version",
     },
     "customer_memory_pairings": {
-        "id", "agency_id", "binding_id", "code_digest", "expires_at", "consumed_at",
+        "id",
+        "agency_id",
+        "binding_id",
+        "code_digest",
+        "expires_at",
+        "consumed_at",
     },
     "whatsapp_conversations": {
         "id",
@@ -512,9 +646,50 @@ EXPECTED_COLUMNS = {
 }
 
 
-EXPECTED_COLUMNS["websites"] = {"id", "agency_id", "slug", "template_id", "status", "configuration", "agent_binding_id", "knowledge_faq_ids", "voice_enabled", "lead_capture_enabled", "created_at", "updated_at", "row_version"}
-EXPECTED_COLUMNS["website_agent_bindings"] = {"id", "agency_id", "label", "provider_agent_id", "enabled", "browser_tools_confirmed", "created_at", "updated_at", "row_version"}
-EXPECTED_COLUMNS["conversation_sessions"].update({"website_id", "website_agent_binding_id", "website_capabilities"})
+EXPECTED_COLUMNS["websites"] = {
+    "id",
+    "agency_id",
+    "slug",
+    "template_id",
+    "status",
+    "configuration",
+    "agent_binding_id",
+    "knowledge_faq_ids",
+    "voice_enabled",
+    "lead_capture_enabled",
+    "created_at",
+    "updated_at",
+    "row_version",
+}
+EXPECTED_COLUMNS["website_agent_bindings"] = {
+    "id",
+    "agency_id",
+    "label",
+    "provider_agent_id",
+    "enabled",
+    "browser_tools_confirmed",
+    "created_at",
+    "updated_at",
+    "row_version",
+}
+EXPECTED_COLUMNS["conversation_sessions"].update(
+    {"website_id", "website_agent_binding_id", "website_capabilities"}
+)
+EXPECTED_COLUMNS["websites"].add("published_version_id")
+EXPECTED_COLUMNS["conversation_sessions"].add("website_version_id")
+EXPECTED_COLUMNS["website_versions"] = {
+    "id",
+    "agency_id",
+    "website_id",
+    "number",
+    "configuration",
+    "agent_binding_id",
+    "knowledge_faq_ids",
+    "voice_enabled",
+    "lead_capture_enabled",
+    "created_by",
+    "created_at",
+}
 EXPECTED_COLUMNS["agency_approved_faqs"].add("question_variations")
 
 
@@ -664,7 +839,11 @@ def test_migration_unique_constraints_match_the_approved_scopes(
     database_inspector = inspect(migrated_database)
     expected_unique_columns: dict[str, set[tuple[str, ...]]] = {
         "outbound_phone_verifications": {("provider_verification_id",)},
-        "outbound_demo_calls": {("agency_id", "request_id"), ("conversation_id",), ("sip_call_id",)},
+        "outbound_demo_calls": {
+            ("agency_id", "request_id"),
+            ("conversation_id",),
+            ("sip_call_id",),
+        },
         "customer_mfa_challenges": {("token_hash",)},
         "customer_mfa_recovery_codes": {("code_hash",)},
         "whatsapp_conversations": {("conversation_id",), ("session_id",)},
@@ -853,11 +1032,31 @@ def test_migration_check_constraints_cover_approved_invariants(
             "ck_inbound_call_events_details_object",
         },
     }
-    expected_constraint_names["conversation_sessions"].add("ck_conversation_sessions_website_binding_consistent")
-    expected_constraint_names["conversation_sessions"].add("ck_conversation_sessions_website_capabilities_object")
-    expected_constraint_names["agency_approved_faqs"].add("ck_agency_approved_faqs_question_variations_valid")
-    expected_constraint_names["website_agent_bindings"] = {"ck_website_agent_bindings_label_valid", "ck_website_agent_bindings_provider_agent_valid"}
-    expected_constraint_names["websites"] = {"ck_websites_status_valid", "ck_websites_slug_valid", "ck_websites_configuration_object", "ck_websites_knowledge_array", "ck_websites_row_version_positive"}
+    expected_constraint_names["conversation_sessions"].add(
+        "ck_conversation_sessions_website_binding_consistent"
+    )
+    expected_constraint_names["conversation_sessions"].add(
+        "ck_conversation_sessions_website_capabilities_object"
+    )
+    expected_constraint_names["agency_approved_faqs"].add(
+        "ck_agency_approved_faqs_question_variations_valid"
+    )
+    expected_constraint_names["website_agent_bindings"] = {
+        "ck_website_agent_bindings_label_valid",
+        "ck_website_agent_bindings_provider_agent_valid",
+    }
+    expected_constraint_names["website_versions"] = {
+        "ck_website_versions_number_positive",
+        "ck_website_versions_configuration_object",
+        "ck_website_versions_knowledge_array",
+    }
+    expected_constraint_names["websites"] = {
+        "ck_websites_status_valid",
+        "ck_websites_slug_valid",
+        "ck_websites_configuration_object",
+        "ck_websites_knowledge_array",
+        "ck_websites_row_version_positive",
+    }
     actual_constraint_names = {
         table_name: {
             constraint["name"]

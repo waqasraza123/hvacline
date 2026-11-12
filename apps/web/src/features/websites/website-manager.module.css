@@ -9,6 +9,117 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 24px;
 }
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.siteGallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-block: 24px;
+}
+.siteCard {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--customer-surface);
+  min-width: 0;
+}
+.siteCard[aria-pressed="true"] {
+  border-color: var(--customer-accent);
+  outline: 2px solid var(--customer-accent);
+  outline-offset: 2px;
+}
+.siteCard img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.siteCard span,
+.siteCard small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.editorSection {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line);
+}
+.editorSection > summary {
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 650;
+  padding: 10px 0;
+}
+.colors {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+.sectionList {
+  padding: 0;
+  list-style: none;
+}
+.sectionList li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 10px;
+}
+.sectionList li > span {
+  flex: 1;
+  min-width: 100px;
+  text-transform: capitalize;
+}
+.publication {
+  margin-block: 32px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.history li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.history span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+.confirmation {
+  position: fixed;
+  z-index: 1901;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(520px, calc(100vw - 32px));
+  max-height: 90dvh;
+  overflow-y: auto;
+  padding: 28px;
+  border-radius: 16px;
+  background: var(--customer-surface);
+  color: var(--customer-ink);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 30%);
+}
 .selection,
 .actions {
   display: flex;

@@ -80,7 +80,9 @@ def test_guest_ignores_greeting_and_allows_only_faq_tools() -> None:
             event(
                 "agent_response",
                 agent_response_event={
-                    "agent_response": "We handle AC repair. Sign in when you are ready to book."
+                    "agent_response": (
+                        "We handle AC repair. Sign in when you are ready to book."
+                    )
                 },
             ),
             event("agent_response_complete"),

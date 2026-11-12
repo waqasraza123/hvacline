@@ -42,8 +42,8 @@ from insurance_operations.leads.schemas import (
 )
 from insurance_operations.leads.service import LeadService
 from insurance_operations.settings import ApiSettings
+from insurance_operations.telephony.providers.elevenlabs import MAX_WEBHOOK_BYTES
 from insurance_operations.whatsapp.provider import (
-    MAX_WEBHOOK_BYTES,
     ElevenLabsWhatsAppAdapter,
     WhatsAppInitiation,
     rejected,
@@ -106,7 +106,8 @@ def callback_readback(customer: CustomerInput) -> str:
         f"Please confirm these callback details. Name: {customer.full_name}. "
         f"Callback number: {customer.phone}.{email} "
         "May I save these contact details and the conversation transcript and ask "
-        "the team to call you? Reply yes to request a callback, or tell me what to correct."
+        "the team to call you? Reply yes to request a callback, "
+        "or tell me what to correct."
     )
 
 
@@ -259,7 +260,9 @@ def create_whatsapp_router(service: WhatsAppService) -> APIRouter:
             raise ApiError(
                 status_code=422,
                 code="INTAKE_CONFIRMATION_REQUIRED",
-                message="Read the complete current intake readback and wait for a clear yes",
+                message=(
+                    "Read the complete current intake readback and wait for a clear yes"
+                ),
             ) from error
         result, _ = service.conversations.confirm_intake(
             actor=actor,

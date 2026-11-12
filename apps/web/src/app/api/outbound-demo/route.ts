@@ -24,7 +24,10 @@ function json(body: unknown, status = 200) {
 
 function rejected(message: string, status: number, code?: string) {
   return json(
-    { error: { message, ...(code ? { code } : {}) }, request_not_created: true },
+    {
+      error: { message, ...(code ? { code } : {}) },
+      request_not_created: true,
+    },
     status,
   );
 }
@@ -40,7 +43,9 @@ async function customerGate(
     denied: json(
       {
         error: {
-          code: anonymous ? "CALLBACK_SIGN_IN_REQUIRED" : "CALLBACK_AUTH_UNAVAILABLE",
+          code: anonymous
+            ? "CALLBACK_SIGN_IN_REQUIRED"
+            : "CALLBACK_AUTH_UNAVAILABLE",
           message: anonymous
             ? "Sign in to request a demo call or check its status."
             : "We couldn’t check your sign-in. Please try again.",
@@ -137,7 +142,8 @@ async function phoneVerification(
       return json(
         {
           error: {
-            message: messages[response.status] ??
+            message:
+              messages[response.status] ??
               "Text verification is unavailable. Please try again later.",
           },
         },
@@ -274,7 +280,10 @@ export async function POST(request: NextRequest) {
     }
     const data: unknown = JSON.parse(Buffer.concat(chunks).toString("utf8"));
     if (typeof data === "object" && data !== null && "action" in data)
-      return phoneVerification(data as Record<string, unknown>, gate.customerId);
+      return phoneVerification(
+        data as Record<string, unknown>,
+        gate.customerId,
+      );
     if (
       typeof data !== "object" ||
       data === null ||
@@ -310,7 +319,11 @@ export async function POST(request: NextRequest) {
         "Verify your US phone number, choose a scenario and agree to one AI demo call.",
         400,
       );
-    const upstream = await backend("calls", gate.customerId, JSON.stringify(data));
+    const upstream = await backend(
+      "calls",
+      gate.customerId,
+      JSON.stringify(data),
+    );
     const result: unknown = await upstream.json();
     if (!upstream.ok) {
       const code =
@@ -339,9 +352,14 @@ export async function POST(request: NextRequest) {
           "Only US mobile, landline and internet phone numbers are supported.",
           422,
         );
-      if (upstream.status === 403 && code === "DEMO_PHONE_VERIFICATION_REQUIRED")
+      if (
+        upstream.status === 403 &&
+        code === "DEMO_PHONE_VERIFICATION_REQUIRED"
+      )
         return rejected(
-          "Verify your phone number with a new text-message code first.", 403, code,
+          "Verify your phone number with a new text-message code first.",
+          403,
+          code,
         );
       const message =
         upstream.status === 403

@@ -319,12 +319,14 @@ def test_provider_write_followed_by_database_failure_is_cleaned_from_durable_hol
     with patch("insurance_operations.hvac.calendar_sync.calendar_adapter") as adapters:
         adapters.return_value.__enter__.return_value = provider
         held = service.reserve(agency_id, request, uuid4())
-        with patch(
-            "insurance_operations.hvac.service.enqueue_booking_notifications",
-            side_effect=RuntimeError("synthetic transaction failure"),
+        with (
+            patch(
+                "insurance_operations.hvac.service.enqueue_booking_notifications",
+                side_effect=RuntimeError("synthetic transaction failure"),
+            ),
+            pytest.raises(RuntimeError),
         ):
-            with pytest.raises(RuntimeError):
-                service.confirm(agency_id, held.id, True, uuid4())
+            service.confirm(agency_id, held.id, True, uuid4())
         with service.sessions() as session, session.begin():
             row = session.get(Appointment, held.id)
             binding = session.get(CalendarBooking, held.id)
@@ -430,18 +432,20 @@ def test_concurrent_email_workers_send_a_single_provider_request(
             )
         )
         assert notification_id
-    with patch.object(
-        ResendBookingEmail,
-        "send",
-        return_value=("ACCEPTED", "synthetic-email-" + str(uuid4())),
-    ) as send:
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            list(
-                executor.map(
-                    lambda _: deliver_notification(service.sessions, notification_id),
-                    range(2),
-                )
+    with (
+        patch.object(
+            ResendBookingEmail,
+            "send",
+            return_value=("ACCEPTED", "synthetic-email-" + str(uuid4())),
+        ) as send,
+        ThreadPoolExecutor(max_workers=2) as executor,
+    ):
+        list(
+            executor.map(
+                lambda _: deliver_notification(service.sessions, notification_id),
+                range(2),
             )
+        )
     send.assert_called_once()
     with service.sessions() as session:
         row = session.get(BookingNotification, notification_id)

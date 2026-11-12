@@ -41,7 +41,9 @@ export function OutboundDemo() {
           <ProductIcon name="phone" />
           <div>
             <h3>Outbound calling</h3>
-            <p>Try the AI voice agent on your own phone with a short HVAC demo.</p>
+            <p>
+              Try the AI voice agent on your own phone with a short HVAC demo.
+            </p>
           </div>
         </article>
         <OutboundDemoTrigger />

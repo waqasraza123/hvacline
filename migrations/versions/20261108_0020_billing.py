@@ -222,7 +222,11 @@ def upgrade() -> None:
             server_default=sa.func.now(),
         ),
         sa.CheckConstraint(
-            "minutes BETWEEN 1 AND 1440 AND package_minutes >= 0 AND purchased_minutes >= 0 AND minutes = package_minutes + purchased_minutes",
+            (
+                "minutes BETWEEN 1 AND 1440 AND package_minutes >= "
+                "0 AND purchased_minutes >= 0 AND minutes = "
+                "package_minutes + purchased_minutes"
+            ),
             name="minutes_valid",
         ),
         sa.CheckConstraint(
@@ -247,7 +251,9 @@ def downgrade() -> None:
     for table in tables:
         if op.get_bind().scalar(sa.text(f"SELECT EXISTS (SELECT 1 FROM {table})")):
             raise RuntimeError(
-                "Retain billing customer bindings, checkout reservations and Stripe receipts; roll back application only"
+                "Retain billing customer bindings, checkout "
+                "reservations and Stripe receipts; roll back "
+                "application only"
             )
     for table in tables:
         op.drop_table(table)

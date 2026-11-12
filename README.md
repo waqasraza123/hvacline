@@ -76,23 +76,30 @@ acceptance and the foundation/Phase 3 implementation plan:
 
 ## Configurable Voice AI websites
 
-Phase 2 adds agency-owned persisted configurations, server-managed agent bindings
-and dynamic `/sites/[slug]` rendering. In the connected dashboard, **Websites**
-lets an authorized operator customize branding/content, choose an approved agent
-and knowledge subset, preview, save drafts and publish a site. Voice/Text reuses
-the existing signed ElevenLabs transport and customer MFA; inquiries reuse the
-existing lead workflow. Website booking and memory remain disabled. `/demos/...`
-continues to provide safe static examples.
+Connected Operations → Websites provides a restricted administrator editor:
+create from three distinct templates, customize branding/content/colors/fonts/
+sections/FAQs/actions, preview, save private drafts, publish immutable versions,
+restore history and unpublish. Published sites use `/sites/[slug]`; ordinary
+content changes require no rebuild. Drafts cannot change live agent/knowledge
+bindings. Images are selected from approved artwork; uploads/custom domains are
+not exposed. Voice/Text reuse signed ElevenLabs sessions and customer MFA.
+Website inquiries use the existing lead workflow; booking and memory stay disabled
+for those sessions. Existing HVAC account workflows remain separate.
 
-The platform defaults off and needs migration `20261112_0022`, separately
-configured agents and owner acceptance. Existing development identity gates
-remain; this is not production multi-business onboarding. No configured Neon
-migration or live non-HVAC conversation was performed. Setup, security bounds,
-checks and manual acceptance: [Phase 2 guide](docs/website-platform-phase2.md).
+The platform defaults off and remains development/test gated. Management requires
+the existing business administrator token; customer sign-in does not grant owner
+access. Migrations `20261112_0022` and `20261113_0023`, configured agents and owner
+acceptance are required. Production self-service onboarding is not ready.
 
-Homepage pricing is on its separate `/pricing` page. The home Services section
-and footer My package link are removed; responsive navigation and footer
-integration captions remain.
+The owner stopped verification; final edits are **unverified**. Earlier web
+verification and focused backend checks passed, while broader Python checks
+reported unresolved failures. Exact results, changed source, deployment/setup
+commands and one acceptance checklist: [Platform handoff](docs/website-platform-phase2.md).
+No deployment, target migration or hosted agent change was performed.
+
+The homepage retains the hero, template gallery and calling entry. Packages,
+Services, booking walkthrough and HVAC-owner FAQ are removed; pricing lives on
+`/pricing`. Header/footer integrations include short descriptions.
 
 ## Dashboard demo
 

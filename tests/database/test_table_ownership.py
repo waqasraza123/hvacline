@@ -5,13 +5,13 @@ from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
     "websites": ("websites", "agency_id"),
+    "website_versions": ("websites", "agency_id"),
     "website_agent_bindings": ("websites", "agency_id"),
     "billing_accounts": ("billing", "agency_id"),
     "billing_checkouts": ("billing", "agency_id"),
     "billing_events": ("billing", "agency_id"),
     "billing_topups": ("billing", "agency_id"),
     "billing_labor": ("billing", "agency_id"),
-
     "outbound_phone_verifications": ("telephony", "agency_id"),
     "outbound_demo_calls": ("telephony", "agency_id"),
     "homepage_chat_visitors": ("homepage_chat", "agency_id"),
@@ -92,37 +92,55 @@ def test_foundation_relationships_match_available_parent_tables(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_relationships: dict[str, set[tuple[tuple[str, ...], str]]] = {
-        "websites": {(("agency_id",), "agencies"), (("agent_binding_id", "agency_id"), "website_agent_bindings")},
+        "websites": {
+            (("agency_id",), "agencies"),
+            (("agent_binding_id", "agency_id"), "website_agent_bindings"),
+            (("published_version_id", "id", "agency_id"), "website_versions"),
+        },
+        "website_versions": {
+            (("agency_id",), "agencies"),
+            (("website_id", "agency_id"), "websites"),
+            (("agent_binding_id", "agency_id"), "website_agent_bindings"),
+            (("created_by",), "app_users"),
+        },
         "website_agent_bindings": {(("agency_id",), "agencies")},
         "outbound_phone_verifications": {(("agency_id",), "agencies")},
         "outbound_demo_calls": {(("agency_id",), "agencies")},
         "homepage_chat_visitors": {(("agency_id",), "agencies")},
         "homepage_chat_daily_usage": {(("agency_id",), "agencies")},
         "customer_mfa_factors": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_mfa_challenges": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_mfa_recovery_codes": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_policies": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_facts": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
             (("source_intake_id",), "conversation_intakes"),
         },
         "customer_memory_summaries": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
             (("intake_id",), "conversation_intakes"),
         },
         "customer_whatsapp_identities": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_pairings": {
-            (("agency_id",), "agencies"), (("binding_id",), "whatsapp_conversations"),
+            (("agency_id",), "agencies"),
+            (("binding_id",), "whatsapp_conversations"),
         },
         "whatsapp_conversations": {
             (("agency_id",), "agencies"),
@@ -161,6 +179,7 @@ def test_foundation_relationships_match_available_parent_tables(
             (("created_by",), "app_users"),
         },
         "conversation_sessions": {
+            (("website_version_id", "website_id", "agency_id"), "website_versions"),
             (("website_id", "agency_id"), "websites"),
             (("website_agent_binding_id", "agency_id"), "website_agent_bindings"),
             (("agency_id",), "agencies"),

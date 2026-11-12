@@ -13,11 +13,15 @@ def normalize_phone_number(value: str) -> str:
     if E164.fullmatch(value):
         return value
     if re.fullmatch(r"\+?[0-9 ().-]+", value) is None:
-        raise ValueError("Use a phone number without extensions or dialing instructions")
+        raise ValueError(
+            "Use a phone number without extensions or dialing instructions"
+        )
     try:
         number = phonenumbers.parse(value, "US")
     except phonenumbers.NumberParseException:
-        raise ValueError("Use a complete phone number including its area code") from None
+        raise ValueError(
+            "Use a complete phone number including its area code"
+        ) from None
     normalized = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
     if number.extension or E164.fullmatch(normalized) is None:
         raise ValueError("Use a complete phone number without an extension")

@@ -8,14 +8,16 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, Header, HTTPException, Response
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from insurance_operations.booking_jobs import JobBatchResult, process_booking_jobs
 from insurance_operations.job_execution import create_job_engine
 from insurance_operations.settings import JobRunnerSettings
 
 
-def create_job_app(settings: JobRunnerSettings, engine: Engine | None = None) -> FastAPI:
+def create_job_app(
+    settings: JobRunnerSettings, engine: Engine | None = None
+) -> FastAPI:
     database_engine = engine if engine is not None else create_job_engine(settings)
     sessions = sessionmaker(
         bind=database_engine,

@@ -24,7 +24,11 @@ class OutboundDemoCall(UuidPrimaryKeyMixin, Base):
             name="status_valid",
         ),
         CheckConstraint(
-            "transfer_status IN ('not_requested','refer_accepted','failed','unconfirmed')",
+            (
+                "transfer_status IN "
+                "('not_requested','refer_accepted','failed','unconf"
+                "irmed')"
+            ),
             name="transfer_status_valid",
         ),
         Index("ix_outbound_demo_calls_agency_created", "agency_id", "created_at"),

@@ -112,7 +112,10 @@ def booking_details(
         change_allowance=allowance,
         change_message=None
         if can_reschedule
-        else f"You have used {allowance.used} of {allowance.maximum} allowed date/time changes. Contact the business for further changes."
+        else (
+            f"You have used {allowance.used} of {allowance.maximum} "
+            "allowed date/time changes. Contact the business for further changes."
+        )
         if allowance.remaining == 0
         else "Please contact the business to change this appointment.",
     )

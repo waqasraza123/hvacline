@@ -16,17 +16,31 @@ FACT_OPTIONS: dict[str, dict[str, str]] = {
     },
     "contact_preference": {"PHONE": "phone contact", "EMAIL": "email contact"},
     "equipment_type": {
-        "CENTRAL_AC": "central air conditioning", "HEAT_PUMP": "heat pump",
-        "FURNACE": "furnace", "BOILER": "boiler", "MINI_SPLIT": "mini split",
+        "CENTRAL_AC": "central air conditioning",
+        "HEAT_PUMP": "heat pump",
+        "FURNACE": "furnace",
+        "BOILER": "boiler",
+        "MINI_SPLIT": "mini split",
     },
     "equipment_brand": {
-        name: name.title() for name in (
-            "CARRIER", "TRANE", "LENNOX", "GOODMAN", "DAIKIN", "RHEEM",
-            "MITSUBISHI", "YORK", "BRYANT", "AMANA",
+        name: name.title()
+        for name in (
+            "CARRIER",
+            "TRANE",
+            "LENNOX",
+            "GOODMAN",
+            "DAIKIN",
+            "RHEEM",
+            "MITSUBISHI",
+            "YORK",
+            "BRYANT",
+            "AMANA",
         )
     },
     "equipment_fuel": {
-        "ELECTRIC": "electric heating", "GAS": "gas heating", "OIL": "oil heating",
+        "ELECTRIC": "electric heating",
+        "GAS": "gas heating",
+        "OIL": "oil heating",
     },
     "arrival_preference": {"CALL_FIRST": "call before arrival"},
     "site_access": {"GATE": "gated access", "PETS": "pets on site"},

@@ -60,48 +60,80 @@ class MemoryHarness:
 
 
 @pytest.fixture
-def harness(migrated_database: Engine, database_settings: DatabaseSettings) -> Iterator[MemoryHarness]:
+def harness(
+    migrated_database: Engine, database_settings: DatabaseSettings
+) -> Iterator[MemoryHarness]:
     with migrated_database.connect() as connection:
         transaction = connection.begin()
         sessions = sessionmaker(
-            bind=connection, expire_on_commit=False, join_transaction_mode="create_savepoint",
+            bind=connection,
+            expire_on_commit=False,
+            join_transaction_mode="create_savepoint",
         )
         actors: list[ActorContext] = []
         with sessions() as session, session.begin():
-            agency = Agency(name="Synthetic Memory HVAC", slug=f"memory-{uuid4()}", environment_kind="DEVELOPMENT")
-            foreign = Agency(name="Separate HVAC", slug=f"memory-{uuid4()}", environment_kind="DEVELOPMENT")
+            agency = Agency(
+                name="Synthetic Memory HVAC",
+                slug=f"memory-{uuid4()}",
+                environment_kind="DEVELOPMENT",
+            )
+            foreign = Agency(
+                name="Separate HVAC",
+                slug=f"memory-{uuid4()}",
+                environment_kind="DEVELOPMENT",
+            )
             session.add_all([agency, foreign])
             session.flush()
             for business in (agency, agency, foreign):
-                user = AppUser(auth_subject=uuid4(), display_name="Fictional memory customer")
+                user = AppUser(
+                    auth_subject=uuid4(), display_name="Fictional memory customer"
+                )
                 session.add(user)
                 session.flush()
                 account = CustomerAccount(
-                    agency_id=business.id, app_user_id=user.id,
-                    email=f"memory-{uuid4()}@example.test", password_hash="synthetic-not-a-login-hash",
+                    agency_id=business.id,
+                    app_user_id=user.id,
+                    email=f"memory-{uuid4()}@example.test",
+                    password_hash="synthetic-not-a-login-hash",
                     created_at=datetime.now(UTC),
                 )
                 session.add(account)
                 session.flush()
-                session.add(CustomerMfaFactor(
-                    account_id=account.id, agency_id=business.id, version=1,
-                    secret_ciphertext="synthetic-service-fixture-not-an-encrypted-secret",
-                    enabled_at=datetime.now(UTC), last_counter=1, failed_attempts=0,
-                ))
-                actors.append(ActorContext(
-                    app_user_id=user.id, display_name=user.display_name,
-                    agency_id=business.id, agency_name=business.name,
-                    agency_environment="DEVELOPMENT",
-                ))
+                session.add(
+                    CustomerMfaFactor(
+                        account_id=account.id,
+                        agency_id=business.id,
+                        version=1,
+                        secret_ciphertext="synthetic-service-fixture-not-an-encrypted-secret",
+                        enabled_at=datetime.now(UTC),
+                        last_counter=1,
+                        failed_attempts=0,
+                    )
+                )
+                actors.append(
+                    ActorContext(
+                        app_user_id=user.id,
+                        display_name=user.display_name,
+                        agency_id=business.id,
+                        agency_name=business.name,
+                        agency_environment="DEVELOPMENT",
+                    )
+                )
         settings = ApiSettings(
-            _env_file=None, app_environment="development", api_host="127.0.0.1", api_port=8000,
+            _env_file=None,
+            app_environment="development",
+            api_host="127.0.0.1",
+            api_port=8000,
             database_url=database_settings.runtime_database_url,
             database_ssl_mode=database_settings.database_ssl_mode,
             customer_memory_enabled=True,
         )
         try:
             yield MemoryHarness(
-                CustomerMemoryService(sessions, settings), actors[0], actors[1], actors[2]
+                CustomerMemoryService(sessions, settings),
+                actors[0],
+                actors[1],
+                actors[2],
             )
         finally:
             transaction.rollback()
@@ -114,10 +146,17 @@ def revision(memory: CustomerMemoryService, actor: ActorContext) -> int:
 
 
 def enable(memory: CustomerMemoryService, actor: ActorContext) -> None:
-    memory.set_consent(actor, MemoryConsentInput(
-        expected_revision=revision(memory, actor), request_id=uuid4(),
-        enabled=True, explicit_confirmation=True,
-    ), True, uuid4())
+    memory.set_consent(
+        actor,
+        MemoryConsentInput(
+            expected_revision=revision(memory, actor),
+            request_id=uuid4(),
+            enabled=True,
+            explicit_confirmation=True,
+        ),
+        True,
+        uuid4(),
+    )
 
 
 def conversation(
@@ -185,9 +224,12 @@ def authorized_intake(
         return intake.id
 
 
-def save_control(memory: CustomerMemoryService, actor: ActorContext, value: str = "AFTERNOON") -> MemoryFactSaveInput:
+def save_control(
+    memory: CustomerMemoryService, actor: ActorContext, value: str = "AFTERNOON"
+) -> MemoryFactSaveInput:
     data = MemoryFactSaveInput(
-        expected_revision=revision(memory, actor), request_id=uuid4(),
+        expected_revision=revision(memory, actor),
+        request_id=uuid4(),
         facts=[MemoryFactInput(key="appointment_time", value=value)],
         explicit_confirmation=True,
     )
@@ -195,14 +237,20 @@ def save_control(memory: CustomerMemoryService, actor: ActorContext, value: str 
     return data
 
 
-def test_memory_recalls_across_sessions_without_cross_customer_or_tenant_leak(harness: MemoryHarness) -> None:
+def test_memory_recalls_across_sessions_without_cross_customer_or_tenant_leak(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     saved = save_control(memory, owner)
     memory.save(owner, saved, uuid4())
     first, second = conversation(memory, owner), conversation(memory, owner)
-    assert "afternoon appointments" in str(memory.view(owner, context_only=True, browser_session_id=first)["summary"])
-    assert "afternoon appointments" in str(memory.view(owner, context_only=True, browser_session_id=second)["summary"])
+    assert "afternoon appointments" in str(
+        memory.view(owner, context_only=True, browser_session_id=first)["summary"]
+    )
+    assert "afternoon appointments" in str(
+        memory.view(owner, context_only=True, browser_session_id=second)["summary"]
+    )
     assert memory.view(harness.other)["facts"] == []
     assert memory.view(harness.foreign)["facts"] == []
     for actor in (harness.other, harness.foreign):
@@ -212,43 +260,76 @@ def test_memory_recalls_across_sessions_without_cross_customer_or_tenant_leak(ha
         assert session.scalar(select(func.count()).select_from(CustomerMemoryFact)) == 1
 
 
-def test_only_authorized_owned_sources_support_facts_and_transcripts_are_not_duplicated(harness: MemoryHarness) -> None:
+def test_only_authorized_owned_sources_support_facts_and_transcripts_are_not_duplicated(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     session_id = conversation(memory, owner)
     intake_id = authorized_intake(memory, owner, session_id)
-    memory.save(owner, MemoryFactSaveInput(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-        facts=[MemoryFactInput(key="equipment_type", value="FURNACE")],
-        source_intake_id=intake_id, explicit_confirmation=True,
-    ), uuid4())
+    memory.save(
+        owner,
+        MemoryFactSaveInput(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+            facts=[MemoryFactInput(key="equipment_type", value="FURNACE")],
+            source_intake_id=intake_id,
+            explicit_confirmation=True,
+        ),
+        uuid4(),
+    )
     assert "furnace" in str(memory.view(owner, context_only=True)["summary"])
     with memory.sessions() as session:
-        assert session.scalar(select(func.count()).select_from(CustomerMemorySummary)) == 1
-        assert session.scalar(select(func.count()).select_from(ConversationIntake).where(ConversationIntake.id == intake_id)) == 1
-    memory.remove_fact(owner, "equipment_type", MemoryMutation(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-    ), uuid4())
+        assert (
+            session.scalar(select(func.count()).select_from(CustomerMemorySummary)) == 1
+        )
+        assert (
+            session.scalar(
+                select(func.count())
+                .select_from(ConversationIntake)
+                .where(ConversationIntake.id == intake_id)
+            )
+            == 1
+        )
+    memory.remove_fact(
+        owner,
+        "equipment_type",
+        MemoryMutation(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+        ),
+        uuid4(),
+    )
     assert "furnace" not in str(memory.view(owner, context_only=True)["summary"])
     for actor in (harness.other, harness.foreign):
         with memory.sessions() as session, pytest.raises(ApiError):
             memory.source(session, memory.account(session, actor), intake_id)
     with pytest.raises(ApiError):
-        memory.save(owner, MemoryFactSaveInput(
-            expected_revision=revision(memory, owner), request_id=uuid4(),
-            facts=[MemoryFactInput(key="equipment_type", value="HEAT_PUMP")],
-            source_intake_id=intake_id, explicit_confirmation=True,
-        ), uuid4())
+        memory.save(
+            owner,
+            MemoryFactSaveInput(
+                expected_revision=revision(memory, owner),
+                request_id=uuid4(),
+                facts=[MemoryFactInput(key="equipment_type", value="HEAT_PUMP")],
+                source_intake_id=intake_id,
+                explicit_confirmation=True,
+            ),
+            uuid4(),
+        )
 
 
-def test_corrections_conflicts_erasure_and_retention_prevent_resurrection(harness: MemoryHarness) -> None:
+def test_corrections_conflicts_erasure_and_retention_prevent_resurrection(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     old = save_control(memory, owner)
     save_control(memory, owner, "MORNING")
     with pytest.raises(ApiError):
         memory.save(owner, old, uuid4())
-    assert "morning appointments" in str(memory.view(owner, context_only=True)["summary"])
+    assert "morning appointments" in str(
+        memory.view(owner, context_only=True)["summary"]
+    )
     with memory.sessions() as session, session.begin():
         row = session.scalar(select(CustomerMemoryFact))
         assert row is not None
@@ -259,9 +340,15 @@ def test_corrections_conflicts_erasure_and_retention_prevent_resurrection(harnes
         assert purge_expired(session, 90) == 1
     save_control(memory, owner)
     stale = conversation(memory, owner)
-    memory.set_consent(owner, MemoryMutation(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-    ), None, uuid4())
+    memory.set_consent(
+        owner,
+        MemoryMutation(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+        ),
+        None,
+        uuid4(),
+    )
     assert memory.view(owner)["facts"] == []
     with pytest.raises(ApiError):
         memory.view(owner, context_only=True, browser_session_id=stale)
@@ -269,7 +356,9 @@ def test_corrections_conflicts_erasure_and_retention_prevent_resurrection(harnes
         memory.save(owner, old, uuid4())
 
 
-def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tools(harness: MemoryHarness) -> None:
+def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tools(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     save_control(memory, owner)
@@ -277,9 +366,12 @@ def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tool
     now = datetime.now(UTC)
     with memory.sessions() as session, session.begin():
         binding = WhatsAppConversation(
-            agency_id=owner.agency_id, session_id=call_session,
-            conversation_id=f"conv_{uuid4()}", phone_number_id="synthetic-business-id",
-            caller_digest="a" * 64, initialized_at=now,
+            agency_id=owner.agency_id,
+            session_id=call_session,
+            conversation_id=f"conv_{uuid4()}",
+            phone_number_id="synthetic-business-id",
+            caller_digest="a" * 64,
+            initialized_at=now,
             expires_at=now + timedelta(seconds=180),
         )
         session.add(binding)
@@ -289,22 +381,40 @@ def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tool
     code = memory.begin_pairing(binding_id)
     enable(memory, harness.foreign)
     with pytest.raises(ApiError):
-        memory.approve_pairing(harness.foreign, MemoryPairInput(
-            expected_revision=revision(memory, harness.foreign), request_id=uuid4(),
-            code=code, explicit_confirmation=True,
-        ), code, uuid4())
-    memory.approve_pairing(owner, MemoryPairInput(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-        code=code, explicit_confirmation=True,
-    ), code, uuid4())
+        memory.approve_pairing(
+            harness.foreign,
+            MemoryPairInput(
+                expected_revision=revision(memory, harness.foreign),
+                request_id=uuid4(),
+                code=code,
+                explicit_confirmation=True,
+            ),
+            code,
+            uuid4(),
+        )
+    memory.approve_pairing(
+        owner,
+        MemoryPairInput(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+            code=code,
+            explicit_confirmation=True,
+        ),
+        code,
+        uuid4(),
+    )
     linked = memory.whatsapp_actor(binding_id)
     assert linked is not None and linked.app_user_id == owner.app_user_id
-    assert "afternoon appointments" in str(memory.view(
-        linked, context_only=True, whatsapp_binding_id=binding_id
-    )["summary"])
-    sanitized = redact_pairing_codes([
-        ConversationTurn(speaker="AGENT", text=f"Your linking code is {code}."),
-    ])
+    assert "afternoon appointments" in str(
+        memory.view(linked, context_only=True, whatsapp_binding_id=binding_id)[
+            "summary"
+        ]
+    )
+    sanitized = redact_pairing_codes(
+        [
+            ConversationTurn(speaker="AGENT", text=f"Your linking code is {code}."),
+        ]
+    )
     assert code not in sanitized[0].text
     with memory.sessions() as session, session.begin():
         previous = session.get(WhatsAppConversation, binding_id)
@@ -317,19 +427,26 @@ def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tool
     now = datetime.now(UTC)
     with memory.sessions() as session, session.begin():
         returning = WhatsAppConversation(
-            agency_id=owner.agency_id, session_id=second_session,
-            conversation_id=f"conv_{uuid4()}", phone_number_id="synthetic-business-id",
-            caller_digest="a" * 64, initialized_at=now,
+            agency_id=owner.agency_id,
+            session_id=second_session,
+            conversation_id=f"conv_{uuid4()}",
+            phone_number_id="synthetic-business-id",
+            caller_digest="a" * 64,
+            initialized_at=now,
             expires_at=now + timedelta(seconds=180),
         )
         session.add(returning)
         session.flush()
         returning_id = returning.id
     returning_actor = memory.whatsapp_actor(returning_id)
-    assert returning_actor is not None and returning_actor.app_user_id == owner.app_user_id
-    assert "afternoon appointments" in str(memory.view(
-        returning_actor, context_only=True, whatsapp_binding_id=returning_id
-    )["summary"])
+    assert (
+        returning_actor is not None and returning_actor.app_user_id == owner.app_user_id
+    )
+    assert "afternoon appointments" in str(
+        memory.view(
+            returning_actor, context_only=True, whatsapp_binding_id=returning_id
+        )["summary"]
+    )
     with memory.sessions() as session, session.begin():
         account = memory.account(session, owner)
         factor = session.get(CustomerMfaFactor, account.id)
@@ -338,16 +455,27 @@ def test_whatsapp_requires_browser_approved_link_and_unlink_revokes_current_tool
     assert memory.view(owner)["whatsapp_linked"] is False
     assert memory.whatsapp_actor(returning_id) is None
     with pytest.raises(ApiError):
-        memory.view(returning_actor, context_only=True, whatsapp_binding_id=returning_id)
-    memory.unlink(owner, MemoryMutation(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-    ), uuid4())
+        memory.view(
+            returning_actor, context_only=True, whatsapp_binding_id=returning_id
+        )
+    memory.unlink(
+        owner,
+        MemoryMutation(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+        ),
+        uuid4(),
+    )
     assert memory.whatsapp_actor(binding_id) is None
     with pytest.raises(ApiError):
-        memory.view(returning_actor, context_only=True, whatsapp_binding_id=returning_id)
+        memory.view(
+            returning_actor, context_only=True, whatsapp_binding_id=returning_id
+        )
 
 
-def test_customer_can_delete_optional_data_when_business_disables_memory(harness: MemoryHarness) -> None:
+def test_customer_can_delete_optional_data_when_business_disables_memory(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     save_control(memory, owner)
@@ -355,13 +483,21 @@ def test_customer_can_delete_optional_data_when_business_disables_memory(harness
     assert memory.view(owner)["available"] is False
     with pytest.raises(ApiError):
         memory.view(owner, context_only=True)
-    memory.set_consent(owner, MemoryMutation(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-    ), None, uuid4())
+    memory.set_consent(
+        owner,
+        MemoryMutation(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+        ),
+        None,
+        uuid4(),
+    )
     assert memory.view(owner)["facts"] == []
 
 
-def test_increasing_business_retention_does_not_silently_increase_customer_cap(harness: MemoryHarness) -> None:
+def test_increasing_business_retention_does_not_silently_increase_customer_cap(
+    harness: MemoryHarness,
+) -> None:
     memory, owner = harness.memory, harness.owner
     enable(memory, owner)
     save_control(memory, owner)
@@ -369,9 +505,15 @@ def test_increasing_business_retention_does_not_silently_increase_customer_cap(h
     assert memory.view(owner)["retention_days"] == 1
     memory.settings.customer_memory_retention_days = 90
     assert memory.view(owner)["retention_days"] == 1
-    memory.set_consent(owner, MemoryMutation(
-        expected_revision=revision(memory, owner), request_id=uuid4(),
-    ), None, uuid4())
+    memory.set_consent(
+        owner,
+        MemoryMutation(
+            expected_revision=revision(memory, owner),
+            request_id=uuid4(),
+        ),
+        None,
+        uuid4(),
+    )
     assert memory.view(owner)["retention_days"] == 90
     assert memory.view(owner)["facts"] == []
 
@@ -634,7 +776,10 @@ def test_committed_memory_survives_new_service_and_database_connections(
     enable(memory, owner)
     save_control(memory, owner, "MORNING")
     restarted_process = subprocess.run(
-        [sys.executable, "-c", """
+        [
+            sys.executable,
+            "-c",
+            """
 import sys
 from uuid import UUID
 from sqlalchemy.orm import sessionmaker
@@ -660,8 +805,14 @@ try:
     )["summary"])
 finally:
     engine.dispose()
-""", str(owner.app_user_id), str(owner.agency_id)],
-        capture_output=True, text=True, check=True, timeout=15,
+""",
+            str(owner.app_user_id),
+            str(owner.agency_id),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=15,
     )
     assert "morning appointments" in restarted_process.stdout
     for mode in ("VOICE", "TEXT"):

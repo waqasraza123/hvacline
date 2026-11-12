@@ -120,16 +120,22 @@ def test_separate_user_turns_cannot_be_joined_into_equipment_evidence() -> None:
 
 
 def test_location_cannot_be_inferred_to_be_an_equipment_brand() -> None:
-    source = ConversationIntake(id=uuid4(), confirmed_transcript=[
-        {"speaker": "USER", "text": "I live in New York."},
-    ])
+    source = ConversationIntake(
+        id=uuid4(),
+        confirmed_transcript=[
+            {"speaker": "USER", "text": "I live in New York."},
+        ],
+    )
     assert supported_facts(source) == []
 
 
 def test_brand_requires_an_explicit_equipment_or_brand_statement() -> None:
-    source = ConversationIntake(id=uuid4(), confirmed_transcript=[
-        {"speaker": "USER", "text": "My Trane furnace needs service."},
-    ])
+    source = ConversationIntake(
+        id=uuid4(),
+        confirmed_transcript=[
+            {"speaker": "USER", "text": "My Trane furnace needs service."},
+        ],
+    )
     assert supported_facts(source) == [
         MemoryFactInput(key="equipment_type", value="FURNACE"),
         MemoryFactInput(key="equipment_brand", value="TRANE"),

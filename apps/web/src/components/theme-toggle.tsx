@@ -11,7 +11,11 @@ import {
 import styles from "./theme-toggle.module.css";
 
 export function ThemeToggle() {
-  const theme = useSyncExternalStore(subscribeToTheme, currentTheme, serverTheme);
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    currentTheme,
+    serverTheme,
+  );
   const dark = theme === "dark";
 
   return (

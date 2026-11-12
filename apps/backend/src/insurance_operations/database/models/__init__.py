@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from insurance_operations.database.models.website import Website, WebsiteAgentBinding
 
 from insurance_operations.database.models.approved_faq import (
     AgencyApprovedFaq,
@@ -7,7 +6,11 @@ from insurance_operations.database.models.approved_faq import (
 )
 from insurance_operations.database.models.base import Base
 from insurance_operations.database.models.billing import (
-    BillingAccount, BillingCheckout, BillingEvent, BillingTopUp, BillingLabor,
+    BillingAccount,
+    BillingCheckout,
+    BillingEvent,
+    BillingLabor,
+    BillingTopUp,
 )
 from insurance_operations.database.models.booking_integrations import (
     BookingEmailEvent,
@@ -28,12 +31,17 @@ from insurance_operations.database.models.customer_account import (
     CustomerAuthLimit,
     CustomerLoginSession,
 )
-from insurance_operations.database.models.customer_mfa import (
-    CustomerMfaChallenge, CustomerMfaFactor, CustomerMfaRecoveryCode,
-)
 from insurance_operations.database.models.customer_memory import (
-    CustomerMemoryFact, CustomerMemoryPairing, CustomerMemoryPolicy,
-    CustomerMemorySummary, CustomerWhatsAppIdentity,
+    CustomerMemoryFact,
+    CustomerMemoryPairing,
+    CustomerMemoryPolicy,
+    CustomerMemorySummary,
+    CustomerWhatsAppIdentity,
+)
+from insurance_operations.database.models.customer_mfa import (
+    CustomerMfaChallenge,
+    CustomerMfaFactor,
+    CustomerMfaRecoveryCode,
 )
 from insurance_operations.database.models.homepage_chat import (
     HomepageChatDailyUsage,
@@ -77,6 +85,11 @@ from insurance_operations.database.models.telephony import (
     InboundCallStatus,
     InboundNumberStatus,
 )
+from insurance_operations.database.models.website import (
+    Website,
+    WebsiteAgentBinding,
+    WebsiteVersion,
+)
 from insurance_operations.database.models.whatsapp import WhatsAppConversation
 
 
@@ -88,13 +101,15 @@ class TableOwnership:
 
 TABLE_OWNERSHIP = {
     "websites": TableOwnership(module="websites", agency_column="agency_id"),
-    "website_agent_bindings": TableOwnership(module="websites", agency_column="agency_id"),
+    "website_agent_bindings": TableOwnership(
+        module="websites", agency_column="agency_id"
+    ),
+    "website_versions": TableOwnership(module="websites", agency_column="agency_id"),
     "billing_accounts": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_checkouts": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_events": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_topups": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_labor": TableOwnership(module="billing", agency_column="agency_id"),
-
     "outbound_phone_verifications": TableOwnership(
         module="telephony", agency_column="agency_id"
     ),
@@ -107,14 +122,30 @@ TABLE_OWNERSHIP = {
     "homepage_chat_daily_usage": TableOwnership(
         module="homepage_chat", agency_column="agency_id"
     ),
-    "customer_mfa_factors": TableOwnership(module="customer_access", agency_column="agency_id"),
-    "customer_mfa_challenges": TableOwnership(module="customer_access", agency_column="agency_id"),
-    "customer_mfa_recovery_codes": TableOwnership(module="customer_access", agency_column="agency_id"),
-    "customer_memory_policies": TableOwnership(module="customer_memory", agency_column="agency_id"),
-    "customer_memory_facts": TableOwnership(module="customer_memory", agency_column="agency_id"),
-    "customer_memory_summaries": TableOwnership(module="customer_memory", agency_column="agency_id"),
-    "customer_whatsapp_identities": TableOwnership(module="customer_memory", agency_column="agency_id"),
-    "customer_memory_pairings": TableOwnership(module="customer_memory", agency_column="agency_id"),
+    "customer_mfa_factors": TableOwnership(
+        module="customer_access", agency_column="agency_id"
+    ),
+    "customer_mfa_challenges": TableOwnership(
+        module="customer_access", agency_column="agency_id"
+    ),
+    "customer_mfa_recovery_codes": TableOwnership(
+        module="customer_access", agency_column="agency_id"
+    ),
+    "customer_memory_policies": TableOwnership(
+        module="customer_memory", agency_column="agency_id"
+    ),
+    "customer_memory_facts": TableOwnership(
+        module="customer_memory", agency_column="agency_id"
+    ),
+    "customer_memory_summaries": TableOwnership(
+        module="customer_memory", agency_column="agency_id"
+    ),
+    "customer_whatsapp_identities": TableOwnership(
+        module="customer_memory", agency_column="agency_id"
+    ),
+    "customer_memory_pairings": TableOwnership(
+        module="customer_memory", agency_column="agency_id"
+    ),
     "whatsapp_conversations": TableOwnership(
         module="conversations", agency_column="agency_id"
     ),
@@ -193,12 +224,6 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
-    "Website", "WebsiteAgentBinding",
-    "BillingAccount", "BillingCheckout", "BillingEvent", "BillingTopUp", "BillingLabor",
-    "OutboundPhoneVerification",
-    "OutboundDemoCall",
-    "HomepageChatDailyUsage",
-    "HomepageChatVisitor",
     "TABLE_OWNERSHIP",
     "Agency",
     "AgencyApprovedFaq",
@@ -212,31 +237,38 @@ __all__ = [
     "ApprovedFaqStatus",
     "AuditEvent",
     "Base",
+    "BillingAccount",
+    "BillingCheckout",
+    "BillingEvent",
+    "BillingLabor",
+    "BillingTopUp",
     "BookingEmailEvent",
     "BookingNotification",
+    "BusinessSchedule",
     "CalendarAuthorization",
     "CalendarBooking",
     "CalendarConnection",
-    "BusinessSchedule",
     "ConversationChannel",
     "ConversationIntake",
     "ConversationIntakeConfirmationReceipt",
     "ConversationSession",
     "Customer",
     "CustomerAccount",
-    "CustomerMfaChallenge",
-    "CustomerMfaFactor",
-    "CustomerMfaRecoveryCode",
+    "CustomerAuthLimit",
+    "CustomerLoginSession",
     "CustomerMemoryFact",
     "CustomerMemoryPairing",
     "CustomerMemoryPolicy",
     "CustomerMemorySummary",
+    "CustomerMfaChallenge",
+    "CustomerMfaFactor",
+    "CustomerMfaRecoveryCode",
     "CustomerWhatsAppIdentity",
-    "CustomerAuthLimit",
-    "CustomerLoginSession",
     "HandoffContactMethod",
     "HandoffRequestKind",
     "HandoffStatus",
+    "HomepageChatDailyUsage",
+    "HomepageChatVisitor",
     "HvacServiceRequest",
     "IdempotencyRecord",
     "InboundCall",
@@ -246,6 +278,11 @@ __all__ = [
     "LeadHandoffRequest",
     "LeadStatus",
     "LeadUrgency",
+    "OutboundDemoCall",
+    "OutboundPhoneVerification",
     "TableOwnership",
+    "Website",
+    "WebsiteAgentBinding",
+    "WebsiteVersion",
     "WhatsAppConversation",
 ]

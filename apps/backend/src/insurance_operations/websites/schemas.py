@@ -278,3 +278,7 @@ class WebsiteSave(StrictModel):
         if len(set(self.knowledge_faq_ids)) != len(self.knowledge_faq_ids):
             raise ValueError("Knowledge references must be unique")
         return self
+
+
+class WebsitePublication(StrictModel):
+    expected_row_version: int = Field(ge=1)

@@ -57,7 +57,8 @@ class WhatsAppSettings(CommonSettings):
         )
         if not all(required) or not self.elevenlabs_whatsapp_privacy_confirmed:
             raise ValueError(
-                "WhatsApp agency, actor, agent, number and privacy approval are required"
+                "WhatsApp agency, actor, agent, number and privacy "
+                "approval are required"
             )
         if any(
             secret is None or len(secret.get_secret_value()) < 32 for secret in secrets

@@ -518,7 +518,11 @@
   gap: 3rem;
   border: 1px solid var(--customer-accent-border);
   border-radius: 18px;
-  background: linear-gradient(110deg, var(--customer-accent-soft), var(--customer-surface) 70%);
+  background: linear-gradient(
+    110deg,
+    var(--customer-accent-soft),
+    var(--customer-surface) 70%
+  );
   padding: 2.5rem;
   margin-block: 2rem;
 }

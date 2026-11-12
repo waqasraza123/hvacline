@@ -186,7 +186,7 @@ export function CalendarConnections({
       <p className="section-help">
         Connect one writable Google calendar per team. Teams without a
         connection use the internal schedule. A disconnected calendar pauses
-        that team's booking. External changes require staff review.
+        that team’s booking. External changes require staff review.
       </p>
       {error && (
         <p className="ops-error" role="alert">
@@ -285,7 +285,7 @@ export function CalendarConnections({
               ? "Email delivery is enabled for bookings with a confirmed email address."
               : "Email delivery is awaiting workspace owner setup."}{" "}
             Accepted means the email provider has received the message.
-            Delivered means the recipient's mail server accepted it.
+            Delivered means the recipient’s mail server accepted it.
           </p>
           {data.notifications.length === 0 ? (
             <p className="section-help">No queued booking emails yet.</p>

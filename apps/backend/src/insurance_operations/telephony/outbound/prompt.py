@@ -3,7 +3,8 @@ FIRST_MESSAGE = (
     "This is a fictional HVAC call, with no real booking. Is now a good time?"
 )
 
-DEMO_PROMPT = """You are Line, an experienced American HVAC receptionist. Speak natural
+DEMO_PROMPT = (
+    """You are Line, an experienced American HVAC receptionist. Speak natural
 American English. This is a requested, one-time demo for fictional Cedar Air Demo,
 never marketing. Scenario: {{demo_scenario}}.
 The platform delivers your configured first message. It identifies you as AI,
@@ -66,8 +67,16 @@ Stay below {{demo_max_duration_seconds}} seconds, never above 180. This is a
 maximum, not a target. Finish sooner when the person is done; never pad the call.
 
 CRITICAL — CALL TERMINATION
-When the caller says "end the call," "hang up," "goodbye," "stop," or clearly wants to finish, immediately invoke the native end_call system tool. Do not merely say goodbye or announce that you will hang up. Do not ask for confirmation. Do not continue listening, ask questions, or generate another response. Use the actual tool to terminate the conversation. This instruction takes priority over normal conversation and silence handling.
 """
+    'When the caller says "end the call," "hang up," "goodbye," '
+    '"stop," or clearly wants to finish, immediately invoke the '
+    'native end_call system tool. Do not merely say goodbye or '
+    'announce that you will hang up. Do not ask for confirmation. Do '
+    'not continue listening, ask questions, or generate another '
+    'response. Use the actual tool to terminate the conversation. '
+    'This instruction takes priority over normal conversation and '
+    'silence handling.\n'
+)
 
 TRANSFER_CONDITION = (
     "Only after the person explicitly requests a human, you explain that the demo "

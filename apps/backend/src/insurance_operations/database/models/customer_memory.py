@@ -2,7 +2,13 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import (
-    Boolean, CheckConstraint, DateTime, ForeignKey, Index, Integer, Text,
+    Boolean,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -102,7 +108,9 @@ class CustomerWhatsAppIdentity(UuidPrimaryKeyMixin, Base):
     __tablename__ = "customer_whatsapp_identities"
     __table_args__ = (
         UniqueConstraint(
-            "agency_id", "phone_number_id", "caller_digest",
+            "agency_id",
+            "phone_number_id",
+            "caller_digest",
             name="uq_customer_whatsapp_identity",
         ),
         CheckConstraint("length(caller_digest) = 64", name="digest_valid"),
@@ -120,7 +128,9 @@ class CustomerWhatsAppIdentity(UuidPrimaryKeyMixin, Base):
     caller_digest: Mapped[str] = mapped_column(Text, nullable=False)
     verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    mfa_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    mfa_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0"
+    )
 
 
 class CustomerMemoryPairing(UuidPrimaryKeyMixin, Base):
@@ -134,7 +144,8 @@ class CustomerMemoryPairing(UuidPrimaryKeyMixin, Base):
         ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False
     )
     binding_id: Mapped[UUID] = mapped_column(
-        ForeignKey("whatsapp_conversations.id", ondelete="RESTRICT"), nullable=False,
+        ForeignKey("whatsapp_conversations.id", ondelete="RESTRICT"),
+        nullable=False,
         unique=True,
     )
     code_digest: Mapped[str] = mapped_column(Text, nullable=False, unique=True)

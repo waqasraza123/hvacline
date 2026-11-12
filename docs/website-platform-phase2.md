@@ -1,101 +1,166 @@
-# Phase 2 website platform
+# HVACLine website platform — final local handoff
 
-Local implementation; live provider, hosted database and visual acceptance remain
-pending. No commit, push, deployment, production/shared migration, hosted agent
-change, real call or provider authorization request was performed.
+The latest owner instruction stops all verification. Final edits are **unverified**.
+No commit, push, deployment, shared/production migration, hosted agent change,
+SMS or real call was performed for this task.
 
-## Behavior and architecture
+## Implemented
 
-- `/demos/hvac`, `/demos/real-estate` and `/demos/appointments` retain safe static
-  defaults. `/sites/[slug]` renders persisted published configurations using the
-  same distinct templates. It is dynamic/no-store: ordinary content saves need
-  no rebuild. Unknown/draft/disabled sites404; unavailable agents never fall back.
-- `/operations` → connect workspace → **Websites** provides create/edit, template,
-  branding, approved logos/artwork, colors, hero/CTA/services/contact/SEO, agent/
-  knowledge selection, Voice/Text toggle, confirmed inquiries, visibility and
-  preview. Version conflicts require reload. Draft previews never start agents.
-- `websites` stores stable UUID/agency, unique immutable slug, template/content,
-  binding/knowledge selections, capabilities, status, timestamps and row version.
-  `website_agent_bindings` holds private provider references and enablement/tool
-  review flags. Keys remain in existing backend settings, never website JSON.
-- Conversations persist website/binding IDs and a capability snapshot. Composite
-  foreign keys enforce shared agency ownership. Grant creation and tools recheck
-  site/binding state. Quotas remain shared per agency; new sites cannot reset them.
-- The existing `ConversationService`, provider grants, password/MFA/customer
-  identity, proxy, ElevenLabs adapter, authorization parser, composer and timer
-  are reused. Server-side lookup selects the agent; browsers cannot select
-  provider or business IDs. The customer must explicitly start Voice or Text.
-- Inquiries reuse transactional customer/intake/lead confirmation and idempotent
-  recovery. Explicit confirmation is required in the shared service, including
-  attempts through legacy routes. They create no appointments. Website booking
-  and memory remain disabled client/server, including attempts through legacy endpoints. Existing
-  HVAC account booking and optional account memory are preserved separately.
-- FAQ retrieval uses the existing matcher but restricts website sessions to the
-  selected active records in their agency. An empty selection exposes none.
-  Public configuration and owner agent options contain no provider IDs/secrets.
-- TS/Pydantic validate content, supported sections, navigation, safe URLs, hex
-  colors, allowlisted fonts/assets and capability selections. No arbitrary
-  HTML/JS/CSS or remote/uploaded asset URL is accepted. No dependencies added.
-- Homepage steering removes compact pricing, Services and footer My package.
-  `/pricing` remains. Desktop pills/Radix mobile navigation and shared footer
-  logos with short captions replace the old navigation arrangement.
+- Three distinct templates remain at `/demos/hvac`, `/demos/real-estate` and
+  `/demos/appointments`. Published configurations render dynamically at
+  `/sites/[slug]`; content changes do not need a frontend rebuild.
+- Connected Operations → Websites has a website gallery, creation/template flow,
+  permanent unique slug, branding/logo/favicon, both color palettes, fonts,
+  spacing, hero/images, supported sections/order, navigation, services/process,
+  property showcase/story, FAQs, CTA destinations, contact details and SEO.
+- Preview validates structured content and never starts an agent. Images are
+  approved repository assets; remote images/uploads and custom domains are not
+  exposed as unfinished controls.
+- Save draft preserves the live publication and its agent/knowledge/capabilities.
+  Publish creates an immutable version and atomically switches the public pointer.
+  Version history supports confirmed rollback as a new publication; rollback
+  leaves the saved draft unchanged. Unpublish disables public resolution and new
+  sessions without deleting content/history. Every mutation checks row version.
+- Published links use the existing frontend origin and `/sites/slug`; copy-link
+  and open-link controls work after publication. Hosting must be deployed first.
+- Homepage packages, Services, booking walkthrough and HVAC-owner FAQ are removed.
+  Pricing remains at `/pricing`; header/footer logos, mobile navigation, gallery,
+  calling and booking entry remain.
 
-Source: backend `websites/`, `database/models/website.py`, conversation context
-and guards in conversation/FAQ/memory/booking code; frontend `features/websites/`,
-`app/sites/[slug]`, `api/websites/[slug]/[...path]`, dashboard integration and shared
-conversation/auth components. Homepage navigation/provider components and tests
-are updated alongside the feature.
+## Authorization and conversation boundaries
 
-API: public `GET /api/v1/websites/{slug}`; owner `GET/POST
-/api/v1/development/websites`, `PUT /api/v1/development/websites/{id}`; customer
-`/api/v1/customer/websites/{slug}/conversation-sessions`, session `/end` and
-`/approved-faq-lookup`, plus `/conversation-intakes`. Save requires the expected
-row version (zero for creation); unauthorized references and stale edits fail
-without partial updates. Site selection supplies presentation, never authority.
+Management is intentionally **restricted administrator mode**, using the existing
+configured business membership and administrator workspace token. Customer
+login/MFA alone grants no website-management access. Management requires a token
+even when the broader local sandbox gate is off. The platform remains gated to
+`development`/`test`; public self-service SaaS onboarding is not production-ready.
 
-Identity is still the configured development business/admin gate, not production
-business onboarding. Multiple sites/agents work within that authorized business;
-service/database tests cover foreign-agency denial. Customers cannot select a
-different business simply by changing a slug. Existing manual memory settings
-remain account/business scoped; new website conversations cannot read/write it.
-Future site memory sharing needs an explicit policy. Existing provider connections
-may persist until their bounded timeout after revocation, while new grants and
-backend tools are immediately denied.
+Provider keys stay in backend settings. Browser requests cannot select business
+or provider agent IDs. Public responses contain published content and capability
+availability, never provider references, owner drafts or selected FAQ IDs.
+Authorized site sessions reuse existing ElevenLabs signed grants, consent/MFA,
+limits, session ownership, adapters and cleanup. Missing agents show unavailable;
+there is no HVAC fallback. Actual live agent behavior is not verified.
 
-## Migration and external setup
+Composite foreign keys scope sites, versions, bindings and conversations to the
+same business. Sessions capture the published version; publishing/rebinding or
+unpublishing invalidates their backend tools, while owned cleanup remains usable.
+Approved FAQ lookup reads only the published version's selected active business
+records. Draft changes cannot expand live knowledge. Queries still enforce
+session ownership, active state and expiry. Quotas remain shared per business.
 
-Forward revision `20261112_0022_website_platform`, parent `20261109_0021`, creates
-the two ownership tables and adds nullable website/binding context plus capability
-JSON to conversations. No user/business/website/agent/content is automatically
-seeded. Migrate before deploying the backend, even while the feature is disabled:
-ORM conversation queries include the new columns. Upgrade/downgrade was exercised
-only in the dedicated disposable local database; configured Neon was untouched.
+Customer-confirmed inquiries reuse transactional lead/intake persistence and
+idempotency. Website booking and account memory are denied client/server,
+including legacy routes; existing HVAC booking/memory remain on their established
+paths. Unsupported business actions never report a successful appointment.
+Existing connected provider sessions can persist until disconnect/bounded timeout
+following revocation; backend tools and new grants fail closed.
 
-After separate target/operation authorization, the owner migration command is:
+Content is escaped, typed and validated in TS/Pydantic. URLs allow validated
+local paths or HTTPS without credentials; assets/fonts/colors/sections are
+allowlisted. No uploaded code, arbitrary CSS/HTML, executable content or secret
+configuration is accepted. Owner audits store references/state, not content.
+
+## Schema and source
+
+- Existing `20261112_0022` introduces websites/bindings and conversation context.
+- New forward revision `20261113_0023` adds `website_versions`, the publication
+  pointer and conversation version binding. A trigger rejects version updates
+  and deletes. Existing website records are copied into initial snapshots;
+  published pointers and existing website sessions are backfilled. No existing
+  business/customer/appointment/knowledge/memory/billing rows are deleted.
+- Migration round trips ran only in local disposable
+  `hvacline_final_test_20261113`. Production rollback uses published versions,
+  not schema downgrades. Migration files were mechanically formatted; earlier
+  migration SQL/string values were preserved.
+- Core backend files: `websites/{schemas,service,guards,routes}.py`,
+  `database/models/{website,conversation,__init__}.py`, shared conversation/FAQ
+  guards and the new migration. Core web files: `features/websites/`
+  (`website-manager`, `content-editor`, shared templates/renderer), `app/sites/`,
+  website proxy and dashboard integration. Homepage/navigation removals remain.
+- Existing web lint failures were corrected in billing loading, booking state,
+  adapter cleanup, appointments, homepage restore, outbound dialog and dashboard
+  links. Python formatting/import/string wrapping and narrow typing fixes span
+  existing source/tests/migrations. No lint rules were disabled or dependencies
+  added. Test package markers resolve duplicate module collection.
+
+## Verification record
+
+Before the stop instruction:
+
+- `npm run verify:web` completed successfully: formatting, full ESLint,
+  TypeScript, 256 tests/38 files and production Next build.
+- Focused website/contracts/migration/ownership suite: **39 passed**, including
+  draft isolation, publish/rollback/unpublish, immutable versions, agent routing,
+  tenant isolation and concurrent edits.
+- Full Ruff source/test/migration lint reached a passing run.
+- Broader pytest completed **596 passed, 9 failed**, with three warnings.
+  Failures were two stale billing error-code assertions, five reserved-domain
+  MFA test emails, a production SSL fixture expectation, and exact prompt-text
+  matching. Corresponding source/fixture corrections were made but not rerun.
+- Full mypy reported **81 errors** in production and test files. Three production
+  typing issues were subsequently corrected without rerunning; existing strict
+  test typing errors remain unresolved. Do not report full mypy as passing.
+
+Latest typing, fixture, prompt-preservation and editor fallback changes happened
+without further checks after the owner stopped execution. Therefore the final
+source is not verified and a clean release gate is not established. Existing
+warnings include Starlette/httpx deprecation and duplicate operation IDs for two
+older routes. No live browser/provider/visual acceptance was run.
+
+Owner verification commands (not authorization for the agent to resume):
 
 ```bash
-APP_ENVIRONMENT=development .venv/bin/python -m alembic upgrade head
+npm run verify:web
+.venv/bin/ruff format --check .
+.venv/bin/ruff check .
+.venv/bin/python -m mypy apps/backend/src tests
 ```
 
-`WEBSITE_PLATFORM_ENABLED=false` defaults on both services. Enable the server-side
-flag separately in FastAPI and Next only after schema/setup review. Next uses its
-existing `NEXT_PUBLIC_API_BASE_URL`; FastAPI remains development/test gated.
+Only the named local database below is disposable; fixtures downgrade/rebuild it.
+Never substitute a shared or production URL.
 
-For one non-HVAC business:
+```bash
+APP_ENVIRONMENT=test \
+DATABASE_URL=postgresql://127.0.0.1/unconfigured_runtime \
+DIRECT_DATABASE_URL=postgresql://127.0.0.1/unconfigured_runtime \
+TEST_DATABASE_URL=postgresql://127.0.0.1/hvacline_final_test_20261113 \
+DATABASE_SSL_MODE=disable CUSTOMER_PORTAL_ENABLED=false DEMO_SANDBOX_ENABLED=false \
+PGOPTIONS='-c timezone=UTC' .venv/bin/python -m pytest
+```
 
-1. Configure a separate private ElevenLabs agent with approved domain content,
-   signed browser authorization, Voice and Text-only override support. Review
-   audio retention/privacy before setting the existing confirmation flag. Do not
-   copy the HVAC agent just to make a button work.
-2. Review hosted tools. Supported browser callbacks are `lookup_approved_faq` and
-   `submit_intake_draft`; the customer confirms inquiries in the form. Disable
-   inherited phone/server-side mutations, booking and memory tools. No hosted
-   tools were configured or independently attested in this task.
-3. Backend prerequisites are the existing API key/privacy confirmation, portal
-   key, MFA encryption key, sandbox/admin gate and active development membership.
-   With this platform enabled, customer identity no longer requires a default
-   HVAC agent. Provider keys must stay out of client config and command arguments.
-4. After explicit database-write authorization, register the existing agent:
+## Owner deployment and agent setup
+
+1. Complete the owner checks above before release. Back up the intended target,
+   verify `DIRECT_DATABASE_URL` is that target and preserve stable MFA/encryption
+   keys. Keep the website flags off during the schema/API transition. No target
+   migration or deployment is authorized by this handoff.
+2. After separately authorizing the target migration, from the repository root:
+
+```bash
+APP_ENVIRONMENT=development .venv/bin/python -m alembic current
+APP_ENVIRONMENT=development .venv/bin/python -m alembic upgrade head
+APP_ENVIRONMENT=development .venv/bin/python -m alembic check
+```
+
+3. Deploy the matching FastAPI revision **after migration**, then Next using the
+   existing Render/Vercel infrastructure. Render's configured pre-deploy command
+   also runs `alembic upgrade head`; review its target before requesting a deploy.
+   Next build command: `npm run build:web`. No deployment command was run here.
+4. Preserve existing administrator token, development membership, portal secret,
+   MFA key, backend API URL, CORS/HTTPS and provider privacy settings. Next needs
+   `NEXT_PUBLIC_API_BASE_URL` and server-only `CUSTOMER_PORTAL_SECRET`. Enable
+   server-side `WEBSITE_PLATFORM_ENABLED=true` on FastAPI and Next only after
+   schema/backend/frontend compatibility is established. Do not expose keys or
+   binding IDs through `NEXT_PUBLIC_*`. Existing HVAC flags keep their meaning.
+5. Independently configure a private non-HVAC ElevenLabs agent for the business.
+   Require authenticated browser connections and Text-only override support.
+   Supported tools are the two definitions in `website-agent-tools.json`;
+   use `website-agent-instructions.md` with approved business facts. Remove
+   inherited phone/server mutation, booking and memory tools. Review actual
+   retention/privacy and browser settings before confirming them in backend
+   settings. No hosted agent was modified or attested by this task.
+6. With separately authorized database writes, register that existing agent:
 
 ```bash
 .venv/bin/python -m insurance_operations.websites.register_agent \
@@ -103,137 +168,34 @@ For one non-HVAC business:
   --label "Property inquiries" --confirm-browser-tools-only
 ```
 
-This command was **not executed**. It writes a trusted binding, enforces unique
-provider-agent ownership and prints its UUID without changing ElevenLabs. This
-slice shares the existing backend provider account/key; independent credential
-vaults and production onboarding remain future work.
+7. Connect Operations using the authorized administrator token; create a site,
+   replace example content, select approved agent/knowledge, save, preview and
+   publish. Share the actual frontend origin plus `/sites/slug`. Each enabled
+   agent must be independently accepted; one site's success verifies no other.
 
-5. Create a site in Websites, replace example content, select its authorized
-   agent and approved FAQ subset, enable the intended capabilities and publish.
-   Visit `/sites/slug` using the current business's customer login/MFA realm.
+## One acceptance checklist
 
-No non-HVAC binding was registered in the configured database and no live browser
-session was started. The live end-to-end completion criterion remains open;
-mocked calls and successful compilation do not satisfy it.
+- Inspect homepage and all demos at 320/390/768/1440px, keyboard navigation and
+  both themes. Removed sections stay absent; pricing/booking/calling links work.
+- Unauthorized management requests fail. Create a site, select each template,
+  edit supported fields, save/reload and preview. Unsafe URLs/assets and duplicate
+  slugs fail clearly. Draft preview starts no microphone/provider session.
+- Publish and directly open/refresh its share URL; metadata/content match.
+  Save a different draft and confirm live content/agent/knowledge are unchanged.
+- Publish the saved draft, inspect version history, restore an older publication,
+  verify the draft remains unchanged, then unpublish and verify public404 and
+  denied new sessions. Two-tab stale saves/publications fail without lost edits.
+- Using separately authorized disposable identities, attempt foreign website,
+  agent, version, FAQ and session IDs; expect denial and no private data leak.
+- After explicit live-session authorization, test Text and Voice independently
+  for each configured agent. Verify actual agent identity, disclosure/MFA, mic
+  consent/denial, selected knowledge, empty knowledge, disconnect/timeout/retry.
+  Missing agents never fall back. Re-publication/revocation denies stale tools.
+- Explicitly confirm one enabled inquiry; retry the same unknown result and
+  verify exactly one owned intake/lead, no appointment and no account memory.
+  Repeat existing HVAC booking/memory acceptance on its original routes.
 
-## Verification and manual acceptance
-
-Session results are recorded in project-state/current-session notes. Initially
-`npm run verify:web` stopped on49 formatting warnings. Phase1/touched files were
-formatted; the next attempt stops on15 older files outside this slice. The
-aggregate command is not claimed to pass. Results on November 13, 2026:
-
-| Check | Result |
-| --- | --- |
-| Full web tests | 256 passed across 38 files |
-| Web typecheck and production build | Passed, including demos and dynamic site route |
-| Website/navigation scoped ESLint | Passed |
-| Backend suite listed below | 102 passed; one existing Starlette/httpx deprecation warning |
-| New backend Ruff and mypy | Passed; mypy checked seven source files |
-| Aggregate `verify:web` | Stopped at 15 preexisting formatting warnings |
-| Full `lint:web` separately | 11 errors and three warnings in older code |
-| Hosted provider/browser, visual and configured Neon acceptance | Not run |
-
-The remaining formatting paths are account/outbound/development API proxies and
-their tests, root layout, MFA page, brand/theme toggle, billing CSS, customer proxy/
-server test and outbound demo components. Full lint errors are in billing dashboard,
-browser booking/configured adapter, customer appointments, homepage chat, calendar
-connections, dashboard demo and outbound dialog. Those unrelated implementations
-were preserved. Full logs were inspected; no failed aggregate check is reported
-as passing. The backend run covers website contracts/persistence/HTTP/MFA,
-cross-business references, distinct agents, FAQ isolation, memory/capability
-denial, real concurrent edits, migration round trips and existing HVAC booking.
-
-```bash
-npm run verify:web
-npm run typecheck:web
-npm run test:web
-npm run build:web
-npm exec --workspace @insurance-operations/web -- eslint src/features/websites src/app/sites src/app/api/websites src/components/header-navigation.tsx src/components/provider-logos.tsx src/features/customer/auth-continuation.ts
-```
-
-Only the newly created local `hvacline_websites_test_20261112` is disposable.
-Its fixtures rebuild/downgrade it. Never substitute shared/production URLs. Legacy
-conversation fixtures inherit optional flags from local env; these process-local
-overrides isolate their defaults while explicit test constructor settings win.
-`PGOPTIONS` makes disposable connections use UTC, matching existing booking
-serialization assertions independently of the local PostgreSQL timezone:
-
-```bash
-APP_ENVIRONMENT=test \
-DATABASE_URL=postgresql://127.0.0.1/unconfigured_runtime \
-DIRECT_DATABASE_URL=postgresql://127.0.0.1/unconfigured_runtime \
-TEST_DATABASE_URL=postgresql://127.0.0.1/hvacline_websites_test_20261112 \
-DATABASE_SSL_MODE=disable CUSTOMER_PORTAL_ENABLED=false DEMO_SANDBOX_ENABLED=false \
-PGOPTIONS='-c timezone=UTC' \
-.venv/bin/python -m pytest tests/test_website_contracts.py tests/database/test_websites.py tests/database/test_migrations.py tests/database/test_table_ownership.py tests/database/test_conversation_api.py tests/database/test_hvac_scheduling.py tests/database/test_customer_memory.py tests/test_conversation_provider.py tests/test_conversation_provider_selection.py tests/test_customer_mfa_settings.py
-```
-
-The venv's pytest launcher has a stale interpreter path; use `python -m pytest`.
-Focused lint/type commands:
-
-```bash
-.venv/bin/ruff check apps/backend/src/insurance_operations/websites apps/backend/src/insurance_operations/database/models/website.py migrations/versions/20261112_0022_website_platform.py tests/conftest.py tests/test_website_contracts.py tests/database/test_websites.py
-.venv/bin/python -m mypy apps/backend/src/insurance_operations/websites apps/backend/src/insurance_operations/database/models/website.py
-```
-
-Manual checks (live sessions/data writes need separate authorization):
-
-1. At320/390/768/1440px in both themes, inspect homepage/header/footer and demos:
-   no page overflow,44px controls, keyboard focus, menu Escape/outside dismissal,
-   focus restoration and anchors. Narrow-screen theme control is inside the menu.
-2. Check homepage pricing/services/package removals, `/pricing`, gallery, `/book`
-   auth/consent and `/operations`. Navigation must not request the microphone.
-3. In authorized disposable/staging data, create/edit/save/reload/preview a draft,
-   publish and refresh `/sites/slug`. Verify metadata, missing/disabled404,
-   validation and a two-tab version conflict. Template changes reset defaults.
-4. Inspect network payloads for no provider IDs/keys/private cross-business data.
-   Using separate test identities, attempt foreign site/agent/FAQ IDs; expect
-   denial. Empty knowledge selection must retrieve no other agency/site records.
-5. With an independently configured agent and explicit live authorization, test
-   **Text first**, verify the actual provider agent, selected/unselected knowledge,
-   finish and then separately test Voice/mic consent/denial/mute/timeouts/retry.
-   There must be no fallback, automatic connection or cross-site memory.
-6. Explicitly confirm an enabled inquiry. Check one owned customer/intake/lead on
-   unknown-response retry and no appointment. Disable/rebind the site; new grants
-   and tools must fail, while its owner can still end the existing session.
-7. Independently repeat agent/knowledge checks for every other enabled website.
-   One successful site's conversation does not verify another site's provider.
-
-## Phase 3
-
-Complete production identity/roles, customer realm onboarding and credential vault
-provisioning first. The smallest useful next slice is immutable website versions
-and atomic publish/rollback pointers behind existing owner authorization; it needs
-a forward migration for versions, publish timestamps and owner audit references.
-Reuse this structured editor/renderer for preview and version restoration. Add
-owned uploads with MIME/dimension/decode validation and approved processed IDs;
-reject uploaded SVG/HTML by default. Custom domains require normalized unique
-hostnames, DNS ownership verification, trusted-edge host lookup and TLS; unknown
-hosts fail closed. Non-HVAC scheduling requires an approved domain workflow
-before lifting the current backend capability denial.
-
-## Changed source map
-
-- Backend: `websites/{schemas,guards,service,routes,register_agent}.py`,
-  `database/models/{website,conversation,__init__}.py`, `application.py`,
-  `settings.py`, `conversations/{service,booking}.py`,
-  `approved_faqs/service.py`, `customer_access/routes.py`,
-  `customer_memory/service.py` and `.env.example`.
-- Schema: `migrations/versions/20261112_0022_website_platform.py`.
-- Web: `features/websites/{published.server,editor,website-manager,website-voice}`
-  and related CSS/tests; existing website contracts/primitives/styles;
-  `app/sites/[slug]/{page,loading,error,not-found}.tsx`;
-  `app/api/websites/[slug]/[...path]/{route,route.test}.ts`;
-  `features/conversation/{api,elevenlabs-adapter,chat-composer}` and related tests;
-  `features/customer/auth-continuation` and test; dashboard shell/demo/workspace.
-- Homepage: `app/{page.tsx,page.test.ts}`, shared
-  `components/{header-navigation,provider-logos}` and their CSS. Two existing
-  customer proxy test stream annotations were adjusted for TypeScript 6.
-- Backend tests: `tests/conftest.py`, `tests/test_website_contracts.py`,
-  `tests/database/{test_websites,test_migrations,test_table_ownership}.py`.
-- Documentation: README, this guide, `multi-product-websites.md`,
-  `project-state.md` and local current-session notes.
-
-The checkout already contained unrelated work. This inventory describes the
-Phase 2 changes, not every path shown by Git status.
+External blockers are target migration/deployment authorization, dedicated
+non-HVAC agent configuration/binding/privacy review and authorized live/visual
+acceptance. Existing production business onboarding is insufficient for public
+self-service; restricted management and development/test gates remain enforced.

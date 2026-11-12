@@ -71,7 +71,9 @@ describe("outbound demo bridge", () => {
       new NextRequest("https://hvacline.example/api/outbound-demo"),
     );
     expect(available.status).toBe(401);
-    expect((await available.json()).error.code).toBe("CALLBACK_SIGN_IN_REQUIRED");
+    expect((await available.json()).error.code).toBe(
+      "CALLBACK_SIGN_IN_REQUIRED",
+    );
     expect(available.cookies.get("hvacline-call-visitor")).toBeUndefined();
     const response = await POST(post());
     expect(response.status).toBe(401);
@@ -84,10 +86,12 @@ describe("outbound demo bridge", () => {
 
   it("requires sign-in for saved status without claiming the call was never created", async () => {
     customerSession.mockResolvedValue({ status: "anonymous" });
-    const response = await GET(new NextRequest(
-      `https://hvacline.example/api/outbound-demo?request_id=${requestId}`,
-      { headers: { Cookie: `hvacline-call-visitor=${visitor}` } },
-    ));
+    const response = await GET(
+      new NextRequest(
+        `https://hvacline.example/api/outbound-demo?request_id=${requestId}`,
+        { headers: { Cookie: `hvacline-call-visitor=${visitor}` } },
+      ),
+    );
     expect(response.status).toBe(401);
     expect(await response.json()).not.toHaveProperty("request_not_created");
     expect(fetcher).not.toHaveBeenCalled();
@@ -98,16 +102,18 @@ describe("outbound demo bridge", () => {
     const response = await POST(post());
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({
-      error: { code: "CALLBACK_AUTH_UNAVAILABLE" }, request_not_created: true,
+      error: { code: "CALLBACK_AUTH_UNAVAILABLE" },
+      request_not_created: true,
     });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("revalidates sign-in at submission after an earlier availability check", async () => {
     fetcher.mockResolvedValueOnce(Response.json({ available: true }));
-    expect((await GET(new NextRequest(
-      "https://hvacline.example/api/outbound-demo",
-    ))).status).toBe(200);
+    expect(
+      (await GET(new NextRequest("https://hvacline.example/api/outbound-demo")))
+        .status,
+    ).toBe(200);
     customerSession.mockResolvedValue({ status: "anonymous" });
     expect((await POST(post())).status).toBe(401);
     expect(fetcher).toHaveBeenCalledTimes(1);
@@ -168,38 +174,54 @@ describe("outbound demo bridge", () => {
     expect(response.headers.get("Cache-Control")).toBe("no-store");
     const headers = fetcher.mock.calls[0][1]?.headers as Record<string, string>;
     expect(headers["X-Outbound-Visitor"]).not.toBe(visitor);
-    expect(JSON.stringify(headers)).not.toContain("synthetic-callback-customer");
+    expect(JSON.stringify(headers)).not.toContain(
+      "synthetic-callback-customer",
+    );
   });
 
   it("keeps the account owner stable across cookies and isolates other sign-ins", async () => {
     fetcher.mockImplementation(async () => Response.json(call));
     await POST(post());
     const first = fetcher.mock.calls[0][1]?.headers as Record<string, string>;
-    const changedCookie = new NextRequest("https://hvacline.example/api/outbound-demo", {
-      method: "POST", headers: {
-        Origin: "https://hvacline.example", "Content-Type": "application/json",
-        Cookie: `hvacline-call-visitor=${"x".repeat(43)}`,
-      }, body: JSON.stringify(payload),
-    });
+    const changedCookie = new NextRequest(
+      "https://hvacline.example/api/outbound-demo",
+      {
+        method: "POST",
+        headers: {
+          Origin: "https://hvacline.example",
+          "Content-Type": "application/json",
+          Cookie: `hvacline-call-visitor=${"x".repeat(43)}`,
+        },
+        body: JSON.stringify(payload),
+      },
+    );
     await POST(changedCookie);
     const second = fetcher.mock.calls[1][1]?.headers as Record<string, string>;
     expect(second["X-Outbound-Visitor"]).toBe(first["X-Outbound-Visitor"]);
-    customerSession.mockResolvedValue({ status: "authenticated", user: {
-      id: "other-synthetic-account", full_name: "Other Customer", email: "other@example.test",
-    } });
+    customerSession.mockResolvedValue({
+      status: "authenticated",
+      user: {
+        id: "other-synthetic-account",
+        full_name: "Other Customer",
+        email: "other@example.test",
+      },
+    });
     await POST(post());
     const third = fetcher.mock.calls[2][1]?.headers as Record<string, string>;
     expect(third["X-Outbound-Visitor"]).not.toBe(first["X-Outbound-Visitor"]);
   });
 
-  it.each(["send_code", "verify_code"])("requires sign-in before SMS action %s", async (action) => {
-    customerSession.mockResolvedValue({ status: "anonymous" });
-    expect((await POST(post({ action }))).status).toBe(401);
-    expect(fetcher).not.toHaveBeenCalled();
-  });
+  it.each(["send_code", "verify_code"])(
+    "requires sign-in before SMS action %s",
+    async (action) => {
+      customerSession.mockResolvedValue({ status: "anonymous" });
+      expect((await POST(post({ action }))).status).toBe(401);
+      expect(fetcher).not.toHaveBeenCalled();
+    },
+  );
 
   it("does not request a callback without a phone verification proof", async () => {
-    const { phone_verification_id: _proof, ...unverified } = payload;
+    const unverified = { ...payload, phone_verification_id: undefined };
     expect((await POST(post(unverified))).status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();
   });
@@ -207,11 +229,18 @@ describe("outbound demo bridge", () => {
   it("sends only the consented SMS request and never invokes the call route", async () => {
     const challenge = {
       challenge_id: payload.phone_verification_id,
-      expires_at: "2026-11-05T12:05:00Z", verified: false,
+      expires_at: "2026-11-05T12:05:00Z",
+      verified: false,
     };
     fetcher.mockResolvedValueOnce(Response.json(challenge));
-    const response = await POST(post({ action: "send_code", phone_number: "+12025550123",
-      sms_consent: true, sms_consent_version: "outbound-sms-v1" }));
+    const response = await POST(
+      post({
+        action: "send_code",
+        phone_number: "+12025550123",
+        sms_consent: true,
+        sms_consent_version: "outbound-sms-v1",
+      }),
+    );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual(challenge);
     expect(fetcher).toHaveBeenCalledTimes(1);
@@ -221,9 +250,23 @@ describe("outbound demo bridge", () => {
   });
 
   it.each([
-    { action: "send_code", phone_number: "+12025550123", sms_consent: false, sms_consent_version: "outbound-sms-v1" },
-    { action: "verify_code", challenge_id: payload.phone_verification_id, code: "12345" },
-    { action: "verify_code", challenge_id: payload.phone_verification_id, code: "123456", status: "accepted" },
+    {
+      action: "send_code",
+      phone_number: "+12025550123",
+      sms_consent: false,
+      sms_consent_version: "outbound-sms-v1",
+    },
+    {
+      action: "verify_code",
+      challenge_id: payload.phone_verification_id,
+      code: "12345",
+    },
+    {
+      action: "verify_code",
+      challenge_id: payload.phone_verification_id,
+      code: "123456",
+      status: "accepted",
+    },
   ])("rejects missing SMS consent or invalid code actions %j", async (body) => {
     expect((await POST(post(body))).status).toBe(400);
     expect(fetcher).not.toHaveBeenCalled();

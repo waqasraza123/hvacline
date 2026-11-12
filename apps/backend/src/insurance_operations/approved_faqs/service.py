@@ -19,7 +19,9 @@ from insurance_operations.approved_faqs.schemas import (
     ApprovedFaqStatusInput,
     ApprovedFaqUpdateInput,
 )
-from insurance_operations.approved_faqs.text import normalize_faq_question
+from insurance_operations.approved_faqs.text import (
+    normalize_faq_question as normalize_faq_question,
+)
 from insurance_operations.database.models.approved_faq import (
     AgencyApprovedFaq,
     ApprovedFaqStatus,
@@ -145,7 +147,10 @@ class ApprovedFaqService:
                     raise ApiError(
                         status_code=422,
                         code="APPROVED_FAQ_VARIATIONS_INVALID",
-                        message="Review the question variations; each must be distinct from the main question.",
+                        message=(
+                            "Review the question variations; each must be "
+                            "distinct from the main question."
+                        ),
                     ) from error
                 faq.question = request.question
                 faq.normalized_question = normalize_faq_question(request.question)
@@ -325,7 +330,7 @@ class ApprovedFaqService:
         session: Session,
         agency_id: UUID,
         query: str,
-        faq_ids: list[UUID] | None = None,
+        faq_ids: Sequence[UUID] | None = None,
     ) -> ApprovedFaqLookupResponse:
         settings = session.scalar(
             select(AgencyReceptionistSettings).where(

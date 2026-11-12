@@ -185,7 +185,9 @@ class GoogleCalendarAdapter:
                     ):
                         continue
 
-                    def boundary(value: dict[str, str]) -> datetime:
+                    def boundary(
+                        value: dict[str, str], zone: ZoneInfo = timezone
+                    ) -> datetime:
                         if "dateTime" in value:
                             parsed = datetime.fromisoformat(
                                 value["dateTime"].replace("Z", "+00:00")
@@ -196,7 +198,7 @@ class GoogleCalendarAdapter:
                         return datetime.combine(
                             datetime.fromisoformat(value["date"]).date(),
                             time.min,
-                            timezone,
+                            zone,
                         )
 
                     start, end = boundary(row["start"]), boundary(row["end"])
