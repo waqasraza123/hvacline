@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from insurance_operations.database.models.website import Website, WebsiteAgentBinding
 
 from insurance_operations.database.models.approved_faq import (
     AgencyApprovedFaq,
@@ -86,6 +87,8 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "websites": TableOwnership(module="websites", agency_column="agency_id"),
+    "website_agent_bindings": TableOwnership(module="websites", agency_column="agency_id"),
     "billing_accounts": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_checkouts": TableOwnership(module="billing", agency_column="agency_id"),
     "billing_events": TableOwnership(module="billing", agency_column="agency_id"),
@@ -190,6 +193,7 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "Website", "WebsiteAgentBinding",
     "BillingAccount", "BillingCheckout", "BillingEvent", "BillingTopUp", "BillingLabor",
     "OutboundPhoneVerification",
     "OutboundDemoCall",

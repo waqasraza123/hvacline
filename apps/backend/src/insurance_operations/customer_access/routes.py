@@ -47,7 +47,7 @@ def create_customer_router(
             not settings.customer_portal_enabled
             or settings.app_environment is not RuntimeEnvironment.DEVELOPMENT
             or not settings.demo_sandbox_enabled
-            or conversations is None
+            or (conversations is None and not settings.website_platform_enabled)
             or secret is None
             or not portal_key
             or not secrets.compare_digest(portal_key.encode(), secret.get_secret_value().encode())

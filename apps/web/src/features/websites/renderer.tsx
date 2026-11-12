@@ -13,5 +13,9 @@ const templateComponents = {
 
 export function WebsiteRenderer({ site }: { site: ResolvedWebsite }) {
   const Template = templateComponents[site.template.id];
-  return <WebsiteFrame site={site}><Template site={site} /></WebsiteFrame>;
+  return (
+    <WebsiteFrame site={site}>
+      <Template site={site} />
+    </WebsiteFrame>
+  );
 }

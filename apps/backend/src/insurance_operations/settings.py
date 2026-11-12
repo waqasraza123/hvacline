@@ -232,6 +232,7 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
 
 class ApiSettings(DatabaseSettings):
+    website_platform_enabled: bool = False
     homepage_chat_enabled: bool = False
     homepage_chat_daily_limit: int = Field(default=20, ge=1, le=1000)
     homepage_chat_concurrent_limit: int = Field(default=1, ge=1, le=10)
@@ -396,7 +397,7 @@ class ApiSettings(DatabaseSettings):
         if (
             self.app_environment is not RuntimeEnvironment.DEVELOPMENT
             or not self.demo_sandbox_enabled
-            or not self.conversation_ai_enabled
+            or (not self.conversation_ai_enabled and not self.website_platform_enabled)
         ):
             raise ValueError(
                 "customer portal requires the protected development voice environment"

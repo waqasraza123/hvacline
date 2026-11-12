@@ -40,6 +40,7 @@ from insurance_operations.database.models.operations import (
 )
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings
+from insurance_operations.websites.guards import active_website, session_website
 
 CONFIRM_INTAKE_ROUTE_KEY = "POST /api/v1/development/conversation-intakes"
 ACTIVE_SESSION_STATUSES = {
@@ -54,7 +55,7 @@ class ConversationService:
         *,
         session_factory: sessionmaker[Session],
         settings: ApiSettings,
-        provider: ConversationProvider,
+        provider: ConversationProvider | None,
     ) -> None:
         self._session_factory = session_factory
         self._settings = settings
@@ -65,6 +66,8 @@ class ConversationService:
         *,
         actor: ActorContext,
         request: ConversationSessionCreateInput,
+        website_id: UUID | None = None,
+        website_agent_binding_id: UUID | None = None,
     ) -> ConversationSessionResponse:
         if not request.ai_disclosure_accepted:
             raise ApiError(
@@ -97,7 +100,23 @@ class ConversationService:
             self._expire_stale_sessions(session, actor.agency_id, now)
             self._enforce_concurrency_limit(session, actor, now)
             self._enforce_daily_limit(session, actor.agency_id, now)
+            capabilities: dict[str, bool] = {}
+            if website_id is not None:
+                if website_agent_binding_id is None:
+                    raise self._session_state_conflict()
+                website = active_website(
+                    session, actor.agency_id, website_id, website_agent_binding_id
+                )
+                capabilities = {
+                    "knowledge": True,
+                    "lead_capture": website.lead_capture_enabled,
+                    "booking": False,
+                    "memory": False,
+                }
             conversation_session = ConversationSession(
+                website_id=website_id,
+                website_agent_binding_id=website_agent_binding_id,
+                website_capabilities=capabilities,
                 agency_id=actor.agency_id,
                 initiated_by=actor.app_user_id,
                 status=ConversationSessionStatus.REQUESTING.value,
@@ -117,6 +136,8 @@ class ConversationService:
             conversation_session_id = conversation_session.id
 
         try:
+            if self._provider is None:
+                raise ConversationProviderError("Provider unavailable")
             grant = self._provider.authorize_session(input_mode=request.input_mode)
         except ConversationProviderError as error:
             with self._session_factory() as session, session.begin():
@@ -144,6 +165,7 @@ class ConversationService:
             )
             if authorized_session is None:
                 raise RuntimeError("conversation session was not persisted")
+            session_website(session, authorized_session)
             if (
                 authorized_session.status != ConversationSessionStatus.REQUESTING.value
                 or authorized_session.authorization_expires_at <= authorized_at
@@ -304,6 +326,7 @@ class ConversationService:
                 existing_record = session.scalar(
                     select(IdempotencyRecord)
                     .where(
+                        IdempotencyRecord.agency_id == actor.agency_id,
                         IdempotencyRecord.actor_scope_type == "APP_USER",
                         IdempotencyRecord.actor_scope_id == actor.app_user_id,
                         IdempotencyRecord.route_key == CONFIRM_INTAKE_ROUTE_KEY,
@@ -328,6 +351,20 @@ class ConversationService:
                     code="CONVERSATION_SESSION_EXPIRED",
                     message="The conversation confirmation window has expired",
                 )
+            if conversation_session.website_id is not None:
+                session_website(session, conversation_session, "lead_capture")
+                if request.service is not None:
+                    raise ApiError(
+                        status_code=403,
+                        code="WEBSITE_CAPABILITY_DISABLED",
+                        message="HVAC booking is not enabled for this website session.",
+                    )
+                if getattr(request, "explicit_confirmation", False) is not True:
+                    raise ApiError(
+                        status_code=422,
+                        code="WEBSITE_CONFIRMATION_REQUIRED",
+                        message="Review and explicitly confirm the website inquiry.",
+                    )
             live_confirmation = (
                 (
                     request.spoken_confirmation

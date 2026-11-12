@@ -3,7 +3,11 @@ import { demoWebsites } from "./catalog";
 import { resolveVoicePresentation } from "./agents.server";
 import type { ResolvedWebsite, WebsiteConfigurationSource } from "./contracts";
 import { websiteTemplates } from "./templates";
-import { freezeConfiguration, validateTemplateCompatibility, validateWebsiteConfiguration } from "./validation";
+import {
+  freezeConfiguration,
+  validateTemplateCompatibility,
+  validateWebsiteConfiguration,
+} from "./validation";
 
 const staticWebsiteSource: WebsiteConfigurationSource = {
   async findBySlug(slug) {
@@ -20,8 +24,13 @@ export async function resolveDemoWebsite(
   const stored = await source.findBySlug(slug);
   if (!stored) return null;
   const configuration = validateWebsiteConfiguration(stored);
-  if (configuration.slug !== slug || configuration.status !== "demo") return null;
+  if (configuration.slug !== slug || configuration.status !== "demo")
+    return null;
   const template = websiteTemplates[configuration.templateId];
   validateTemplateCompatibility(configuration, template);
-  return freezeConfiguration({ configuration, template, voice: resolveVoicePresentation(configuration, voiceFeatureEnabled) });
+  return freezeConfiguration({
+    configuration,
+    template,
+    voice: resolveVoicePresentation(configuration, voiceFeatureEnabled),
+  });
 }

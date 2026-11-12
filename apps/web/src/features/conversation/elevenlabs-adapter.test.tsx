@@ -37,6 +37,49 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
+it("never retrieves account memory for a website whose memory capability is disabled", async () => {
+  vi.stubGlobal("window", { setTimeout, clearTimeout });
+  const fetcher = vi.fn();
+  vi.stubGlobal("fetch", fetcher);
+  let client!: ConversationClient;
+  renderToStaticMarkup(
+    <ElevenLabsConversationAdapter
+      memoryEnabled={false}
+      onDisconnect={vi.fn()}
+      onDraft={vi.fn()}
+      onError={vi.fn()}
+      onApprovedFaqLookup={vi.fn()}
+      onTranscript={vi.fn()}
+      onBookingTool={vi.fn()}
+    >
+      {(value) => {
+        client = value;
+        return null;
+      }}
+    </ElevenLabsConversationAdapter>,
+  );
+  await client.start({
+    sessionId: "website-session",
+    inputMode: "VOICE",
+    transport: "webrtc",
+    credential: "synthetic-token",
+    maximumDurationSeconds: 180,
+    confirmationExpiresAt: "2030-01-01T00:30:00Z",
+  });
+  const tools = sdk.configuration.clientTools as Record<
+    string,
+    (input?: Record<string, unknown>) => unknown
+  >;
+  expect(String(await tools.retrieve_customer_memory())).toContain(
+    "not enabled",
+  );
+  expect(String(await tools.remember_customer_memory({}))).toContain(
+    "not enabled",
+  );
+  expect(fetcher).not.toHaveBeenCalled();
+  expect(sdk.sendContextualUpdate).not.toHaveBeenCalled();
+});
+
 it.each(["VOICE", "TEXT"] as const)(
   "retrieves the same authorized memory on %s connection through the actual adapter",
   async (mode) => {

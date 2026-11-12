@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "websites", "website_agent_bindings",
     "billing_accounts", "billing_checkouts", "billing_events", "billing_topups", "billing_labor",
     "outbound_phone_verifications",
     "outbound_demo_calls",
@@ -511,6 +512,12 @@ EXPECTED_COLUMNS = {
 }
 
 
+EXPECTED_COLUMNS["websites"] = {"id", "agency_id", "slug", "template_id", "status", "configuration", "agent_binding_id", "knowledge_faq_ids", "voice_enabled", "lead_capture_enabled", "created_at", "updated_at", "row_version"}
+EXPECTED_COLUMNS["website_agent_bindings"] = {"id", "agency_id", "label", "provider_agent_id", "enabled", "browser_tools_confirmed", "created_at", "updated_at", "row_version"}
+EXPECTED_COLUMNS["conversation_sessions"].update({"website_id", "website_agent_binding_id", "website_capabilities"})
+EXPECTED_COLUMNS["agency_approved_faqs"].add("question_variations")
+
+
 def test_migration_creates_only_the_approved_foundation_tables(
     migrated_database: Engine,
 ) -> None:
@@ -846,6 +853,11 @@ def test_migration_check_constraints_cover_approved_invariants(
             "ck_inbound_call_events_details_object",
         },
     }
+    expected_constraint_names["conversation_sessions"].add("ck_conversation_sessions_website_binding_consistent")
+    expected_constraint_names["conversation_sessions"].add("ck_conversation_sessions_website_capabilities_object")
+    expected_constraint_names["agency_approved_faqs"].add("ck_agency_approved_faqs_question_variations_valid")
+    expected_constraint_names["website_agent_bindings"] = {"ck_website_agent_bindings_label_valid", "ck_website_agent_bindings_provider_agent_valid"}
+    expected_constraint_names["websites"] = {"ck_websites_status_valid", "ck_websites_slug_valid", "ck_websites_configuration_object", "ck_websites_knowledge_array", "ck_websites_row_version_positive"}
     actual_constraint_names = {
         table_name: {
             constraint["name"]

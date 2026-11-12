@@ -58,6 +58,7 @@ from insurance_operations.conversations.service import ConversationService
 from insurance_operations.billing.routes import create_billing_public_router, create_billing_admin_router
 from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.customer_access.routes import create_customer_router
+from insurance_operations.websites.routes import create_website_router
 from insurance_operations.database.connection import (
     DatabaseReadinessError,
     check_database_readiness,
@@ -838,6 +839,7 @@ def create_app(
 
     application.include_router(create_billing_admin_router(settings, billing_settings, session_factory, development_actor))
     application.include_router(create_hvac_router(session_factory, development_actor))
+    application.include_router(create_website_router(settings, session_factory, development_actor))
     application.include_router(
         create_booking_integration_router(settings, session_factory, development_actor)
     )

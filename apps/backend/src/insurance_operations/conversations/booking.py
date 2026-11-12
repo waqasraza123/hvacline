@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
+from insurance_operations.websites.guards import session_website
 from insurance_operations.conversations.schemas import ConversationTurn
 from insurance_operations.conversations.service import CONFIRM_INTAKE_ROUTE_KEY
 from insurance_operations.conversations.spoken import (
@@ -106,6 +107,12 @@ def create_browser_booking_router(
         session: Session, actor: ActorContext, session_id: UUID
     ) -> ConversationSession:
         row = session.get(ConversationSession, session_id)
+        if (
+            row is not None
+            and row.agency_id == actor.agency_id
+            and row.initiated_by == actor.app_user_id
+        ):
+            session_website(session, row, "booking")
         if (
             row is None
             or row.agency_id != actor.agency_id

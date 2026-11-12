@@ -1,5 +1,54 @@
 # Project State
 
+## Phase 2 publication authorized — 2026-11-13
+
+Owner explicitly requests push to main, authorizing the Phase 2 and homepage
+commit/publication. Prepared from canonical main `ac0c860` in isolated checkout
+`/private/tmp/hvacline-phase2-publish-20261113`; original divergent source and
+unrelated work remain intact. Compared all175 pending paths:87 already match
+canonical main,88 contain current changes. Hooks remain disabled and publication
+retains `[skip ci] [skip render]`. No deployment, configured database migration,
+provider/settings operation or live call is authorized by this publication.
+Existing local test results and live-acceptance limits are recorded below.
+
+## Configurable websites — local checks passed, live acceptance pending — 2026-11-13
+
+Phase 2 source adds agency-owned `websites` and private `website_agent_bindings`,
+validated content, optimistic owner updates and dynamic `/sites/[slug]` rendering
+through the three existing templates. Static `/demos/...` remains independent.
+The connected dashboard has a structured website editor and safe draft preview.
+Migration `20261112_0022` follows `20261109_0021`; schema must precede backend
+deployment because conversation ORM queries include the new nullable context.
+
+Backend-resolved bindings reuse existing signed ElevenLabs grants, consent/MFA,
+session ownership and agency quotas. Composite agency foreign keys and tool
+guards bind conversations to sites/agents. Selected active FAQs are scoped to the
+site; generic inquiries require explicit confirmation and reuse transactional
+lead persistence. Website booking and account-memory access are denied, including
+legacy routes. Missing agents never fall back to HVAC. The platform defaults off
+and remains development/test gated; production identity/customer realms, provider
+provisioning and dedicated credential isolation are still incomplete.
+
+Owner-authorized local results: 256 web tests/38 files, TypeScript and production
+Next build passed; website/navigation scoped ESLint passed. The listed backend
+suite passed all102 tests, including actual concurrent edits and existing HVAC
+booking/memory; new backend Ruff/mypy passed. Migration round trips ran only in
+new disposable local `hvacline_websites_test_20261112`. Process-local optional
+flags and UTC database connections isolate legacy fixtures from local defaults.
+`npm run verify:web` remains failed at15 preexisting formatting paths. Separate
+full lint reports11 older errors/three warnings; those unrelated files were
+preserved. No visual or live-provider acceptance is established by these checks.
+
+Homepage changes remove compact pricing, Services and footer My package; retain
+`/pricing`, booking/calling and gallery. Shared header/footer provider logos have
+short captions; desktop pill navigation and a mobile drawer are implemented.
+No configured Neon migration, agent registration, hosted change, live session,
+real call, service startup, commit, push or deployment was performed. A separate
+non-HVAC agent/binding and authorized live browser test are required before the
+Phase 2 end-to-end completion criterion can be claimed. Exact setup, changed
+source, results, commands/manual checks and Phase 3 slice:
+[website-platform-phase2.md](website-platform-phase2.md).
+
 ## Multi-product website publication authorized — runtime UNVERIFIED — 2026-11-12
 
 Owner explicitly requests push to main, authorizing commit/publication of the
@@ -48,7 +97,6 @@ No tests, builds, lint/type checks, formatters, services or runtime checks ran.
 Implementation/runtime remain unverified. Preserve original divergent source and
 pending edits; publish from current canonical main with hooks disabled and
 [skip ci] [skip render]. No deployment or provider/data operation is requested.
-
 
 ## Persistent memory and full-width website publication — 2026-11-10
 

@@ -43,9 +43,10 @@ export async function authorizeConversationSession(
   apiBaseUrl: string,
   adminToken?: string,
   inputMode: ConversationInputMode = "VOICE",
+  websiteSlug?: string,
 ): Promise<ConversationSessionAuthorization> {
   const response = await fetch(
-    `${apiBaseUrl}/api/v1/development/conversation-sessions`,
+    conversationApiPath(apiBaseUrl, "conversation-sessions", websiteSlug),
     {
       method: "POST",
       headers: {
@@ -103,6 +104,7 @@ export async function authorizeConversationSession(
         sessionId,
         "FAILED",
         adminToken,
+        websiteSlug,
       ).catch(() => undefined);
     }
     throw new ConversationApiError(
@@ -128,9 +130,14 @@ export async function endConversationSession(
   sessionId: string,
   outcome: "COMPLETED" | "INTERRUPTED" | "FAILED",
   adminToken?: string,
+  websiteSlug?: string,
 ): Promise<boolean> {
   const response = await fetch(
-    `${apiBaseUrl}/api/v1/development/conversation-sessions/${sessionId}/end`,
+    conversationApiPath(
+      apiBaseUrl,
+      `conversation-sessions/${sessionId}/end`,
+      websiteSlug,
+    ),
     {
       method: "POST",
       headers: {
@@ -153,6 +160,22 @@ export async function endConversationSession(
     );
   }
   return body.review_available;
+}
+
+export function conversationApiPath(
+  baseUrl: string,
+  path: string,
+  websiteSlug?: string,
+): string {
+  if (websiteSlug !== undefined) {
+    if (
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(websiteSlug) ||
+      websiteSlug.length > 64
+    )
+      throw new Error("Invalid website slug");
+    return `/api/websites/${websiteSlug}/${path}`;
+  }
+  return `${baseUrl}/api/v1/development/${path}`;
 }
 
 export type ConfirmationInput = Readonly<{

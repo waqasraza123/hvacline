@@ -13,6 +13,7 @@ export function ChatComposer({
   textOnly,
   initialMessage = "",
   onSent,
+  assistantName = "Line",
 }: {
   send: (text: string) => void;
   connected: boolean;
@@ -20,6 +21,7 @@ export function ChatComposer({
   textOnly: boolean;
   initialMessage?: string;
   onSent?: () => void;
+  assistantName?: string;
 }) {
   const id = useId();
   const [message, setMessage] = useState(initialMessage);
@@ -45,7 +47,7 @@ export function ChatComposer({
   return (
     <form className={styles.composer} onSubmit={submit}>
       <label className={styles.label} htmlFor={id}>
-        Message Line
+        Message {assistantName}
       </label>
       <div className={styles.inputRow}>
         <textarea

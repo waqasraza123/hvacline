@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from uuid import UUID
@@ -32,6 +34,7 @@ from insurance_operations.database.models.receptionist import (
     AgencyReceptionistSettings,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.websites.guards import session_website
 
 _IGNORED_MATCH_WORDS = frozenset(
     {
@@ -231,7 +234,15 @@ class ApprovedFaqService:
                     code="CONVERSATION_SESSION_NOT_ACTIVE",
                     message="The conversation session is not active",
                 )
-            result = self._lookup(session, actor.agency_id, query)
+            site = session_website(session, conversation_session, "knowledge")
+            result = self._lookup(
+                session,
+                actor.agency_id,
+                query,
+                [UUID(value) for value in site.knowledge_faq_ids]
+                if site is not None
+                else None,
+            )
             if result.source is not None:
                 session.add(
                     AuditEvent(
@@ -314,6 +325,7 @@ class ApprovedFaqService:
         session: Session,
         agency_id: UUID,
         query: str,
+        faq_ids: list[UUID] | None = None,
     ) -> ApprovedFaqLookupResponse:
         settings = session.scalar(
             select(AgencyReceptionistSettings).where(
@@ -330,6 +342,7 @@ class ApprovedFaqService:
             select(AgencyApprovedFaq).where(
                 AgencyApprovedFaq.agency_id == agency_id,
                 AgencyApprovedFaq.status == ApprovedFaqStatus.ACTIVE.value,
+                *([AgencyApprovedFaq.id.in_(faq_ids)] if faq_ids is not None else []),
             )
         ).all()
         match = select_faq_match(query, faqs)

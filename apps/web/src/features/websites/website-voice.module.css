@@ -1,0 +1,89 @@
+.panel {
+  padding: 28px;
+  background: var(--site-bg);
+  border: 1px solid var(--site-line);
+  border-radius: 18px;
+  font-size: 13px;
+}
+.panel h3 {
+  font-size: 24px;
+  margin-top: 0;
+}
+.panel p {
+  color: var(--site-muted);
+  font-size: 12px;
+}
+.panel button,
+.panel input,
+.panel textarea {
+  font: inherit;
+}
+.panel button {
+  min-height: 44px;
+  border: 1px solid var(--site-line);
+  border-radius: 8px;
+  background: var(--site-accent);
+  color: var(--site-accent-ink);
+  padding: 12px 16px;
+  font-size: 12px;
+}
+.panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.panel input:not([type="checkbox"]),
+.panel textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--site-bg);
+  color: var(--site-ink);
+  border: 1px solid var(--site-line);
+  border-radius: 8px;
+}
+.panel label {
+  display: block;
+  margin: 14px 0;
+  line-height: 1.7;
+}
+.panel fieldset {
+  padding: 0;
+  border: 0;
+}
+.panel input[type="checkbox"] {
+  accent-color: var(--site-accent);
+  margin-right: 10px;
+}
+.modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-block: 20px;
+}
+.modes button {
+  background: var(--site-surface);
+  color: var(--site-ink);
+}
+.modes button[aria-pressed="true"] {
+  border-color: var(--site-accent);
+  box-shadow: inset 0 0 0 1px var(--site-accent);
+}
+.consents {
+  border-top: 1px solid var(--site-line);
+  padding-block: 12px 24px;
+}
+.transcript {
+  max-height: 280px;
+  overflow-y: auto;
+  margin: 24px 0;
+  padding-left: 20px;
+}
+.transcript strong {
+  font-size: 10px;
+}
+.transcript p {
+  margin: 4px 0 16px;
+}
+.panel a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

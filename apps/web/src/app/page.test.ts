@@ -58,3 +58,19 @@ it("adds the demo collection while retaining existing booking, pricing and calli
   expect(html).toContain('href="/operations"');
   expect(html).toContain('href="tel:+12014097805"');
 });
+
+it("keeps pricing separate and removes homepage service and package navigation", () => {
+  const html = renderToStaticMarkup(createElement(Home));
+  expect(html).toContain('href="/pricing"');
+  expect(html).not.toContain('id="services"');
+  expect(html).not.toContain('href="#services"');
+  expect(html).not.toContain("My package");
+  for (const caption of [
+    "Voice AI",
+    "Phone calls",
+    "Call routing",
+    "WhatsApp voice",
+    "Source code",
+  ])
+    expect(html).toContain(caption);
+});

@@ -10,16 +10,42 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "./dashboard.module.css";
 
 const sections = [
+  { key: "websites", label: "Websites", icon: "home", group: "Manage" },
   { key: "overview", label: "Overview", icon: "home", group: "Workspace" },
-  { key: "requests", label: "Service requests", icon: "chat", group: "Workspace" },
-  { key: "bookings", label: "Appointments", icon: "calendar", group: "Workspace" },
+  {
+    key: "requests",
+    label: "Service requests",
+    icon: "chat",
+    group: "Workspace",
+  },
+  {
+    key: "bookings",
+    label: "Appointments",
+    icon: "calendar",
+    group: "Workspace",
+  },
   { key: "calls", label: "Calls", icon: "phone", group: "Workspace" },
   { key: "handoffs", label: "Follow-up", icon: "clock", group: "Workspace" },
   { key: "scheduling", label: "Scheduling", icon: "calendar", group: "Manage" },
   { key: "receptionist", label: "Receptionist", icon: "mic", group: "Manage" },
-  { key: "knowledge", label: "Knowledge base", icon: "shield", group: "Manage" },
-  { key: "maintenance hours", label: "Maintenance hours", icon: "clock", group: "Manage" },
-  { key: "browser voice", label: "Browser voice", icon: "mic", group: "Manage" },
+  {
+    key: "knowledge",
+    label: "Knowledge base",
+    icon: "shield",
+    group: "Manage",
+  },
+  {
+    key: "maintenance hours",
+    label: "Maintenance hours",
+    icon: "clock",
+    group: "Manage",
+  },
+  {
+    key: "browser voice",
+    label: "Browser voice",
+    icon: "mic",
+    group: "Manage",
+  },
 ] as const satisfies ReadonlyArray<{
   key: string;
   label: string;
@@ -73,7 +99,10 @@ export function DashboardShell({
             <ul>
               {sections
                 .filter((item) => item.group === group)
-                .filter((item) => item.key !== "browser voice" || conversationAiEnabled)
+                .filter(
+                  (item) =>
+                    item.key !== "browser voice" || conversationAiEnabled,
+                )
                 .map((item) => (
                   <li key={item.key}>
                     <button
@@ -101,10 +130,20 @@ export function DashboardShell({
   }
 
   return (
-    <div className={`${styles.theme} ${styles.shell} ${collapsed ? styles.collapsed : ""}`}>
-      <a href={`#${mainId}`} className={styles.skipLink}>Skip to workspace</a>
-      <aside id={sidebarId} className={styles.desktopSidebar} aria-label="Workspace navigation">
-        <div className={styles.sidebarBrand}><Brand /></div>
+    <div
+      className={`${styles.theme} ${styles.shell} ${collapsed ? styles.collapsed : ""}`}
+    >
+      <a href={`#${mainId}`} className={styles.skipLink}>
+        Skip to workspace
+      </a>
+      <aside
+        id={sidebarId}
+        className={styles.desktopSidebar}
+        aria-label="Workspace navigation"
+      >
+        <div className={styles.sidebarBrand}>
+          <Brand />
+        </div>
         {navigation()}
         <div className={styles.sidebarFooter}>
           <ProductIcon name="shield" />
@@ -129,7 +168,11 @@ export function DashboardShell({
             </button>
             <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
               <Dialog.Trigger asChild>
-                <button type="button" className={`${styles.iconButton} ${styles.mobileToggle}`} aria-label="Open workspace navigation">
+                <button
+                  type="button"
+                  className={`${styles.iconButton} ${styles.mobileToggle}`}
+                  aria-label="Open workspace navigation"
+                >
                   <MenuIcon />
                 </button>
               </Dialog.Trigger>
@@ -139,25 +182,36 @@ export function DashboardShell({
                   <div className={styles.drawerHeading}>
                     <Brand />
                     <Dialog.Close asChild>
-                      <button type="button" className={styles.iconButton} aria-label="Close navigation">
+                      <button
+                        type="button"
+                        className={styles.iconButton}
+                        aria-label="Close navigation"
+                      >
                         <ProductIcon name="close" />
                       </button>
                     </Dialog.Close>
                   </div>
-                  <Dialog.Title className={styles.srOnly}>Workspace navigation</Dialog.Title>
-                  <Dialog.Description className={styles.srOnly}>Choose a section of your HVAC service workspace.</Dialog.Description>
+                  <Dialog.Title className={styles.srOnly}>
+                    Workspace navigation
+                  </Dialog.Title>
+                  <Dialog.Description className={styles.srOnly}>
+                    Choose a section of your HVAC service workspace.
+                  </Dialog.Description>
                   {navigation()}
                 </Dialog.Content>
               </Dialog.Portal>
             </Dialog.Root>
             <div className={styles.breadcrumb}>
-              <span>Workspace</span><span aria-hidden="true">/</span><strong>{connected ? label : "Connect"}</strong>
+              <span>Workspace</span>
+              <span aria-hidden="true">/</span>
+              <strong>{connected ? label : "Connect"}</strong>
             </div>
           </div>
           <div className={styles.headerActions}>
             <ThemeToggle />
             <Link href="/#call-me" className={styles.phoneLink}>
-              <ProductIcon name="phone" /><span>Phone receptionist</span>
+              <ProductIcon name="phone" />
+              <span>Phone receptionist</span>
             </Link>
           </div>
         </header>
@@ -173,7 +227,12 @@ export function DashboardShell({
               </p>
             </div>
             {connected && !demo && (
-              <button type="button" className={styles.refreshButton} onClick={onRefresh} disabled={busy}>
+              <button
+                type="button"
+                className={styles.refreshButton}
+                onClick={onRefresh}
+                disabled={busy}
+              >
                 {busy ? "Refreshing…" : "Refresh workspace"}
               </button>
             )}
@@ -187,7 +246,16 @@ export function DashboardShell({
 
 function MenuIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <path d="M4 6h16M4 12h10M4 18h16" />
     </svg>
   );

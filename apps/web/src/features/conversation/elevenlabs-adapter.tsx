@@ -20,6 +20,7 @@ import type {
 } from "./contracts";
 
 export type AdapterProperties = Readonly<{
+  memoryEnabled?: boolean;
   children: (client: ConversationClient) => ReactNode;
   onDisconnect: () => void;
   onDraft: (draft: ConversationDraft) => Promise<string>;
@@ -66,15 +67,34 @@ function AdapterBridge({
   onApprovedFaqLookup,
   onTranscript,
   onBookingTool,
+  memoryEnabled = true,
 }: AdapterProperties) {
   const controls = useConversationControls();
   const [pendingTextEchoes] = useState(() => new PendingTextEchoes());
   const [memory] = useState(customerMemorySession);
   const conversation = useConversation({
     clientTools: {
-      retrieve_customer_memory: memory.retrieve_customer_memory,
-      prepare_customer_memory: memory.prepare_customer_memory,
-      remember_customer_memory: memory.remember_customer_memory,
+      retrieve_customer_memory: () =>
+        memoryEnabled
+          ? memory.retrieve_customer_memory()
+          : JSON.stringify({
+              available: false,
+              message: "Memory is not enabled for this website.",
+            }),
+      prepare_customer_memory: (parameters: Record<string, unknown>) =>
+        memoryEnabled
+          ? memory.prepare_customer_memory(parameters)
+          : JSON.stringify({
+              available: false,
+              message: "Memory is not enabled for this website.",
+            }),
+      remember_customer_memory: (parameters: Record<string, unknown>) =>
+        memoryEnabled
+          ? memory.remember_customer_memory(parameters)
+          : JSON.stringify({
+              available: false,
+              message: "Memory is not enabled for this website.",
+            }),
       lookup_approved_faq: async (parameters: ApprovedFaqToolParameters) => {
         const query = optionalString(parameters.query);
         if (query === undefined) {
@@ -161,7 +181,7 @@ function AdapterBridge({
       const text = message.message.trim();
       if (text) {
         if (speaker === "USER" && pendingTextEchoes.consume(text)) return;
-        memory.record(speaker, text);
+        if (memoryEnabled) memory.record(speaker, text);
         onTranscript(speaker, text);
       }
     },
@@ -174,7 +194,7 @@ function AdapterBridge({
     isMuted: conversation.isMuted,
     start: async (authorization, backgroundContext) => {
       const connection = sessionConnection(authorization);
-      memory.start(authorization.sessionId);
+      if (memoryEnabled) memory.start(authorization.sessionId);
       pendingTextEchoes.clear();
       let memoryStarted = false;
       await new Promise<void>((resolve, reject) => {
@@ -197,7 +217,7 @@ function AdapterBridge({
             ...connection,
             dynamicVariables: { homepage_guest: false },
             onConnect: () => {
-              if (!memoryStarted) {
+              if (memoryEnabled && !memoryStarted) {
                 memoryStarted = true;
                 void memory.loadContext((context) =>
                   controls.sendContextualUpdate(context),
@@ -240,7 +260,7 @@ function AdapterBridge({
         pendingTextEchoes.consume(text);
         throw error;
       }
-      memory.record("USER", text);
+      if (memoryEnabled) memory.record("USER", text);
       onTranscript("USER", text);
     },
     notifyTyping: () => {

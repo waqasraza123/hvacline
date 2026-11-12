@@ -1,5 +1,15 @@
 # Multi-product Voice AI websites
 
+## Phase 2 update — 2026-11-13
+
+Phase 1's focused checks and production web build have now passed during the
+owner-authorized Phase 2 work. The current source adds persisted `/sites/[slug]`,
+an authenticated configuration editor and independently resolved server-side
+agents; `/demos/...` retains the static examples described below. Current
+architecture, test results, migration/setup, limitations and manual acceptance
+are in [the Phase 2 guide](website-platform-phase2.md). The original unverified
+Phase 1 handoff below records its implementation-time status, not today's checks.
+
 ## Phase 1 source implementation
 
 Implementation, compilation, runtime and visual acceptance are **unverified**.

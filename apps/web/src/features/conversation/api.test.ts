@@ -9,6 +9,36 @@ import { lookupConversationApprovedFaq } from "../approved-faqs/api";
 
 afterEach(() => vi.unstubAllGlobals());
 
+it("binds website authorization and cleanup to the same site route", async () => {
+  const fetcher = vi
+    .fn()
+    .mockResolvedValueOnce(
+      Response.json({
+        session_id: "00000000-0000-4000-8000-000000000099",
+        input_mode: "TEXT",
+        connection: { transport: "webrtc", credential: "synthetic" },
+        maximum_duration_seconds: 180,
+        confirmation_expires_at: "2030-01-01T00:30:00Z",
+      }),
+    )
+    .mockResolvedValueOnce(Response.json({ review_available: false }));
+  vi.stubGlobal("fetch", fetcher);
+  await expect(
+    authorizeConversationSession("", undefined, "TEXT", "studio"),
+  ).rejects.toBeInstanceOf(ConversationApiError);
+  expect(fetcher.mock.calls[0][0]).toBe(
+    "/api/websites/studio/conversation-sessions",
+  );
+  expect(fetcher.mock.calls[1][0]).toContain(
+    "/api/websites/studio/conversation-sessions/",
+  );
+  expect(JSON.parse(fetcher.mock.calls[0][1].body)).toEqual({
+    input_mode: "TEXT",
+    ai_disclosure_accepted: true,
+    microphone_consent_granted: false,
+  });
+});
+
 it("passes the server session expiry to the countdown", async () => {
   vi.stubGlobal(
     "fetch",

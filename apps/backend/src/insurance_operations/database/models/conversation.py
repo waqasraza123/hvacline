@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     SmallInteger,
     Text,
@@ -42,6 +43,26 @@ class ConversationChannel(StrEnum):
 class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
     __tablename__ = "conversation_sessions"
     __table_args__ = (
+        CheckConstraint(
+            "jsonb_typeof(website_capabilities) = 'object'",
+            name="website_capabilities_object",
+        ),
+        ForeignKeyConstraint(
+            ["website_id", "agency_id"],
+            ["websites.id", "websites.agency_id"],
+            name="fk_conversation_sessions_owned_website",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["website_agent_binding_id", "agency_id"],
+            ["website_agent_bindings.id", "website_agent_bindings.agency_id"],
+            name="fk_conversation_sessions_owned_website_agent",
+            ondelete="RESTRICT",
+        ),
+        CheckConstraint(
+            "(website_id IS NULL AND website_agent_binding_id IS NULL) OR (website_id IS NOT NULL AND website_agent_binding_id IS NOT NULL)",
+            name="website_binding_consistent",
+        ),
         CheckConstraint(
             "status IN ('REQUESTING', 'AUTHORIZED', 'REVIEW_PENDING', "
             "'CONFIRMED', 'FAILED', 'EXPIRED')",
@@ -105,6 +126,11 @@ class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin,
     agency_id: Mapped[UUID] = mapped_column(
         ForeignKey("agencies.id", ondelete="RESTRICT"),
         nullable=False,
+    )
+    website_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    website_agent_binding_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    website_capabilities: Mapped[dict[str, bool]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb")
     )
     initiated_by: Mapped[UUID] = mapped_column(
         ForeignKey("app_users.id", ondelete="RESTRICT"),

@@ -23,10 +23,10 @@
 
 HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job.
 
-The codebase also includes a Phase 1 multi-product website collection: three
-independent visual templates share typed configuration and routing. The existing
-HVACLine product remains intact; a full website editor and per-business voice
-provisioning are future phases.
+Three independent website templates share typed configuration and routing.
+Phase 2 adds persisted websites, a basic configuration editor and server-managed
+agent routing. Live non-HVAC voice acceptance and production onboarding remain
+pending; the existing HVACLine product remains intact.
 
 ## What it does
 
@@ -70,14 +70,33 @@ and SEO live in structured configuration. CSS Modules isolate template styling.
 There is no database migration, new dependency, editor, upload endpoint or
 publishing service in Phase 1.
 
-**Implementation is unverified.** Focused regression tests were added but no
-checks were executed under the active owner policy. Exact commands, manual
-acceptance and the Phase 2/3 implementation plan:
+Phase 1's focused checks have since run during Phase 2. Exact commands, manual
+acceptance and the foundation/Phase 3 implementation plan:
 [Multi-product website foundation](docs/multi-product-websites.md).
+
+## Configurable Voice AI websites
+
+Phase 2 adds agency-owned persisted configurations, server-managed agent bindings
+and dynamic `/sites/[slug]` rendering. In the connected dashboard, **Websites**
+lets an authorized operator customize branding/content, choose an approved agent
+and knowledge subset, preview, save drafts and publish a site. Voice/Text reuses
+the existing signed ElevenLabs transport and customer MFA; inquiries reuse the
+existing lead workflow. Website booking and memory remain disabled. `/demos/...`
+continues to provide safe static examples.
+
+The platform defaults off and needs migration `20261112_0022`, separately
+configured agents and owner acceptance. Existing development identity gates
+remain; this is not production multi-business onboarding. No configured Neon
+migration or live non-HVAC conversation was performed. Setup, security bounds,
+checks and manual acceptance: [Phase 2 guide](docs/website-platform-phase2.md).
+
+Homepage pricing is on its separate `/pricing` page. The home Services section
+and footer My package link are removed; responsive navigation and footer
+integration captions remain.
 
 ## Dashboard demo
 
-Choose **Dashboard demo** in the homepage navigation or open `/operations`.
+Choose **Dashboard** in the homepage navigation or open `/operations`.
 The initial view uses clearly labeled fictional sample data and does not contact
 the backend, request microphone access, or change bookings. Explore Overview,
 Service requests, Appointments, Calls, Follow-up, Scheduling, Receptionist,

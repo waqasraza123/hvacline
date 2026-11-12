@@ -194,6 +194,7 @@ class CustomerMemoryService:
         now = datetime.now(UTC)
         if (
             row is None or row.agency_id != account.agency_id
+            or row.website_id is not None
             or row.status not in {"AUTHORIZED", "CONFIRMED"}
             or row.ended_at is not None or row.authorization_expires_at <= now
             or (not whatsapp and (

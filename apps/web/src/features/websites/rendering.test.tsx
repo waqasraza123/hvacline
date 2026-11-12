@@ -18,21 +18,31 @@ describe("multi-demo presentation", () => {
       expect(html).toContain(`aria-describedby="demo-${slug}-description"`);
     }
     expect(html).toContain("Illustrated template previews");
-    expect(html).toContain("sizes=");
+    expect(html).toContain('width="1200" height="1000"');
+    expect(html).toContain('width="1400" height="1000"');
   });
 
   it("renders complete, distinct layouts with their own sections and artwork", async () => {
-    const fetch = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Demo rendering must not call a backend"));
-    const pages = await Promise.all(["hvac", "real-estate", "appointments"].map(async (slug) => {
-      const site = (await resolveDemoWebsite(slug, true))!;
-      const html = renderToStaticMarkup(createElement(WebsiteRenderer, { site }));
-      for (const section of site.configuration.sections) expect(html).toContain(`id="${section}"`);
-      expect(html).toContain(site.configuration.hero.title.replaceAll("&", "&amp;"));
-      expect(html).toContain("Written example");
-      expect(html).not.toContain("existing-server-hvac-provider");
-      expect(html).not.toContain("existing-backend-business-resolution");
-      return html;
-    }));
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Demo rendering must not call a backend"));
+    const pages = await Promise.all(
+      ["hvac", "real-estate", "appointments"].map(async (slug) => {
+        const site = (await resolveDemoWebsite(slug, true))!;
+        const html = renderToStaticMarkup(
+          createElement(WebsiteRenderer, { site }),
+        );
+        for (const section of site.configuration.sections)
+          expect(html).toContain(`id="${section}"`);
+        expect(html).toContain(
+          site.configuration.hero.title.replaceAll("&", "&amp;"),
+        );
+        expect(html).toContain("Written example");
+        expect(html).not.toContain("existing-server-hvac-provider");
+        expect(html).not.toContain("existing-backend-business-resolution");
+        return html;
+      }),
+    );
     expect(pages[0]).toContain("hvac-equipment.svg");
     expect(pages[0]).toContain('href="/book"');
     expect(pages[1]).toContain("courtyard-home.svg");
@@ -53,10 +63,15 @@ describe("multi-demo presentation", () => {
       ...site,
       configuration: {
         ...site.configuration,
-        hero: { ...site.configuration.hero, title: "<script>window.example = true</script>" },
+        hero: {
+          ...site.configuration.hero,
+          title: "<script>window.example = true</script>",
+        },
       },
     };
-    const html = renderToStaticMarkup(createElement(WebsiteRenderer, { site: configured }));
+    const html = renderToStaticMarkup(
+      createElement(WebsiteRenderer, { site: configured }),
+    );
     expect(html).toContain("&lt;script&gt;");
     expect(html).not.toContain("<script>window.example");
   });

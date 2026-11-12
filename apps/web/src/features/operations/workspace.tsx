@@ -11,7 +11,13 @@ import { DashboardShell } from "./dashboard-shell";
 import type { OperationsSection } from "./dashboard-shell";
 import { DashboardOverview } from "./dashboard-overview";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
-import { demoOperations, demoSchedule, demoReferenceTime, DemoSection } from "./dashboard-demo";
+import { WebsiteManager } from "@/features/websites/website-manager";
+import {
+  demoOperations,
+  demoSchedule,
+  demoReferenceTime,
+  DemoSection,
+} from "./dashboard-demo";
 import styles from "./dashboard.module.css";
 import { requestApi } from "./api";
 import type {
@@ -34,7 +40,9 @@ export function OperationsWorkspace({
   const [token, setToken] = useState("");
   const [demo, setDemo] = useState(true);
   const [data, setData] = useState<Operations | null>(demoOperations);
-  const [schedule, setSchedule] = useState<ScheduleResponse | null>(demoSchedule);
+  const [schedule, setSchedule] = useState<ScheduleResponse | null>(
+    demoSchedule,
+  );
   const [tab, setTab] = useState<OperationsSection>("overview");
   const [loadedAt, setLoadedAt] = useState(demoReferenceTime);
   const [busy, setBusy] = useState(false);
@@ -106,15 +114,26 @@ export function OperationsWorkspace({
     >
       {demo && (
         <div className={styles.demoBanner}>
-          <div><strong>Demo workspace · sample data</strong><p>Explore the design. Calls, visits and business details are fictional; actions do not change a live workspace.</p></div>
-          <button type="button" onClick={() => {
-            setDemo(false);
-            setData(null);
-            setSchedule(null);
-            setTab("overview");
-            setMessage("");
-            setError("");
-          }}>Connect your workspace</button>
+          <div>
+            <strong>Demo workspace · sample data</strong>
+            <p>
+              Explore the design. Calls, visits and business details are
+              fictional; actions do not change a live workspace.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setDemo(false);
+              setData(null);
+              setSchedule(null);
+              setTab("overview");
+              setMessage("");
+              setError("");
+            }}
+          >
+            Connect your workspace
+          </button>
         </div>
       )}
       {!data && (
@@ -142,15 +161,21 @@ export function OperationsWorkspace({
           <button className="primary-link" disabled={busy}>
             {busy ? <LoadingSpinner label="Connecting…" /> : "Open dashboard"}
           </button>
-          <button type="button" disabled={busy} onClick={() => {
-            setDemo(true);
-            setToken("");
-            setData(demoOperations);
-            setSchedule(demoSchedule);
-            setLoadedAt(demoReferenceTime);
-            setError("");
-            setMessage("");
-          }}>Explore demo instead</button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setDemo(true);
+              setToken("");
+              setData(demoOperations);
+              setSchedule(demoSchedule);
+              setLoadedAt(demoReferenceTime);
+              setError("");
+              setMessage("");
+            }}
+          >
+            Explore demo instead
+          </button>
         </form>
       )}
       {error && (
@@ -170,7 +195,12 @@ export function OperationsWorkspace({
             Up to 100 latest records per queue. Counts reflect loaded records,
             not business totals. Times in{" "}
             {schedule?.configuration?.timezone ?? "America/New_York"}.
-            {!demo && <> Last refreshed {timestamp(new Date(loadedAt).toISOString())}.</>}
+            {!demo && (
+              <>
+                {" "}
+                Last refreshed {timestamp(new Date(loadedAt).toISOString())}.
+              </>
+            )}
           </p>
           {tab === "overview" && (
             <DashboardOverview
@@ -182,6 +212,9 @@ export function OperationsWorkspace({
             />
           )}
           {demo && <DemoSection section={tab} />}
+          {!demo && tab === "websites" && (
+            <WebsiteManager apiBaseUrl={apiBaseUrl} token={token} />
+          )}
           {!demo && tab === "maintenance hours" && (
             <LaborRecorder
               apiBaseUrl={apiBaseUrl}
@@ -212,7 +245,11 @@ export function OperationsWorkspace({
                         {row.customer.address.state_code}{" "}
                         {row.customer.address.postal_code}
                       </p>
-                      {row.customer.phone && <a href={"tel:" + row.customer.phone}>{row.customer.phone}</a>}
+                      {row.customer.phone && (
+                        <a href={"tel:" + row.customer.phone}>
+                          {row.customer.phone}
+                        </a>
+                      )}
                       <p className="section-help">
                         Preferred: {row.service.preferred_window}
                       </p>
@@ -327,47 +364,62 @@ export function OperationsWorkspace({
                   bookings.
                 </p>
               ) : (
-                <DashboardTable caption="Appointment calendar" headings={["Appointment", "Team", "Customer", "Status", "Action"]}>
+                <DashboardTable
+                  caption="Appointment calendar"
+                  headings={[
+                    "Appointment",
+                    "Team",
+                    "Customer",
+                    "Status",
+                    "Action",
+                  ]}
+                >
                   {data.appointments.map((row) => (
-                  <tr key={row.id}>
-                    <td><strong>{timestamp(row.starts_at)}</strong></td>
-                    <td>
+                    <tr key={row.id}>
+                      <td>
+                        <strong>{timestamp(row.starts_at)}</strong>
+                      </td>
+                      <td>
                         {schedule?.configuration?.teams.find(
                           (team) => team.key === row.team_key,
                         )?.name ?? row.team_key}
-                    </td>
-                    <td>
+                      </td>
+                      <td>
                         {data.service_requests.find(
                           (request) => request.id === row.service_request_id,
                         )?.customer.full_name ?? "Service request"}
-                    </td>
-                    <td>
-                      <StatusBadge status={row.status === "HELD" &&
-                      new Date(row.hold_expires_at) < new Date()
-                        ? "EXPIRED"
-                        : row.status} />
-                    </td>
-                    <td>
-                    {row.status === "CONFIRMED" && (
-                      <button
-                        disabled={busy || demo}
-                        onClick={() =>
-                          void act(async () => {
-                            await api(
-                              "hvac/appointments/" + row.id + "/cancel",
-                              "POST",
-                              { explicit_confirmation: true },
-                            );
-                            await load();
-                            setMessage("Appointment cancelled.");
-                          })
-                        }
-                      >
-                        Cancel appointment
-                      </button>
-                    )}
-                    </td>
-                  </tr>
+                      </td>
+                      <td>
+                        <StatusBadge
+                          status={
+                            row.status === "HELD" &&
+                            new Date(row.hold_expires_at) < new Date()
+                              ? "EXPIRED"
+                              : row.status
+                          }
+                        />
+                      </td>
+                      <td>
+                        {row.status === "CONFIRMED" && (
+                          <button
+                            disabled={busy || demo}
+                            onClick={() =>
+                              void act(async () => {
+                                await api(
+                                  "hvac/appointments/" + row.id + "/cancel",
+                                  "POST",
+                                  { explicit_confirmation: true },
+                                );
+                                await load();
+                                setMessage("Appointment cancelled.");
+                              })
+                            }
+                          >
+                            Cancel appointment
+                          </button>
+                        )}
+                      </td>
+                    </tr>
                   ))}
                 </DashboardTable>
               )}
@@ -382,12 +434,21 @@ export function OperationsWorkspace({
                   are required.
                 </p>
               ) : (
-                <DashboardTable caption="Incoming calls" headings={["Caller", "Received", "Status"]}>
+                <DashboardTable
+                  caption="Incoming calls"
+                  headings={["Caller", "Received", "Status"]}
+                >
                   {data.calls.map((row) => (
                     <tr key={row.id}>
-                      <td><strong>{row.caller_number ?? "Caller number unavailable"}</strong></td>
+                      <td>
+                        <strong>
+                          {row.caller_number ?? "Caller number unavailable"}
+                        </strong>
+                      </td>
                       <td>{timestamp(row.received_at)}</td>
-                      <td><StatusBadge status={row.status} /></td>
+                      <td>
+                        <StatusBadge status={row.status} />
+                      </td>
                     </tr>
                   ))}
                 </DashboardTable>
@@ -402,12 +463,19 @@ export function OperationsWorkspace({
                   No pending callbacks or human handoffs.
                 </p>
               ) : (
-                <DashboardTable caption="Pending human follow-up" headings={["Follow-up", "Reason", "Status"]}>
+                <DashboardTable
+                  caption="Pending human follow-up"
+                  headings={["Follow-up", "Reason", "Status"]}
+                >
                   {data.handoffs.map((row) => (
                     <tr key={row.id}>
-                      <td><strong>{row.kind.replaceAll("_", " ")}</strong></td>
+                      <td>
+                        <strong>{row.kind.replaceAll("_", " ")}</strong>
+                      </td>
                       <td>{row.reason}</td>
-                      <td><StatusBadge status={row.status} /></td>
+                      <td>
+                        <StatusBadge status={row.status} />
+                      </td>
                     </tr>
                   ))}
                 </DashboardTable>
