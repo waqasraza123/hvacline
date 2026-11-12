@@ -1,14 +1,18 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import { LaborRecorder } from "@/features/billing/labor-recorder";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import { Brand } from "@/components/brand";
 import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
 import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import { ScheduleForm } from "./schedule-form";
 import { CalendarConnections } from "./calendar-connections";
+import { DashboardShell } from "./dashboard-shell";
+import type { OperationsSection } from "./dashboard-shell";
+import { DashboardOverview } from "./dashboard-overview";
+import { DashboardTable, StatusBadge } from "./dashboard-table";
+import { demoOperations, demoSchedule, demoReferenceTime, DemoSection } from "./dashboard-demo";
+import styles from "./dashboard.module.css";
 import { requestApi } from "./api";
 import type {
   Appointment,
@@ -28,9 +32,11 @@ export function OperationsWorkspace({
   conversationAiEnabled: boolean;
 }) {
   const [token, setToken] = useState("");
-  const [data, setData] = useState<Operations | null>(null);
-  const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
-  const [tab, setTab] = useState("requests");
+  const [demo, setDemo] = useState(true);
+  const [data, setData] = useState<Operations | null>(demoOperations);
+  const [schedule, setSchedule] = useState<ScheduleResponse | null>(demoSchedule);
+  const [tab, setTab] = useState<OperationsSection>("overview");
+  const [loadedAt, setLoadedAt] = useState(demoReferenceTime);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -38,8 +44,10 @@ export function OperationsWorkspace({
   const [day, setDay] = useState("");
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [reservation, setReservation] = useState<Appointment | null>(null);
-  const api = <T,>(path: string, method = "GET", body?: unknown) =>
-    requestApi<T>(apiBaseUrl, token, path, method, body);
+  const api = <T,>(path: string, method = "GET", body?: unknown) => {
+    if (demo) throw new Error("Connect a workspace to use this action.");
+    return requestApi<T>(apiBaseUrl, token, path, method, body);
+  };
   async function load() {
     const [operations, configuration] = await Promise.all([
       api<Operations>("hvac/operations"),
@@ -47,6 +55,7 @@ export function OperationsWorkspace({
     ]);
     setData(operations);
     setSchedule(configuration);
+    setLoadedAt(Date.now());
   }
   async function act(task: () => Promise<void>) {
     setBusy(true);
@@ -84,27 +93,30 @@ export function OperationsWorkspace({
     }).format(new Date(value));
   }
   return (
-    <main className="ops-shell">
-      <nav className="top-nav">
-        <Brand />
-        <div className="nav-links">
-          <Link href="/phone-demo">Phone receptionist</Link>
+    <DashboardShell
+      section={tab}
+      onSelect={setTab}
+      connected={data !== null}
+      busy={busy}
+      conversationAiEnabled={conversationAiEnabled}
+      onRefresh={() => {
+        if (!demo) void act(load);
+      }}
+      demo={demo}
+    >
+      {demo && (
+        <div className={styles.demoBanner}>
+          <div><strong>Demo workspace · sample data</strong><p>Explore the design. Calls, visits and business details are fictional; actions do not change a live workspace.</p></div>
+          <button type="button" onClick={() => {
+            setDemo(false);
+            setData(null);
+            setSchedule(null);
+            setTab("overview");
+            setMessage("");
+            setError("");
+          }}>Connect your workspace</button>
         </div>
-      </nav>
-      <div className="ops-heading">
-        <div>
-          <p className="eyebrow">YOUR SERVICE WORKSPACE</p>
-          <h1>Keep the next job moving.</h1>
-          <p className="section-help">
-            Manage service requests, appointments, calls and follow-up.
-          </p>
-        </div>
-        {data && (
-          <button onClick={() => void act(load)} disabled={busy}>
-            Refresh workspace ↻
-          </button>
-        )}
-      </div>
+      )}
       {!data && (
         <form
           className="ops-card access-form"
@@ -128,8 +140,17 @@ export function OperationsWorkspace({
             />
           </label>
           <button className="primary-link" disabled={busy}>
-            {busy ? <LoadingSpinner label="Connecting…" /> : "Open workspace"}
+            {busy ? <LoadingSpinner label="Connecting…" /> : "Open dashboard"}
           </button>
+          <button type="button" disabled={busy} onClick={() => {
+            setDemo(true);
+            setToken("");
+            setData(demoOperations);
+            setSchedule(demoSchedule);
+            setLoadedAt(demoReferenceTime);
+            setError("");
+            setMessage("");
+          }}>Explore demo instead</button>
         </form>
       )}
       {error && (
@@ -144,68 +165,24 @@ export function OperationsWorkspace({
       )}
       {data && (
         <>
-          <p className="section-help">
-            Showing the latest 100 records per queue. Times in{" "}
+          <p className={styles.queueNote}>
+            {demo ? "Sample schedule for November 12, 2026. " : ""}
+            Up to 100 latest records per queue. Counts reflect loaded records,
+            not business totals. Times in{" "}
             {schedule?.configuration?.timezone ?? "America/New_York"}.
+            {!demo && <> Last refreshed {timestamp(new Date(loadedAt).toISOString())}.</>}
           </p>
-          <section className="ops-metrics" aria-label="Current queues">
-            {[
-              ["Incoming calls", data.calls.length],
-              ["Service requests", data.service_requests.length],
-              [
-                "Confirmed bookings",
-                data.appointments.filter((row) => row.status === "CONFIRMED")
-                  .length,
-              ],
-              [
-                "Missed / failed calls",
-                data.calls.filter((row) =>
-                  ["FAILED", "REJECTED"].includes(row.status),
-                ).length,
-              ],
-              [
-                "Pending callbacks",
-                data.handoffs.filter((row) => row.kind === "CALLBACK").length,
-              ],
-              [
-                "Human handoffs",
-                data.handoffs.filter((row) => row.kind === "LIVE_TRANSFER")
-                  .length,
-              ],
-            ].map(([label, value]) => (
-              <article key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-              </article>
-            ))}
-          </section>
-          <div
-            className="ops-tabs"
-            role="tablist"
-            aria-label="Workspace sections"
-          >
-            {[
-              "requests",
-              "bookings",
-              "calls",
-              "handoffs",
-              "scheduling",
-              "receptionist",
-              "knowledge",
-              "maintenance hours",
-              ...(conversationAiEnabled ? ["browser voice"] : []),
-            ].map((name) => (
-              <button
-                role="tab"
-                aria-selected={tab === name}
-                key={name}
-                onClick={() => setTab(name)}
-              >
-                {name === "knowledge" ? "knowledge base" : name}
-              </button>
-            ))}
-          </div>
-          {tab === "maintenance hours" && (
+          {tab === "overview" && (
+            <DashboardOverview
+              data={data}
+              schedule={schedule}
+              loadedAt={loadedAt}
+              timestamp={timestamp}
+              onSelect={setTab}
+            />
+          )}
+          {demo && <DemoSection section={tab} />}
+          {!demo && tab === "maintenance hours" && (
             <LaborRecorder
               apiBaseUrl={apiBaseUrl}
               token={token}
@@ -235,9 +212,7 @@ export function OperationsWorkspace({
                         {row.customer.address.state_code}{" "}
                         {row.customer.address.postal_code}
                       </p>
-                      <a href={"tel:" + row.customer.phone}>
-                        {row.customer.phone}
-                      </a>
+                      {row.customer.phone && <a href={"tel:" + row.customer.phone}>{row.customer.phone}</a>}
                       <p className="section-help">
                         Preferred: {row.service.preferred_window}
                       </p>
@@ -255,7 +230,7 @@ export function OperationsWorkspace({
                       {!row.service.hazardous_condition &&
                         row.status !== "BOOKED" && (
                           <button
-                            disabled={busy}
+                            disabled={busy || demo}
                             onClick={() => {
                               setSelected(row);
                               setAvailability(null);
@@ -352,30 +327,30 @@ export function OperationsWorkspace({
                   bookings.
                 </p>
               ) : (
-                data.appointments.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>{timestamp(row.starts_at)}</h3>
-                      <p>
+                <DashboardTable caption="Appointment calendar" headings={["Appointment", "Team", "Customer", "Status", "Action"]}>
+                  {data.appointments.map((row) => (
+                  <tr key={row.id}>
+                    <td><strong>{timestamp(row.starts_at)}</strong></td>
+                    <td>
                         {schedule?.configuration?.teams.find(
                           (team) => team.key === row.team_key,
                         )?.name ?? row.team_key}
-                      </p>
-                      <p>
+                    </td>
+                    <td>
                         {data.service_requests.find(
                           (request) => request.id === row.service_request_id,
                         )?.customer.full_name ?? "Service request"}
-                      </p>
-                    </div>
-                    <span className="sample-badge">
-                      {row.status === "HELD" &&
+                    </td>
+                    <td>
+                      <StatusBadge status={row.status === "HELD" &&
                       new Date(row.hold_expires_at) < new Date()
                         ? "EXPIRED"
-                        : row.status}
-                    </span>
+                        : row.status} />
+                    </td>
+                    <td>
                     {row.status === "CONFIRMED" && (
                       <button
-                        disabled={busy}
+                        disabled={busy || demo}
                         onClick={() =>
                           void act(async () => {
                             await api(
@@ -391,8 +366,10 @@ export function OperationsWorkspace({
                         Cancel appointment
                       </button>
                     )}
-                  </article>
-                ))
+                    </td>
+                  </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
@@ -405,19 +382,15 @@ export function OperationsWorkspace({
                   are required.
                 </p>
               ) : (
-                data.calls.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>
-                        {row.caller_number ?? "Caller number unavailable"}
-                      </h3>
-                      <p>{timestamp(row.received_at)}</p>
-                    </div>
-                    <span className="sample-badge">
-                      {row.status.replaceAll("_", " ")}
-                    </span>
-                  </article>
-                ))
+                <DashboardTable caption="Incoming calls" headings={["Caller", "Received", "Status"]}>
+                  {data.calls.map((row) => (
+                    <tr key={row.id}>
+                      <td><strong>{row.caller_number ?? "Caller number unavailable"}</strong></td>
+                      <td>{timestamp(row.received_at)}</td>
+                      <td><StatusBadge status={row.status} /></td>
+                    </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
@@ -429,36 +402,36 @@ export function OperationsWorkspace({
                   No pending callbacks or human handoffs.
                 </p>
               ) : (
-                data.handoffs.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>{row.kind.replaceAll("_", " ")}</h3>
-                      <p>{row.reason}</p>
-                    </div>
-                    <span className="sample-badge">{row.status}</span>
-                  </article>
-                ))
+                <DashboardTable caption="Pending human follow-up" headings={["Follow-up", "Reason", "Status"]}>
+                  {data.handoffs.map((row) => (
+                    <tr key={row.id}>
+                      <td><strong>{row.kind.replaceAll("_", " ")}</strong></td>
+                      <td>{row.reason}</td>
+                      <td><StatusBadge status={row.status} /></td>
+                    </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
-          {tab === "receptionist" && (
+          {!demo && tab === "receptionist" && (
             <ReceptionistSettingsEditor
               apiBaseUrl={apiBaseUrl}
               adminToken={token}
               embedded
             />
           )}
-          {tab === "browser voice" && (
+          {!demo && tab === "browser voice" && (
             <BrowserVoicePanel apiBaseUrl={apiBaseUrl} adminToken={token} />
           )}
-          {tab === "knowledge" && (
+          {!demo && tab === "knowledge" && (
             <ApprovedFaqManager
               apiBaseUrl={apiBaseUrl}
               adminToken={token}
               embedded
             />
           )}
-          {tab === "scheduling" && schedule && (
+          {!demo && tab === "scheduling" && schedule && (
             <>
               <CalendarConnections
                 baseUrl={apiBaseUrl}
@@ -484,6 +457,6 @@ export function OperationsWorkspace({
           )}
         </>
       )}
-    </main>
+    </DashboardShell>
   );
 }

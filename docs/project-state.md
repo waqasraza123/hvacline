@@ -1,5 +1,24 @@
 # Project State
 
+## TailAdmin operations dashboard demo — implementation UNVERIFIED — 2026-11-12
+
+Owner selects TailAdmin, requests HVACLine colors, demo content, README update
+and publication of all pending code to main. `/operations` now defaults to local
+fictional sample records; no backend/provider call or microphone access is made
+by the demo. Existing admin-token connection switches to stored workspace data.
+Demo mutations are disabled and live editors/integrations remain unmounted.
+Adapted sidebar/header/cards/tables use scoped CSS Modules, existing Radix Dialog
+and existing light/dark preference; TailAdmin MIT notice is retained. Overview
+counts explicitly describe capped loaded queues, not business-wide analytics.
+No API/schema/dependency/environment change. README and
+docs/operations-dashboard.md contain exact deferred commands/manual checks.
+
+No tests, builds, lint/type checks, formatters, services or runtime checks ran.
+Implementation/runtime remain unverified. Preserve original divergent source and
+pending edits; publish from current canonical main with hooks disabled and
+[skip ci] [skip render]. No deployment or provider/data operation is requested.
+
+
 ## Persistent memory and full-width website publication — 2026-11-10
 
 Owner authorizes committing/pushing all pending changes to main. Compared all86
