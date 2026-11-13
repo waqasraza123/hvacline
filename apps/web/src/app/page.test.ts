@@ -47,12 +47,11 @@ it("renders the memory preview beside existing hero badges without changing the 
   }
 });
 
-it("adds the demo collection while retaining existing booking, pricing and calling links", () => {
+it("omits the demo showcase while retaining booking, pricing and calling links", () => {
   const html = renderToStaticMarkup(createElement(Home));
-  expect(html).toContain("Explore Voice AI Demos");
-  expect(html).toContain('href="/demos/hvac"');
-  expect(html).toContain('href="/demos/real-estate"');
-  expect(html).toContain('href="/demos/appointments"');
+  expect(html).not.toMatch(/Explore Voice AI Demos/i);
+  expect(html).not.toContain("voice-demos");
+  expect(html).not.toContain('href="/demos/');
   expect(html).toContain('href="/book"');
   expect(html).toContain('href="/pricing"');
   expect(html).toContain('href="/operations"');

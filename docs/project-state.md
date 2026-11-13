@@ -1,5 +1,21 @@
 # Project State
 
+## Public Voice AI showcase disabled — implementation UNVERIFIED — 2026-11-13
+
+Owner requests removal of Explore Voice AI Demos and publication to main.
+Homepage gallery, hero link, shared desktop/mobile navigation entry, gallery-only
+component/styles and demo utility pages are removed. `/demos/[slug]` now always
+returns not-found. Dashboard and published-site utility links no longer point
+to the removed collection; published-site loading/error states are independent. Shared templates/artwork and the
+administrator website editor remain available.
+
+No tests/builds/lints/type checks/services or runtime checks ran. Owner command:
+`npm run verify:web`. Manual: no showcase/collection links on home/navigation or
+published sites; all three former demo URLs return404; booking/calling/pricing,
+website editor and published sites still work. Runtime remains unverified.
+Publish from canonical main in an isolated checkout, preserve unrelated local
+work, disable hooks and retain `[skip ci] [skip render]`. No deployment requested.
+
 ## Final builder publication authorized — 2026-11-13
 
 Owner explicitly requests push to main after the coding-only handoff, authorizing

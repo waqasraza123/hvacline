@@ -10,11 +10,6 @@ import styles from "./header-navigation.module.css";
 
 const links = [
   {
-    href: "/#voice-demos",
-    label: "Voice AI demos",
-    description: "Explore the collection",
-  },
-  {
     href: "/operations",
     label: "Dashboard",
     description: "See your service workspace",
@@ -86,8 +81,7 @@ export function HeaderNavigation() {
               Find your next step.
             </Dialog.Title>
             <Dialog.Description className={styles.description}>
-              Explore the websites, meet the receptionist or open your
-              workspace.
+              Meet the receptionist, view packages or open your workspace.
             </Dialog.Description>
             <nav className={styles.mobile} aria-label="Mobile navigation">
               {links.map((link, index) => (

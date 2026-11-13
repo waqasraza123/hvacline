@@ -64,13 +64,13 @@ export function WebsiteFrame({
         Skip to website content
       </a>
       <div className={styles.demoBar}>
-        <Link href="/#voice-demos">← Explore Voice AI Demos</Link>
+        <Link href="/">← HVACLine home</Link>
         <span>
           {site.configuration.designStyle}
           <span className={styles.demoTag}>
             {site.configuration.status === "published"
               ? "Voice AI website"
-              : "Demo website"}
+              : "Website preview"}
           </span>
         </span>
         <ThemeToggle />
@@ -282,7 +282,7 @@ export function SiteFooter({ site }: { site: ResolvedWebsite }) {
           ? "Built with HVACLine"
           : "Illustrative website · built with HVACLine"}
       </span>
-      <Link href="/#voice-demos">Explore other demos ↗</Link>
+      <Link href="/">HVACLine home ↗</Link>
     </footer>
   );
 }

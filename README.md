@@ -45,35 +45,6 @@ pending; the existing HVACLine product remains intact.
 
 Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
 
-## Explore Voice AI Demos
-
-The homepage's **Explore Voice AI Demos** gallery opens three complete example
-websites. Each uses its own layout, content, theme and metadata:
-
-| Website | Route | Design | Conversation boundary |
-| --- | --- | --- | --- |
-| HVACLine AI | `/demos/hvac` | Charcoal/orange industrial, equipment illustration and service workflow | Written example; existing `/book` account entry, with Voice/Text checked in the existing flow |
-| Alder & Stone | `/demos/real-estate` | Warm editorial luxury, serif headlines and asymmetric architectural collection | Fictional brand and illustrated properties; no agent or inquiries submitted |
-| Morrow Studio | `/demos/appointments` | Soft sage, spacious appointment studio and friendly welcome | Fictional studio; no agent, customer data or bookings |
-
-Gallery artwork reuses the original local illustrations from the actual demos.
-There are no third-party website screenshots, active property listings or
-simulated successful bookings. Other demo businesses never default to the HVAC
-agent. Connection links preserve existing authentication, consent and backend
-availability checks; the new pages themselves do not start sessions.
-
-`WebsiteTemplate`, `WebsiteConfiguration` and server-only `AgentConfiguration`
-remain separate. Validated static records feed a shared source interface and
-component registry, with three distinct layout components. Section order, brand,
-approved asset references, colors, allowlisted fonts, content, navigation, CTAs
-and SEO live in structured configuration. CSS Modules isolate template styling.
-There is no database migration, new dependency, editor, upload endpoint or
-publishing service in Phase 1.
-
-Phase 1's focused checks have since run during Phase 2. Exact commands, manual
-acceptance and the foundation/Phase 3 implementation plan:
-[Multi-product website foundation](docs/multi-product-websites.md).
-
 ## Configurable Voice AI websites
 
 Connected Operations → Websites provides a restricted administrator editor:
@@ -97,9 +68,16 @@ reported unresolved failures. Exact results, changed source, deployment/setup
 commands and one acceptance checklist: [Platform handoff](docs/website-platform-phase2.md).
 No deployment, target migration or hosted agent change was performed.
 
-The homepage retains the hero, template gallery and calling entry. Packages,
+The homepage retains the hero and calling entry. The public template showcase
+and its navigation links are removed; `/demos/[slug]` returns not-found. Packages,
 Services, booking walkthrough and HVAC-owner FAQ are removed; pricing lives on
 `/pricing`. Header/footer integrations include short descriptions.
+
+Showcase removal is **unverified**. Owner command: `npm run verify:web`. Manually
+confirm that homepage, desktop/mobile navigation and published-site utility links
+contain no demo collection links; `/demos/hvac`, `/demos/real-estate` and
+`/demos/appointments` return 404; booking, calling, pricing and website editing
+remain available.
 
 ## Dashboard demo
 

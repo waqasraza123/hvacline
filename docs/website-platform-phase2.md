@@ -6,9 +6,10 @@ SMS or real call was performed for this task.
 
 ## Implemented
 
-- Three distinct templates remain at `/demos/hvac`, `/demos/real-estate` and
-  `/demos/appointments`. Published configurations render dynamically at
-  `/sites/[slug]`; content changes do not need a frontend rebuild.
+- Three distinct templates remain available to the website editor. The public
+  showcase is disabled and `/demos/[slug]` returns not-found. Published
+  configurations render dynamically at `/sites/[slug]`; content changes do not
+  need a frontend rebuild.
 - Connected Operations → Websites has a website gallery, creation/template flow,
   permanent unique slug, branding/logo/favicon, both color palettes, fonts,
   spacing, hero/images, supported sections/order, navigation, services/process,
@@ -24,8 +25,9 @@ SMS or real call was performed for this task.
 - Published links use the existing frontend origin and `/sites/slug`; copy-link
   and open-link controls work after publication. Hosting must be deployed first.
 - Homepage packages, Services, booking walkthrough and HVAC-owner FAQ are removed.
-  Pricing remains at `/pricing`; header/footer logos, mobile navigation, gallery,
-  calling and booking entry remain.
+  The demo gallery and its hero/navigation links are also removed. Pricing
+  remains at `/pricing`; header/footer logos, mobile navigation, calling and
+  booking entry remain. Published-site utility links return to HVACLine home.
 
 ## Authorization and conversation boundaries
 

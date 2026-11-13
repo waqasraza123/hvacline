@@ -14,7 +14,6 @@ import {
   OutboundDemoTrigger,
 } from "@/features/outbound-demo/outbound-demo-dialog";
 import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
-import { DemoGallery } from "@/features/websites/demo-gallery";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 
@@ -61,9 +60,6 @@ export default function Home() {
                 <ProductIcon name="mic" /> Try Voice Chat
                 <ProductIcon name="arrow" />
               </Link>
-              <a className="product-text-link" href="#voice-demos">
-                Explore Voice AI demos <span>↗</span>
-              </a>
             </div>
             <p className="hero-voice-note">
               Talk to Line in your browser. Sign in, then connect when you’re
@@ -117,7 +113,6 @@ export default function Home() {
             <HomepageChat />
           </div>
         </section>
-        <DemoGallery />
         <OutboundDemo />
         <section className="product-final-cta product-container">
           <div>

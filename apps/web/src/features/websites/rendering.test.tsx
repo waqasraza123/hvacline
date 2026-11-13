@@ -3,25 +3,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resolveDemoWebsite } from "./registry.server";
 import { WebsiteRenderer } from "./renderer";
-import { DemoGallery } from "./demo-gallery";
 
 vi.mock("@/components/theme-toggle", () => ({ ThemeToggle: () => null }));
 afterEach(() => vi.restoreAllMocks());
 
-describe("multi-demo presentation", () => {
-  it("shows an accessible gallery linking to all three real demo routes", () => {
-    const html = renderToStaticMarkup(createElement(DemoGallery));
-    expect(html).toContain("Explore Voice AI Demos");
-    for (const slug of ["hvac", "real-estate", "appointments"]) {
-      expect(html).toContain(`href="/demos/${slug}"`);
-      expect(html).toContain(`id="demo-${slug}-title"`);
-      expect(html).toContain(`aria-describedby="demo-${slug}-description"`);
-    }
-    expect(html).toContain("Illustrated template previews");
-    expect(html).toContain('width="1200" height="1000"');
-    expect(html).toContain('width="1400" height="1000"');
-  });
-
+describe("website template presentation", () => {
   it("renders complete, distinct layouts with their own sections and artwork", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")
@@ -38,6 +24,8 @@ describe("multi-demo presentation", () => {
           site.configuration.hero.title.replaceAll("&", "&amp;"),
         );
         expect(html).toContain("Written example");
+        expect(html).not.toContain("voice-demos");
+        expect(html).not.toContain("Explore other demos");
         expect(html).not.toContain("existing-server-hvac-provider");
         expect(html).not.toContain("existing-backend-business-resolution");
         return html;

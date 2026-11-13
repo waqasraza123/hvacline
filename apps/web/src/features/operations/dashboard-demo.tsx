@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Operations, ScheduleResponse } from "./api";
 import type { OperationsSection } from "./dashboard-shell";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
@@ -189,10 +188,9 @@ export function DemoSection({ section }: { section: OperationsSection }) {
       <section className="ops-card">
         <h2>Your Voice AI websites</h2>
         <p className="section-help">
-          Connect your workspace to create, customize and save business-owned
-          websites. These static designs remain safe previews.
+          Connect your workspace to create, customize and publish business-owned
+          websites.
         </p>
-        <Link href="/#voice-demos">Explore the three website templates ↗</Link>
       </section>
     );
   if (section === "scheduling")
