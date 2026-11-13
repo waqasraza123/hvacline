@@ -1,5 +1,21 @@
 # Project State
 
+## Short product-only README — 2026-11-14
+
+Owner requests a very short, feature-focused README without development or
+deployment information. README now contains the existing banner, short product
+introduction, website/license links, ten concise feature bullets and a brief
+written-permission notice. Setup, architecture, status reports, CI/release/star
+badges and the documentation directory are removed from README. Preview labels
+remain for websites/GHL; Stripe stays explicitly sandbox. LICENSE is unchanged.
+Repository-presentation handoff reflects the new layout and owner manual checks.
+
+No tests/builds/linters/type checks/formatters/services/browser rendering or
+deployment ran. Rendering remains UNVERIFIED. No automated command is needed for
+this text-only edit. Owner manual check: open GitHub README at desktop/mobile
+widths; inspect banner, feature text, website/license links, and absence of
+setup/development/deployment sections. Other source work and release preserved.
+
 ## GitHub presentation and proprietary licensing — 2026-11-14
 
 Owner requests polished GitHub presentation and no usage without prior written

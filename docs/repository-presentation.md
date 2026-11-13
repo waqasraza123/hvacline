@@ -1,8 +1,9 @@
 # GitHub presentation and licensing
 
-The repository uses a product-focused README, original SVG banner, linked release,
-live CI/star badges, a proprietary license badge, capability/stack tables, and a
-documentation index. Community files supply bug/feature forms, a PR template,
+The repository uses a short product-focused README with an original SVG banner,
+a feature list, website link, and proprietary license notice. Development,
+deployment, architecture, setup, and project-status details are kept out of README.
+Community files supply bug/feature forms, a PR template,
 contribution guidance, a security-reporting process, and release-note categories.
 The existing beta tag remains at its original commit; this task creates no release.
 
@@ -42,12 +43,12 @@ gh api repos/waqasraza123/hvacline/private-vulnerability-reporting
 Manual checks:
 
 1. Open the repository on GitHub at desktop and phone widths. Check banner text,
-   badge images, relative documentation links, and table readability. The release
-   badge must point to v0.1.0-beta.1, and CI must show its actual status.
+   website/license links, and feature readability. Confirm the README contains
+   no development, deployment, architecture, setup, or verification sections.
 2. Check the About description, website URL, and topic chips. Confirm the
    proprietary permission requirement is visible near the top of README and in
    LICENSE. A custom license may be shown by GitHub as an unrecognized license;
-   the explicit notice and badge provide the readable terms.
+   the explicit notice and LICENSE link provide the readable terms.
 3. Open New issue and inspect both forms without submitting. Check required
    fields, documentation/license links, and the private security-report link.
 4. Inspect the PR template and release-note categories. Publishing a PR/release
