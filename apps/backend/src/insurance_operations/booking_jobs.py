@@ -18,6 +18,7 @@ from insurance_operations.database.models.booking_integrations import (
     CalendarConnection,
 )
 from insurance_operations.database.models.hvac import Appointment
+from insurance_operations.ghl.jobs import collect_ghl_jobs
 from insurance_operations.hvac.calendar_sync import (
     reconcile_booking,
     reconcile_connection,
@@ -136,8 +137,8 @@ def collect_booking_jobs(
             ).all()
         )
     jobs: list[Callable[[], None]] = []
-    for notification, binding, connection in zip_longest(
-        notifications, bindings, connections
+    for notification, binding, connection, ghl_job in zip_longest(
+        notifications, bindings, connections, collect_ghl_jobs(sessions, batch_size)
     ):
         if notification is not None:
             jobs.append(partial(deliver_notification, sessions, notification))
@@ -151,6 +152,8 @@ def collect_booking_jobs(
                     reconcile_connection_job, sessions, connection[0], connection[1]
                 )
             )
+        if ghl_job is not None:
+            jobs.append(ghl_job)
     return jobs
 
 

@@ -79,6 +79,19 @@ contain no demo collection links; `/demos/hvac`, `/demos/real-estate` and
 `/demos/appointments` return 404; booking, calling, pricing and website editing
 remain available.
 
+## GoHighLevel integration
+
+Connected Operations → Integrations adds an opt-in **GoHighLevel** connection:
+confirmed leads match/create contacts and receive separate opportunities, with
+booking/handoff stages, encrypted private tokens and durable delivery/recovery.
+Existing scheduling remains authoritative. The integration defaults off, remains
+development/test gated and is **unverified**; no migration or live GHL operation
+has run. [Setup, exact deferred commands and acceptance](docs/gohighlevel.md).
+
+The hero includes **GoHighLevel · CRM sync · Preview**. The next integration is
+n8n event delivery after controlled GHL acceptance; the linked guide specifies
+the follow-up slice and its limits.
+
 ## Dashboard demo
 
 Choose **Dashboard** in the homepage navigation or open `/operations`.

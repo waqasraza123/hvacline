@@ -56,6 +56,7 @@ class HandoffStatus(StrEnum):
 class AgencyLead(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
     __tablename__ = "agency_leads"
     __table_args__ = (
+        UniqueConstraint("agency_id", "id", name="uq_agency_leads_agency_id"),
         CheckConstraint(
             "status IN ('NEW', 'CONTACTED', 'QUALIFIED', 'CLOSED', 'ARCHIVED')",
             name="status_valid",

@@ -12,6 +12,7 @@ import type { OperationsSection } from "./dashboard-shell";
 import { DashboardOverview } from "./dashboard-overview";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
 import { WebsiteManager } from "@/features/websites/website-manager";
+import { GhlIntegration } from "@/features/ghl/integration";
 import {
   demoOperations,
   demoSchedule,
@@ -212,6 +213,9 @@ export function OperationsWorkspace({
             />
           )}
           {demo && <DemoSection section={tab} />}
+          {!demo && tab === "integrations" && (
+            <GhlIntegration apiBaseUrl={apiBaseUrl} token={token} />
+          )}
           {!demo && tab === "websites" && (
             <WebsiteManager apiBaseUrl={apiBaseUrl} token={token} />
           )}

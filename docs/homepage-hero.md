@@ -171,3 +171,12 @@ Manual checks after the owner starts or deploys the frontend:
 
 The owner authorized publication to `main` on October 31. Hosting deployment
 and runtime acceptance remain unverified; no deployment command was requested.
+## GoHighLevel hero badge — 2026-11-13
+
+The hero adds GoHighLevel with the qualifier `CRM sync · Preview`, alongside
+existing feature badges. Shared wrapping, theme and responsive styles are reused.
+The badge does not claim live acceptance; GHL defaults off pending setup and
+owner verification. No tests/builds/browser checks ran. Owner command:
+`npm run verify:web`; manually inspect badge wrapping at320/390/768/1440px in
+both themes, screen-reader labeling and the existing Voice/calling actions.
+

@@ -1,5 +1,45 @@
 # Project State
 
+## GHL hero and all-work publication authorized — 2026-11-13
+
+Owner requests GoHighLevel in the hero, commit/push of all pending work to main,
+and the next step/integration. Hero adds CRM sync · Preview using existing
+responsive badge styles; current source remains runtime-unverified. Publication
+is authorized without tests/builds/checks or deployment. Preserve original local
+history/edits, publish from canonical main without force, disable hooks and retain
+[skip ci] [skip render]. Compare all pending source paths before publication.
+
+Owner next: reviewed0024 migration, API/job flags/key, client-owned test GHL
+sub-account and controlled acceptance. Then implement separate n8n event delivery
+with authenticated/signed events, receiver deduplication and visible retry/replay;
+that follow-up is documented, not implemented. Exact commands/manual checks and
+next slice: docs/gohighlevel.md; hero checks: docs/homepage-hero.md.
+
+## GoHighLevel integration — source implemented, UNVERIFIED — 2026-11-13
+
+Owner selects private-token GHL integration first: contact matching/creation,
+separate opportunity per confirmed lead and booking/handoff stage synchronization.
+Connected Operations → Integrations adds setup, mappings, health/history,
+pause/resume, token replacement, disconnect and guarded recovery. Existing
+HVACLine scheduling remains authoritative; OAuth/GHL booking/two-way sync,
+workflow enrollment and messaging are outside this slice. Public demos stay off.
+
+New backend ghl module and migration20261113_0024 add encrypted business-bound
+credentials, composite ownership constraints, transactional capture and versioned
+outbox delivery through existing bounded jobs. Only new confirmed leads enroll;
+no historical backfill. Partial completion/creation uncertainty survives retries;
+ambiguous creation requires reconciliation or deliberate owner review. Closed or
+externally moved opportunities are protected. Production identity remains gated.
+GHL_ENABLED defaults false; API/jobs require GHL_TOKEN_ENCRYPTION_KEY when enabled.
+
+Owner explicitly keeps execution stopped. Source formatting only was applied;
+no tests/builds/lints/type checks/migrations/services/live GHL operations,
+publication or deployment ran. Runtime remains unverified. Regression source
+covers API authorization, identity conflicts, repeat requests, lost responses,
+booking/handoff/reschedule states, concurrent coordinators, token/rate failures,
+transactional rollback and business isolation. Exact owner commands, setup,
+limitations and manual acceptance: docs/gohighlevel.md. Preserve unrelated work.
+
 ## Public Voice AI showcase disabled — implementation UNVERIFIED — 2026-11-13
 
 Owner requests removal of Explore Voice AI Demos and publication to main.

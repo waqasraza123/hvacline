@@ -183,6 +183,17 @@ export const demoSchedule: ScheduleResponse = {
 };
 
 export function DemoSection({ section }: { section: OperationsSection }) {
+  if (section === "integrations")
+    return (
+      <section className="ops-card">
+        <h2>GoHighLevel integration</h2>
+        <p className="section-help">
+          Connect an authorized workspace to send confirmed leads and booking
+          outcomes to a GHL sub-account. This preview makes no provider
+          requests.
+        </p>
+      </section>
+    );
   if (section === "websites")
     return (
       <section className="ops-card">

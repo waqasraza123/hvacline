@@ -77,7 +77,7 @@ export default function Home() {
             </div>
             <ul
               className="hero-trust-badges"
-              aria-label="Voice, memory, account and payment features"
+              aria-label="Voice, memory, CRM, account and payment features"
             >
               <li className="hero-trust-badge">
                 <ProductIcon name="mic" />
@@ -98,6 +98,13 @@ export default function Home() {
                 <span>
                   <small>Customer-controlled · Preview</small>
                   <strong>Persistent Memory</strong>
+                </span>
+              </li>
+              <li className="hero-trust-badge">
+                <ProductIcon name="chat" />
+                <span>
+                  <small>CRM sync · Preview</small>
+                  <strong>GoHighLevel</strong>
                 </span>
               </li>
               <li className="hero-trust-badge">

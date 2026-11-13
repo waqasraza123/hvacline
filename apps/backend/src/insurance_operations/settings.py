@@ -136,6 +136,24 @@ class DatabaseSettings(DatabaseConnectionSettings):
     booking_email_from: EmailStr | None = None
     booking_reminder_hours: int = Field(default=24, ge=1, le=168)
     worker_poll_seconds: int = Field(default=30, ge=5, le=60)
+    ghl_enabled: bool = False
+    ghl_token_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_ghl_integration(self) -> Self:
+        if not self.ghl_enabled:
+            return self
+        if self.app_environment is RuntimeEnvironment.PRODUCTION:
+            raise ValueError("GHL requires the development identity gates")
+        from cryptography.fernet import Fernet
+
+        if self.ghl_token_encryption_key is None:
+            raise ValueError("GHL_TOKEN_ENCRYPTION_KEY is required")
+        try:
+            Fernet(self.ghl_token_encryption_key.get_secret_value().encode())
+        except (ValueError, TypeError) as error:
+            raise ValueError("GHL_TOKEN_ENCRYPTION_KEY must be a Fernet key") from error
+        return self
 
     @field_validator(
         "demo_inbound_number_e164",

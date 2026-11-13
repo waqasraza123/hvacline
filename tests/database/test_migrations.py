@@ -38,6 +38,8 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "ghl_connections",
+    "ghl_deliveries",
     "websites",
     "website_agent_bindings",
     "website_versions",
@@ -691,6 +693,40 @@ EXPECTED_COLUMNS["website_versions"] = {
     "created_at",
 }
 EXPECTED_COLUMNS["agency_approved_faqs"].add("question_variations")
+EXPECTED_COLUMNS["ghl_connections"] = {
+    "id",
+    "agency_id",
+    "location_id",
+    "pipeline_id",
+    "stages",
+    "fields",
+    "token_ciphertext",
+    "status",
+    "activated_at",
+    "last_checked_at",
+    "blocked_until",
+    "last_error",
+}
+EXPECTED_COLUMNS["ghl_deliveries"] = {
+    "id",
+    "agency_id",
+    "connection_id",
+    "lead_id",
+    "desired_version",
+    "delivered_version",
+    "status",
+    "attempts",
+    "contact_id",
+    "opportunity_id",
+    "contact_unknown",
+    "opportunity_unknown",
+    "last_stage_id",
+    "pending_stage_id",
+    "created_at",
+    "next_attempt_at",
+    "last_synced_at",
+    "last_error",
+}
 
 
 def test_migration_creates_only_the_approved_foundation_tables(

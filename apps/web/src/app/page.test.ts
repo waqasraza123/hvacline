@@ -26,8 +26,10 @@ it("renders the memory preview beside existing hero badges without changing the 
   expect(html).toMatch(/href="\/book"[^>]*>[\s\S]*?Try Voice Chat/);
   expect(html).toContain("<strong>Persistent Memory</strong>");
   expect(html).toContain("Customer-controlled · Preview");
+  expect(html).toContain("<strong>GoHighLevel</strong>");
+  expect(html).toContain("CRM sync · Preview");
   expect(html).toContain(
-    'aria-label="Voice, memory, account and payment features"',
+    'aria-label="Voice, memory, CRM, account and payment features"',
   );
   const css = readFileSync(new URL("./product.css", import.meta.url), "utf8");
   expect(css).toMatch(/\.hero-trust-badges\s*\{[^}]*flex-wrap:\s*wrap/s);

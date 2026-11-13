@@ -10,6 +10,12 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "./dashboard.module.css";
 
 const sections = [
+  {
+    key: "integrations",
+    label: "Integrations",
+    icon: "shield",
+    group: "Manage",
+  },
   { key: "websites", label: "Websites", icon: "home", group: "Manage" },
   { key: "overview", label: "Overview", icon: "home", group: "Workspace" },
   {
