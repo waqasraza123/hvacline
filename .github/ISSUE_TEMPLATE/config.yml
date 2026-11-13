@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Private security report
+    url: https://github.com/waqasraza123/hvacline/security/advisories/new
+    about: Report vulnerabilities privately. Never post sensitive details in a public issue.
+  - name: Setup and documentation
+    url: https://github.com/waqasraza123/hvacline/blob/main/docs/development-setup.md
+    about: Read the configuration and setup guide before reporting an installation problem.
+  - name: Licensing and written permission
+    url: https://github.com/waqasraza123/hvacline/blob/main/LICENSE
+    about: Proprietary software. Obtain written permission before use or modification.

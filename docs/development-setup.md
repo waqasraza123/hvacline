@@ -2,6 +2,10 @@
 
 [Back to HVACLine AI](../README.md)
 
+HVACLine is proprietary software. The setup commands below are for users with
+prior written permission under [LICENSE](../LICENSE); public access does not
+grant a free-use, evaluation, or noncommercial license.
+
 Setup and verification instructions moved from the product README. Development remains fictional-data only; runtime acceptance is pending. For the latest account, MFA, memory and WhatsApp configuration, start with the [environment handoff](environment-handoff.md).
 
 ## Stack and compatibility

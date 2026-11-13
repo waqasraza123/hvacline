@@ -1,134 +1,138 @@
 <p align="center">
-  <img src="apps/web/public/icon.svg" alt="HVACLine AI logo" width="96" height="96">
-</p>
-
-<h1 align="center">HVACLine AI</h1>
-
-<p align="center">
-  <strong>Turn missed calls into HVAC bookings.</strong><br>
-  An AI receptionist for U.S. heating and air businesses.
+  <img src="docs/assets/hvacline-banner.svg" alt="HVACLine AI — Turn missed calls into HVAC bookings." width="100%">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/HVAC-F97316?style=flat-square" alt="HVAC">
-  <img src="https://img.shields.io/badge/AI_Receptionist-18181B?style=flat-square" alt="AI receptionist">
-  <img src="https://img.shields.io/badge/Appointment_Booking-18181B?style=flat-square" alt="Appointment booking">
+  <strong>An AI receptionist for U.S. heating and air businesses.</strong><br>
+  Answer the request. Find the right time. Keep the team in the loop.
 </p>
 
 <p align="center">
-  <a href="https://elevenlabs.io/"><img src="https://img.shields.io/badge/ElevenLabs-18181B?style=for-the-badge&amp;logo=elevenlabs&amp;logoColor=white" alt="ElevenLabs voice AI"></a>
-  <a href="https://www.twilio.com/"><img src="https://img.shields.io/badge/Twilio-F22F46?style=for-the-badge&amp;logo=twilio&amp;logoColor=white" alt="Twilio telephone integration"></a>
-  <a href="docs/whatsapp-inbound-calling.md"><img src="https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&amp;logo=whatsapp&amp;logoColor=white" alt="WhatsApp inbound voice integration"></a>
+  <a href="https://github.com/waqasraza123/hvacline/releases/tag/v0.1.0-beta.1"><img src="https://img.shields.io/badge/release-v0.1.0--beta.1-F97316?style=flat-square" alt="Release v0.1.0-beta.1"></a>
+  <a href="https://github.com/waqasraza123/hvacline/actions/workflows/ci.yml"><img src="https://github.com/waqasraza123/hvacline/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status on main"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Proprietary-18181B?style=flat-square" alt="Proprietary — written permission required"></a>
+  <a href="https://github.com/waqasraza123/hvacline/stargazers"><img src="https://img.shields.io/github/stars/waqasraza123/hvacline?style=flat-square&amp;color=18181B" alt="GitHub stars"></a>
 </p>
 
-HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job.
+<p align="center">
+  <a href="https://hvacline.online">Website</a> ·
+  <a href="#capabilities">Capabilities</a> ·
+  <a href="#getting-started">Getting started</a> ·
+  <a href="#documentation">Documentation</a> ·
+  <a href="https://github.com/waqasraza123/hvacline/releases">Releases</a> ·
+  <a href="LICENSE">License</a>
+</p>
 
-Three independent website templates share typed configuration and routing.
-Phase 2 adds persisted websites, a basic configuration editor and server-managed
-agent routing. Live non-HVAC voice acceptance and production onboarding remain
-pending; the existing HVACLine product remains intact.
+HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job. Browser voice and text, telephone integrations, scheduling, and operations share the same confirmed request workflow.
 
-## What it does
+> **Proprietary software.** Prior written permission from the applicable copyright holders is required to use, run, modify, redistribute, or commercialize this software, including for personal, educational, internal, or other noncommercial purposes. Public visibility does not grant a free-use license. See [LICENSE](LICENSE), including the limited rights required by GitHub's terms and applicable law.
 
-- **Meet customers where they are.** Browser chat and voice, with telephone and inbound WhatsApp voice integrations.
-- **Capture the job details.** Contact information, service address, equipment issue, requested service and preferred time.
-- **Book against real availability.** Service areas, business hours and technician schedules determine offered slots; customers explicitly confirm before booking.
-- **Keep the team informed.** One operations workspace for requests, appointments, calls, callbacks and handoffs.
-- **Explore the business dashboard.** Open `/operations` for an orange-and-charcoal TailAdmin dashboard demo with fictional HVAC requests, appointments and follow-up. Connect a workspace separately to use its existing tools.
-- **Support returning customers.** Appointment history, rescheduling and optional customer-controlled memory. Google Calendar sync and booking emails/reminders are opt-in integrations.
+> **Beta / development preview.** Use fictional data. Production identity, tenant onboarding, privacy review, and live provider acceptance remain incomplete. Final application changes are **unverified**; a release or CI badge does not establish production readiness. See [project state](docs/project-state.md) and the [platform handoff](docs/website-platform-phase2.md).
+
+## Capabilities
+
+| Area | What is implemented |
+| --- | --- |
+| **Voice & text** | Browser conversations with ElevenLabs, telephone integrations, and inbound WhatsApp voice. |
+| **Service intake** | Contact details, service address, equipment issue, requested service, and explicit customer confirmation. |
+| **Appointment booking** | Business hours, service areas, technician availability, expiring holds, and confirmed appointments. |
+| **Operations** | Requests, appointments, calls, callbacks, handoffs, receptionist settings, and approved knowledge. |
+| **Returning customers** | Account access with authenticator MFA, appointment management, and optional customer-controlled memory. |
+| **Calendar & messages** | Opt-in Google Calendar synchronization and queued booking emails/reminders through Resend. |
+| **Maintenance billing** | Stripe **sandbox-only** packages, purchased labor hours, checkout, and billing history. |
+| **Voice AI websites** | Three templates, structured editing, private drafts, immutable publications, history, and rollback behind administrator gates. |
+| **GoHighLevel CRM** | Opt-in confirmed-lead contact/opportunity delivery, booking stages, and delivery recovery; runtime acceptance pending. |
+
+Optional integrations require their own configuration and acceptance. Answers stay within approved business information. Hazardous or unsupported requests go to staff. HVACLine does not diagnose equipment or invent prices, and the application stores no raw audio.
 
 ## From request to appointment
 
-1. A customer describes the issue and reviews their details with the receptionist.
-2. HVACLine checks the configured service area and schedule, then holds an available time.
-3. The customer confirms, and the saved appointment appears in the operations workspace.
+1. **Understand the request.** The customer describes the issue and confirms their details.
+2. **Find a time.** HVACLine checks the configured service area and schedule, then holds an available slot.
+3. **Confirm the booking.** The customer explicitly confirms; the saved appointment appears in Operations.
 
-Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
+## Explore the dashboard
 
-## Configurable Voice AI websites
+Open `/operations` on a configured instance for an orange-and-charcoal dashboard with light/dark themes, responsive navigation, requests, appointments, calls, and follow-up queues.
 
-Connected Operations → Websites provides a restricted administrator editor:
-create from three distinct templates, customize branding/content/colors/fonts/
-sections/FAQs/actions, preview, save private drafts, publish immutable versions,
-restore history and unpublish. Published sites use `/sites/[slug]`; ordinary
-content changes require no rebuild. Drafts cannot change live agent/knowledge
-bindings. Images are selected from approved artwork; uploads/custom domains are
-not exposed. Voice/Text reuse signed ElevenLabs sessions and customer MFA.
-Website inquiries use the existing lead workflow; booking and memory stay disabled
-for those sessions. Existing HVAC account workflows remain separate.
+The initial dashboard uses clearly labeled **fictional sample data**. It makes no backend requests, requests no microphone access, and disables booking/payment mutations. **Connect your workspace** opens the separate administrator-token gate for stored records and management tools. Counts describe capped loaded queues, not business-wide analytics.
 
-The platform defaults off and remains development/test gated. Management requires
-the existing business administrator token; customer sign-in does not grant owner
-access. Migrations `20261112_0022` and `20261113_0023`, configured agents and owner
-acceptance are required. Production self-service onboarding is not ready.
+Dashboard components adapt [TailAdmin](https://github.com/TailAdmin/free-nextjs-admin-dashboard); its [MIT notice](apps/web/src/features/operations/TAILADMIN-LICENSE.txt) is retained. [Dashboard guide and manual acceptance →](docs/operations-dashboard.md)
 
-The owner stopped verification; final edits are **unverified**. Earlier web
-verification and focused backend checks passed, while broader Python checks
-reported unresolved failures. Exact results, changed source, deployment/setup
-commands and one acceptance checklist: [Platform handoff](docs/website-platform-phase2.md).
-No deployment, target migration or hosted agent change was performed.
+## Getting started
 
-The homepage retains the hero and calling entry. The public template showcase
-and its navigation links are removed; `/demos/[slug]` returns not-found. Packages,
-Services, booking walkthrough and HVAC-owner FAQ are removed; pricing lives on
-`/pricing`. Header/footer integrations include short descriptions.
+Development setup requires **Node.js 24**, **Python 3.13**, and a configured **Neon PostgreSQL** development branch. Running the software requires prior written permission under [LICENSE](LICENSE).
 
-Showcase removal is **unverified**. Owner command: `npm run verify:web`. Manually
-confirm that homepage, desktop/mobile navigation and published-site utility links
-contain no demo collection links; `/demos/hvac`, `/demos/real-estate` and
-`/demos/appointments` return 404; booking, calling, pricing and website editing
-remain available.
-
-## GoHighLevel integration
-
-Connected Operations → Integrations adds an opt-in **GoHighLevel** connection:
-confirmed leads match/create contacts and receive separate opportunities, with
-booking/handoff stages, encrypted private tokens and durable delivery/recovery.
-Existing scheduling remains authoritative. The integration defaults off, remains
-development/test gated and is **unverified**; no migration or live GHL operation
-has run. [Setup, exact deferred commands and acceptance](docs/gohighlevel.md).
-
-The hero includes **GoHighLevel · CRM sync · Preview**. The next integration is
-n8n event delivery after controlled GHL acceptance; the linked guide specifies
-the follow-up slice and its limits.
-
-## Dashboard demo
-
-Choose **Dashboard** in the homepage navigation or open `/operations`.
-The initial view uses clearly labeled fictional sample data and does not contact
-the backend, request microphone access, or change bookings. Explore Overview,
-Service requests, Appointments, Calls, Follow-up, Scheduling, Receptionist,
-Knowledge base and Maintenance hours. Browser voice appears when that feature
-is enabled. Sample appointments use November 12, 2026 as their example day.
-
-The dashboard adapts TailAdmin's sidebar, header, metric cards and tables to
-HVACLine's orange branding, existing light/dark theme and responsive navigation.
-Selected components use scoped CSS Modules without adding dependencies.
-[TailAdmin source](https://github.com/TailAdmin/free-nextjs-admin-dashboard) ·
-[Retained MIT license](apps/web/src/features/operations/TAILADMIN-LICENSE.txt).
-
-**Connect your workspace** opens the existing admin-token gate. Connected mode
-uses stored records and preserves booking, scheduling, knowledge, receptionist
-and maintenance-labor tools. Counts describe up to 100 loaded records per queue,
-not business-wide totals. Follow-up remains a read-only queue; production
-business login, roles and onboarding are separate work.
-
-**Implementation is unverified.** No tests, builds, linting, type checks,
-formatters, services or runtime checks were run for this dashboard change.
-Owner checks, when explicitly authorized:
+After receiving permission:
 
 ```bash
-npm run verify:web
+git clone https://github.com/waqasraza123/hvacline.git
+cd hvacline
+cp .env.example .env
+cp apps/web/.env.example apps/web/.env.local
+npm ci
+python3.13 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[dev]'
 ```
 
-- At 320, 768 and 1440px, inspect light/dark colors, table scrolling, readable statuses and absence of page overflow.
-- Use keyboard navigation to collapse/expand the desktop sidebar, open the mobile drawer, close it with Escape, and confirm focus returns to its trigger.
-- Explore every demo section and confirm there are no API requests, microphone prompts or working booking/payment mutations.
-- Connect an authorized workspace; check empty/loading/error states, refresh, counts/timezone and the existing booking/editor/calendar/labor flows with approved sample records.
-- Confirm the homepage's Dashboard demo link works and customer booking, pricing and billing retain their layouts.
+Then follow the [development setup guide](docs/development-setup.md) for database configuration, migrations, fictional business content, and service startup. Keep test databases isolated and disposable. Provider credentials and opt-in integrations are configured separately; never commit secrets.
 
-## Explore
+See the [environment handoff](docs/environment-handoff.md) for account, MFA, memory, and WhatsApp configuration. Existing `insurance_operations` package and CLI names are retained for deployment and schema compatibility.
 
-[Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)
+## Architecture
 
-Optional development-only [local browser conversations](docs/local-browser-voice.md) use whisper.cpp, Ollama and Piper; implementation and runtime acceptance remain unverified.
+| Layer | Technology |
+| --- | --- |
+| Web | Next.js, React, TypeScript |
+| API | FastAPI, Python 3.13, Pydantic |
+| Persistence | Neon PostgreSQL, SQLAlchemy 2, psycopg 3, Alembic |
+| Voice & telephone | ElevenLabs, Twilio, Telnyx, WhatsApp voice |
+| Optional integrations | Google Calendar, Resend, Stripe sandbox, GoHighLevel |
+| Background work | Separate worker or bounded scheduled jobs |
+
+```text
+apps/web/          Customer experience, Operations, website editor
+apps/backend/      API, scheduling, accounts, provider integrations, jobs
+migrations/        Versioned database changes
+tests/             Python unit, API, and database specifications
+docs/              Setup, architecture, integrations, and acceptance guides
+```
+
+Ownership constraints, signed provider events, explicit confirmations, and persistent request keys protect shared workflows. Scheduling remains authoritative when integrations synchronize external records. [Architecture details →](docs/hvacline-architecture.md)
+
+## Documentation
+
+| Start here | Guides |
+| --- | --- |
+| **Setup & design** | [Development](docs/development-setup.md) · [Environment](docs/environment-handoff.md) · [Architecture](docs/hvacline-architecture.md) |
+| **Customer experience** | [Chat & voice](docs/customer-chat.md) · [Authenticator MFA](docs/customer-mfa.md) · [Customer memory](docs/customer-memory.md) |
+| **Receptionist & knowledge** | [Browser agent](docs/elevenlabs-agent-setup.md) · [Knowledge base](docs/knowledge-base.md) |
+| **Telephone** | [Live validation](docs/hvacline-live-validation.md) · [Telnyx SIP](docs/telnyx-sip-setup.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Callbacks](docs/public-callbacks.md) |
+| **Business tools** | [Dashboard](docs/operations-dashboard.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Maintenance billing](docs/maintenance-billing.md) · [GoHighLevel](docs/gohighlevel.md) |
+| **Website platform** | [Editor, publications & acceptance](docs/website-platform-phase2.md) · [Agent setup](docs/website-agent-instructions.md) |
+| **Optional local voice** | [whisper.cpp, Ollama & Piper](docs/local-browser-voice.md) |
+| **Project status** | [Current state](docs/project-state.md) · [Verification history](docs/verification.md) · [Launch requirements](docs/public-demo-production-readiness.md) |
+
+## Status & releases
+
+The existing [v0.1.0-beta.1 prerelease](https://github.com/waqasraza123/hvacline/releases/tag/v0.1.0-beta.1) records an earlier source snapshot. The default branch includes subsequent work; the tag remains pinned to its original commit.
+
+- **Website platform:** administrator-only, off by default, and development/test gated. Published sites use `/sites/[slug]`; website sessions support inquiries, with booking and memory disabled. Production self-service onboarding is pending.
+- **GoHighLevel:** source implemented and off by default. The configured development database reached migration `20261113_0024`; provider setup and runtime acceptance remain pending. [Setup and deferred checks](docs/gohighlevel.md).
+- **Public template showcase:** removed; `/demos/[slug]` returns not-found. Templates remain available through the restricted editor. Pricing lives on `/pricing`.
+- **Verification:** earlier checks cover earlier snapshots. Final source changes and live/visual acceptance remain unverified; exact results and deferred commands live in the linked feature guides.
+
+n8n event delivery is a documented follow-up, not an implemented integration.
+
+## Feedback, contributions & security
+
+Use the [issue forms](https://github.com/waqasraza123/hvacline/issues/new/choose) for reproducible bugs, feature proposals, or permission inquiries. Read [CONTRIBUTING.md](CONTRIBUTING.md) before proposing code changes; written permission is required before running or modifying the software.
+
+Report vulnerabilities privately through the process in [SECURITY.md](SECURITY.md). Keep credentials, customer information, recordings, and transcripts out of public reports.
+
+## License
+
+**Proprietary. All rights reserved.** No free, personal, educational, internal, or commercial use is licensed without prior written permission from the applicable copyright holders. Payment alone does not grant permission. Any authorization is limited to the scope and conditions agreed in writing.
+
+For permission, open a [permission inquiry](https://github.com/waqasraza123/hvacline/issues/new?title=Licensing%20permission%20inquiry) describing the intended use without confidential information. An inquiry, acknowledgement, or public repository access is not authorization. See [LICENSE](LICENSE) for the full notice. Third-party components retain their own licenses.

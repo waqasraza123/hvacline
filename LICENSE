@@ -1,0 +1,65 @@
+HVACLine Proprietary License Notice
+
+Copyright (c) 2026 the respective HVACLine copyright holders.
+All rights reserved.
+
+1. Scope
+
+This notice applies to the original HVACLine source code, documentation, and
+other original materials in this repository (the "Software"), except materials
+identified as third-party works or governed by a separate license. Copyright
+remains with the respective copyright holders; this notice does not transfer
+ownership or assert ownership of third-party works.
+
+2. Prior written permission required
+
+Except for rights required by applicable law or expressly granted under the
+GitHub Terms of Service for content hosted on GitHub, no license or permission
+is granted to use, run, reproduce, modify, prepare derivative works of,
+distribute, sublicense, sell, host, deploy, or otherwise exploit the Software,
+in whole or in part, without prior written permission from the applicable
+copyright holders or their duly authorized representative.
+
+This restriction applies to all purposes, including personal, educational,
+research, evaluation, nonprofit, internal business, and commercial purposes.
+There is no automatic free-use, trial, or noncommercial-use license.
+
+Any permission must expressly identify the authorized Software and permitted
+scope of use. Fees, duration, deployment, redistribution, and other conditions,
+if any, must be agreed in writing. Payment, silence, an unanswered request,
+access to the repository, or possession of a copy does not grant permission.
+
+3. Public repository and GitHub platform rights
+
+Making the repository publicly visible does not make the Software open source
+or grant a general right to use it. This notice does not restrict the rights
+granted to GitHub or its users by the GitHub Terms of Service, including viewing
+and forking public content through GitHub's functionality. Such platform rights
+do not constitute permission to run, deploy, or commercialize the Software
+outside the rights expressly granted by those terms.
+
+4. Third-party materials and existing rights
+
+Third-party dependencies, components, and notices remain subject to their own
+licenses, including the retained TailAdmin MIT notice. Nothing in this notice
+restricts rights granted under those licenses, revokes any valid prior grant,
+or limits rights that cannot lawfully be restricted.
+
+No trademark rights are granted by this notice.
+
+5. Disclaimer
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
+NONINFRINGEMENT. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE
+COPYRIGHT HOLDERS SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+6. Permission inquiries
+
+To request permission, contact the repository maintainer through
+https://github.com/waqasraza123/hvacline/issues with a nonconfidential description
+of the intended use. A request or acknowledgement is not permission; obtain
+express written authorization from the applicable copyright holders or their
+duly authorized representative before proceeding.

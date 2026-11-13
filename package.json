@@ -1,6 +1,7 @@
 {
   "name": "insurance-operations-ai",
   "private": true,
+  "license": "UNLICENSED",
   "engines": {
     "node": "24.x"
   },

@@ -1,0 +1,32 @@
+name: Feature proposal
+description: Describe a workflow problem and the improvement you need.
+title: "[Feature]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the intended outcome before proposing implementation.
+        Keep customer information and other confidential details out of this report.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Who encounters it, and during which workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired behavior
+      description: Give a concrete before/after example using fictional data.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What observable result would make this change complete?

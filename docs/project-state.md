@@ -1,5 +1,27 @@
 # Project State
 
+## GitHub presentation and proprietary licensing — 2026-11-14
+
+Owner requests polished GitHub presentation and no usage without prior written
+permission. Root LICENSE reserves first-party rights for all uses, with GitHub
+platform/lawful-rights exceptions and preserved third-party licenses/prior grants.
+No legal entity, assignment, fee or software paywall is invented. npm declares
+UNLICENSED; Python declares LicenseRef-Proprietary and includes LICENSE.
+
+Repository About now describes the product and permission requirement; twenty
+relevant topics retain earlier tags. Existing website link is preserved. Private
+vulnerability reporting is enabled. README adds original SVG banner, real CI/star
+badges, existing beta link, capabilities and documentation. Community files add
+issue forms, PR template, contributor/security guidance and release-note categories.
+Existing v0.1.0-beta.1 remains at its original commit; no new release is created.
+
+Publish only this task's repository/licensing files on canonical main, preserving
+unrelated divergent local work. Retain [skip ci] [skip render]. No tests, builds,
+linters, type checks, formatters, migrations, services, provider actions or
+deployment commands ran. GitHub rendering, packaging and application runtime
+remain UNVERIFIED. Exact deferred commands/manual checks:
+docs/repository-presentation.md. Application code/dependency versions are unchanged.
+
 ## GHL hero and all-work publication authorized — 2026-11-13
 
 Owner requests GoHighLevel in the hero, commit/push of all pending work to main,
