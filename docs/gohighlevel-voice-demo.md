@@ -1,8 +1,10 @@
 # GHL voice booking and inbound demo
 
-Source implementation is **UNVERIFIED**. No tests, builds, linters, type checks,
-database migrations, hosted configuration, provider activation or telephone calls
-ran for this slice. Source formatting only was applied. The first three requested
+Source implementation/runtime is **UNVERIFIED**. On2026-11-18, the owner authorized
+applying migration0025 to the configured direct development database. Upgrade
+0024 →0025 succeeded; revision, columns, booking table and ownership foreign keys
+were read back. No tests, builds, linters, type checks, hosted configuration,
+provider activation or telephone calls ran. The first three requested
 priorities are covered in source: GHL calendar booking, contact summaries and the
 existing inbound-phone tool flow. A callable demo still requires owner-controlled
 deployment, phone/agent setup and live acceptance below.
@@ -76,7 +78,9 @@ writes.
 1. Review migration `20261118_0025` following `20261113_0024`. It adds optional voice
    configuration/version, note delivery state and `ghl_calendar_bookings` with
    composite business ownership constraints. Apply it to the intended database
-   **before deploying this backend**. No migration has been applied by Codex.
+   **before deploying this backend**. The configured development database already
+   reached0025 on2026-11-18; do not rerun solely for this handoff. Other deployment
+   targets require their own reviewed migration operation.
 2. Keep the existing API/jobs `GHL_ENABLED` and shared `GHL_TOKEN_ENCRYPTION_KEY`
    configuration. Use an authorized fictional-data test sub-account. No new
    environment variables, dependencies or public credentials are needed.

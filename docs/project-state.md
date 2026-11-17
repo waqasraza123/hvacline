@@ -1,5 +1,31 @@
 # Project State
 
+## Navbar active dot — source UNVERIFIED — 2026-11-18
+
+Shared desktop/mobile top navigation initially marks Dashboard with a green dot
+and short pulse. Client navigation moves the dot and active styling to the chosen
+item; browser/hash history updates the selection. Reduced motion disables the
+pulse while retaining the dot. No verification or services ran.
+Owner authorizes scoped commit/push to main with [skip ci] [skip render].
+Owner command: `npm run verify:web`; fresh-load/click/mobile/keyboard/history,
+theme and reduced-motion acceptance: docs/operations-dashboard.md.
+
+## Configured development database upgraded through0025 — 2026-11-18
+
+Owner explicitly requests applying the published GHL voice migration. Selected
+the existing configured direct development migration database, excluding the
+disposable test target. Initial revision0024; applied0024 →20261118_0025
+successfully. Readback confirms sole revision0025, new connection/delivery
+columns, ghl_calendar_bookings and its business/connection/appointment foreign
+keys. No customer rows were queried for acceptance.
+
+Only the requested migration and narrow revision/schema readback ran. No tests,
+builds, lints, type checks, seeds, services, provider actions, hosted configuration,
+calls, deployments or new publication. Runtime/visual acceptance remains
+UNVERIFIED. Do not rerun the migration after this completed handoff. Next:
+deploy the compatible source, configure GHL scopes/calendar routes/note author
+and separately authorize acceptance using docs/gohighlevel-voice-demo.md.
+
 ## GHL voice priorities — source UNVERIFIED — 2026-11-18
 
 Owner selects only the first three priorities: direct GHL calendar booking,
@@ -15,7 +41,8 @@ Optional contact notes use confirmed persisted lead data and the current notes
 API, one note per request, with independent unknown-create recovery. Existing
 notes/identities are preserved. Administrator UI adds mapping, note setup and
 booking history/recovery; customer booking failures preserve staff-review state.
-Migration20261118_0025 follows0024 and must precede backend deployment; not applied.
+Migration20261118_0025 follows0024 and must precede backend deployment; applied
+to the configured development database on2026-11-18 as recorded above.
 GHL cancellation/rescheduling, continuous external-edit reconciliation, emergency
 live transfer, lead reactivation and agency onboarding remain outside this slice.
 

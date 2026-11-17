@@ -11,6 +11,11 @@ are evaluated relative to that example day. Demo booking mutations are disabled,
 and API dispatch rejects demo actions. Connected editors, calendar integrations,
 maintenance labor and browser voice are not mounted in demo mode.
 
+The shared top navigation initially marks Dashboard with a green dot and a short
+pulse. Selecting another item moves the dot and active styling to that item;
+desktop and mobile share the selection. Browser back/forward and hash navigation
+update the selection. Reduced-motion preferences keep a still green dot.
+
 Connect your workspace replaces the demo with the existing in-memory admin-token
 gate. Returning to the demo clears that token. Connected mode retains the
 existing development endpoints, controls and ownership checks. No new production
@@ -50,6 +55,10 @@ Manual acceptance:
    (`/#call-me`), rather than the sandbox-gated `/phone-demo` route.
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
    horizontally scrollable tables, wrapped request details and no page overflow.
+   On a fresh homepage load, confirm Dashboard shows the green pulsing dot before
+   any interaction. Select Calling and Pricing; confirm the active marker moves
+   on navigation. Repeat with the mobile menu and keyboard, check browser back/
+   forward, and enable reduced motion to confirm the dot stays visible and still.
 3. Use keyboard-only navigation: skip link, desktop collapse/expand, mobile drawer
    focus containment, Escape/outside dismissal and trigger focus restoration.
    Resize from an open mobile drawer to desktop; navigation must remain usable.

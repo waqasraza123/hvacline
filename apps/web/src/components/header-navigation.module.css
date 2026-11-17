@@ -23,6 +23,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 40px;
   padding: 10px 14px;
   border-radius: 999px;
@@ -31,9 +32,40 @@
   font-weight: 600;
   white-space: nowrap;
 }
-.desktop a:first-child {
+.desktop a[data-active="true"] {
   background: var(--customer-accent-soft);
   color: var(--customer-accent-ink);
+}
+.activeDot {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  color: #16a34a;
+  background: currentColor;
+  box-shadow: 0 0 6px rgb(22 163 74 / 25%);
+}
+.activeDot::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border: 1px solid currentColor;
+  border-radius: inherit;
+  opacity: 0;
+  animation: activeDotPulse 2.4s ease-out infinite;
+}
+@keyframes activeDotPulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.65);
+  }
+  35%,
+  100% {
+    opacity: 0;
+    transform: scale(1.45);
+  }
 }
 .desktop a:hover {
   background: var(--customer-subtle);
@@ -114,7 +146,9 @@
   flex: 1;
 }
 .mobile strong {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 16px;
   font-weight: 600;
 }
@@ -123,6 +157,9 @@
   margin-top: 4px;
   color: var(--customer-muted);
   font-size: 11px;
+}
+.mobile a[data-active="true"] strong {
+  color: var(--customer-accent-ink);
 }
 .number {
   color: var(--customer-accent-ink);
@@ -213,5 +250,10 @@
 @media (min-width: 360px) and (max-width: 390px) {
   .header :global(.brand-link em) {
     display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .activeDot::after {
+    animation: none;
   }
 }
