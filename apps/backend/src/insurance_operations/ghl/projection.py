@@ -40,6 +40,18 @@ class LeadProjection:
         return values
 
 
+def normalized_phone(value: str | None, country_code: str) -> str | None:
+    if not value:
+        return None
+    try:
+        number = phonenumbers.parse(value, country_code)
+        if not phonenumbers.is_valid_number(number) or number.extension:
+            raise ValueError
+        return phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
+    except (phonenumbers.NumberParseException, ValueError):
+        raise GhlError("GHL_PHONE_FORMAT_INVALID") from None
+
+
 def project_lead(session: Session, agency_id: UUID, lead_id: UUID) -> LeadProjection:
     row = session.execute(
         select(AgencyLead, Customer, ConversationSession)
@@ -65,17 +77,7 @@ def project_lead(session: Session, agency_id: UUID, lead_id: UUID) -> LeadProjec
     lead, customer, conversation = row
     if lead.status == "ARCHIVED" or customer.archived_at:
         raise GhlError("GHL_LOCAL_LEAD_UNAVAILABLE")
-    phone = None
-    if customer.phone:
-        try:
-            number = phonenumbers.parse(customer.phone, customer.country_code)
-            if not phonenumbers.is_valid_number(number) or number.extension:
-                raise ValueError
-            phone = phonenumbers.format_number(
-                number, phonenumbers.PhoneNumberFormat.E164
-            )
-        except (phonenumbers.NumberParseException, ValueError):
-            raise GhlError("GHL_PHONE_FORMAT_INVALID") from None
+    phone = normalized_phone(customer.phone, customer.country_code)
     request = session.scalar(
         select(HvacServiceRequest).where(
             HvacServiceRequest.agency_id == agency_id,

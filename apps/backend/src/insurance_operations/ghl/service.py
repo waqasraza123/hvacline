@@ -10,7 +10,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
-from insurance_operations.database.models.ghl import GhlConnection, GhlDelivery
+from insurance_operations.database.models.ghl import (
+    GhlCalendarBooking,
+    GhlConnection,
+    GhlDelivery,
+)
+from insurance_operations.database.models.hvac import Appointment
 from insurance_operations.database.models.operations import AuditActorType, AuditEvent
 from insurance_operations.errors import ApiError
 from insurance_operations.ghl.projection import project_lead
@@ -20,6 +25,7 @@ from insurance_operations.ghl.schemas import (
     CredentialInput,
     RetryInput,
 )
+from insurance_operations.hvac.locking import lock_business_schedule
 from insurance_operations.job_execution import (
     current_job_budget,
     job_budget,
@@ -137,6 +143,8 @@ def connection_view(row: GhlConnection) -> dict[str, object]:
         "last_checked_at": row.last_checked_at,
         "last_error": row.last_error,
         "blocked_until": row.blocked_until,
+        "voice_configuration": row.voice_configuration or {},
+        "voice_version": row.voice_version,
     }
 
 
@@ -154,6 +162,8 @@ def delivery_view(row: GhlDelivery, connection: GhlConnection) -> dict[str, obje
         "delivered_version": row.delivered_version,
         "contact_id": row.contact_id,
         "opportunity_id": row.opportunity_id,
+        "note_id": row.note_id,
+        "note_unknown": row.note_unknown,
         "contact_unknown": row.contact_unknown,
         "opportunity_unknown": row.opportunity_unknown,
         "last_stage_id": row.last_stage_id,
@@ -288,6 +298,41 @@ class GhlService:
                     client.validate_mapping(configuration)
             with self.sessions() as session, session.begin():
                 row = self.current(session, actor.agency_id)
+                lock_business_schedule(session, actor.agency_id)
+                if action == "disconnect" and session.scalar(
+                    select(GhlCalendarBooking.appointment_id)
+                    .join(
+                        Appointment, Appointment.id == GhlCalendarBooking.appointment_id
+                    )
+                    .where(
+                        GhlCalendarBooking.connection_id == row.id,
+                        (
+                            GhlCalendarBooking.status.in_(
+                                [
+                                    "CONTACT_PENDING",
+                                    "CREATING",
+                                    "UNKNOWN",
+                                    "NEEDS_REVIEW",
+                                ]
+                            )
+                        )
+                        | (
+                            (Appointment.ends_at > datetime.now(UTC))
+                            & (
+                                (Appointment.status == "CONFIRMED")
+                                | (
+                                    (Appointment.status == "HELD")
+                                    & (Appointment.hold_expires_at > datetime.now(UTC))
+                                )
+                            )
+                        ),
+                    )
+                    .limit(1)
+                ):
+                    raise unavailable(
+                        "GHL_CALENDAR_IN_USE",
+                        "Resolve active GHL reservations and appointments before disconnecting.",
+                    )
                 row.status = {
                     "pause": "PAUSED",
                     "resume": "ACTIVE",
@@ -410,7 +455,28 @@ class GhlService:
                 self.configuration(connection, token)
             recovered_id = delivery.opportunity_id
             recovered_contact = delivery.contact_id
+            recovered_note = delivery.note_id
             with self.factory(token, connection.location_id) as client:
+                if data.remote_note_id:
+                    if (
+                        not recovered_contact
+                        or not delivery.note_unknown
+                        or recovered_note
+                    ):
+                        raise unavailable(
+                            "GHL_RECOVERY_INVALID",
+                            "Only an unresolved contact summary can be linked.",
+                        )
+                    client.note(data.remote_note_id).require_summary(
+                        recovered_contact, reference_for(delivery.lead_id)
+                    )
+                    recovered_note = data.remote_note_id
+                elif data.confirm_note_absent:
+                    if not delivery.note_unknown or recovered_note:
+                        raise unavailable(
+                            "GHL_RECOVERY_INVALID",
+                            "Only an unresolved contact summary can be cleared after review.",
+                        )
                 if data.remote_opportunity_id:
                     if recovered_id and recovered_id != data.remote_opportunity_id:
                         raise unavailable(
@@ -461,6 +527,10 @@ class GhlService:
                     row.opportunity_unknown = False
                 if data.confirm_remote_absent and delivery.contact_unknown:
                     row.contact_id, row.contact_unknown = recovered_contact, False
+                if recovered_note:
+                    row.note_id, row.note_unknown = recovered_note, False
+                elif data.confirm_note_absent:
+                    row.note_unknown = False
                 row.status, row.attempts, row.last_error = "PENDING", 0, None
                 row.next_attempt_at = datetime.now(UTC)
                 audit(session, actor, "GHL_DELIVERY_RETRIED", identifier)

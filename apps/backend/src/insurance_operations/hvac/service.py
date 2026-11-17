@@ -11,6 +11,7 @@ from insurance_operations.database.models.booking_integrations import (
     CalendarBooking,
     CalendarConnection,
 )
+from insurance_operations.database.models.ghl import GhlCalendarBooking, GhlConnection
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -19,6 +20,15 @@ from insurance_operations.database.models.hvac import (
 from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.errors import ApiError
+from insurance_operations.ghl.booking import (
+    GhlBookingService,
+    bind_ghl_reservation,
+    check_ghl_slots,
+    guard_change,
+    release_ghl_reservation,
+    routed_connection,
+    voice_configuration,
+)
 from insurance_operations.hvac.availability import candidate_slots, overlaps
 from insurance_operations.hvac.booking_limits import (
     require_customer_booking_capacity,
@@ -104,6 +114,19 @@ class SchedulingService:
                 if not connected_teams.issubset({team.key for team in request.teams}):
                     raise unavailable(
                         "Keep teams with calendar connections in the schedule."
+                    )
+                ghl_connection = session.scalar(
+                    select(GhlConnection).where(
+                        GhlConnection.agency_id == agency_id,
+                        GhlConnection.status != "DISCONNECTED",
+                    )
+                )
+                if ghl_connection and not {
+                    route.team_key
+                    for route in voice_configuration(ghl_connection).calendars
+                }.issubset({team.key for team in request.teams}):
+                    raise unavailable(
+                        "Keep teams with GHL calendar routes in the schedule."
                     )
                 schedule.configuration = content
                 schedule.version += 1
@@ -225,6 +248,8 @@ class SchedulingService:
             if free:
                 try:
                     for team_key in {slot.team_key for slot in free}:
+                        if routed_connection(session, agency_id, team_key):
+                            continue
                         connection = connection_for_team(session, agency_id, team_key)
                         if connection is None:
                             continue
@@ -268,6 +293,13 @@ class SchedulingService:
                         ]
                 except CalendarUnavailable as error:
                     raise calendar_error(error) from error
+            free = check_ghl_slots(
+                session,
+                agency_id,
+                free,
+                configuration.timezone,
+                configuration.duration_minutes,
+            )
             return AvailabilityResponse(
                 configured=configuration.enabled,
                 in_service_area=in_area,
@@ -376,9 +408,26 @@ class SchedulingService:
                     "The appointment or technician is already reserved.",
                     "SLOT_CONFLICT",
                 )
-        check_external_slot(
-            session, agency_id, slot.team_key, slot.starts_at, slot.ends_at, replace_id
-        )
+        ghl_route = routed_connection(session, agency_id, slot.team_key)
+        if ghl_route is None:
+            check_external_slot(
+                session,
+                agency_id,
+                slot.team_key,
+                slot.starts_at,
+                slot.ends_at,
+                replace_id,
+            )
+        if not check_ghl_slots(
+            session,
+            agency_id,
+            [slot],
+            configuration.timezone,
+            configuration.duration_minutes,
+        ):
+            raise unavailable(
+                "That time is no longer available in GHL.", "GHL_SLOT_UNAVAILABLE"
+            )
         row = Appointment(
             agency_id=agency_id,
             service_request_id=service_request.id,
@@ -392,7 +441,9 @@ class SchedulingService:
         )
         session.add(row)
         session.flush()
-        bind_reservation(session, row)
+        if ghl_route is None:
+            bind_reservation(session, row)
+        bind_ghl_reservation(session, row)
         session.flush()
         return row
 
@@ -405,6 +456,13 @@ class SchedulingService:
     ) -> AppointmentView:
         if not explicit_confirmation:
             raise unavailable("Explicit confirmation of the appointment is required.")
+        with self.sessions() as session:
+            binding = session.get(GhlCalendarBooking, appointment_id)
+            ghl_booking = binding is not None and binding.agency_id == agency_id
+        if ghl_booking:
+            return GhlBookingService(self.sessions).confirm(
+                agency_id, appointment_id, correlation_id
+            )
         with self.sessions() as session, session.begin():
             configuration = self._lock_schedule(session, agency_id)
             row = self._appointment(session, agency_id, appointment_id)
@@ -419,26 +477,7 @@ class SchedulingService:
                 )
             if row.status == "CONFIRMED":
                 return AppointmentView.model_validate(row)
-            require_customer_booking_capacity(session, service_request, confirming=True)
-            now = datetime.now(UTC)
-            if row.status != "HELD" or row.hold_expires_at <= now:
-                raise unavailable(
-                    "The reservation expired or is no longer active.",
-                    "RESERVATION_EXPIRED",
-                )
-            day = row.starts_at.astimezone(ZoneInfo(configuration.timezone)).date()
-            reserved_at = row.hold_expires_at - timedelta(minutes=5)
-            if row.starts_at <= now or not any(
-                slot.team_key == row.team_key
-                and slot.starts_at == row.starts_at
-                and slot.ends_at == row.ends_at
-                for slot in candidate_slots(configuration, day, reserved_at)
-            ):
-                raise unavailable(
-                    "Availability changed. Request a new appointment.",
-                    "SLOT_UNAVAILABLE",
-                )
-            self._ensure_capacity(session, row, now)
+            self._validate_confirmation(session, agency_id, row, configuration)
             publish_confirmation(session, row)
             row.status = "CONFIRMED"
             self._request(session, agency_id, row.service_request_id).status = "BOOKED"
@@ -453,6 +492,43 @@ class SchedulingService:
                 )
             )
             return AppointmentView.model_validate(row)
+
+    def _validate_confirmation(
+        self,
+        session: Session,
+        agency_id: UUID,
+        row: Appointment,
+        configuration: ScheduleInput,
+        *,
+        allow_expired: bool = False,
+    ) -> None:
+        service_request = self._request(session, agency_id, row.service_request_id)
+        if (
+            service_request.service_details.get("hazardous_condition")
+            or service_request.status == "CLOSED"
+        ):
+            raise unavailable(
+                "This service request requires human attention.",
+                "HUMAN_ATTENTION_REQUIRED",
+            )
+        require_customer_booking_capacity(session, service_request, confirming=True)
+        now = datetime.now(UTC)
+        if row.status != "HELD" or (not allow_expired and row.hold_expires_at <= now):
+            raise unavailable(
+                "The reservation expired or is no longer active.", "RESERVATION_EXPIRED"
+            )
+        day = row.starts_at.astimezone(ZoneInfo(configuration.timezone)).date()
+        reserved_at = row.hold_expires_at - timedelta(minutes=5)
+        if row.starts_at <= now or not any(
+            slot.team_key == row.team_key
+            and slot.starts_at == row.starts_at
+            and slot.ends_at == row.ends_at
+            for slot in candidate_slots(configuration, day, reserved_at)
+        ):
+            raise unavailable(
+                "Availability changed. Request a new appointment.", "SLOT_UNAVAILABLE"
+            )
+        self._ensure_capacity(session, row, now)
 
     def flag_hazard(
         self, agency_id: UUID, request_id: UUID, correlation_id: UUID
@@ -469,7 +545,13 @@ class SchedulingService:
                     Appointment.status == "HELD",
                 )
             ):
+                binding = session.get(GhlCalendarBooking, appointment.id)
+                if binding and (binding.status != "RESERVED" or binding.event_id):
+                    binding.last_error = "HUMAN_ATTENTION_REQUIRED"
+                    binding.status = "NEEDS_REVIEW"
+                    continue
                 appointment.status = "CANCELLED"
+                release_ghl_reservation(session, appointment)
                 request_cleanup(session, appointment)
             session.add(
                 system_audit(
@@ -491,6 +573,7 @@ class SchedulingService:
                 return AppointmentView.model_validate(row)
             if row.status != "HELD":
                 raise unavailable("Only an unconfirmed hold can be released.")
+            release_ghl_reservation(session, row)
             row.status = "CANCELLED"
             request_cleanup(session, row)
             suppress_booking_notifications(session, row.id)
@@ -513,9 +596,11 @@ class SchedulingService:
             row = self._appointment(session, agency_id, appointment_id)
             if row.status == "CANCELLED":
                 return AppointmentView.model_validate(row)
+            guard_change(session, row)
             self._allow_change(row, configuration, datetime.now(UTC))
             was_confirmed = row.status == "CONFIRMED"
             row.status = "CANCELLED"
+            release_ghl_reservation(session, row)
             request_cleanup(session, row)
             suppress_booking_notifications(session, row.id)
             if was_confirmed:
@@ -542,6 +627,12 @@ class SchedulingService:
         with self.sessions() as session, session.begin():
             configuration = self._lock_schedule(session, agency_id)
             old = self._appointment(session, agency_id, appointment_id)
+            guard_change(session, old)
+            if routed_connection(session, agency_id, request.team_key):
+                raise unavailable(
+                    "GHL rescheduling requires staff review in GHL.",
+                    "GHL_BOOKING_REVIEW_REQUIRED",
+                )
             if old.service_request_id != request.service_request_id:
                 raise unavailable(
                     "The new appointment must belong to the same service request."
@@ -618,6 +709,7 @@ class SchedulingService:
             self._ensure_capacity(session, new, now, old.id)
             publish_confirmation(session, new, old.id)
             old.status = "CANCELLED"
+            release_ghl_reservation(session, old)
             new.status = "CONFIRMED"
             request_cleanup(session, old)
             suppress_booking_notifications(session, old.id)
@@ -725,6 +817,20 @@ class SchedulingService:
                         Appointment.status == "CONFIRMED",
                         (Appointment.status == "HELD")
                         & (Appointment.hold_expires_at > now),
+                        select(GhlCalendarBooking.appointment_id)
+                        .where(
+                            GhlCalendarBooking.appointment_id == Appointment.id,
+                            GhlCalendarBooking.agency_id == agency_id,
+                            GhlCalendarBooking.status.in_(
+                                [
+                                    "CONTACT_PENDING",
+                                    "CREATING",
+                                    "UNKNOWN",
+                                    "NEEDS_REVIEW",
+                                ]
+                            ),
+                        )
+                        .exists(),
                     ),
                 )
             )

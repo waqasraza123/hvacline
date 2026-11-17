@@ -56,6 +56,8 @@ export type Delivery = {
   delivered_version: number;
   contact_id: string | null;
   opportunity_id: string | null;
+  note_id?: string | null;
+  note_unknown?: boolean;
   contact_unknown: boolean;
   opportunity_unknown: boolean;
   last_stage_id: string | null;
@@ -88,6 +90,36 @@ export const emptyFields: FieldMapping = {
 export function deliveryMessage(code: string | null): string {
   if (!code) return "";
   const messages: Record<string, string> = {
+    GHL_VOICE_VERSION_CONFLICT:
+      "Voice settings changed. Reload this page before saving.",
+    GHL_CALENDAR_CONFIGURATION_INVALID:
+      "Use an active fixed-duration personal, round-robin or event calendar matching the duration in Scheduling. Multiple-duration calendars are not supported.",
+    GHL_CALENDAR_TEAM_INVALID:
+      "Configure Scheduling first, then choose an existing team.",
+    GHL_CALENDAR_PROVIDER_CONFLICT:
+      "A team can use Google Calendar or GHL. Remove its existing calendar connection first.",
+    GHL_CALENDAR_IN_USE:
+      "Resolve existing reservations, appointments and uncertain provider writes before changing calendar routing or disconnecting.",
+    GHL_BOOKING_UNAVAILABLE:
+      "Restore the original GHL connection and its permissions before retrying this reservation.",
+    GHL_SLOT_UNAVAILABLE:
+      "That time is no longer available in GHL. Request another appointment time.",
+    GHL_APPOINTMENT_CREATION_UNKNOWN:
+      "GHL may already have created this appointment. Review booking history and link the matching appointment; do not create a replacement blindly.",
+    GHL_APPOINTMENT_OWNERSHIP_INVALID:
+      "The GHL appointment does not match the original calendar, contact, reference, times or confirmed status. Staff review is required.",
+    GHL_LOCAL_CONFIRMATION_REQUIRED:
+      "The GHL appointment needs local review before it can be reported as confirmed. Check hazards, current scheduling and other reservations.",
+    GHL_BOOKING_REVIEW_REQUIRED:
+      "Ask staff to review this appointment in GHL before making changes.",
+    GHL_NOTE_CREATION_UNKNOWN:
+      "The contact summary may already exist. Link its note ID or confirm its absence after reviewing the GHL contact.",
+    GHL_NOTE_OWNERSHIP_INVALID:
+      "The contact note does not match this contact and request reference. Review the note in GHL.",
+    GHL_NOTE_WRITE_UNCONFIRMED:
+      "GHL did not confirm the contact summary. Review its note before retrying.",
+    GHL_TIMEOUT:
+      "GHL did not respond in time. Review booking or delivery status before retrying.",
     GHL_AUTH_REQUIRED:
       "Replace the token or restore its permissions, then resume the connection.",
     GHL_CONTACT_MATCH_AMBIGUOUS:

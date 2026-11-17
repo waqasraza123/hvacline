@@ -13,7 +13,7 @@ import type {
 import { appendTranscript } from "./review";
 import { OperationsApiError, requestApi } from "../operations/api";
 import type { Appointment, Availability, Slot } from "../operations/api";
-import { bookingFailure } from "./booking-progress";
+import { bookingFailure, bookingRequiresStaffReview } from "./booking-progress";
 import type { BookingFailure, BookingProgress } from "./booking-progress";
 
 export type VoiceBookingTool =
@@ -174,8 +174,9 @@ export class VoiceBookingSession {
           failure instanceof Error
             ? failure.message
             : "Booking could not be completed.",
-        instruction:
-          "Do not claim success. Correct missing details or retry the same tool. Never invent availability or a confirmation.",
+        instruction: bookingRequiresStaffReview(failure)
+          ? "Do not claim success or create a replacement appointment. Keep the original reservation reference and request staff review of its GHL booking history."
+          : "Do not claim success. Correct missing details or retry the same tool. Never invent availability or a confirmation.",
       };
     } finally {
       this.busy = false;

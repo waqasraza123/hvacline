@@ -43,7 +43,11 @@ from insurance_operations.database.models.customer_mfa import (
     CustomerMfaFactor,
     CustomerMfaRecoveryCode,
 )
-from insurance_operations.database.models.ghl import GhlConnection, GhlDelivery
+from insurance_operations.database.models.ghl import (
+    GhlCalendarBooking,
+    GhlConnection,
+    GhlDelivery,
+)
 from insurance_operations.database.models.homepage_chat import (
     HomepageChatDailyUsage,
     HomepageChatVisitor,
@@ -101,6 +105,7 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "ghl_calendar_bookings": TableOwnership(module="ghl", agency_column="agency_id"),
     "ghl_connections": TableOwnership(module="ghl", agency_column="agency_id"),
     "ghl_deliveries": TableOwnership(module="ghl", agency_column="agency_id"),
     "websites": TableOwnership(module="websites", agency_column="agency_id"),
@@ -227,6 +232,7 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "GhlCalendarBooking",
     "GhlConnection",
     "GhlDelivery",
     "TABLE_OWNERSHIP",

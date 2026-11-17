@@ -291,6 +291,12 @@ def create_booking_integration_router(
                     )
                 if team_key not in {team.key for team in configuration.teams}:
                     raise integration_error("The selected team no longer exists.")
+                from insurance_operations.ghl.booking import routed_connection
+
+                if routed_connection(session, agency_id, team_key):
+                    raise integration_error(
+                        "Remove this team's GHL calendar route before connecting Google Calendar."
+                    )
                 connection = session.scalar(
                     select(CalendarConnection).where(
                         CalendarConnection.agency_id == agency_id,

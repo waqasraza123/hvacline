@@ -1,5 +1,9 @@
 # GoHighLevel integration
 
+For optional direct GHL calendar booking, contact-level request summaries and
+the inbound demo flow, see [GHL voice demo](gohighlevel-voice-demo.md). This
+unverified extension requires migration0025 before backend deployment.
+
 Implementation is **unverified**. The owner requested coding only. No tests,
 builds, lint/type checks, migrations, services, live GHL requests, customer calls,
 or deployment ran for this feature. The owner subsequently authorized committing
@@ -51,7 +55,9 @@ Holds and released/expired holds are not bookings or booking cancellations.
 Rescheduling updates the original opportunity with the replacement appointment.
 Appointment ID, start/end, configured timezone and team are written to the booking
 field. Cancelling an appointment does not automatically mark the deal lost.
-HVACLine/internal Google scheduling remains authoritative; no GHL calendar writes.
+Without an optional GHL voice calendar route, HVACLine/internal Google scheduling
+remains authoritative. The [voice extension](gohighlevel-voice-demo.md) adds direct
+GHL appointment writes only for explicitly mapped teams.
 
 ## Owner setup — perform separately
 
@@ -69,8 +75,10 @@ HVACLine/internal Google scheduling remains authoritative; no GHL calendar write
 3. In a client-owned GHL **test sub-account**, create a Private Integration Token
    with `contacts.readonly`, `contacts.write`, `opportunities.readonly`,
    `opportunities.write`, and `locations/customFields.readonly`. Use the sub-account
-   token, not a legacy API key or agency-wide token. No notes/tasks/calendar/workflow
-   permission is needed. Setup checks pipeline/field read access and mappings;
+   token, not a legacy API key or agency-wide token. The base CRM connector needs
+   no notes/tasks/calendar/workflow permissions; optional voice booking and
+   contact summaries require the additional scopes in the voice-demo guide.
+   Setup checks pipeline/field read access and mappings;
    contact access and write permissions are exercised only during explicitly
    authorized delivery.
 4. Create/select a dedicated pipeline with four separate stages for new, booked,

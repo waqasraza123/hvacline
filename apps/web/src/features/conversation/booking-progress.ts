@@ -9,6 +9,7 @@ export type BookingFailure = Readonly<{
   operation: VoiceBookingTool;
   message: string;
   uncertain: boolean;
+  staffReview?: boolean;
 }>;
 
 export type BookingProgress = Readonly<{
@@ -43,6 +44,24 @@ const OPERATIONS: Record<VoiceBookingTool, string> = {
   release_appointment_hold: "Releasing your temporary hold…",
 };
 
+export function bookingRequiresStaffReview(failure: unknown): boolean {
+  const code =
+    failure instanceof ConversationApiError ||
+    failure instanceof OperationsApiError
+      ? failure.code
+      : undefined;
+  return Boolean(
+    code &&
+    [
+      "GHL_APPOINTMENT_CREATION_UNKNOWN",
+      "GHL_APPOINTMENT_OWNERSHIP_INVALID",
+      "GHL_LOCAL_CONFIRMATION_REQUIRED",
+      "GHL_BOOKING_REVIEW_REQUIRED",
+      "GHL_CONTACT_CREATION_UNKNOWN",
+    ].includes(code),
+  );
+}
+
 export function bookingFailure(
   operation: VoiceBookingTool,
   failure: unknown,
@@ -61,15 +80,25 @@ export function bookingFailure(
       "confirm_appointment",
       "release_appointment_hold",
     ].includes(operation) &&
-    (status === undefined || status >= 500 || status === 408);
-  const message = uncertain
-    ? "We couldn’t establish the result. Retry the same action with Line before choosing something else. Saved requests and confirmed appointments are kept."
-    : operation === "confirm_service_request" && status === 422
-      ? "Your details still need confirmation. Wait for Line’s complete readback, then confirm or correct the details."
-      : operation === "confirm_appointment" && status === 422
-        ? "The appointment still needs confirmation. Wait for the full date and time readback, then confirm."
-        : "This step could not be completed. Ask Line to correct the details or retry. No new success has been established.";
-  return { operation, message, uncertain };
+    (status === undefined ||
+      status >= 500 ||
+      status === 408 ||
+      bookingRequiresStaffReview(failure));
+  const message = bookingRequiresStaffReview(failure)
+    ? "This booking needs staff review. Keep the original reservation reference and contact the business before choosing another appointment."
+    : uncertain
+      ? "We couldn’t establish the result. Retry the same action with Line before choosing something else. Saved requests and confirmed appointments are kept."
+      : operation === "confirm_service_request" && status === 422
+        ? "Your details still need confirmation. Wait for Line’s complete readback, then confirm or correct the details."
+        : operation === "confirm_appointment" && status === 422
+          ? "The appointment still needs confirmation. Wait for the full date and time readback, then confirm."
+          : "This step could not be completed. Ask Line to correct the details or retry. No new success has been established.";
+  return {
+    operation,
+    message,
+    uncertain,
+    staffReview: bookingRequiresStaffReview(failure),
+  };
 }
 
 export function holdRemainingSeconds(
@@ -130,8 +159,9 @@ export function bookingPresentation(
   }
   if (progress.pending) message = OPERATIONS[progress.pending];
   if (progress.failure?.uncertain)
-    message =
-      "The last action has an unresolved result. Retry that same action before continuing.";
+    message = progress.failure.staffReview
+      ? progress.failure.message
+      : "The last action has an unresolved result. Retry that same action before continuing.";
   if (confirmed) message = "Your appointment is confirmed and saved.";
   if (progress.hazardous)
     message =

@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from insurance_operations.database.models.ghl import GhlConnection, GhlDelivery
 from insurance_operations.ghl.projection import project_lead
 from insurance_operations.ghl.provider import GhlError
+from insurance_operations.ghl.schemas import VoiceConfiguration
 from insurance_operations.ghl.service import (
     GhlBusy,
     GhlService,
@@ -243,6 +244,29 @@ def deliver_locked(
             saved.field(str(field["id"])) != field["fieldValue"] for field in fields
         ):
             raise GhlError("GHL_FIELD_WRITE_UNCONFIRMED", connection_error=True)
+        voice = VoiceConfiguration.model_validate(connection.voice_configuration or {})
+        if voice.contact_notes:
+            assert voice.note_user_id is not None
+            if row.note_id:
+                client.note(row.note_id).require_summary(contact_id, reference)
+            elif row.note_unknown:
+                raise GhlError("GHL_NOTE_CREATION_UNKNOWN")
+            else:
+                body = (
+                    f"{reference}\nName: {projection.name}\n"
+                    f"Callback: {projection.phone or 'Not provided'}\n{projection.summary}"
+                )
+                set_delivery(sessions, identifier, note_unknown=True)
+                try:
+                    note_id = client.create_summary(
+                        contact_id, voice.note_user_id, body
+                    )
+                except GhlError as error:
+                    if not error.ambiguous:
+                        set_delivery(sessions, identifier, note_unknown=False)
+                    raise
+                set_delivery(sessions, identifier, note_id=note_id, note_unknown=False)
+                client.note(note_id).require_summary(contact_id, reference)
     with sessions() as session, session.begin():
         current = session.get(GhlDelivery, identifier)
         assert current is not None

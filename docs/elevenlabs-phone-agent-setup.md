@@ -24,6 +24,10 @@ for the removal of fictional-data requirements and the required schema update.
 
 ## Agent behavior
 
+For the optional GHL calendar demonstration, apply the current eight-tool HVAC
+contract and [GHL demo additions](gohighlevel-voice-demo.md#inbound-demo-prompt-additions).
+The historical sequence below does not replace that booking contract.
+
 The first message must disclose that the caller is speaking to AI and that provider
 processing occurs. Ask
 the caller to explicitly agree before collecting or answering anything.

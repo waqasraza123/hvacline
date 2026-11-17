@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "ghl_calendar_bookings",
     "ghl_connections",
     "ghl_deliveries",
     "websites",
@@ -694,6 +695,8 @@ EXPECTED_COLUMNS["website_versions"] = {
 }
 EXPECTED_COLUMNS["agency_approved_faqs"].add("question_variations")
 EXPECTED_COLUMNS["ghl_connections"] = {
+    "voice_configuration",
+    "voice_version",
     "id",
     "agency_id",
     "location_id",
@@ -708,6 +711,8 @@ EXPECTED_COLUMNS["ghl_connections"] = {
     "last_error",
 }
 EXPECTED_COLUMNS["ghl_deliveries"] = {
+    "note_id",
+    "note_unknown",
     "id",
     "agency_id",
     "connection_id",
@@ -726,6 +731,19 @@ EXPECTED_COLUMNS["ghl_deliveries"] = {
     "next_attempt_at",
     "last_synced_at",
     "last_error",
+}
+
+EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
+    "appointment_id",
+    "agency_id",
+    "connection_id",
+    "calendar_id",
+    "status",
+    "contact_id",
+    "contact_unknown",
+    "event_id",
+    "last_error",
+    "created_at",
 }
 
 

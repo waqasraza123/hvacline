@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from insurance_operations.database.models.conversation import ConversationSession
 from insurance_operations.database.models.customer_account import CustomerAccount
+from insurance_operations.database.models.ghl import GhlCalendarBooking
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.database.models.operations import AuditEvent
 from insurance_operations.errors import ApiError
@@ -97,6 +98,15 @@ def customer_booking_limits(
             or_(
                 Appointment.status == "CONFIRMED",
                 (Appointment.status == "HELD") & (Appointment.hold_expires_at > now),
+                select(GhlCalendarBooking.appointment_id)
+                .where(
+                    GhlCalendarBooking.appointment_id == Appointment.id,
+                    GhlCalendarBooking.agency_id == agency_id,
+                    GhlCalendarBooking.status.in_(
+                        ["CONTACT_PENDING", "CREATING", "UNKNOWN", "NEEDS_REVIEW"]
+                    ),
+                )
+                .exists(),
             ),
         )
     )

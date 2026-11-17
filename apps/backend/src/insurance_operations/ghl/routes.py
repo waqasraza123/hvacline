@@ -9,12 +9,15 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
 from insurance_operations.errors import ApiError
+from insurance_operations.ghl.booking import GhlBookingService
 from insurance_operations.ghl.provider import GhlError
 from insurance_operations.ghl.schemas import (
+    BookingRecoveryInput,
     ConnectionAction,
     ConnectionInput,
     CredentialInput,
     RetryInput,
+    VoiceConfigurationInput,
 )
 from insurance_operations.ghl.service import GhlBusy, GhlService
 from insurance_operations.job_execution import JobDeadlineExceeded
@@ -65,6 +68,7 @@ def create_ghl_router(
     service: GhlService | None = None,
 ) -> APIRouter:
     integration = service or GhlService(sessions, settings)
+    booking = GhlBookingService(sessions, integration.factory)
 
     def owner(
         response: Response,
@@ -140,5 +144,36 @@ def create_ghl_router(
     def retry(identifier: UUID, data: RetryInput, actor: Owner) -> dict[str, bool]:
         integration.retry(actor, identifier, data)
         return {"queued": True}
+
+    @router.get("/voice")
+    @provider_errors
+    def voice(actor: Owner) -> dict[str, object]:
+        integration.enabled()
+        return booking.configuration(actor)
+
+    @router.put("/voice")
+    @provider_errors
+    def configure_voice(
+        data: VoiceConfigurationInput, actor: Owner
+    ) -> dict[str, object]:
+        return booking.configure(actor, data, settings)
+
+    @router.get("/bookings")
+    @provider_errors
+    def bookings(
+        actor: Owner,
+        offset: int = Query(default=0, ge=0),
+        limit: int = Query(default=25, ge=1, le=100),
+    ) -> dict[str, object]:
+        integration.enabled()
+        return booking.bookings(actor, offset, limit)
+
+    @router.post("/bookings/{identifier}/recover")
+    @provider_errors
+    def recover_booking(
+        identifier: UUID, data: BookingRecoveryInput, actor: Owner
+    ) -> dict[str, bool]:
+        integration.enabled()
+        return booking.recover(actor, identifier, data)
 
     return router

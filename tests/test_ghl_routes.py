@@ -107,3 +107,22 @@ def test_customer_credentials_do_not_authorize_ghl_management() -> None:
             },
         )
         assert response.status_code == 401
+
+
+def test_voice_configuration_booking_history_and_recovery_require_admin_token() -> None:
+    application, _ = app()
+    prefix = "/api/v1/development/integrations/ghl"
+    with TestClient(application) as client:
+        assert client.get(prefix + "/voice").status_code == 401
+        assert client.get(prefix + "/bookings").status_code == 401
+        assert (
+            client.put(prefix + "/voice", json={"expected_version": 0}).status_code
+            == 401
+        )
+        assert (
+            client.post(
+                prefix + f"/bookings/{uuid4()}/recover",
+                json={"confirm_remote_absent": True},
+            ).status_code
+            == 401
+        )

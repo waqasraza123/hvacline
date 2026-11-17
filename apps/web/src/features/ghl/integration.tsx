@@ -21,6 +21,7 @@ import type {
   StageMapping,
 } from "./contracts";
 import styles from "./integration.module.css";
+import { GhlVoiceSettings } from "./voice-settings";
 
 const prefix = "integrations/ghl";
 const pageSize = 25;
@@ -421,6 +422,14 @@ export function GhlIntegration({
               </fieldset>
             </form>
           )}
+          {connected && (
+            <GhlVoiceSettings
+              key={connection.id + connection.status}
+              apiBaseUrl={apiBaseUrl}
+              token={token}
+              active={connection.status === "ACTIVE"}
+            />
+          )}
           <h3>Delivery history</h3>
           <p className="section-help">
             Confirmations and CRM delivery are separate. Paused connections
@@ -481,10 +490,14 @@ function DeliveryRow({
   retry: (body: {
     remote_opportunity_id?: string;
     confirm_remote_absent?: boolean;
+    remote_note_id?: string;
+    confirm_note_absent?: boolean;
   }) => Promise<void>;
 }) {
   const [remoteId, setRemoteId] = useState("");
   const [absent, setAbsent] = useState(false);
+  const [noteId, setNoteId] = useState("");
+  const [noteAbsent, setNoteAbsent] = useState(false);
   const unresolved = delivery.contact_unknown || delivery.opportunity_unknown;
   return (
     <article className={styles.delivery}>
@@ -497,6 +510,11 @@ function DeliveryRow({
         <dd>{delivery.contact_id ?? "Not linked"}</dd>
         <dt>Opportunity</dt>
         <dd>{delivery.opportunity_id ?? "Not linked"}</dd>
+        <dt>Contact summary</dt>
+        <dd>
+          {delivery.note_id ??
+            (delivery.note_unknown ? "Creation requires review" : "Not linked")}
+        </dd>
         <dt>Last synchronized</dt>
         <dd>{when(delivery.last_synced_at)}</dd>
         <dt>Attempts since last sync</dt>
@@ -537,6 +555,12 @@ function DeliveryRow({
                 void retry({
                   ...(remoteId ? { remote_opportunity_id: remoteId } : {}),
                   confirm_remote_absent: absent,
+                  ...(delivery.note_unknown && noteId
+                    ? { remote_note_id: noteId }
+                    : {}),
+                  confirm_note_absent: Boolean(
+                    delivery.note_unknown && noteAbsent,
+                  ),
                 });
               }}
             >
@@ -567,7 +591,39 @@ function DeliveryRow({
                   </span>
                 </label>
               )}
-              <button disabled={busy}>Reconcile and retry</button>
+              {delivery.note_unknown && !delivery.note_id && (
+                <>
+                  <label>
+                    Matching GHL contact note ID (optional)
+                    <input
+                      value={noteId}
+                      pattern={"[a-zA-Z0-9_\\-]+"}
+                      maxLength={128}
+                      disabled={busy || noteAbsent}
+                      onChange={(event) => setNoteId(event.target.value)}
+                    />
+                  </label>
+                  <label className={styles.check}>
+                    <input
+                      type="checkbox"
+                      checked={noteAbsent}
+                      disabled={busy || Boolean(noteId)}
+                      onChange={(event) => setNoteAbsent(event.target.checked)}
+                    />
+                    <span>
+                      I checked the GHL contact and confirmed that this
+                      request's summary note does not exist. Allow a new note.
+                    </span>
+                  </label>
+                </>
+              )}
+              <button
+                disabled={
+                  busy || (delivery.note_unknown && !noteId && !noteAbsent)
+                }
+              >
+                Reconcile and retry
+              </button>
             </form>
           </details>
         )}

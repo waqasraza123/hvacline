@@ -62,6 +62,12 @@ class GhlConnection(UuidPrimaryKeyMixin, Base):
     last_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     blocked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(Text)
+    voice_configuration: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
+    )
+    voice_version: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
 
 
 class GhlDelivery(UuidPrimaryKeyMixin, Base):
@@ -109,6 +115,10 @@ class GhlDelivery(UuidPrimaryKeyMixin, Base):
     attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     contact_id: Mapped[str | None] = mapped_column(Text)
     opportunity_id: Mapped[str | None] = mapped_column(Text)
+    note_id: Mapped[str | None] = mapped_column(Text)
+    note_unknown: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
     contact_unknown: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default="false"
     )
@@ -129,3 +139,51 @@ class GhlDelivery(UuidPrimaryKeyMixin, Base):
     )
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(Text)
+
+
+class GhlCalendarBooking(Base):
+    __tablename__ = "ghl_calendar_bookings"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["agency_id", "connection_id"],
+            ["ghl_connections.agency_id", "ghl_connections.id"],
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["agency_id", "appointment_id"],
+            ["hvac_appointments.agency_id", "hvac_appointments.id"],
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint(
+            "connection_id", "event_id", name="uq_ghl_calendar_bookings_event"
+        ),
+        CheckConstraint(
+            "status IN ('RESERVED', 'CONTACT_PENDING', 'CREATING', 'UNKNOWN', "
+            "'CONFIRMED', 'NEEDS_REVIEW', 'RELEASED')",
+            name="status_valid",
+        ),
+        CheckConstraint(
+            "status <> 'CONFIRMED' OR (event_id IS NOT NULL AND contact_id IS NOT NULL AND NOT contact_unknown)",
+            name="confirmation_valid",
+        ),
+        Index("ix_ghl_calendar_bookings_agency_created", "agency_id", "created_at"),
+    )
+
+    appointment_id: Mapped[UUID] = mapped_column(primary_key=True)
+    agency_id: Mapped[UUID] = mapped_column(
+        ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False
+    )
+    connection_id: Mapped[UUID] = mapped_column(nullable=False)
+    calendar_id: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, server_default="RESERVED")
+    contact_id: Mapped[str | None] = mapped_column(Text)
+    contact_unknown: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )
+    event_id: Mapped[str | None] = mapped_column(Text)
+    last_error: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("clock_timestamp()"),
+    )

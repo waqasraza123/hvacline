@@ -2,12 +2,14 @@ import json
 import logging
 import math
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Any
+from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import httpx
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 
 from insurance_operations.ghl.schemas import ConnectionInput, GhlId
 
@@ -84,6 +86,76 @@ class RemoteOpportunity(RemoteRecord):
             ),
             None,
         )
+
+
+class RemoteCalendar(RemoteRecord):
+    locationId: GhlId
+    name: str = Field(max_length=500)
+    isActive: bool
+    calendarType: str
+    slotDuration: int = Field(gt=0, le=480)
+    slotDurationUnit: str
+    durationOptions: list[dict[str, Any]] = Field(default_factory=list, max_length=3)
+
+    def require_duration(self, minutes: int) -> None:
+        duration = self.slotDuration * (60 if self.slotDurationUnit == "hours" else 1)
+        if (
+            not self.isActive
+            or self.calendarType not in {"personal", "round_robin", "event"}
+            or self.slotDurationUnit not in {"mins", "hours"}
+            or duration != minutes
+            or self.durationOptions
+        ):
+            raise GhlError("GHL_CALENDAR_CONFIGURATION_INVALID")
+
+
+class RemoteAppointment(RemoteRecord):
+    locationId: GhlId
+    calendarId: GhlId
+    contactId: GhlId
+    title: str
+    appointmentStatus: str
+    startTime: AwareDatetime
+    endTime: AwareDatetime
+    deleted: bool = False
+    isRecurring: bool = False
+
+    def require_booking(
+        self,
+        *,
+        location_id: str,
+        calendar_id: str,
+        contact_id: str,
+        appointment_id: UUID,
+        starts_at: datetime,
+        ends_at: datetime,
+    ) -> None:
+        if (
+            self.locationId != location_id
+            or self.calendarId != calendar_id
+            or self.contactId != contact_id
+            or self.title != appointment_title(appointment_id)
+            or self.appointmentStatus != "confirmed"
+            or self.startTime != starts_at
+            or self.endTime != ends_at
+            or self.deleted
+            or self.isRecurring
+        ):
+            raise GhlError("GHL_APPOINTMENT_OWNERSHIP_INVALID")
+
+
+class RemoteNote(RemoteRecord):
+    body: str
+    userId: GhlId
+    contactId: GhlId
+
+    def require_summary(self, contact_id: str, reference: str) -> None:
+        if self.contactId != contact_id or not self.body.startswith(reference + "\n"):
+            raise GhlError("GHL_NOTE_OWNERSHIP_INVALID")
+
+
+def appointment_title(identifier: UUID) -> str:
+    return f"HVACLine appointment {identifier}"
 
 
 @dataclass(frozen=True)
@@ -337,3 +409,129 @@ class GhlClient:
 
     def update_opportunity(self, identifier: str, values: dict[str, object]) -> None:
         self.request("PUT", f"/opportunities/{identifier}", body=values)
+
+    def calendar(self, identifier: str) -> RemoteCalendar:
+        data = self.request("GET", f"/calendars/{identifier}")
+        try:
+            calendar = RemoteCalendar.model_validate(data["calendar"])
+        except (KeyError, ValueError):
+            raise GhlError("GHL_RESPONSE_INVALID") from None
+        if calendar.id != identifier or calendar.locationId != self.location_id:
+            raise GhlError("GHL_LOCATION_MISMATCH", connection_error=True)
+        return calendar
+
+    def free_slots(self, calendar_id: str, day: date, timezone: str) -> set[datetime]:
+        start = datetime.combine(day, time.min, ZoneInfo(timezone))
+        end = datetime.combine(day + timedelta(days=1), time.min, ZoneInfo(timezone))
+        data = self.request(
+            "GET",
+            f"/calendars/{calendar_id}/free-slots",
+            params={
+                "startDate": int(start.timestamp() * 1000),
+                "endDate": int(end.timestamp() * 1000),
+                "timezone": timezone,
+            },
+        )
+        slots: set[datetime] = set()
+        try:
+            for key, value in data.items():
+                if key == "traceId":
+                    continue
+                if date.fromisoformat(key) != day or not isinstance(value, dict):
+                    raise ValueError
+                values = value["slots"]
+                if not isinstance(values, list) or len(values) > 1440:
+                    raise ValueError
+                for raw in values:
+                    if not isinstance(raw, str):
+                        raise ValueError
+                    parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+                    if parsed.utcoffset() is None or not start <= parsed < end:
+                        raise ValueError
+                    slots.add(parsed.astimezone(UTC))
+        except (KeyError, TypeError, ValueError):
+            raise GhlError("GHL_RESPONSE_INVALID") from None
+        return slots
+
+    def create_appointment(
+        self,
+        identifier: UUID,
+        calendar_id: str,
+        contact_id: str,
+        starts_at: datetime,
+        ends_at: datetime,
+    ) -> str:
+        data = self.request(
+            "POST",
+            "/calendars/events/appointments",
+            body={
+                "locationId": self.location_id,
+                "calendarId": calendar_id,
+                "contactId": contact_id,
+                "title": appointment_title(identifier),
+                "startTime": starts_at.isoformat(),
+                "endTime": ends_at.isoformat(),
+                "appointmentStatus": "confirmed",
+                "toNotify": False,
+                "ignoreDateRange": False,
+                "ignoreFreeSlotValidation": False,
+            },
+            creating=True,
+        )
+        try:
+            result = RemoteAppointment.model_validate(data)
+            result.require_booking(
+                location_id=self.location_id,
+                calendar_id=calendar_id,
+                contact_id=contact_id,
+                appointment_id=identifier,
+                starts_at=starts_at,
+                ends_at=ends_at,
+            )
+        except ValueError:
+            raise GhlError("GHL_RESPONSE_INVALID", ambiguous=True) from None
+        except GhlError as error:
+            raise GhlError(error.code, ambiguous=True) from None
+        return result.id
+
+    def appointment(self, identifier: str) -> RemoteAppointment:
+        data = self.request("GET", f"/calendars/events/appointments/{identifier}")
+        try:
+            result = RemoteAppointment.model_validate(data["event"])
+        except (KeyError, ValueError):
+            raise GhlError("GHL_RESPONSE_INVALID") from None
+        if result.id != identifier or result.locationId != self.location_id:
+            raise GhlError("GHL_LOCATION_MISMATCH", connection_error=True)
+        return result
+
+    def create_summary(self, contact_id: str, user_id: str, body: str) -> str:
+        data = self.request(
+            "POST",
+            "/notes",
+            params={"locationId": self.location_id},
+            body={
+                "body": body,
+                "userId": user_id,
+                "relations": [{"objectKey": "contact", "recordId": contact_id}],
+            },
+            creating=True,
+        )
+        try:
+            note = RemoteNote.model_validate(data["note"])
+        except (KeyError, ValueError):
+            raise GhlError("GHL_RESPONSE_INVALID", ambiguous=True) from None
+        if note.contactId != contact_id or note.body != body or note.userId != user_id:
+            raise GhlError("GHL_NOTE_WRITE_UNCONFIRMED", ambiguous=True)
+        return note.id
+
+    def note(self, identifier: str) -> RemoteNote:
+        data = self.request(
+            "GET", f"/notes/{identifier}", params={"locationId": self.location_id}
+        )
+        try:
+            note = RemoteNote.model_validate(data["note"])
+        except (KeyError, ValueError):
+            raise GhlError("GHL_RESPONSE_INVALID") from None
+        if note.id != identifier:
+            raise GhlError("GHL_NOTE_OWNERSHIP_INVALID")
+        return note

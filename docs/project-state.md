@@ -1,5 +1,35 @@
 # Project State
 
+## GHL voice priorities — source UNVERIFIED — 2026-11-18
+
+Owner selects only the first three priorities: direct GHL calendar booking,
+contact-level request summaries and an inbound fictional-business demo flow.
+Optional team/calendar routes reuse existing scheduling and phone/browser tools.
+Mapped teams intersect local rules/capacity with GHL availability; confirmation
+creates and verifies a GHL event before local CONFIRMED. Durable attempt state,
+original-destination bindings and explicit owner recovery guard uncertain writes.
+Unresolved attempts retain capacity after ordinary hold expiry. Existing routes
+remain the default; Google/GHL routing cannot overlap on a team.
+
+Optional contact notes use confirmed persisted lead data and the current notes
+API, one note per request, with independent unknown-create recovery. Existing
+notes/identities are preserved. Administrator UI adds mapping, note setup and
+booking history/recovery; customer booking failures preserve staff-review state.
+Migration20261118_0025 follows0024 and must precede backend deployment; not applied.
+GHL cancellation/rescheduling, continuous external-edit reconciliation, emergency
+live transfer, lead reactivation and agency onboarding remain outside this slice.
+
+Inbound demo uses the existing authenticated eight-tool phone flow plus documented
+emergency/routine prompt additions. No number/agent/provider was configured or
+activated, no call made, and no migration or deployment performed. Source
+formatting only; all regression sources and runtime/visual behavior UNVERIFIED.
+Owner setup, exact deferred commands and manual acceptance:
+docs/gohighlevel-voice-demo.md. Existing execution stop and unrelated work preserved.
+
+Owner authorizes scoped publication to main; retain [skip ci] [skip render].
+No verification, migration, provider activation or deployment is authorized by
+this publication.
+
 ## Public Dashboard navigation — source UNVERIFIED — 2026-11-17
 
 Shared desktop/mobile navigation labels the existing `/operations` link
