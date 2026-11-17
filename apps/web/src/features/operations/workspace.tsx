@@ -13,6 +13,7 @@ import { DashboardOverview } from "./dashboard-overview";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
 import { WebsiteManager } from "@/features/websites/website-manager";
 import { GhlIntegration } from "@/features/ghl/integration";
+import { GhlSetupPreview, GhlSpotlight } from "@/features/ghl/spotlight";
 import {
   demoOperations,
   demoSchedule,
@@ -94,6 +95,14 @@ export function OperationsWorkspace({
     setAvailability(null);
     setMessage("Reserved for five minutes. Confirm the appointment below.");
   }
+  function connectWorkspace(section: OperationsSection = "overview") {
+    setDemo(false);
+    setData(null);
+    setSchedule(null);
+    setTab(section);
+    setMessage("");
+    setError("");
+  }
   function timestamp(value: string) {
     return new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
@@ -118,21 +127,12 @@ export function OperationsWorkspace({
           <div>
             <strong>Demo workspace · sample data</strong>
             <p>
-              Explore the design. Calls, visits and business details are
-              fictional; actions do not change a live workspace.
+              Calls, visits and business details here are sample records.
+              Explore GoHighLevel for CRM sync, calendar booking and contact
+              summaries.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setDemo(false);
-              setData(null);
-              setSchedule(null);
-              setTab("overview");
-              setMessage("");
-              setError("");
-            }}
-          >
+          <button type="button" onClick={() => connectWorkspace()}>
             Connect your workspace
           </button>
         </div>
@@ -191,18 +191,20 @@ export function OperationsWorkspace({
       )}
       {data && (
         <>
-          <p className={styles.queueNote}>
-            {demo ? "Sample schedule for November 12, 2026. " : ""}
-            Up to 100 latest records per queue. Counts reflect loaded records,
-            not business totals. Times in{" "}
-            {schedule?.configuration?.timezone ?? "America/New_York"}.
-            {!demo && (
-              <>
-                {" "}
-                Last refreshed {timestamp(new Date(loadedAt).toISOString())}.
-              </>
-            )}
-          </p>
+          {(!demo || tab !== "integrations") && (
+            <p className={styles.queueNote}>
+              {demo ? "Sample schedule for November 12, 2026. " : ""}
+              Up to 100 latest records per queue. Counts reflect loaded records,
+              not business totals. Times in{" "}
+              {schedule?.configuration?.timezone ?? "America/New_York"}.
+              {!demo && (
+                <>
+                  {" "}
+                  Last refreshed {timestamp(new Date(loadedAt).toISOString())}.
+                </>
+              )}
+            </p>
+          )}
           {tab === "overview" && (
             <DashboardOverview
               data={data}
@@ -210,9 +212,25 @@ export function OperationsWorkspace({
               loadedAt={loadedAt}
               timestamp={timestamp}
               onSelect={setTab}
+            >
+              <GhlSpotlight
+                key={demo ? "demo" : "workspace"}
+                apiBaseUrl={apiBaseUrl}
+                token={token}
+                demo={demo}
+                refreshedAt={loadedAt}
+                onOpen={() => setTab("integrations")}
+                onConnect={() => connectWorkspace("integrations")}
+              />
+            </DashboardOverview>
+          )}
+          {demo && tab !== "integrations" && <DemoSection section={tab} />}
+          {demo && tab === "integrations" && (
+            <GhlSetupPreview
+              onConnect={() => connectWorkspace("integrations")}
+              onBack={() => setTab("overview")}
             />
           )}
-          {demo && <DemoSection section={tab} />}
           {!demo && tab === "integrations" && (
             <GhlIntegration apiBaseUrl={apiBaseUrl} token={token} />
           )}

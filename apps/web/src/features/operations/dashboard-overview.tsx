@@ -1,5 +1,5 @@
 import { ProductIcon } from "@/components/product-icons";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import type { Operations, ScheduleResponse } from "./api";
 import type { OperationsSection } from "./dashboard-shell";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
@@ -11,12 +11,14 @@ export function DashboardOverview({
   loadedAt,
   timestamp,
   onSelect,
+  children,
 }: {
   data: Operations;
   schedule: ScheduleResponse | null;
   loadedAt: number;
   timestamp: (value: string) => string;
   onSelect: (section: OperationsSection) => void;
+  children?: ReactNode;
 }) {
   const upcoming = data.appointments
     .filter(
@@ -70,6 +72,7 @@ export function DashboardOverview({
 
   return (
     <div className={styles.overview}>
+      {children}
       <section className={styles.metrics} aria-label="Loaded queue counts">
         {metrics.map((metric) => (
           <button

@@ -155,6 +155,20 @@
 .navItem svg {
   flex-shrink: 0;
 }
+.navItem[data-featured="true"] {
+  border-color: var(--customer-border);
+  background: var(--surface);
+  color: var(--customer-accent-ink);
+}
+.navFeatureBadge {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--customer-border);
+  border-radius: 5px;
+  background: var(--customer-accent-soft);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+}
 .navItem:hover:not(:disabled),
 .navItem[aria-current="page"] {
   border-color: transparent;
@@ -739,6 +753,7 @@
     padding-inline: 12px;
   }
   .collapsed .desktopSidebar .navLabel,
+  .collapsed .desktopSidebar .navFeatureBadge,
   .collapsed .desktopSidebar .groupLabel,
   .collapsed .desktopSidebar :global(.brand-link > span) {
     display: none;

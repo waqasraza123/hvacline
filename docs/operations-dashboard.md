@@ -11,6 +11,21 @@ are evaluated relative to that example day. Demo booking mutations are disabled,
 and API dispatch rejects demo actions. Connected editors, calendar integrations,
 maintenance labor and browser voice are not mounted in demo mode.
 
+GoHighLevel is featured above the overview queue cards and has its own named
+sidebar entry with a CRM badge. The underlying section key remains `integrations`;
+older setup guides referring to Integrations mean this GoHighLevel entry.
+The feature card highlights contact/opportunity sync, GHL calendar booking and
+contact summaries, with direct actions to explore or manage the connection.
+Demo visitors can open a static workflow preview or enter the administrator
+connection flow; the latter returns to GoHighLevel after authentication.
+
+The overview and static workflow preview make no requests in demo mode. In a
+connected workspace the overview reads the existing administrator-protected GHL
+status endpoint on mount and workspace refresh. Loading, unavailable, disabled,
+not-connected, paused, error and active states remain distinct. Active describes
+saved connection configuration, not newly verified provider health or enabled
+calendar/note features. No backend, credentials or permissions change.
+
 The shared top navigation initially marks Dashboard with a green dot and a short
 pulse. Selecting another item moves the dot and active styling to that item;
 desktop and mobile share the selection. Browser back/forward and hash navigation
@@ -51,6 +66,9 @@ Manual acceptance:
    Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
+   Confirm the GHL feature leads the overview, its named sidebar entry opens the
+   static workflow preview, and both work without network requests in demo mode.
+   Connect your workspace must require the admin token and return to GoHighLevel.
    The top-right Phone receptionist link must open the homepage Calling section
    (`/#call-me`), rather than the sandbox-gated `/phone-demo` route.
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
@@ -65,6 +83,10 @@ Manual acceptance:
 4. Connect an approved workspace. Confirm invalid-token/network failures have
    clear errors; retry succeeds without losing the entered token. Check actual
    timestamps/timezone, last refresh, empty queues and correctly labeled counts.
+   Review GHL loading/unavailable/disabled/disconnected/paused/error/active states
+   and workspace refresh. Check the card/sidebar on mobile, desktop, collapsed
+   navigation, keyboard and both themes. Status reads must remain admin-protected
+   and must not perform a provider request.
 5. With authorized sample records, check existing availability/reservation/
    confirmation/cancellation flows, editor updates, scheduling/calendar controls,
    maintenance labor and conditional browser voice. Hazardous requests must

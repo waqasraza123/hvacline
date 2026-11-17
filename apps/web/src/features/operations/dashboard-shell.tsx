@@ -12,9 +12,9 @@ import styles from "./dashboard.module.css";
 const sections = [
   {
     key: "integrations",
-    label: "Integrations",
+    label: "GoHighLevel",
     icon: "shield",
-    group: "Manage",
+    group: "Workspace",
   },
   { key: "websites", label: "Websites", icon: "home", group: "Manage" },
   { key: "overview", label: "Overview", icon: "home", group: "Workspace" },
@@ -114,6 +114,9 @@ export function DashboardShell({
                     <button
                       type="button"
                       className={styles.navItem}
+                      data-featured={
+                        item.key === "integrations" ? "true" : undefined
+                      }
                       aria-current={section === item.key ? "page" : undefined}
                       aria-label={item.label}
                       title={item.label}
@@ -125,6 +128,14 @@ export function DashboardShell({
                     >
                       <ProductIcon name={item.icon} />
                       <span className={styles.navLabel}>{item.label}</span>
+                      {item.key === "integrations" && (
+                        <span
+                          className={styles.navFeatureBadge}
+                          aria-hidden="true"
+                        >
+                          CRM
+                        </span>
+                      )}
                     </button>
                   </li>
                 ))}
@@ -227,9 +238,11 @@ export function DashboardShell({
               <p className={styles.eyebrow}>HVACLINE OPERATIONS</p>
               <h1>{connected ? label : "Your service workspace"}</h1>
               <p className={styles.subtitle}>
-                {section === "overview" || !connected
-                  ? "A clear view of your calls, bookings and next steps."
-                  : "Manage your service business, one next step at a time."}
+                {section === "integrations" && connected
+                  ? "Your CRM, calendar booking and contact summaries."
+                  : section === "overview" || !connected
+                    ? "A clear view of your calls, bookings and next steps."
+                    : "Manage your service business, one next step at a time."}
               </p>
             </div>
             {connected && !demo && (

@@ -1,5 +1,19 @@
 # Project State
 
+## Prominent GoHighLevel dashboard feature — source UNVERIFIED — 2026-11-18
+
+Overview leads with a GHL feature card covering CRM sync, calendar booking and
+contact summaries. Named GoHighLevel sidebar entry/CRM badge and direct actions
+reuse the existing integrations section. Demo connect flow retains that target
+through administrator authentication. Demo overview adds no requests; connected
+overview reads existing protected saved connection status, not live provider
+health. No backend, schema, provider, permission or dependency changes.
+Public GoHighLevel opens a static workflow preview without a provider request.
+Source formatting only; no checks/services/provider calls/deployment.
+Owner authorizes scoped publication with [skip ci] [skip render].
+Owner command: `npm run verify:web`; exact UI/status/auth/demo/mobile/theme
+acceptance in docs/operations-dashboard.md. Implementation remains UNVERIFIED.
+
 ## Navbar active dot — source UNVERIFIED — 2026-11-18
 
 Shared desktop/mobile top navigation initially marks Dashboard with a green dot
