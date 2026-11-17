@@ -3,7 +3,8 @@
 Implementation and runtime acceptance are **unverified**. The owner requested
 coding and publication only; no execution checks or services are authorized.
 
-`/operations` opens a sample-data demo. The homepage links to it. Its initial
+`/operations` opens a sample-data demo for all visitors without sign-in. The
+shared desktop navbar and mobile menu link to it as Dashboard. Its initial
 render uses local fictional fixtures and makes no backend or provider request.
 The example schedule is November 12, 2026 in America/New_York; upcoming visits
 are evaluated relative to that example day. Demo booking mutations are disabled,
@@ -40,7 +41,9 @@ npm run verify:web
 
 Manual acceptance:
 
-1. Open the homepage Dashboard demo link. Visit every visible section without
+1. While signed out, open Dashboard from the top navbar and mobile menu;
+   confirm `/operations` opens without sign-in. Repeat while signed in.
+   Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
    The top-right Phone receptionist link must open the homepage Calling section

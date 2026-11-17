@@ -12,7 +12,7 @@ const links = [
   {
     href: "/operations",
     label: "Dashboard",
-    description: "See your service workspace",
+    description: "Explore the dashboard demo",
   },
   { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
   { href: "/#call-me", label: "Calling", description: "Inbound and outbound" },

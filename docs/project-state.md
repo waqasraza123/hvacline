@@ -1,5 +1,15 @@
 # Project State
 
+## Public Dashboard navigation — source UNVERIFIED — 2026-11-17
+
+Shared desktop/mobile navigation labels the existing `/operations` link
+Dashboard, with demo wording in the mobile menu. All visitors can open the
+existing sample-data dashboard without sign-in; live workspace access retains
+the admin-token gate. No authentication/backend change is required.
+Owner requests commit/push to main. No checks or services ran. Owner command:
+`npm run verify:web`; manually open Dashboard signed out and signed in from
+desktop/mobile navigation and confirm live workspace access remains protected.
+
 ## Short product-only README — 2026-11-14
 
 Owner requests a very short, feature-focused README without development or
