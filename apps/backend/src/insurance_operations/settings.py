@@ -252,6 +252,10 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
 
 class ApiSettings(DatabaseSettings):
+    ghl_demo_enabled: bool = False
+    ghl_demo_fictional_data_only: bool = False
+    ghl_demo_location_id: str | None = None
+    ghl_demo_private_integration_token: SecretStr | None = None
     website_platform_enabled: bool = False
     homepage_chat_enabled: bool = False
     homepage_chat_daily_limit: int = Field(default=20, ge=1, le=1000)
@@ -291,6 +295,30 @@ class ApiSettings(DatabaseSettings):
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
     customer_mfa_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_ghl_demo(self) -> Self:
+        if not self.ghl_demo_enabled:
+            return self
+        if not self.ghl_demo_fictional_data_only:
+            raise ValueError("GHL demo requires a fictional-data-only sub-account")
+        from insurance_operations.ghl.schemas import CredentialInput
+
+        if (
+            not self.ghl_demo_location_id
+            or self.ghl_demo_private_integration_token is None
+        ):
+            raise ValueError(
+                "GHL demo requires a location ID and private integration token"
+            )
+        try:
+            CredentialInput(
+                location_id=self.ghl_demo_location_id,
+                token=self.ghl_demo_private_integration_token,
+            )
+        except ValueError:
+            raise ValueError("GHL demo location ID or token is invalid") from None
+        return self
 
     @model_validator(mode="after")
     def validate_homepage_chat(self) -> Self:

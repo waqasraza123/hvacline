@@ -1,5 +1,24 @@
 # Project State
 
+## Public live GHL demo authorized — focused tests passed — 2026-11-18
+
+Owner authorizes publishing/deploying the read-only public pipeline view,
+configuring hosted server-only GHL_DEMO_* settings and performing focused mock
+checks plus live read-only acceptance. Dedicated sub-account is fictional-only.
+Python test_ghl_demo/test_ghl_routes/test_ghl:37 passed; frontend demo-contracts:
+6 passed. No database tests, broad verification, local services or migrations ran.
+
+Source adds the public aggregate API, strict enabled-config validation, bounded
+cached GET-only provider reads, credential-free UI and honest empty/error/previous
+snapshot states. The live card precedes the static workflow preview. No package
+or schema change. Hosted endpoint currently404; local private demo token absent,
+activation off. Hosting connections/private credential setup remain pending;
+no GHL reads/writes or deployment completed yet. Publish scoped demo sources,
+then finish hosted configuration and acceptance per docs/gohighlevel-public-demo.md.
+
+Scoped publication is authorized; hosting/credential setup and live acceptance
+must be completed before claiming this demo is active.
+
 ## Prominent GoHighLevel dashboard feature — source UNVERIFIED — 2026-11-18
 
 Overview leads with a GHL feature card covering CRM sync, calendar booking and

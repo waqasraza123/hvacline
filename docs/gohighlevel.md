@@ -1,5 +1,11 @@
 # GoHighLevel integration
 
+For the public read-only pipeline/stage-count view of a dedicated fictional-data
+sub-account, see [GoHighLevel public demo](gohighlevel-public-demo.md). It uses
+separate server-only demo credentials and does not exercise the managed CRM or
+calendar write workflow below. Focused demo checks:37 backend and6 frontend passed;
+hosted setup and live acceptance remain pending.
+
 For optional direct GHL calendar booking, contact-level request summaries and
 the inbound demo flow, see [GHL voice demo](gohighlevel-voice-demo.md). This
 unverified extension requires migration0025 before backend deployment.

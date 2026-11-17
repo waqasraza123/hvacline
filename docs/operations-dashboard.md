@@ -31,6 +31,13 @@ pulse. Selecting another item moves the dot and active styling to that item;
 desktop and mobile share the selection. Browser back/forward and hash navigation
 update the selection. Reduced-motion preferences keep a still green dot.
 
+The public GoHighLevel section also reads the optional live aggregate projection
+from a dedicated fictional-data sub-account. It shows pipeline/stage names,
+opportunity counts and the successful-read timestamp above the static workflow
+preview. Credentials and record IDs remain server-side; no admin sign-in is
+required to view the aggregate demo. Disabled/error/empty states remain explicit.
+Setup and43 passing focused checks: [public demo guide](gohighlevel-public-demo.md).
+
 Connect your workspace replaces the demo with the existing in-memory admin-token
 gate. Returning to the demo clears that token. Connected mode retains the
 existing development endpoints, controls and ownership checks. No new production
@@ -66,8 +73,10 @@ Manual acceptance:
    Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
-   Confirm the GHL feature leads the overview, its named sidebar entry opens the
-   static workflow preview, and both work without network requests in demo mode.
+   Confirm the GHL feature leads the overview without requests in demo mode.
+   Its named sidebar entry opens the public aggregate data card and static
+   workflow preview. Only the credential-free public demo endpoint is fetched;
+   private/admin status endpoints must not be requested by demo visitors.
    Connect your workspace must require the admin token and return to GoHighLevel.
    The top-right Phone receptionist link must open the homepage Calling section
    (`/#call-me`), rather than the sandbox-gated `/phone-demo` route.

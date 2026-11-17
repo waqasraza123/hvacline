@@ -70,6 +70,7 @@ from insurance_operations.database.models.lead import LeadStatus
 from insurance_operations.database.models.telephony import InboundCallStatus
 from insurance_operations.demo_security import require_demo_admin_token
 from insurance_operations.errors import ApiError, api_error_handler
+from insurance_operations.ghl.demo import create_ghl_demo_router
 from insurance_operations.ghl.routes import create_ghl_router
 from insurance_operations.homepage_chat.routes import create_homepage_chat_router
 from insurance_operations.hvac.integration_routes import (
@@ -203,6 +204,7 @@ def create_app(
         lifespan=lifespan,
     )
     application.state.integration_settings = settings
+    application.include_router(create_ghl_demo_router(settings))
     application.include_router(
         create_billing_public_router(billing_settings, session_factory)
     )

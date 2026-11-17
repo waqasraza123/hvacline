@@ -13,6 +13,7 @@ import { DashboardOverview } from "./dashboard-overview";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
 import { WebsiteManager } from "@/features/websites/website-manager";
 import { GhlIntegration } from "@/features/ghl/integration";
+import { GhlDemo } from "@/features/ghl/demo";
 import { GhlSetupPreview, GhlSpotlight } from "@/features/ghl/spotlight";
 import {
   demoOperations,
@@ -226,10 +227,13 @@ export function OperationsWorkspace({
           )}
           {demo && tab !== "integrations" && <DemoSection section={tab} />}
           {demo && tab === "integrations" && (
-            <GhlSetupPreview
-              onConnect={() => connectWorkspace("integrations")}
-              onBack={() => setTab("overview")}
-            />
+            <>
+              <GhlDemo apiBaseUrl={apiBaseUrl} />
+              <GhlSetupPreview
+                onConnect={() => connectWorkspace("integrations")}
+                onBack={() => setTab("overview")}
+              />
+            </>
           )}
           {!demo && tab === "integrations" && (
             <GhlIntegration apiBaseUrl={apiBaseUrl} token={token} />
