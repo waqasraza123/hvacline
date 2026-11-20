@@ -1,12 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
-import "../product.css";
+import { LoadingScreen } from "@/components/loading-screen";
 
 export default function LoadingPricing() {
-  return (
-    <div className="product-site">
-      <main className="product-container" style={{ paddingBlock: "5rem" }}>
-        <LoadingSpinner label="Loading maintenance packages…" />
-      </main>
-    </div>
-  );
+  return <LoadingScreen label="Loading maintenance packages…" />;
 }

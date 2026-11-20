@@ -4,7 +4,8 @@ Implementation and runtime acceptance are **unverified**. The owner requested
 coding and publication only; no execution checks or services are authorized.
 
 `/operations` opens a sample-data demo for all visitors without sign-in. The
-shared desktop navbar and mobile menu link to it as Dashboard. Its initial
+shared desktop navbar and mobile menu offer Dashboard and Pricing; Calling has
+been removed from both. The dashboard's initial
 render uses local fictional fixtures and makes no backend or provider request.
 The example schedule is November 12, 2026 in America/New_York; upcoming visits
 are evaluated relative to that example day. Demo booking mutations are disabled,
@@ -83,7 +84,8 @@ Manual acceptance:
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
    horizontally scrollable tables, wrapped request details and no page overflow.
    On a fresh homepage load, confirm Dashboard shows the green pulsing dot before
-   any interaction. Select Calling and Pricing; confirm the active marker moves
+   any interaction. Confirm Calling is absent. Select Pricing and Dashboard;
+   confirm the active marker moves
    on navigation. Repeat with the mobile menu and keyboard, check browser back/
    forward, and enable reduced motion to confirm the dot stays visible and still.
 3. Use keyboard-only navigation: skip link, desktop collapse/expand, mobile drawer

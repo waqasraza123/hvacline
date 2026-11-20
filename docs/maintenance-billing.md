@@ -72,7 +72,9 @@ availability, change service areas or bypass existing booking/consent gates.
   end. Mid-period tier switching is disabled to prevent resetting the included
   allowance through Stripe price changes. After cancellation finishes, customers
   can choose a new package; purchased-hour balances remain.
-- All new asynchronous states use the same circular `LoadingSpinner`, with a
+- Full-page route fallbacks use the shared centered `LoadingScreen`; owner
+  commands and acceptance are in [Loading screens](loading-screens.md).
+  Inline asynchronous states use the circular `LoadingSpinner`, with a
   descriptive status, disabled actions and stable surrounding layout. Sign-in,
   MFA and Operations connection use the same spinner. Reduced-motion preferences
   slow the spinner and remove decorative transitions.

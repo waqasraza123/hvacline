@@ -1,5 +1,19 @@
 # Project State
 
+## Shared route loader and navigation — source UNVERIFIED — 2026-11-20
+
+Owner requests a centered custom loader for otherwise blank loading views and
+removal of Calling from the top bar. Root, Pricing, Billing and published-site
+fallbacks reuse LoadingScreen with the existing Brand, themed orange signal,
+descriptive status and reduced-motion support. Inline action/panel spinners stay.
+Shared desktop/mobile navigation now offers Dashboard and Pricing.
+
+Owner authorizes scoped publication to main; preserve unrelated local work and
+retain [skip ci] [skip render]. No tests/builds/linters/type checks/services or
+browser acceptance ran; runtime remains UNVERIFIED. Owner command:
+`npm run verify:web`; exact manual checks: docs/loading-screens.md.
+No backend, schema, dependency, authentication or provider change.
+
 ## Public live GHL demo authorized — focused tests passed — 2026-11-18
 
 Owner authorizes publishing/deploying the read-only public pipeline view,

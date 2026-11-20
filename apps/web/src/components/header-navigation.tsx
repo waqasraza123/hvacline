@@ -15,7 +15,6 @@ const links = [
     description: "Explore the dashboard demo",
   },
   { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
-  { href: "/#call-me", label: "Calling", description: "Inbound and outbound" },
 ] as const;
 
 export function HeaderNavigation() {
@@ -106,7 +105,7 @@ export function HeaderNavigation() {
               Find your next step.
             </Dialog.Title>
             <Dialog.Description className={styles.description}>
-              Meet the receptionist, view packages or open your workspace.
+              View maintenance packages or open your workspace.
             </Dialog.Description>
             <nav className={styles.mobile} aria-label="Mobile navigation">
               {links.map((link, index) => (
