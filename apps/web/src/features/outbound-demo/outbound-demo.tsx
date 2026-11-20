@@ -10,7 +10,7 @@ export function OutboundDemo() {
       aria-labelledby="outbound-title"
     >
       <div className="outbound-demo-intro">
-        <p className="product-eyebrow">ON YOUR PHONE</p>
+        <p className="product-eyebrow">HVAC PHONE EXAMPLE</p>
         <h2 id="outbound-title">
           Inbound &amp;
           <br />

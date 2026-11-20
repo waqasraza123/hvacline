@@ -258,7 +258,7 @@ export function HomepageChat() {
         </span>
         <div>
           <h2 id="try-line-title">
-            Meet Line<span>Your AI voice receptionist</span>
+            Meet Line<span>HVAC example</span>
           </h2>
         </div>
         <span className={styles.badge}>

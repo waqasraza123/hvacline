@@ -45,16 +45,17 @@ export default function Home() {
         <section className="product-hero product-container">
           <div className="hero-copy">
             <p className="product-eyebrow">
-              <span /> AI VOICE RECEPTIONIST FOR HVAC
+              <span /> CUSTOMIZABLE AI VOICE AGENTS
             </p>
             <h1>
-              Stop losing jobs
+              AI voice agents,
               <br />
-              <span>to missed calls.</span>
+              <span>built around your business.</span>
             </h1>
             <p className="product-lead">
-              Line answers questions, checks available times, and books HVAC
-              appointments in one natural conversation.
+              Customize the voice, knowledge, and workflows to fit your
+              business—from answering customer questions to capturing
+              enquiries and supporting your day-to-day operations.
             </p>
             <div className="product-hero-actions">
               <Link className="product-button" href="/book">
@@ -63,8 +64,7 @@ export default function Home() {
               </Link>
             </div>
             <p className="hero-voice-note">
-              Talk to Line in your browser. Sign in, then connect when you’re
-              ready.
+              Try the HVAC example. Sign in, then connect when you’re ready.
             </p>
             <div className="hero-contact-options">
               <OutboundDemoTrigger className="product-text-link">
@@ -125,15 +125,15 @@ export default function Home() {
         <OutboundDemo />
         <section className="product-final-cta product-container">
           <div>
-            <p className="product-eyebrow">TRY THE BOOKING CONVERSATION</p>
+            <p className="product-eyebrow">EXPLORE THE HVAC EXAMPLE</p>
             <h2>
-              Hear Line book
+              Experience AI voice
               <br />
-              <span>an HVAC appointment.</span>
+              <span>in action.</span>
             </h2>
           </div>
           <Link className="product-button button-light" href="/book">
-            Book an appointment <ProductIcon name="arrow" />
+            Try Voice Chat <ProductIcon name="arrow" />
           </Link>
         </section>
       </main>
@@ -145,7 +145,7 @@ export default function Home() {
           <GitHubLink description />
         </div>
         <Brand />
-        <p>AI voice receptionist. HVAC appointments booked in conversation.</p>
+        <p>Customizable AI voice agents for business conversations.</p>
         <nav aria-label="Footer navigation">
           <Link href="/login">Sign in</Link>
           <Link href="/signup">Create an account</Link>
@@ -160,7 +160,7 @@ export default function Home() {
           <VoiceSymbol />
         </span>
         <span>
-          Try Voice Chat<small>AI VOICE RECEPTIONIST FOR HVAC</small>
+          Try Voice Chat<small>AI VOICE AGENTS FOR BUSINESS</small>
         </span>
         <ProductIcon name="arrow" />
       </Link>

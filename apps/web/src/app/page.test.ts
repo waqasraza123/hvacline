@@ -19,10 +19,10 @@ vi.mock("@/features/outbound-demo/outbound-demo-dialog", () => ({
     createElement("button", null, children),
 }));
 
-it("renders the memory preview beside existing hero badges without changing the heading or primary action", () => {
+it("renders broader business positioning beside the existing hero badges and primary action", () => {
   const html = renderToStaticMarkup(createElement(Home));
-  expect(html).toContain("Stop losing jobs");
-  expect(html).toContain("to missed calls.");
+  expect(html).toContain("AI voice agents,");
+  expect(html).toContain("built around your business.");
   expect(html).toMatch(/href="\/book"[^>]*>[\s\S]*?Try Voice Chat/);
   expect(html).toContain("<strong>Persistent Memory</strong>");
   expect(html).toContain("Customer-controlled · Preview");

@@ -1,3 +1,36 @@
+## Broader homepage positioning — source UNVERIFIED — 2026-11-20
+
+Owner selects business owners and homepage-wide messaging while retaining
+HVACLine. Hero now reads “AI voice agents, built around your business.” and
+describes customizable voice/knowledge/workflows. Card and phone section label
+the HVAC example; closing CTA/footer/launcher/default and Open Graph metadata
+align with the broader positioning. All primary actions retain Try Voice Chat
+at /book; existing layout and behavior remain. Geographic/language coverage,
+industry implementations, self-service and backend booking/safety gates do not
+expand. README/mobile branding remain outside this slice.
+
+Updated existing headline expectations and current homepage copy/hero guides.
+No tests/builds/linters/type checks/services/browser checks/publication/deployment
+ran. Runtime/visual acceptance remains UNVERIFIED. Owner command:
+`npm run verify:web`; exact manual checks: docs/homepage-copy.md. Preserve
+unrelated local/remote source and divergent history. Latest published main/tag
+remain the Expo publication recorded below; this copy change is local only.
+
+## Expo mobile app and React Native branding published — UNVERIFIED — 2026-11-20
+
+Published98c1c8efcc2f2583ef2a33f046c91514da193098 on canonical main from
+fa59bac8fe671c7ff70880e0e491dab6e8d055cc through expected-head non-force
+Git-data update; remote readback matches. Exactly57 scoped files (40 new) include
+Expo app/core/web adapters/gateway/config/lockfile/docs, README React Native/Expo
+badges/mobile Preview and official SVG logo. Prepared blob identities match;
+unrelated remote files/memory and divergent local source/index/history preserved.
+Annotated v0.1.0-beta.2 resolves to that commit; existing beta.1 remains595994f.
+Commit retains [skip ci] [skip render]. No tests/builds/linters/type checks,
+services/simulators/migrations/providers/deployment commands ran. Runtime/native/
+security/visual acceptance remains UNVERIFIED. Owner setup/commands/manual checks:
+docs/mobile-app.md and docs/repository-presentation.md. Publication alone does not
+activate the disabled mobile gateway or create an app-store binary/release.
+
 ## Expo mobile publication authorized — UNVERIFIED — 2026-11-20
 
 Owner requests publishing the Expo customer app to main, updating README and

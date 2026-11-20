@@ -1,5 +1,28 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Broader business positioning — November 20, 2026 — UNVERIFIED
+
+The homepage now leads with “AI voice agents, built around your business.” and
+describes configurable voice, knowledge and workflows for business owners.
+HVACLine remains the brand. The conversation card and phone section explicitly
+identify the HVAC example; the closing CTA, footer, launcher and default/search
+sharing metadata use the broader positioning. The primary action remains
+Try Voice Chat at `/book`, including the closing CTA. Exact current copy:
+[homepage copy](homepage-copy.md). Older sections below are historical context.
+
+Source copy and the existing headline test expectations only; layout, links,
+phone number, recovery preview, authentication/consent, provider behavior and
+HVAC booking/safety boundaries remain. README/mobile branding is outside this
+change. Broader positioning does not add countries, languages, industry-specific
+implementations or public self-service setup.
+
+No tests/builds/linters/type checks/services/browser acceptance ran. Runtime and
+visual acceptance remain UNVERIFIED. Owner command: `npm run verify:web`.
+Manually inspect narrow phone/desktop headline wraps and both themes, example
+labels, closing/footer/launcher copy, existing CTA/phone/callback destinations,
+sign-in/consent separation and title/description/Open Graph text. Publication and
+deployment remain separate owner actions; no migration or provider setup needed.
+
 ## Try Voice Chat is primary — November 9, 2026 — UNVERIFIED
 
 The hero now clearly offers Try Voice Chat as its primary action and explains
