@@ -117,6 +117,51 @@ class DatabaseConnectionSettings(CommonSettings):
 
 
 class DatabaseSettings(DatabaseConnectionSettings):
+    elevenlabs_phone_agent_id: str | None = None
+    outbound_demo_agent_id: str | None = None
+    elevenlabs_agent_id: str | None = None
+    recovery_agency_id: UUID | None = None
+    recovery_public_api_origin: str | None = None
+    recovery_web_origin: str | None = None
+    recovery_sms_enabled: bool = False
+    recovery_sms_compliance_confirmed: bool = False
+    recovery_twilio_account_sid: str | None = None
+    recovery_twilio_auth_token: SecretStr | None = None
+    recovery_sms_from_number: str | None = None
+    recovery_sms_daily_limit: int = Field(default=50, ge=1, le=100)
+    recovery_voice_enabled: bool = False
+    recovery_voice_compliance_confirmed: bool = False
+    recovery_voice_api_key: SecretStr | None = None
+    recovery_voice_agent_id: str | None = None
+    recovery_voice_phone_number_id: str | None = None
+    recovery_voice_from_number: str | None = None
+    recovery_voice_tool_secret: SecretStr | None = None
+    recovery_voice_webhook_secret: SecretStr | None = None
+    recovery_voice_webhook_id: str | None = None
+    recovery_voice_daily_limit: int = Field(default=5, ge=1, le=10)
+    recovery_voice_max_seconds: int = Field(default=180, ge=30, le=180)
+
+    @field_validator(
+        "recovery_agency_id", "recovery_public_api_origin", "recovery_web_origin",
+        "recovery_twilio_account_sid", "recovery_twilio_auth_token",
+        "recovery_sms_from_number", "recovery_voice_api_key",
+        "recovery_voice_agent_id", "recovery_voice_phone_number_id",
+        "recovery_voice_from_number", "recovery_voice_tool_secret",
+        "recovery_voice_webhook_secret", "recovery_voice_webhook_id", mode="before",
+    )
+    @classmethod
+    def normalize_recovery_transport(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @model_validator(mode="after")
+    def validate_recovery_transport(self) -> Self:
+        from insurance_operations.recovery.configuration import validate_transport
+
+        validate_transport(self)
+        return self
+
     recovery_enabled: bool = False
     recovery_token_encryption_key: SecretStr | None = None
     recovery_ai_allowed_origins: list[str] = Field(default_factory=list)

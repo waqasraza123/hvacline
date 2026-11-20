@@ -14,7 +14,7 @@ from insurance_operations.database.models.hvac import Appointment, BusinessSched
 from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.lead import AgencyLead, LeadHandoffRequest
 from insurance_operations.database.models.operations import AuditEvent
-from insurance_operations.database.models.recovery import RecoveryAttempt, RecoveryCase, RecoveryPermission, RecoveryPolicy
+from insurance_operations.database.models.recovery import RecoveryAttempt, RecoveryCase, RecoveryPermission, RecoveryPolicy, RecoveryWebhook
 from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.availability import utc_instant
@@ -62,6 +62,12 @@ def channel_allowed(rows: list[RecoveryPermission], channel: str) -> bool:
     if any(row.revoked_at is not None and row.channel in {"ALL", channel} for row in rows):
         return False
     return any(row.channel == channel and row.granted_at is not None and row.revoked_at is None and row.scope == "LEAD_RECOVERY" for row in rows)
+
+
+def pending_opt_out(session: Session, agency_id: UUID, digest: str) -> bool:
+    return session.scalar(select(RecoveryWebhook.id).where(RecoveryWebhook.agency_id == agency_id,
+        RecoveryWebhook.kind == "STOP", RecoveryWebhook.processed_at.is_(None),
+        RecoveryWebhook.data["recipient_digest"].astext == digest).limit(1)) is not None
 
 
 def request_block(session: Session, request: HvacServiceRequest) -> str | None:
@@ -167,6 +173,12 @@ def cancel_scheduled(session: Session, case: RecoveryCase) -> None:
         attempt.status, attempt.completed_at = "CANCELLED", datetime.now(UTC)
 
 
+def revoke_continuations(session: Session, case: RecoveryCase) -> None:
+    from insurance_operations.recovery.grants import revoke_case_grants
+
+    revoke_case_grants(session, case)
+
+
 def record_booking_activity(session: Session, appointment: Appointment, now: datetime) -> None:
     case = session.scalar(select(RecoveryCase).where(RecoveryCase.agency_id == appointment.agency_id, RecoveryCase.service_request_id == appointment.service_request_id).with_for_update())
     if case is None or case.status in TERMINAL:
@@ -190,6 +202,7 @@ def stop_for_booking(session: Session, appointment: Appointment, *, attributable
     if attributed:
         case.recovered_appointment_id = appointment.id
     cancel_scheduled(session, case)
+    revoke_continuations(session, case)
     audit(session, case.agency_id, "LEAD_RECOVERY_BOOKING_STOPPED", {"case_id": str(case.id), "appointment_id": str(appointment.id), "status": case.status})
 
 

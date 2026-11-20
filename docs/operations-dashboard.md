@@ -6,8 +6,11 @@ AI Lead Recovery now has dedicated header/sidebar access, a prominent overview
 card and a public `/lead-recovery` demo. Its 24 fictional opportunities and
 interactive follow-up/booking simulation stay separate from authenticated live
 data. AI Provider Settings store encrypted text-model credentials; recovery SMS
-and voice delivery remain unavailable and automation cannot be activated.
-Migration 0026 must precede API/job deployment. No checks or provider requests ran.
+and dedicated ElevenLabs voice delivery now have consent-gated source adapters,
+signed callbacks, scoped booking continuation, expiry/history and protected
+provider reconciliation. All flags remain off; configured status is not live
+acceptance. Migration0027 (after0026) must precede API/job deployment. No checks,
+new migration or provider requests ran for this follow-up.
 Exact source manifest, setup, owner commands, limits and acceptance:
 [AI Lead Recovery](ai-lead-recovery.md).
 

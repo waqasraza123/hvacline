@@ -92,6 +92,23 @@ class VersionInput(StrictInput):
     expected_row_version: int = Field(ge=1)
 
 
+class OutcomeInput(StrictInput):
+    expected_row_version: int = Field(ge=1)
+    provider_reference: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,200}$")
+    carrier_ended_confirmed: bool = Field(default=False, strict=True)
+    grant_id: UUID | None = None
+
+
+class ContinuationView(BaseModel):
+    id: UUID
+    attempt_id: UUID
+    channel: str
+    status: str
+    expires_at: datetime
+    reply_status: str | None
+    failure_code: str | None
+
+
 class AttemptView(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
@@ -125,4 +142,5 @@ class CaseView(BaseModel):
     reason: str | None
     next_attempt: datetime | None
     attempts: list[AttemptView]
+    continuations: list[ContinuationView] = Field(default_factory=list)
     permissions: list[dict[str, object]]

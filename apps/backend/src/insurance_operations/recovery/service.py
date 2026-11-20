@@ -10,19 +10,18 @@ from insurance_operations.actors import ActorContext
 from insurance_operations.database.models.hvac import Appointment, BusinessSchedule, HvacServiceRequest
 from insurance_operations.database.models.identity import Agency, AgencyMembership
 from insurance_operations.database.models.operations import IdempotencyRecord
-from insurance_operations.database.models.recovery import RecoveryAttempt, RecoveryCase, RecoveryPermission, RecoveryPolicy
+from insurance_operations.database.models.recovery import RecoveryAttempt, RecoveryCase, RecoveryPermission, RecoveryPolicy, RecoveryAiConnection, RecoveryGrant
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.locking import lock_business_schedule
 from insurance_operations.hvac.schemas import AppointmentView
 from insurance_operations.recovery.domain import TERMINAL, audit, cancel_scheduled, destination_digest, permission_rows, policy_for
 from insurance_operations.recovery.jobs import eligibility, schedule_case
-from insurance_operations.recovery.providers import UnavailableRecoveryProvider
-from insurance_operations.recovery.schemas import AttemptView, CaseAction, CaseView, PermissionInput, PolicyInput, RecoveryStatus
+from insurance_operations.recovery.transports import ConfiguredRecoveryProvider
+from insurance_operations.recovery.configuration import channel_configured, provider_status
+from insurance_operations.recovery.domain import revoke_continuations
+from insurance_operations.recovery.errors import conflict
+from insurance_operations.recovery.schemas import AttemptView, CaseAction, CaseView, PermissionInput, PolicyInput, RecoveryStatus, ContinuationView, OutcomeInput
 from insurance_operations.settings import DatabaseSettings
-
-
-def conflict(message: str = "This record changed. Refresh and try again.") -> ApiError:
-    return ApiError(status_code=409, code="RECOVERY_CONFLICT", message=message)
 
 
 def owned_case(session: Session, agency_id: UUID, identifier: UUID, *, lock: bool = False) -> RecoveryCase:
@@ -43,6 +42,8 @@ class RecoveryService:
             raise conflict("The original request is unavailable.")
         attempts = list(session.scalars(select(RecoveryAttempt).where(RecoveryAttempt.agency_id == case.agency_id, RecoveryAttempt.recovery_case_id == case.id).order_by(RecoveryAttempt.attempt_number)))
         permissions = permission_rows(session, self.settings, request)
+        grants = list(session.scalars(select(RecoveryGrant).where(RecoveryGrant.agency_id == case.agency_id,
+            RecoveryGrant.recovery_case_id == case.id).order_by(RecoveryGrant.created_at)))
         booking = session.scalar(select(Appointment).where(Appointment.agency_id == case.agency_id, Appointment.service_request_id == request.id,
             Appointment.id == case.recovered_appointment_id if case.recovered_appointment_id else Appointment.status == "CONFIRMED").order_by(Appointment.starts_at.desc()).limit(1))
         return CaseView(id=case.id, row_version=case.row_version, service_request_id=case.service_request_id, lead_id=case.lead_id,
@@ -51,6 +52,8 @@ class RecoveryService:
             source_type=case.source_type, source_reference=case.source_reference, status=RecoveryStatus(case.status), eligible_at=case.eligible_at, last_activity_at=case.last_activity_at,
             recovered_appointment_id=case.recovered_appointment_id, booking=AppointmentView.model_validate(booking) if booking else None, paused=case.paused, assigned_to=case.assigned_to, reason=case.reason,
             next_attempt=next((attempt.scheduled_at for attempt in attempts if attempt.status == "SCHEDULED"), None), attempts=[AttemptView.model_validate(row) for row in attempts],
+            continuations=[ContinuationView(id=grant.id, attempt_id=grant.attempt_id, channel=grant.channel, status=grant.status,
+                expires_at=grant.expires_at, reply_status=grant.reply_status, failure_code=grant.failure_code) for grant in grants],
             permissions=[{"channel": row.channel, "scope": row.scope, "source": row.source, "evidence_reference": row.evidence_reference, "granted_at": row.granted_at.isoformat() if row.granted_at else None,
                 "revoked_at": row.revoked_at.isoformat() if row.revoked_at else None, "row_version": row.row_version} for row in permissions])
 
@@ -80,8 +83,7 @@ class RecoveryService:
         with self.sessions() as session:
             policy = policy_for(session, actor.agency_id)
             return {"policy": policy.model_dump(mode="json"), "runtime_enabled": self.settings.recovery_enabled,
-                "providers": {"SMS": {"available": False, "reason": "No general messaging adapter is configured. Telnyx Verify only sends verification codes."},
-                    "VOICE": {"available": False, "reason": "A dedicated recovery agent and verified booking/callback binding are required. Public demo calling is separate."}},
+                "providers": provider_status(self.settings, actor.agency_id),
                 "identity_gate": "Existing administrator/development identity; production onboarding is not enabled."}
 
     def save_policy(self, actor: ActorContext, data: PolicyInput) -> dict[str, object]:
@@ -94,7 +96,11 @@ class RecoveryService:
             if schedule and data.timezone != schedule.configuration.get("timezone"):
                 raise conflict("Use the agency timezone configured in Scheduling before saving recovery rules.")
             if data.enabled:
-                raise conflict("Recovery delivery providers are unavailable. Save rules with automation disabled until supported messaging or voice delivery is installed.")
+                if not self.settings.recovery_enabled or not data.channels or any(not channel_configured(self.settings, actor.agency_id, channel) for channel in data.channels):
+                    raise conflict("Enable the server recovery gate and configure every selected delivery channel before activating automation.")
+                ai = session.get(RecoveryAiConnection, actor.agency_id)
+                if "SMS" in data.channels and (ai is None or ai.status != "CONNECTED"):
+                    raise conflict("Connect and test the agency text model before enabling SMS recovery. Voice uses its dedicated ElevenLabs agent.")
             if row is None:
                 row = RecoveryPolicy(agency_id=actor.agency_id, capture_from=datetime.now(UTC))
                 session.add(row)
@@ -123,27 +129,80 @@ class RecoveryService:
                 if any(attempt.status in {"STARTED", "UNKNOWN", "QUEUED"} for attempt in session.scalars(select(RecoveryAttempt).where(RecoveryAttempt.agency_id == actor.agency_id, RecoveryAttempt.recovery_case_id == case.id))):
                     raise conflict("Resolve the provider outcome before any further contact.")
                 case.paused = False
-                _, _, reason = eligibility(session, self.settings, case, UnavailableRecoveryProvider(), datetime.now(UTC))
+                _, _, reason = eligibility(session, self.settings, case, ConfiguredRecoveryProvider(self.settings), datetime.now(UTC))
                 if reason:
                     raise conflict(reason.replace("_", " ").capitalize())
-                schedule_case(session, self.settings, case, UnavailableRecoveryProvider(), datetime.now(UTC))
+                schedule_case(session, self.settings, case, ConfiguredRecoveryProvider(self.settings), datetime.now(UTC))
             elif data.action == "PAUSE":
-                case.paused = True
+                case.paused, case.reason = True, "MANUALLY_PAUSED"
+                revoke_continuations(session, case)
             elif data.action == "CLOSE":
                 case.status, case.reason = "CLOSED", "MANUALLY_CLOSED"
                 cancel_scheduled(session, case)
+                revoke_continuations(session, case)
             elif data.action == "ASSIGN":
                 membership = session.scalar(select(AgencyMembership).where(AgencyMembership.agency_id == actor.agency_id, AgencyMembership.app_user_id == data.assigned_to, AgencyMembership.status == "ACTIVE", AgencyMembership.deactivated_at.is_(None)))
                 if membership is None:
                     raise conflict("Assign an active staff member in this agency.")
                 case.assigned_to, case.paused, case.reason = data.assigned_to, True, "ASSIGNED_TO_STAFF"
                 case.status = "NEEDS_REVIEW"
+                revoke_continuations(session, case)
             session.flush()
             session.refresh(case)
             audit(session, actor.agency_id, "LEAD_RECOVERY_ADMIN_ACTION", {"case_id": str(case.id), "action": data.action, "status": case.status}, actor.app_user_id)
             session.add(IdempotencyRecord(agency_id=actor.agency_id, actor_scope_type="STAFF", actor_scope_id=actor.app_user_id, route_key=route, idempotency_key=key,
                 request_fingerprint=fingerprint, status="COMPLETED", response_status=200, response_body={"case_id": str(case.id)}, resource_type="lead_recovery_case", resource_id=case.id, expires_at=datetime.now(UTC) + timedelta(days=7)))
             return self.view(session, case)
+
+    def resolve_outcome(self, actor: ActorContext, identifier: UUID, attempt_id: UUID, data: OutcomeInput) -> CaseView:
+        from insurance_operations.recovery.delivery_jobs import read_provider_outcome
+        from insurance_operations.recovery.inbox import enqueue, process_event
+        from insurance_operations.recovery.transports import TransportFailure
+
+        with self.sessions() as session:
+            case = owned_case(session, actor.agency_id, identifier)
+            attempt = session.scalar(select(RecoveryAttempt).where(RecoveryAttempt.id == attempt_id,
+                RecoveryAttempt.agency_id == actor.agency_id, RecoveryAttempt.recovery_case_id == case.id))
+            if attempt is None or case.row_version != data.expected_row_version:
+                raise conflict()
+            grant = session.scalar(select(RecoveryGrant).where(RecoveryGrant.id == data.grant_id,
+                RecoveryGrant.agency_id == actor.agency_id, RecoveryGrant.attempt_id == attempt.id)) if data.grant_id else None
+            if data.grant_id and grant is None:
+                raise conflict("Continuation not found for this attempt.")
+            current = grant.reply_provider_reference if grant else attempt.provider_reference
+            reference = data.provider_reference or current
+            if current and reference != current:
+                raise conflict("The provider reference is already bound. It cannot be replaced.")
+        if reference:
+            try:
+                receipt = read_provider_outcome(self.settings, attempt, reference, grant=grant)
+            except TransportFailure:
+                raise conflict("The provider could not verify this original destination and request. No retry was authorized.") from None
+            with self.sessions() as session, session.begin():
+                lock_business_schedule(session, actor.agency_id)
+                case = owned_case(session, actor.agency_id, identifier, lock=True)
+                if case.row_version != data.expected_row_version:
+                    raise conflict()
+                case.updated_at = datetime.now(UTC)
+                audit(session, actor.agency_id, "LEAD_RECOVERY_PROVIDER_RECONCILED", {"case_id": str(case.id), "attempt_id": str(attempt.id), "reply": bool(grant)}, actor.app_user_id)
+            event = enqueue(self.sessions, self.settings, agency_id=actor.agency_id, provider=str(attempt.provider),
+                attempt_id=attempt.id, key=f"owner-read:{reference}:{receipt['status']}:{receipt['terminal']}", kind="RECEIPT", data=receipt)
+            process_event(self.sessions, event)
+        elif data.carrier_ended_confirmed and attempt.channel == "VOICE" and attempt.status == "UNKNOWN" and grant is None:
+            with self.sessions() as session, session.begin():
+                lock_business_schedule(session, actor.agency_id)
+                case = owned_case(session, actor.agency_id, identifier, lock=True)
+                if case.row_version != data.expected_row_version:
+                    raise conflict()
+                attempt = session.get(RecoveryAttempt, attempt_id, with_for_update=True)
+                if attempt is None or attempt.status != "UNKNOWN" or attempt.provider_reference:
+                    raise conflict()
+                attempt.provider_terminal_at = datetime.now(UTC)
+                case.updated_at = datetime.now(UTC)
+                audit(session, actor.agency_id, "LEAD_RECOVERY_CARRIER_ENDED_ATTESTED", {"case_id": str(case.id), "attempt_id": str(attempt.id), "status": "UNKNOWN"}, actor.app_user_id)
+        else:
+            raise conflict("Supply the original provider reference. An unknown write can never be blindly retried.")
+        return self.detail(actor, identifier)
 
     def permission(self, actor: ActorContext, identifier: UUID, data: PermissionInput) -> CaseView:
         if data.observed_at > datetime.now(UTC) or data.observed_at < datetime.now(UTC) - timedelta(days=7):
@@ -171,6 +230,7 @@ class RecoveryService:
                 for other in session.scalars(select(RecoveryCase).join(HvacServiceRequest, (HvacServiceRequest.agency_id == RecoveryCase.agency_id) & (HvacServiceRequest.id == RecoveryCase.service_request_id)).where(RecoveryCase.agency_id == actor.agency_id, RecoveryCase.status.not_in(list(TERMINAL)), HvacServiceRequest.customer_details["phone"].astext == str(request.customer_details["phone"])).with_for_update(of=RecoveryCase)):
                     other.status, other.reason = "SUPPRESSED", "OPTED_OUT"
                     cancel_scheduled(session, other)
+                    revoke_continuations(session, other)
             session.flush()
             session.refresh(case)
             audit(session, actor.agency_id, "LEAD_RECOVERY_PERMISSION_UPDATED", {"case_id": str(case.id), "permission_id": str(row.id), "channel": data.channel, "scope": "LEAD_RECOVERY", "granted": data.granted,

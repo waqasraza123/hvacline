@@ -1,5 +1,43 @@
 # Project State
 
+## Recovery delivery publication authorized — 2026-11-20
+
+Owner requests publishing the recovery delivery follow-up to canonical main.
+Publication retains [skip ci] [skip render]; no verification or deployment is
+authorized. New migration0027 remains unapplied and outbound flags stay off.
+Local branch/index and unrelated working changes must remain intact. The latest
+recovery sections below supersede earlier unavailable-adapter and unapplied0026
+status notes; runtime/provider/security acceptance remains UNVERIFIED.
+
+## Recovery delivery and attributed continuation — source UNVERIFIED — 2026-11-20
+
+The recovery runtime now selects a configured, agency-bound Twilio Programmable Messaging adapter or a separate ElevenLabs SIP recovery agent. New migration20261120_0027 adds durable provider ingress, scoped booking grants, dispatch snapshots, receipt/expiry indexes and guards for owned scope, approved selection, immutable references and reply transitions. It follows the previously owner-applied0026 and has NOT been applied. All delivery/automation flags remain off; no hosted agent, provider or local secret configuration was changed.
+
+Signed callbacks feed the existing booking-job runner; YES requests one short-lived SMS booking continuation, STOP suppresses all recovery channels, and ambiguous replies/staff pauses block automatic continuation. Voice tools require static secret headers, a per-call capability, provider conversation binding and actual transcript confirmation. Provider POST outcomes are checkpointed before I/O; unknown outcomes permit authoritative reads, never blind resend. Existing SchedulingService handles availability, reservation/release, exact selection confirmation and notifications/Google/GHL. Durable approved selection supplies attribution; independent bookings stop recovery without credit. Custom text-model settings still support staff drafts, while live voice uses the dedicated hosted agent's model.
+
+Added /recover with fragment exchange and a scoped HttpOnly cookie, sanitized administrator continuation history and read-only outcome reconciliation, provider setup artifact, focused regression source and runbook. Existing public demo/header/sidebar/spotlight remain separate and unchanged by this follow-up. No tests, builds, linters, formatters, type checks, new migrations, services, live provider requests, calls/messages, deployments, commits or pushes ran. Runtime, security, provider compatibility and visual acceptance remain **UNVERIFIED**; production identity/onboarding remains blocked by the existing development gates. Exact files, disabled configuration, external prerequisites, owner commands and fictional acceptance checklist: docs/ai-lead-recovery.md.
+
+## Configured Neon upgraded through recovery0026 — 2026-11-20
+
+Owner explicitly requested migrations. Selected the existing configured direct
+Neon development database; its pooled/direct URLs match the same branch/database
+and the disposable test target is distinct. Initial revision0025; applied
+20261118_0025 →20261120_0026 successfully. Narrow readback confirms sole0026,
+six recovery tables, seven triggers, three guard functions and zero enabled
+recovery policies. No historical recovery candidates or customer data were read
+for acceptance. Do not rerun the completed migration on this target.
+
+Generated a dedicated Fernet key in ignored local.env without displaying it;
+kept RECOVERY_ENABLED=false and RECOVERY_AI_ALLOWED_ORIGINS=[]. Reuse that same
+key privately on the API and existing job runner; no hosted configuration changed.
+No key values, database credentials or account identifiers belong in notes.
+
+Only the requested migration and necessary revision/schema/configuration readback
+ran. No tests/builds/linters/type checks/services/provider requests/calls/messages,
+new publication or deployment. Application/runtime/visual acceptance remains
+UNVERIFIED. Other targets require deliberate migration selection; provider delivery
+remains unavailable and activation blocked. Acceptance: docs/ai-lead-recovery.md.
+
 ## AI Lead Recovery — publication authorized, runtime UNVERIFIED — 2026-11-20
 
 Source adds prospective recovery cases/attempts/policy/explicit permission and

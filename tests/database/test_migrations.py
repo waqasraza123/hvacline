@@ -38,6 +38,8 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "lead_recovery_grants",
+    "lead_recovery_webhooks",
     "lead_recovery_cases",
     "lead_recovery_attempts",
     "lead_recovery_policies",
@@ -755,11 +757,13 @@ EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
 
 EXPECTED_COLUMNS.update({
     "lead_recovery_cases": {"id", "agency_id", "service_request_id", "lead_id", "source_type", "source_reference", "status", "eligible_at", "last_activity_at", "recovered_appointment_id", "paused", "assigned_to", "reason", "created_at", "updated_at", "row_version"},
-    "lead_recovery_attempts": {"id", "agency_id", "recovery_case_id", "channel", "attempt_number", "status", "scheduled_at", "started_at", "completed_at", "provider_reference", "failure_code", "idempotency_key", "created_at", "updated_at"},
+    "lead_recovery_attempts": {"id", "agency_id", "recovery_case_id", "channel", "attempt_number", "status", "scheduled_at", "started_at", "completed_at", "provider_reference", "failure_code", "idempotency_key", "created_at", "updated_at", "provider", "recipient_digest", "dispatch_configuration", "provider_terminal_at", "last_reconciled_at"},
     "lead_recovery_policies": {"agency_id", "enabled", "configuration", "capture_from", "created_at", "updated_at", "row_version"},
     "lead_recovery_permissions": {"id", "agency_id", "destination_digest", "channel", "scope", "source", "evidence_reference", "granted_at", "revoked_at", "created_at", "updated_at", "row_version"},
     "lead_recovery_ai_connections": {"agency_id", "provider", "model", "endpoint", "credential_ciphertext", "status", "last_tested_at", "last_error", "created_at", "updated_at", "row_version"},
     "lead_recovery_provider_events": {"id", "agency_id", "attempt_id", "event_key", "fingerprint", "kind", "occurred_at"},
+    "lead_recovery_grants": {"id", "agency_id", "attempt_id", "recovery_case_id", "channel", "status", "expires_at", "appointment_id", "reservation_key", "readback_nonce", "readback_fingerprint", "approved_at", "provider_conversation_id", "reply_status", "reply_due_at", "reply_started_at", "reply_completed_at", "reply_provider_reference", "failure_code", "created_at", "updated_at", "row_version"},
+    "lead_recovery_webhooks": {"id", "agency_id", "attempt_id", "provider", "event_key", "fingerprint", "kind", "data", "received_at", "next_attempt_at", "processed_at", "failure_code"},
 })
 
 

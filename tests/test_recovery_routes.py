@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from insurance_operations.actors import ActorContext
 from insurance_operations.errors import ApiError, api_error_handler
 from insurance_operations.recovery.routes import create_recovery_router
+from insurance_operations.recovery.continuation_routes import create_recovery_continuation_routes, create_recovery_voice_tools
 from insurance_operations.settings import ApiSettings
 
 
@@ -24,6 +25,8 @@ def application() -> FastAPI:
 
     actor = ActorContext(uuid4(), "Synthetic admin", uuid4(), "Synthetic HVAC", "DEVELOPMENT")
     app.include_router(create_recovery_router(settings, sessionmaker(), lambda: actor))
+    app.include_router(create_recovery_continuation_routes(settings, sessionmaker()))
+    app.include_router(create_recovery_voice_tools(settings, sessionmaker()))
     return app
 
 
@@ -46,3 +49,14 @@ def test_provider_requests_are_not_performed_for_unauthenticated_tests() -> None
         response = client.post("/api/v1/development/lead-recovery/ai/test", json={"expected_row_version": 1})
         assert response.status_code == 401
         completion.assert_not_called()
+
+
+def test_customer_and_voice_tools_require_their_own_authorization() -> None:
+    app = application()
+    with patch("insurance_operations.recovery.voice.RecoveryVoice.bind") as bind, TestClient(app) as client:
+        assert client.get("/api/v1/recovery/continuation").status_code == 403
+        assert client.get("/api/v1/recovery/continuation", headers={"X-Demo-Admin-Token": "synthetic-admin-token-at-least-32-characters"}).status_code == 403
+        for action in ["continue", "context", "readback", "release", "finish"]:
+            response = client.post(f"/api/v1/providers/recovery/voice/tools/{action}", json={"action": "STOP"})
+            assert response.status_code == 403
+        bind.assert_not_called()

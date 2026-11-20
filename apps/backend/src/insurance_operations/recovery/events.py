@@ -14,7 +14,7 @@ from insurance_operations.database.models.lead import AgencyLead, LeadHandoffReq
 from insurance_operations.database.models.recovery import RecoveryAttempt, RecoveryCase, RecoveryPermission, RecoveryProviderEvent
 from insurance_operations.hvac.locking import lock_business_schedule
 from insurance_operations.recovery.domain import TERMINAL, audit, cancel_scheduled, destination_digest
-from insurance_operations.recovery.service import conflict
+from insurance_operations.recovery.errors import conflict
 from insurance_operations.settings import DatabaseSettings
 
 

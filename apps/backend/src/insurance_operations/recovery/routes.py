@@ -11,7 +11,7 @@ from insurance_operations.actors import ActorContext
 from insurance_operations.errors import ApiError
 from insurance_operations.database.models.identity import AgencyMembership
 from insurance_operations.recovery.ai import RecoveryAiService
-from insurance_operations.recovery.schemas import AiInput, CaseAction, CaseView, PermissionInput, PolicyInput, RecoveryStatus, VersionInput
+from insurance_operations.recovery.schemas import AiInput, CaseAction, CaseView, PermissionInput, PolicyInput, RecoveryStatus, VersionInput, OutcomeInput
 from insurance_operations.recovery.service import RecoveryService
 from insurance_operations.settings import ApiSettings, RuntimeEnvironment
 
@@ -80,6 +80,10 @@ def create_recovery_router(settings: ApiSettings, sessions: sessionmaker[Session
     @router.put("/cases/{identifier}/permission", response_model=CaseView)
     def permission(identifier: UUID, data: PermissionInput, actor: Owner) -> CaseView:
         return service.permission(actor, identifier, data)
+
+    @router.post("/cases/{identifier}/attempts/{attempt_id}/reconcile", response_model=CaseView)
+    def reconcile(identifier: UUID, attempt_id: UUID, data: OutcomeInput, actor: Owner) -> CaseView:
+        return service.resolve_outcome(actor, identifier, attempt_id, data)
 
     @router.post("/cases/{identifier}/draft")
     def draft(identifier: UUID, data: VersionInput, actor: Owner) -> dict[str, object]:

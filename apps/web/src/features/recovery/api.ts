@@ -8,6 +8,7 @@ export type RecoveryCase = {
   paused: boolean; assigned_to: string | null; reason: string | null; next_attempt: string | null;
   booking: { id: string; starts_at: string; ends_at: string; team_key: string; status: string } | null;
   attempts: { id: string; channel: string; attempt_number: number; status: string; scheduled_at: string; started_at: string | null; completed_at: string | null; failure_code: string | null }[];
+  continuations: { id: string; attempt_id: string; channel: string; status: string; expires_at: string; reply_status: string | null; failure_code: string | null }[];
   permissions: { channel: string; scope: string; source: string; evidence_reference: string; granted_at: string | null; revoked_at: string | null; row_version: number }[];
 };
 export type CasePage = { items: RecoveryCase[]; total: number; limit: number; offset: number };

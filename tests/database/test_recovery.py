@@ -42,7 +42,10 @@ class RecoveryContext:
 
 @pytest.fixture
 def recovery_context(migrated_database: Engine, database_settings: DatabaseSettings) -> RecoveryContext:
-    _, agency_id, reservation = configure(migrated_database)
+    fictional = service_request()
+    fictional = fictional.model_copy(update={"customer": fictional.customer.model_copy(update={"phone": "+12025550123"})})
+    with patch("tests.database.test_hvac_scheduling.service_request", return_value=fictional):
+        _, agency_id, reservation = configure(migrated_database)
     settings = database_settings.model_copy(update={"recovery_enabled": True, "recovery_token_encryption_key": SecretStr(Fernet.generate_key().decode())})
     sessions = sessionmaker(bind=migrated_database, expire_on_commit=False, info={"integration_settings": settings})
     now = datetime.now(UTC).replace(hour=16, minute=0, second=0, microsecond=0)
@@ -187,7 +190,7 @@ def test_receipt_is_not_engagement_and_yes_creates_staff_continuation(recovery_c
     apply_verified_event(context.sessions, context.settings, event)
     service = RecoveryService(context.sessions, context.settings)
     assert service.detail(context.actor, context.case_id).status == "AWAITING_RESPONSE"
-    apply_verified_event(context.sessions, context.settings, event.model_copy(update={"event_key": "yes-1", "kind": "YES", "sender_phone": "+15559991002"}))
+    apply_verified_event(context.sessions, context.settings, event.model_copy(update={"event_key": "yes-1", "kind": "YES", "sender_phone": "+12025550123"}))
     case = service.detail(context.actor, context.case_id)
     assert case.status == "NEEDS_REVIEW" and case.paused
     assert case.reason == "CUSTOMER_REQUESTED_SCHEDULING"
@@ -238,7 +241,7 @@ def test_trusted_attribution_requires_a_sent_attempt_and_confirmed_same_request(
     assert case.attempts[1].status == "CANCELLED"
     with context.sessions() as session:
         details = str(list(session.scalars(select(AuditEvent.details).where(AuditEvent.agency_id == context.actor.agency_id, AuditEvent.event_type.like("LEAD_RECOVERY%")))))
-        assert "+15559991002" not in details and "Synthetic Caller" not in details
+        assert "+12025550123" not in details and "Synthetic Caller" not in details
 
 
 def test_case_writes_are_versioned_idempotent_and_agency_scoped(recovery_context: RecoveryContext) -> None:

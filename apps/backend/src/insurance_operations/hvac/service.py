@@ -447,6 +447,9 @@ class SchedulingService:
         if ghl_route is None:
             bind_reservation(session, row)
         bind_ghl_reservation(session, row)
+        from insurance_operations.recovery.grants import bind_reservation as bind_recovery_reservation
+
+        bind_recovery_reservation(session, row)
         from insurance_operations.recovery.domain import record_booking_activity
 
         record_booking_activity(session, row, now)
@@ -508,6 +511,9 @@ class SchedulingService:
         *,
         allow_expired: bool = False,
     ) -> None:
+        from insurance_operations.recovery.grants import guard_confirmation
+
+        guard_confirmation(session, row)
         service_request = self._request(session, agency_id, row.service_request_id)
         if (
             service_request.service_details.get("hazardous_condition")
@@ -575,6 +581,9 @@ class SchedulingService:
         with self.sessions() as session, session.begin():
             self._lock_schedule(session, agency_id)
             row = self._appointment(session, agency_id, appointment_id)
+            from insurance_operations.recovery.grants import guard_release
+
+            guard_release(session, row)
             if row.status in {"CANCELLED", "EXPIRED"}:
                 return AppointmentView.model_validate(row)
             if row.status != "HELD":

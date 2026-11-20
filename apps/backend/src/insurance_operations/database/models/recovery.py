@@ -60,6 +60,8 @@ class RecoveryAttempt(UuidPrimaryKeyMixin, TimestampedMixin, Base):
         CheckConstraint("attempt_number BETWEEN 1 AND 2", name="number_valid"),
         CheckConstraint("status IN ('SCHEDULED','STARTED','QUEUED','SENT','DELIVERED','FAILED','UNKNOWN','CANCELLED')", name="status_valid"),
         Index("ix_recovery_attempts_due", "status", "scheduled_at"),
+        Index("ix_recovery_attempt_recipient", "agency_id", "recipient_digest", "started_at"),
+        Index("ix_recovery_attempt_channel", "agency_id", "channel", "provider_terminal_at"),
     )
     agency_id: Mapped[UUID] = mapped_column(ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False)
     recovery_case_id: Mapped[UUID] = mapped_column(nullable=False)
@@ -72,6 +74,69 @@ class RecoveryAttempt(UuidPrimaryKeyMixin, TimestampedMixin, Base):
     provider_reference: Mapped[str | None] = mapped_column(Text)
     failure_code: Mapped[str | None] = mapped_column(Text)
     idempotency_key: Mapped[str] = mapped_column(Text, nullable=False)
+    provider: Mapped[str | None] = mapped_column(Text)
+    recipient_digest: Mapped[str | None] = mapped_column(Text)
+    dispatch_configuration: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    provider_terminal_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RecoveryGrant(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
+    __tablename__ = "lead_recovery_grants"
+    __table_args__ = (
+        UniqueConstraint("agency_id", "id", name="uq_recovery_grant_owned"),
+        UniqueConstraint("attempt_id", name="uq_recovery_grant_attempt"),
+        UniqueConstraint("appointment_id", name="uq_recovery_grant_appointment"),
+        ForeignKeyConstraint(["agency_id", "attempt_id"], ["lead_recovery_attempts.agency_id", "lead_recovery_attempts.id"], ondelete="RESTRICT"),
+        ForeignKeyConstraint(["agency_id", "recovery_case_id"], ["lead_recovery_cases.agency_id", "lead_recovery_cases.id"], ondelete="RESTRICT"),
+        ForeignKeyConstraint(["agency_id", "appointment_id"], ["hvac_appointments.agency_id", "hvac_appointments.id"], ondelete="RESTRICT"),
+        CheckConstraint("status IN ('WAITING','ACTIVE','CONSUMED','REVOKED','EXPIRED')", name="status_valid"),
+        CheckConstraint("channel IN ('SMS','VOICE')", name="channel_valid"),
+        CheckConstraint("reply_status IS NULL OR reply_status IN ('PENDING','STARTED','QUEUED','SENT','DELIVERED','FAILED','UNKNOWN','CANCELLED')", name="reply_status_valid"),
+        CheckConstraint("status <> 'CONSUMED' OR (appointment_id IS NOT NULL AND approved_at IS NOT NULL)", name="consumed_valid"),
+        CheckConstraint("approved_at IS NULL OR (appointment_id IS NOT NULL AND readback_nonce IS NOT NULL AND readback_fingerprint IS NOT NULL)", name="approval_valid"),
+        CheckConstraint("reply_status IS NULL OR channel = 'SMS'", name="reply_channel_valid"),
+        CheckConstraint("row_version > 0", name="version_positive"),
+        Index("ix_recovery_grant_reply_due", "reply_status", "reply_due_at"),
+    )
+    agency_id: Mapped[UUID] = mapped_column(ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False)
+    attempt_id: Mapped[UUID] = mapped_column(nullable=False)
+    recovery_case_id: Mapped[UUID] = mapped_column(nullable=False)
+    channel: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    appointment_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    reservation_key: Mapped[str | None] = mapped_column(Text)
+    readback_nonce: Mapped[UUID | None] = mapped_column(nullable=True)
+    readback_fingerprint: Mapped[str | None] = mapped_column(Text)
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    provider_conversation_id: Mapped[str | None] = mapped_column(Text)
+    reply_status: Mapped[str | None] = mapped_column(Text)
+    reply_due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reply_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reply_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reply_provider_reference: Mapped[str | None] = mapped_column(Text)
+    failure_code: Mapped[str | None] = mapped_column(Text)
+
+
+class RecoveryWebhook(UuidPrimaryKeyMixin, Base):
+    __tablename__ = "lead_recovery_webhooks"
+    __table_args__ = (
+        UniqueConstraint("agency_id", "provider", "event_key", name="uq_recovery_webhook_identity"),
+        ForeignKeyConstraint(["agency_id", "attempt_id"], ["lead_recovery_attempts.agency_id", "lead_recovery_attempts.id"], ondelete="RESTRICT"),
+        Index("ix_recovery_webhook_pending", "processed_at", "next_attempt_at", "received_at"),
+    )
+    agency_id: Mapped[UUID] = mapped_column(ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False)
+    attempt_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    provider: Mapped[str] = mapped_column(Text, nullable=False)
+    event_key: Mapped[str] = mapped_column(Text, nullable=False)
+    fingerprint: Mapped[str] = mapped_column(Text, nullable=False)
+    kind: Mapped[str] = mapped_column(Text, nullable=False)
+    data: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
+    received_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    next_attempt_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    failure_code: Mapped[str | None] = mapped_column(Text)
 
 
 class RecoveryProviderEvent(UuidPrimaryKeyMixin, Base):

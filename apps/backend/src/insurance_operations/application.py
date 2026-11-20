@@ -94,6 +94,8 @@ from insurance_operations.receptionist import (
     ReceptionistSettingsService,
 )
 from insurance_operations.recovery.routes import create_recovery_router
+from insurance_operations.recovery.continuation_routes import create_recovery_continuation_routes, create_recovery_voice_tools
+from insurance_operations.recovery.webhooks import create_recovery_webhooks
 from insurance_operations.settings import (
     ApiSettings,
     ConversationProviderName,
@@ -219,6 +221,9 @@ def create_app(
     )
     application.include_router(create_homepage_chat_router(settings, session_factory))
     application.include_router(create_email_event_router(settings, session_factory))
+    application.include_router(create_recovery_webhooks(settings, session_factory))
+    application.include_router(create_recovery_continuation_routes(settings, session_factory))
+    application.include_router(create_recovery_voice_tools(settings, session_factory))
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[settings.web_origin],

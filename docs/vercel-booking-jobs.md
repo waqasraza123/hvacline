@@ -56,13 +56,17 @@ Manual acceptance: deploy the job project, send a request without authorization 
 ## References
 
 Recovery source also joins this same protected runner and standalone worker;
-there is no additional scheduler. Apply forward migration0026 before deploying
-the updated runner, including when RECOVERY_ENABLED=false. Keep that kill switch
-off; no SMS/voice recovery delivery adapter is active. Share the dedicated
-RECOVERY_TOKEN_ENCRYPTION_KEY privately with the API when configuring recovery
-permissions or AI credentials. See [AI Lead Recovery](ai-lead-recovery.md) for
-unexecuted owner commands and remaining adapter/voice-binding dependencies.
-This source integration is **UNVERIFIED**; no job invocation or migration ran.
+there is no additional scheduler. The collector now interleaves durable signed
+provider inbox events, requested SMS booking-link replies, continuation expiry,
+authoritative read-only receipt reconciliation and due recovery attempts.
+Apply forward migration0027 after0026 before deploying the updated runner,
+including when RECOVERY_ENABLED=false. Keep recovery/channel flags off until
+owner setup and acceptance. Share the dedicated RECOVERY_TOKEN_ENCRYPTION_KEY,
+agency/origin binding and server-only channel settings privately with the API.
+Provider POST checkpoints survive interruption; UNKNOWN is never automatically
+resent. See [AI Lead Recovery](ai-lead-recovery.md) for exact configuration,
+unexecuted owner commands, external prerequisites and acceptance.
+This source integration is **UNVERIFIED**; no job invocation or new migration ran.
 
 - [Vercel Python functions](https://vercel.com/docs/functions/runtimes/python)
 - [Vercel cron limits](https://vercel.com/docs/cron-jobs/usage-and-pricing)

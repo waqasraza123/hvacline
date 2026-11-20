@@ -162,7 +162,7 @@ class RecoveryAiService:
         return {"provider": row.provider if row else None, "model": row.model if row else "", "endpoint": row.endpoint if row else "https://api.openai.com/v1", "status": row.status if row else "NOT_CONFIGURED",
             "row_version": row.row_version if row else 0, "has_credential": bool(row and row.credential_ciphertext), "last_tested_at": row.last_tested_at.isoformat() if row and row.last_tested_at else None,
             "last_error": row.last_error if row else None, "capabilities": ["STAFF_TEXT_DRAFTS"] if row and row.status == "CONNECTED" else [],
-            "live_recovery_voice_supported": False, "voice_status": "Existing ElevenLabs browser/inbound voice is configured separately; custom-model recovery calling is unsupported.",
+            "live_recovery_voice_supported": False, "voice_status": "Recovery calling uses a separately configured dedicated ElevenLabs agent and its hosted voice model. This text-model connection does not replace telephony, speech or that agent's model.",
             "encryption_configured": self.settings.recovery_token_encryption_key is not None}
 
     def status(self, actor: ActorContext) -> dict[str, object]:

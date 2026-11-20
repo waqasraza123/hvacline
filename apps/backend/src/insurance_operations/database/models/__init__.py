@@ -89,6 +89,8 @@ from insurance_operations.database.models.recovery import (
     RecoveryPermission,
     RecoveryPolicy,
     RecoveryProviderEvent,
+    RecoveryGrant,
+    RecoveryWebhook,
 )
 from insurance_operations.database.models.telephony import (
     AgencyCallPolicy,
@@ -113,6 +115,8 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "lead_recovery_grants": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_webhooks": TableOwnership(module="recovery", agency_column="agency_id"),
     "lead_recovery_policies": TableOwnership(module="recovery", agency_column="agency_id"),
     "lead_recovery_cases": TableOwnership(module="recovery", agency_column="agency_id"),
     "lead_recovery_attempts": TableOwnership(module="recovery", agency_column="agency_id"),
@@ -246,6 +250,8 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "RecoveryGrant",
+    "RecoveryWebhook",
     "RecoveryAiConnection",
     "RecoveryAttempt",
     "RecoveryCase",
