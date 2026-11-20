@@ -14,6 +14,12 @@
   <a href="LICENSE">Proprietary license</a>
 </p>
 
+<p align="center">
+  <a href="https://reactnative.dev"><img src="docs/assets/react-native-logo.svg" alt="React Native logo" width="40" height="36"></a><br>
+  <a href="https://reactnative.dev"><img src="https://img.shields.io/badge/React_Native-0.88.1-20232A?logo=react&amp;logoColor=61DAFB" alt="React Native 0.88.1"></a>
+  <a href="https://expo.dev"><img src="https://img.shields.io/badge/Expo-SDK_58-000020?logo=expo&amp;logoColor=white" alt="Expo SDK 58"></a>
+</p>
+
 ## Features
 
 - **Voice & chat:** Help customers through browser conversations, telephone, and inbound WhatsApp voice.
@@ -22,6 +28,7 @@
 - **Operations dashboard:** Manage requests, appointments, calls, callbacks, and team handoffs in one workspace.
 - **AI Lead Recovery · Preview:** Explore missed-call follow-up and unfinished bookings in an interactive dashboard demo.
 - **Customer accounts:** Appointment history, rescheduling, authenticator MFA, and optional customer-controlled memory.
+- **iOS & Android app · Preview:** An Expo and React Native [customer app](apps/mobile) for voice/chat booking, authenticator MFA, appointments, and rescheduling.
 - **Business knowledge:** Answer from approved FAQs and route hazardous or unsupported requests to staff.
 - **Calendar & reminders:** Optional Google Calendar sync and booking emails/reminders.
 - **Voice AI websites · Preview:** Customize three templates, save drafts, publish versions, and restore previous content.

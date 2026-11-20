@@ -1,8 +1,11 @@
+import {
+  intakePayload,
+  type ConfirmationInput,
+} from "@insurance-operations/customer-core";
 import type {
   ConfirmedConversationIntake,
   ConversationInputMode,
   ConversationSessionAuthorization,
-  ConversationTurn,
 } from "./contracts";
 
 type ErrorBody = Readonly<{
@@ -178,50 +181,8 @@ export function conversationApiPath(
   return `${baseUrl}/api/v1/development/${path}`;
 }
 
-export type ConfirmationInput = Readonly<{
-  sessionId: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  intakeIntent: string;
-  transcript: readonly ConversationTurn[];
-  idempotencyKey: string;
-  addressLine1: string;
-  city: string;
-  stateCode: string;
-  postalCode: string;
-  serviceKind: string;
-  preferredWindow: string;
-  hazardousCondition: boolean;
-  spokenConfirmation?: boolean;
-}>;
-
-export function intakePayload(input: ConfirmationInput) {
-  return {
-    conversation_session_id: input.sessionId,
-    customer: {
-      full_name: input.fullName,
-      email: input.email || null,
-      phone: input.phone || null,
-      address: {
-        line1: input.addressLine1,
-        city: input.city,
-        state_code: input.stateCode,
-        postal_code: input.postalCode,
-        country_code: "US",
-      },
-    },
-    intake_intent: input.intakeIntent,
-    service: {
-      kind: input.serviceKind,
-      equipment_issue: input.intakeIntent,
-      preferred_window: input.preferredWindow,
-      hazardous_condition: input.hazardousCondition,
-    },
-    spoken_confirmation: input.spokenConfirmation ?? false,
-    transcript: input.transcript,
-  };
-}
+export { intakePayload } from "@insurance-operations/customer-core";
+export type { ConfirmationInput } from "@insurance-operations/customer-core";
 
 export async function confirmConversationIntake(
   apiBaseUrl: string,

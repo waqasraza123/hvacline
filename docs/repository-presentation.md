@@ -8,7 +8,13 @@ README also links directly to Dashboard and **Try Yourself** at
 mentions GHL calendar booking/contact summaries without claiming live acceptance.
 Community files supply bug/feature forms, a PR template,
 contribution guidance, a security-reporting process, and release-note categories.
-The existing beta tag remains at its original commit; this task creates no release.
+README includes a React Native logo, React Native/Expo badges and an iOS/Android
+customer-app Preview feature linked to apps/mobile. The SVG logo is copied from
+https://reactnative.dev/img/header_logo.svg and linked to the official project;
+third-party names and artwork retain their owners' rights.
+The existing v0.1.0-beta.1 tag stays at its original commit. The owner requests
+publication of the Expo mobile source and a new v0.1.0-beta.2 tag; this is not an
+app-store binary release or a runtime acceptance claim.
 
 ## Owner licensing decision
 
@@ -47,7 +53,9 @@ Manual checks:
 
 1. Open the repository on GitHub at desktop and phone widths. Check banner text,
    website/license links, Dashboard and Try Yourself destinations, and feature
-   readability. Confirm recovery remains labeled Preview. Confirm the README contains
+   readability. Check the React Native logo/badge and Expo badge, the mobile
+   source link, and the app's Preview label. Confirm recovery remains labeled Preview.
+   Confirm the README contains
    no development, deployment, architecture, setup, or verification sections.
 2. Check the About description, website URL, and topic chips. Confirm the
    proprietary permission requirement is visible near the top of README and in

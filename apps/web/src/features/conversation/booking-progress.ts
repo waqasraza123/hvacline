@@ -5,22 +5,14 @@ import type { ConversationClient, ConversationInputMode } from "./contracts";
 import type { ConversationPhase } from "./lifecycle";
 import type { VoiceAppointment, VoiceBookingTool } from "./voice-booking";
 
-export type BookingFailure = Readonly<{
-  operation: VoiceBookingTool;
-  message: string;
-  uncertain: boolean;
-  staffReview?: boolean;
-}>;
-
-export type BookingProgress = Readonly<{
-  requestSaved: boolean;
-  awaitingIntakeConfirmation: boolean;
-  hazardous: boolean;
-  serviceKind?: string;
-  pending?: VoiceBookingTool;
-  failure?: BookingFailure;
-  availability?: Availability;
-}>;
+import type {
+  BookingFailure,
+  BookingProgress,
+} from "@insurance-operations/customer-core";
+export type {
+  BookingFailure,
+  BookingProgress,
+} from "@insurance-operations/customer-core";
 
 export const INITIAL_BOOKING_PROGRESS: BookingProgress = {
   requestSaved: false,

@@ -1,3 +1,43 @@
+## Expo mobile publication authorized — UNVERIFIED — 2026-11-20
+
+Owner requests publishing the Expo customer app to main, updating README and
+adding a tag/React Native logo. README adds the official SVG logo, React Native/
+Expo badges and a customer-app Preview feature. Intended new tag is
+v0.1.0-beta.2; existing beta.1 remains pinned. Publication uses the current remote
+main as parent and preserves unrelated local/remote source and divergent history.
+Commit retains [skip ci] [skip render]; no execution checks/deployment authorized.
+App/native/provider/security/visual acceptance remains UNVERIFIED. Owner setup,
+exact checks and device acceptance: docs/mobile-app.md; README/logo/tag manual
+review: docs/repository-presentation.md. Publication result is recorded separately.
+
+## Expo customer app — source implemented, UNVERIFIED — 2026-11-20
+
+Owner requests an Expo mobile app using the latest stable stack. Added apps/mobile
+with Expo58.0.26, React Native0.88.1, Expo-supported React19.3.0, Router58.0.32
+and TypeScript6.0.3. Native customer screens cover signup/login, mandatory MFA/
+recovery, voice/silent Chat booking, appointments/details and explicit rescheduling.
+SecureStore holds origin-bound expiring sessions and account/appointment-scoped
+reschedule retry references. Disclosure, microphone consent, backend ownership,
+readback confirmation, scheduling/provider guards and development gates remain.
+
+Extracted the existing portable booking controller/contracts/transcript/text/
+appointment helpers into packages/customer-core; web modules retain adapters.
+Disabled-by-default Next.js /api/mobile allowlist injects the existing portal key
+server-side and forwards scoped native bearers, without browser cookie reuse or
+admin routes. Native ElevenLabs1.2.42 uses its supported LiveKit2.12/WebRTC144
+peers; silent Chat uses documented text-only WebSocket events. Persistent customer
+memory and process-restored active conversations/intake retries are outside this
+version. Production identity/onboarding remains incomplete.
+
+Resolved the workspace lockfile with scripts disabled and applied source
+formatting only. Resolver Node26 emitted warnings against retained Node24.x
+requirements. No dependency installation, tests, builds, linters, type checks,
+simulators, services, migrations, provider calls, hosted changes, publication or
+deployment. Added unexecuted gateway/contracts/text/reschedule regressions.
+Runtime/security/provider/native/visual behavior remains UNVERIFIED. Exact setup,
+owner commands and iOS/Android acceptance: docs/mobile-app.md. No mobile/server
+secret or activation setting was changed; preserve unrelated source/history/index.
+
 ## Compact recovery homepage and dedicated route — source UNVERIFIED — 2026-11-20
 
 Owner requests a shorter Lead Recovery homepage section, prominent dashboard
