@@ -583,6 +583,10 @@ class TelephonyService:
                     correlation_id=correlation_id,
                 )
             )
+            from insurance_operations.recovery.domain import detect_terminal
+
+            session.flush()
+            detect_terminal(session, inbound_call.agency_id, call_id=inbound_call.id)
             directive.call = inbound_call_response(inbound_call)
             return directive
 
@@ -660,6 +664,10 @@ class TelephonyService:
                     correlation_id=correlation_id,
                 )
             )
+            from insurance_operations.recovery.domain import detect_terminal
+
+            session.flush()
+            detect_terminal(session, inbound_call.agency_id, call_id=inbound_call.id)
             directive.call = inbound_call_response(inbound_call)
             return directive
 

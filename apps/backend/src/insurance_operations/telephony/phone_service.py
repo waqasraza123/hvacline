@@ -739,6 +739,11 @@ class PhoneReceptionistService:
             ]
         )
 
+        from insurance_operations.recovery.domain import detect_terminal
+
+        session.flush()
+        detect_terminal(session, inbound_call.agency_id, call_id=inbound_call.id)
+
     def _record_unconfirmed_end(
         self,
         *,
@@ -788,6 +793,11 @@ class PhoneReceptionistService:
             )
         )
 
+        from insurance_operations.recovery.domain import detect_terminal
+
+        session.flush()
+        detect_terminal(session, inbound_call.agency_id, call_id=inbound_call.id)
+
     def _record_initiation_failure(
         self,
         *,
@@ -829,6 +839,11 @@ class PhoneReceptionistService:
                 correlation_id=correlation_id,
             )
         )
+
+        from insurance_operations.recovery.domain import detect_terminal
+
+        session.flush()
+        detect_terminal(session, inbound_call.agency_id, call_id=inbound_call.id)
 
     def _resolve_actor(self, session: Session) -> ActorContext:
         try:

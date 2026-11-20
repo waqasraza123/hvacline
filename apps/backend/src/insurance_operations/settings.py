@@ -117,6 +117,32 @@ class DatabaseConnectionSettings(CommonSettings):
 
 
 class DatabaseSettings(DatabaseConnectionSettings):
+    recovery_enabled: bool = False
+    recovery_token_encryption_key: SecretStr | None = None
+    recovery_ai_allowed_origins: list[str] = Field(default_factory=list)
+
+    @field_validator("recovery_token_encryption_key", mode="before")
+    @classmethod
+    def normalize_recovery_key(cls, value: object) -> object:
+        if isinstance(value, SecretStr):
+            value = value.get_secret_value()
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @model_validator(mode="after")
+    def validate_recovery_settings(self) -> Self:
+        from cryptography.fernet import Fernet
+
+        if self.recovery_token_encryption_key is not None:
+            try:
+                Fernet(self.recovery_token_encryption_key.get_secret_value().encode())
+            except (ValueError, TypeError) as error:
+                raise ValueError("RECOVERY_TOKEN_ENCRYPTION_KEY must be a Fernet key") from error
+        if self.recovery_enabled and self.recovery_token_encryption_key is None:
+            raise ValueError("Recovery requires RECOVERY_TOKEN_ENCRYPTION_KEY")
+        return self
+
     customer_max_active_appointments: int = Field(
         default=DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS, ge=1, le=20
     )

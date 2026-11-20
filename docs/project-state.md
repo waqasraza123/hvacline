@@ -1,5 +1,40 @@
 # Project State
 
+## AI Lead Recovery — publication authorized, runtime UNVERIFIED — 2026-11-20
+
+Source adds prospective recovery cases/attempts/policy/explicit permission and
+encrypted text-model connections through forward migration 20261120_0026 after 0025.
+New persisted confirmed requests and normalized browser/phone terminal events
+identify cases without a historical scan; a persisted capture watermark excludes
+pre-installation requests arriving through delayed events. Existing booking jobs own scheduling;
+existing confirmed-booking notification hooks stop recovery without independent
+booking credit. Consent, suppression, versioning, idempotent case actions and
+unknown-outcome review remain backend gates. No migration or runtime check ran.
+
+Homepage preview, /lead-recovery, header/sidebar links and overview spotlight
+use a client-only 24-record fictional demo. Simulated conversation, explicit slot
+confirmation, STOP, reset and fictional estimates stay separate from protected
+live records. Administrator model save/test/revoke uses Fernet context binding,
+public HTTPS origin allowlisting, validated DNS and pinned TLS destinations.
+OpenAI/compatible models support staff-reviewed text drafts only; custom-model
+live voice is unsupported. Existing ElevenLabs agents/demo calling are unchanged.
+
+SMS Verify is not general messaging; runtime recovery delivery has no configured
+SMS adapter or dedicated voice-agent/tool binding. Both channels are reported
+unavailable, automation defaults off and enabling is rejected. Trusted receipt/
+reply processing is an internal adapter boundary, not a public unsigned webhook.
+Live attributed customer continuation and provider reconciliation need concrete
+adapters before activation. Existing development/admin identity gates remain;
+this is not a production-readiness or operational recovery claim.
+
+Focused regression sources, schema/ownership expectations and disposable fixture
+cleanup are added but unexecuted. No tests/builds/linters/formatters/type checks,
+browser checks, services, migrations, provider requests, calls/messages, hosted
+changes or deployment ran. Owner authorizes this scoped publication; commit
+retains [skip ci] [skip render]. No subagents. Existing unrelated source
+is preserved. Exact manifest, configuration, owner commands, acceptance and
+remaining boundaries: docs/ai-lead-recovery.md.
+
 ## Clock-based automatic day/night theme — source UNVERIFIED — 2026-11-20
 
 Owner requests automatic switching by the device's local day/night time. Source

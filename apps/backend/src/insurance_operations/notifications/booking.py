@@ -26,6 +26,9 @@ from insurance_operations.settings import DatabaseSettings
 def enqueue_booking_notifications(
     session: Session, appointment: Appointment, kind: str = "CONFIRMATION"
 ) -> None:
+    from insurance_operations.recovery.domain import stop_for_booking
+
+    stop_for_booking(session, appointment)
     request = session.get(HvacServiceRequest, appointment.service_request_id)
     schedule = session.get(BusinessSchedule, appointment.agency_id)
     if request is None or schedule is None:

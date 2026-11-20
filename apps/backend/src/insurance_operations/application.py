@@ -93,6 +93,7 @@ from insurance_operations.receptionist import (
     ReceptionistSettingsResponse,
     ReceptionistSettingsService,
 )
+from insurance_operations.recovery.routes import create_recovery_router
 from insurance_operations.settings import (
     ApiSettings,
     ConversationProviderName,
@@ -853,6 +854,7 @@ def create_app(
         )
     )
     application.include_router(create_hvac_router(session_factory, development_actor))
+    application.include_router(create_recovery_router(settings, session_factory, development_actor))
     application.include_router(
         create_ghl_router(settings, session_factory, development_actor)
     )

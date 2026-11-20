@@ -14,6 +14,7 @@ import {
   OutboundDemoTrigger,
 } from "@/features/outbound-demo/outbound-demo-dialog";
 import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
+import { RecoveryHomepage } from "@/features/recovery/homepage";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 
@@ -120,6 +121,7 @@ export default function Home() {
             <HomepageChat />
           </div>
         </section>
+        <RecoveryHomepage />
         <OutboundDemo />
         <section className="product-final-cta product-container">
           <div>

@@ -285,6 +285,10 @@ class ConversationService:
             ):
                 conversation_session.ended_at = conversation_session.ended_at or now
 
+            from insurance_operations.recovery.domain import detect_terminal
+
+            session.flush()
+            detect_terminal(session, actor.agency_id, conversation_id=conversation_session.id)
             return ConversationEndResponse(
                 session_id=conversation_session.id,
                 status=conversation_session.status,
@@ -442,6 +446,9 @@ class ConversationService:
                 )
                 session.add(service_request)
                 session.flush()
+                from insurance_operations.recovery.domain import detect_request
+
+                detect_request(session, service_request)
                 session.add(
                     AuditEvent(
                         agency_id=actor.agency_id,

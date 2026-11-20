@@ -38,6 +38,12 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "lead_recovery_cases",
+    "lead_recovery_attempts",
+    "lead_recovery_policies",
+    "lead_recovery_permissions",
+    "lead_recovery_ai_connections",
+    "lead_recovery_provider_events",
     "ghl_calendar_bookings",
     "ghl_connections",
     "ghl_deliveries",
@@ -745,6 +751,16 @@ EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
     "last_error",
     "created_at",
 }
+
+
+EXPECTED_COLUMNS.update({
+    "lead_recovery_cases": {"id", "agency_id", "service_request_id", "lead_id", "source_type", "source_reference", "status", "eligible_at", "last_activity_at", "recovered_appointment_id", "paused", "assigned_to", "reason", "created_at", "updated_at", "row_version"},
+    "lead_recovery_attempts": {"id", "agency_id", "recovery_case_id", "channel", "attempt_number", "status", "scheduled_at", "started_at", "completed_at", "provider_reference", "failure_code", "idempotency_key", "created_at", "updated_at"},
+    "lead_recovery_policies": {"agency_id", "enabled", "configuration", "capture_from", "created_at", "updated_at", "row_version"},
+    "lead_recovery_permissions": {"id", "agency_id", "destination_digest", "channel", "scope", "source", "evidence_reference", "granted_at", "revoked_at", "created_at", "updated_at", "row_version"},
+    "lead_recovery_ai_connections": {"agency_id", "provider", "model", "endpoint", "credential_ciphertext", "status", "last_tested_at", "last_error", "created_at", "updated_at", "row_version"},
+    "lead_recovery_provider_events": {"id", "agency_id", "attempt_id", "event_key", "fingerprint", "kind", "occurred_at"},
+})
 
 
 def test_migration_creates_only_the_approved_foundation_tables(

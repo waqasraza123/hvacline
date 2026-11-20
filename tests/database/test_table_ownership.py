@@ -4,6 +4,12 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "lead_recovery_cases": ("recovery", "agency_id"),
+    "lead_recovery_attempts": ("recovery", "agency_id"),
+    "lead_recovery_policies": ("recovery", "agency_id"),
+    "lead_recovery_permissions": ("recovery", "agency_id"),
+    "lead_recovery_ai_connections": ("recovery", "agency_id"),
+    "lead_recovery_provider_events": ("recovery", "agency_id"),
     "ghl_calendar_bookings": ("ghl", "agency_id"),
     "ghl_connections": ("ghl", "agency_id"),
     "ghl_deliveries": ("ghl", "agency_id"),
@@ -95,6 +101,19 @@ def test_foundation_relationships_match_available_parent_tables(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_relationships: dict[str, set[tuple[tuple[str, ...], str]]] = {
+        "lead_recovery_cases": {
+            (("agency_id",), "agencies"),
+            (("agency_id", "service_request_id"), "hvac_service_requests"),
+            (("agency_id", "lead_id"), "agency_leads"),
+            (("agency_id", "recovered_appointment_id"), "hvac_appointments"),
+            (("agency_id", "assigned_to"), "agency_memberships"),
+            (("assigned_to",), "app_users"),
+        },
+        "lead_recovery_attempts": {(("agency_id",), "agencies"), (("agency_id", "recovery_case_id"), "lead_recovery_cases")},
+        "lead_recovery_provider_events": {(("agency_id",), "agencies"), (("agency_id", "attempt_id"), "lead_recovery_attempts")},
+        "lead_recovery_policies": {(("agency_id",), "agencies")},
+        "lead_recovery_permissions": {(("agency_id",), "agencies")},
+        "lead_recovery_ai_connections": {(("agency_id",), "agencies")},
         "ghl_calendar_bookings": {
             (("agency_id",), "agencies"),
             (("agency_id", "connection_id"), "ghl_connections"),

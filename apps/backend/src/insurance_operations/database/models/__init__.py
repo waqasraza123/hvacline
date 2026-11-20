@@ -82,6 +82,14 @@ from insurance_operations.database.models.outbound_verification import (
 from insurance_operations.database.models.receptionist import (
     AgencyReceptionistSettings,
 )
+from insurance_operations.database.models.recovery import (
+    RecoveryAiConnection,
+    RecoveryAttempt,
+    RecoveryCase,
+    RecoveryPermission,
+    RecoveryPolicy,
+    RecoveryProviderEvent,
+)
 from insurance_operations.database.models.telephony import (
     AgencyCallPolicy,
     AgencyInboundNumber,
@@ -105,6 +113,12 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "lead_recovery_policies": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_cases": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_attempts": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_permissions": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_ai_connections": TableOwnership(module="recovery", agency_column="agency_id"),
+    "lead_recovery_provider_events": TableOwnership(module="recovery", agency_column="agency_id"),
     "ghl_calendar_bookings": TableOwnership(module="ghl", agency_column="agency_id"),
     "ghl_connections": TableOwnership(module="ghl", agency_column="agency_id"),
     "ghl_deliveries": TableOwnership(module="ghl", agency_column="agency_id"),
@@ -232,6 +246,12 @@ TABLE_OWNERSHIP = {
 }
 
 __all__ = [
+    "RecoveryAiConnection",
+    "RecoveryAttempt",
+    "RecoveryCase",
+    "RecoveryPermission",
+    "RecoveryPolicy",
+    "RecoveryProviderEvent",
     "GhlCalendarBooking",
     "GhlConnection",
     "GhlDelivery",

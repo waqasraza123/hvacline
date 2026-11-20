@@ -1,5 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useReducer, useState } from "react";
+import { demoReducer, initialDemo } from "@/features/recovery/demo";
+import { RecoveryDemo } from "@/features/recovery/demo-panel";
+import { RecoveryLive } from "@/features/recovery/live";
+import { RecoverySpotlight } from "@/features/recovery/spotlight";
 import { LaborRecorder } from "@/features/billing/labor-recorder";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
@@ -36,17 +40,24 @@ import type {
 export function OperationsWorkspace({
   apiBaseUrl,
   conversationAiEnabled,
+  initialSection = "overview",
+  initialSetup = false,
+  backendConfigured = true,
 }: {
   apiBaseUrl: string;
   conversationAiEnabled: boolean;
+  initialSection?: OperationsSection;
+  initialSetup?: boolean;
+  backendConfigured?: boolean;
 }) {
   const [token, setToken] = useState("");
-  const [demo, setDemo] = useState(true);
-  const [data, setData] = useState<Operations | null>(demoOperations);
+  const [demo, setDemo] = useState(!initialSetup);
+  const [recoveryDemo, recoveryDispatch] = useReducer(demoReducer, undefined, initialDemo);
+  const [data, setData] = useState<Operations | null>(initialSetup ? null : demoOperations);
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(
-    demoSchedule,
+    initialSetup ? null : demoSchedule,
   );
-  const [tab, setTab] = useState<OperationsSection>("overview");
+  const [tab, setTab] = useState<OperationsSection>(initialSection);
   const [loadedAt, setLoadedAt] = useState(demoReferenceTime);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -97,12 +108,25 @@ export function OperationsWorkspace({
     setMessage("Reserved for five minutes. Confirm the appointment below.");
   }
   function connectWorkspace(section: OperationsSection = "overview") {
+    if (!backendConfigured) {
+      setError("Live setup requires the existing NEXT_PUBLIC_API_BASE_URL configuration for your authenticated backend. The recovery demo remains available without it.");
+      return;
+    }
     setDemo(false);
     setData(null);
     setSchedule(null);
     setTab(section);
     setMessage("");
     setError("");
+  }
+  function exploreDemo() {
+    setDemo(true);
+    setToken("");
+    setData(demoOperations);
+    setSchedule(demoSchedule);
+    setLoadedAt(demoReferenceTime);
+    setError("");
+    setMessage("");
   }
   function timestamp(value: string) {
     return new Intl.DateTimeFormat("en-US", {
@@ -123,14 +147,15 @@ export function OperationsWorkspace({
       }}
       demo={demo}
     >
+      {!backendConfigured && tab === "recovery" && <p className="ops-message" role="status">Demo Mode works without a backend connection. Live setup needs a configured backend origin, administrator sign-in, an AI model, communication providers and reviewed contact permissions.</p>}
       {demo && (
         <div className={styles.demoBanner}>
           <div>
             <strong>Demo workspace · sample data</strong>
             <p>
               Calls, visits and business details here are sample records.
-              Explore GoHighLevel for CRM sync, calendar booking and contact
-              summaries.
+              Explore the interactive AI Lead Recovery demo or GoHighLevel
+              integration setup.
             </p>
           </div>
           <button type="button" onClick={() => connectWorkspace()}>
@@ -146,7 +171,7 @@ export function OperationsWorkspace({
             void act(load);
           }}
         >
-          <h2>Connect to your workspace</h2>
+          <h2>{tab === "recovery" ? "Live Mode · connect your administrator workspace" : "Connect to your workspace"}</h2>
           <p className="section-help">
             Enter the configured admin token. It stays in this page’s memory and
             is sent only to your backend.
@@ -166,15 +191,7 @@ export function OperationsWorkspace({
           <button
             type="button"
             disabled={busy}
-            onClick={() => {
-              setDemo(true);
-              setToken("");
-              setData(demoOperations);
-              setSchedule(demoSchedule);
-              setLoadedAt(demoReferenceTime);
-              setError("");
-              setMessage("");
-            }}
+            onClick={exploreDemo}
           >
             Explore demo instead
           </button>
@@ -192,7 +209,7 @@ export function OperationsWorkspace({
       )}
       {data && (
         <>
-          {(!demo || tab !== "integrations") && (
+          {tab !== "recovery" && (!demo || tab !== "integrations") && (
             <p className={styles.queueNote}>
               {demo ? "Sample schedule for November 12, 2026. " : ""}
               Up to 100 latest records per queue. Counts reflect loaded records,
@@ -214,6 +231,11 @@ export function OperationsWorkspace({
               timestamp={timestamp}
               onSelect={setTab}
             >
+              <RecoverySpotlight
+                key={demo ? "recovery-demo" : "recovery-live"}
+                demo={demo} state={recoveryDemo} apiBaseUrl={apiBaseUrl} token={token} refreshedAt={loadedAt}
+                onOpen={() => setTab("recovery")} onSetup={() => demo ? connectWorkspace("recovery") : setTab("recovery")}
+              />
               <GhlSpotlight
                 key={demo ? "demo" : "workspace"}
                 apiBaseUrl={apiBaseUrl}
@@ -225,7 +247,10 @@ export function OperationsWorkspace({
               />
             </DashboardOverview>
           )}
-          {demo && tab !== "integrations" && <DemoSection section={tab} />}
+          {tab === "recovery" && (demo
+            ? <RecoveryDemo state={recoveryDemo} dispatch={recoveryDispatch} onLive={() => connectWorkspace("recovery")} />
+            : <RecoveryLive apiBaseUrl={apiBaseUrl} token={token} onDemo={exploreDemo} />)}
+          {demo && tab !== "integrations" && tab !== "recovery" && <DemoSection section={tab} />}
           {demo && tab === "integrations" && (
             <>
               <GhlDemo apiBaseUrl={apiBaseUrl} />

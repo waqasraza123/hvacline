@@ -1,18 +1,30 @@
 # Operations dashboard
 
+## AI Lead Recovery — source UNVERIFIED
+
+AI Lead Recovery now has dedicated header/sidebar access, a prominent overview
+card and a public `/lead-recovery` demo. Its 24 fictional opportunities and
+interactive follow-up/booking simulation stay separate from authenticated live
+data. AI Provider Settings store encrypted text-model credentials; recovery SMS
+and voice delivery remain unavailable and automation cannot be activated.
+Migration 0026 must precede API/job deployment. No checks or provider requests ran.
+Exact source manifest, setup, owner commands, limits and acceptance:
+[AI Lead Recovery](ai-lead-recovery.md).
+
 Implementation and runtime acceptance are **unverified**. The owner requested
 coding and publication only; no execution checks or services are authorized.
 
 `/operations` opens a sample-data demo for all visitors without sign-in. The
-shared desktop navbar and mobile menu offer Dashboard and Pricing; Calling has
+shared desktop navbar and mobile menu offer Dashboard, Pricing and AI Recovery; Calling has
 been removed from both. The dashboard's initial
 render uses local fictional fixtures and makes no backend or provider request.
 The example schedule is November 12, 2026 in America/New_York; upcoming visits
-are evaluated relative to that example day. Demo booking mutations are disabled,
-and API dispatch rejects demo actions. Connected editors, calendar integrations,
+are evaluated relative to that example day. Ordinary demo booking mutations are disabled,
+and API dispatch rejects demo actions. Recovery uses only its separate local simulation.
+Connected editors, calendar integrations,
 maintenance labor and browser voice are not mounted in demo mode.
 
-GoHighLevel is featured above the overview queue cards and has its own named
+GoHighLevel is featured below AI Lead Recovery and above the overview queue cards, with its own named
 sidebar entry with a CRM badge. The underlying section key remains `integrations`;
 older setup guides referring to Integrations mean this GoHighLevel entry.
 The feature card highlights contact/opportunity sync, GHL calendar booking and
@@ -74,7 +86,7 @@ Manual acceptance:
    Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
-   Confirm the GHL feature leads the overview without requests in demo mode.
+   Confirm AI Lead Recovery leads the overview, followed by GHL, without requests in demo mode.
    Its named sidebar entry opens the public aggregate data card and static
    workflow preview. Only the credential-free public demo endpoint is fetched;
    private/admin status endpoints must not be requested by demo visitors.

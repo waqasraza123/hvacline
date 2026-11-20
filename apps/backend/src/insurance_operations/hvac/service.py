@@ -194,6 +194,9 @@ class SchedulingService:
             )
             session.add(row)
             session.flush()
+            from insurance_operations.recovery.domain import detect_request
+
+            detect_request(session, row)
             session.add(
                 system_audit(
                     agency_id=agency_id,
@@ -444,6 +447,9 @@ class SchedulingService:
         if ghl_route is None:
             bind_reservation(session, row)
         bind_ghl_reservation(session, row)
+        from insurance_operations.recovery.domain import record_booking_activity
+
+        record_booking_activity(session, row, now)
         session.flush()
         return row
 

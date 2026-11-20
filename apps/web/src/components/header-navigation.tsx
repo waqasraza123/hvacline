@@ -15,6 +15,7 @@ const links = [
     description: "Explore the dashboard demo",
   },
   { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
+  { href: "/lead-recovery", label: "AI Recovery", description: "Try the interactive lead recovery demo" },
 ] as const;
 
 export function HeaderNavigation() {
@@ -105,7 +106,7 @@ export function HeaderNavigation() {
               Find your next step.
             </Dialog.Title>
             <Dialog.Description className={styles.description}>
-              View maintenance packages or open your workspace.
+              Explore AI lead recovery, view maintenance packages or open your workspace.
             </Dialog.Description>
             <nav className={styles.mobile} aria-label="Mobile navigation">
               {links.map((link, index) => (

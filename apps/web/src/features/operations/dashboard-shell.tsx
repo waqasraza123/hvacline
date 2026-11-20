@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "./dashboard.module.css";
 
 const sections = [
+  { key: "recovery", label: "AI Lead Recovery", icon: "phone", group: "Workspace" },
   {
     key: "integrations",
     label: "GoHighLevel",
@@ -115,7 +116,7 @@ export function DashboardShell({
                       type="button"
                       className={styles.navItem}
                       data-featured={
-                        item.key === "integrations" ? "true" : undefined
+                        item.key === "integrations" || item.key === "recovery" ? "true" : undefined
                       }
                       aria-current={section === item.key ? "page" : undefined}
                       aria-label={item.label}
@@ -136,6 +137,7 @@ export function DashboardShell({
                           CRM
                         </span>
                       )}
+                      {item.key === "recovery" && <span className={styles.navFeatureBadge} aria-hidden="true">AI</span>}
                     </button>
                   </li>
                 ))}
@@ -238,7 +240,9 @@ export function DashboardShell({
               <p className={styles.eyebrow}>HVACLINE OPERATIONS</p>
               <h1>{connected ? label : "Your service workspace"}</h1>
               <p className={styles.subtitle}>
-                {section === "integrations" && connected
+                {section === "recovery" && connected
+                  ? "Turn missed opportunities into the next confirmed appointment."
+                  : section === "integrations" && connected
                   ? "Your CRM, calendar booking and contact summaries."
                   : section === "overview" || !connected
                     ? "A clear view of your calls, bookings and next steps."
