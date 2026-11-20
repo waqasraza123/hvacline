@@ -25,7 +25,7 @@ export function ThemeToggle() {
       role="switch"
       aria-label="Dark mode"
       aria-checked={dark}
-      title={`Switch to ${dark ? "light" : "dark"} mode`}
+      title={`Switch to ${dark ? "light" : "dark"} mode until the next day/night change`}
       onClick={() => changeTheme(dark ? "light" : "dark")}
     >
       <span className={styles.track} aria-hidden="true">

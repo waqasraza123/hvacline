@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { themeInitializationScript } from "@/components/theme-preference";
+import { ThemeSync } from "@/components/theme-sync";
 import "./styles.css";
 export const metadata: Metadata = {
   title: {
@@ -33,7 +34,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        <ThemeSync />
+        {children}
+      </body>
     </html>
   );
 }

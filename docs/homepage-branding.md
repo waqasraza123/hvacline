@@ -55,7 +55,7 @@ at desktop/tablet/320px mobile, light/dark contrast, accessible list/icon behavi
 Stripe wordmark and visible Sandbox wording. Existing hero actions and phone
 link must remain usable.
 
-## Light/dark theme switch — 2026-11-09 — UNVERIFIED
+## Automatic day/night theme and manual switch — 2026-11-20 — UNVERIFIED
 
 Added a shared animated sun/moon switch to the homepage, pricing, billing,
 booking, sign-in/signup and MFA headers. Customer surfaces use white/charcoal
@@ -64,11 +64,24 @@ notices, customer panels, dialogs and billing/pricing loading states use shared
 theme colors. Existing charcoal feature panels remain charcoal with readable
 light text; the MFA QR code keeps its white background.
 
-The initial theme follows the system preference unless a valid light/dark choice
-is saved as `hvacline-theme` in browser local storage. A small static script sets
-the root theme before content renders. Switches share the current state, observe
-system changes until an explicit choice is made, and synchronize stored changes
-between tabs. Storage failures keep the control usable for the current page.
+The default theme follows the device's local clock: light from 07:00 inclusive
+to 19:00 exclusive, dark overnight. This schedule uses local time rather than
+the operating system's color preference or the server's timezone; it does not
+estimate sunrise/sunset or request location. Named day/night hour constants live
+in `components/theme-preference.ts`.
+
+A small static script applies the theme before content renders. A shared root
+subscriber checks once per minute while the app is mounted, including routes
+without a theme switch. Focus and visibility changes refresh it after sleep or
+device clock/timezone changes. An open page switches within one minute of the
+boundary, or immediately when the page becomes active again.
+
+Manual switches apply immediately and last until the next local 07:00 or 19:00
+boundary. Browser storage retains the choice and its expiry as a validated
+`{theme, expiresAt}` value under `hvacline-theme`, so reloads and other tabs use
+the same temporary choice. Old permanent string preferences and invalid or
+expired values revert to automatic mode. Storage failures keep the control
+usable in the current tab. Multiple switches share one timer and theme state.
 The switch has an accessible Dark mode name/state, a keyboard focus ring, a
 44px minimum touch target and disabled animation with reduced motion.
 Customer theme styles are scoped to product/customer surfaces.
@@ -78,19 +91,29 @@ type checks, previews, services or deployment ran. No dependency, backend settin
 or migration is needed. Owner command from the repository root:
 
 ```sh
+npm run test:web -- src/components/theme-preference.test.ts
 npm run verify:web
 ```
+
+Regression specifications cover local boundaries, startup/live agreement,
+temporary manual choices, overnight expiry, legacy/invalid storage, tab sync,
+sleep/clock changes, timer cleanup and blocked storage. They have not run.
 
 Owner manual checks: switch both directions using mouse/touch/Space/Enter;
 confirm the screen reader reports Dark mode on/off. Check desktop/tablet/320px
 header spacing and all existing provider/navigation links. Reload directly into
-both saved themes and navigate among `/`, `/pricing`, `/billing`, `/book`,
+both temporary saved themes and navigate among `/`, `/pricing`, `/billing`, `/book`,
 `/login`, `/signup` and `/mfa` without a light-background flash. Inspect cards,
 inputs, native selects, loading screens, warnings/errors, dialogs, focus rings,
-MFA QR contrast and reduced motion in both themes. With no saved choice, change
-the OS preference; then explicitly choose a theme and confirm OS changes no
-longer override it. Check another tab, blocked local storage and theme switching
-during an existing conversation without losing its state.
+MFA QR contrast and reduced motion in both themes. On a test device or browser
+with a controlled local clock, check 06:59 → 07:00 and 18:59 → 19:00, including
+an open page, overnight and after returning to a sleeping tab. Confirm a manual
+choice survives reload but expires at the next boundary. Check device timezone
+changes in automatic mode; changing only the OS color preference should not
+change the scheduled theme. Check another tab, clearing or blocking local
+storage, legacy saved preferences and theme switching during an existing
+conversation without losing its state. Confirm route loading screens also use
+the current clock-based theme.
 
 ## Header pricing label and providers — 2026-11-09 — UNVERIFIED
 

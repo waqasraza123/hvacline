@@ -4,10 +4,11 @@ Implementation is **unverified**. No tests, builds, linters, type checks,
 services or browser checks were run for this change.
 
 `LoadingScreen` centers the existing HVACLine brand, an animated orange signal
-and a descriptive loading status across the viewport. It follows the saved or
-system theme through the existing `data-theme` initialization and stops the
+and a descriptive loading status across the viewport. It follows the local
+day/night schedule or temporary manual choice through `data-theme` and stops the
 signal animation for reduced-motion preferences. It requires no client state,
-timer, dependency or artificial delay.
+timer, dependency or artificial delay of its own. The shared root theme
+subscriber keeps day/night colors current; see [Theme behavior](homepage-branding.md).
 
 The root route fallback, Pricing, Billing and published-site route fallbacks
 reuse it. Buttons and loading panels within visible content keep their inline

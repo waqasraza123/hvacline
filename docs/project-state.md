@@ -1,5 +1,19 @@
 # Project State
 
+## Clock-based automatic day/night theme — source UNVERIFIED — 2026-11-20
+
+Owner requests automatic switching by the device's local day/night time. Source
+uses light07:00–19:00/dark overnight, pre-render initialization and one shared
+root subscriber with minute/focus/visibility refresh. Manual choices expire at
+the next local boundary; legacy permanent preferences return to automatic mode.
+Tab synchronization and blocked-storage fallback remain; no location lookup,
+backend, schema or dependency change. Regression specifications are unexecuted.
+
+Owner authorizes scoped publication to main with [skip ci] [skip render]. No
+tests/builds/linters/type checks/services/browser acceptance or deployment ran.
+Runtime UNVERIFIED. Owner commands: `npm run test:web -- src/components/theme-preference.test.ts`
+and `npm run verify:web`; manual checks: docs/homepage-branding.md.
+
 ## Shared route loader and navigation — source UNVERIFIED — 2026-11-20
 
 Owner requests a centered custom loader for otherwise blank loading views and
