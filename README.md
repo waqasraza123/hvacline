@@ -4,11 +4,13 @@
 
 <p align="center">
   <strong>AI receptionist and appointment booking for HVAC businesses.</strong><br>
-  Capture service requests, answer customer questions, and keep your team organized.
+  Answer customer questions, capture service requests, and keep bookings moving.
 </p>
 
 <p align="center">
   <a href="https://hvacline.online">Visit HVACLine</a> ·
+  <a href="https://www.hvacline.online/operations">Dashboard</a> ·
+  <a href="https://www.hvacline.online/ai-lead-recovery">Try Yourself</a> ·
   <a href="LICENSE">Proprietary license</a>
 </p>
 
@@ -18,11 +20,12 @@
 - **Appointment booking:** Match requests to service areas, business hours, and technician availability, with customer confirmation.
 - **Service intake:** Collect contact details, service addresses, equipment issues, and preferred appointment times.
 - **Operations dashboard:** Manage requests, appointments, calls, callbacks, and team handoffs in one workspace.
+- **AI Lead Recovery · Preview:** Explore missed-call follow-up and unfinished bookings in an interactive dashboard demo.
 - **Customer accounts:** Appointment history, rescheduling, authenticator MFA, and optional customer-controlled memory.
 - **Business knowledge:** Answer from approved FAQs and route hazardous or unsupported requests to staff.
 - **Calendar & reminders:** Optional Google Calendar sync and booking emails/reminders.
 - **Voice AI websites · Preview:** Customize three templates, save drafts, publish versions, and restore previous content.
-- **GoHighLevel · Preview:** Sync confirmed leads to contacts and opportunities with booking-stage updates.
+- **GoHighLevel · Preview:** Sync confirmed leads, route calendar bookings, and add contact summaries.
 - **Maintenance billing · Sandbox:** Stripe packages, purchased labor hours, and billing history.
 
 ## License

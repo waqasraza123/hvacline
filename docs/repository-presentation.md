@@ -3,6 +3,9 @@
 The repository uses a short product-focused README with an original SVG banner,
 a feature list, website link, and proprietary license notice. Development,
 deployment, architecture, setup, and project-status details are kept out of README.
+README also links directly to Dashboard and **Try Yourself** at
+`https://www.hvacline.online/ai-lead-recovery`, labels recovery as a preview and
+mentions GHL calendar booking/contact summaries without claiming live acceptance.
 Community files supply bug/feature forms, a PR template,
 contribution guidance, a security-reporting process, and release-note categories.
 The existing beta tag remains at its original commit; this task creates no release.
@@ -43,7 +46,8 @@ gh api repos/waqasraza123/hvacline/private-vulnerability-reporting
 Manual checks:
 
 1. Open the repository on GitHub at desktop and phone widths. Check banner text,
-   website/license links, and feature readability. Confirm the README contains
+   website/license links, Dashboard and Try Yourself destinations, and feature
+   readability. Confirm recovery remains labeled Preview. Confirm the README contains
    no development, deployment, architecture, setup, or verification sections.
 2. Check the About description, website URL, and topic chips. Confirm the
    proprietary permission requirement is visible near the top of README and in

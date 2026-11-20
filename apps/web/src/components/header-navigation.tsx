@@ -15,7 +15,7 @@ const links = [
     description: "Explore the dashboard demo",
   },
   { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
-  { href: "/lead-recovery", label: "AI Recovery", description: "Try the interactive lead recovery demo" },
+  { href: "/ai-lead-recovery", label: "AI Recovery", description: "Try the interactive lead recovery demo" },
 ] as const;
 
 export function HeaderNavigation() {

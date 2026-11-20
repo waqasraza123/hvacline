@@ -1,3 +1,22 @@
+## Compact recovery homepage and dedicated route — source UNVERIFIED — 2026-11-20
+
+Owner requests a shorter Lead Recovery homepage section, prominent dashboard
+access, README refresh and publication to main; final CTA text is Try Yourself
+and destination is /ai-lead-recovery. Homepage now renders a static compact card
+without the recovery demo/reducer/metrics/setup controls. The dedicated route
+retains the dashboard shell, fictional demo and existing protected setup gate;
+legacy /lead-recovery permanently redirects, preserving setup=1. Header/mobile
+navigation and demo overview link to the new route. Connected overview retains
+its in-place authenticated action. README remains product-only, adds dashboard/
+recovery links and a preview bullet, and updates GHL calendar/summary wording.
+
+No backend/schema/provider/dependency/configuration change. No tests, builds,
+linters, formatters, type checks, browser checks or services ran. Runtime and
+visual acceptance remain UNVERIFIED. Owner command: npm run verify:web;
+manual homepage/link/redirect/setup/dashboard/demo/mobile/theme/README checks:
+docs/ai-lead-recovery.md, docs/operations-dashboard.md and
+docs/repository-presentation.md. Existing unrelated source/index/history preserved.
+
 # Project State
 
 ## Recovery delivery publication authorized — 2026-11-20

@@ -1,12 +1,14 @@
-import { OperationsWorkspace } from "@/features/operations/workspace";
-import { parsePublicEnvironment } from "@/lib/environment";
+import { permanentRedirect } from "next/navigation";
 
-export const metadata = { title: "AI Lead Recovery · Interactive Demo" };
-
-export default async function LeadRecoveryPage({ searchParams }: { searchParams: Promise<{ setup?: string }> }) {
-  const environment = process.env.NEXT_PUBLIC_API_BASE_URL?.trim()
-    ? parsePublicEnvironment(process.env)
-    : null;
+export default async function LegacyLeadRecoveryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ setup?: string }>;
+}) {
   const parameters = await searchParams;
-  return <OperationsWorkspace apiBaseUrl={environment?.apiBaseUrl ?? ""} conversationAiEnabled={environment?.conversationAiEnabled ?? false} initialSection="recovery" initialSetup={parameters.setup === "1" && environment !== null} backendConfigured={environment !== null} />;
+  permanentRedirect(
+    parameters.setup === "1"
+      ? "/ai-lead-recovery?setup=1"
+      : "/ai-lead-recovery",
+  );
 }

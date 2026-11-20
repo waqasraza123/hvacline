@@ -3,7 +3,11 @@
 ## AI Lead Recovery — source UNVERIFIED
 
 AI Lead Recovery now has dedicated header/sidebar access, a prominent overview
-card and a public `/lead-recovery` demo. Its 24 fictional opportunities and
+card and a public `/ai-lead-recovery` demo. The overview's prominent **Try
+Yourself** link opens this dedicated page in the dashboard shell; connected
+workspaces retain their in-place recovery action. The homepage shows only a
+compact introduction and the same link. Legacy `/lead-recovery` URLs redirect
+to the new route, retaining the setup option. Its 24 fictional opportunities and
 interactive follow-up/booking simulation stay separate from authenticated live
 data. AI Provider Settings store encrypted text-model credentials; recovery SMS
 and dedicated ElevenLabs voice delivery now have consent-gated source adapters,
@@ -89,6 +93,10 @@ Manual acceptance:
    Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity.
    Confirm booking and labor changes cannot be made from the demo.
+   Follow the recovery overview's **Try Yourself** link and confirm the URL is
+   `/ai-lead-recovery` with the dashboard sidebar and full fictional recovery
+   demo. In a connected workspace, confirm Open AI Lead Recovery keeps the
+   authenticated workspace and opens its recovery section.
    Confirm AI Lead Recovery leads the overview, followed by GHL, without requests in demo mode.
    Its named sidebar entry opens the public aggregate data card and static
    workflow preview. Only the credential-free public demo endpoint is fetched;

@@ -10,11 +10,16 @@ runs no local hooks and establishes no runtime or provider acceptance.
 
 ## Product experience
 
-The homepage places recovery immediately after the hero, with an interactive
-preview and **Try Live Demo** / **Set Up AI Recovery** links. `/lead-recovery`
-opens the recovery workspace in Demo Mode; `/lead-recovery?setup=1` opens the
-existing administrator connection gate. Shared navigation, the Operations
-sidebar and the first overview feature card expose the same feature.
+The homepage places a compact recovery card after the hero, with one sentence
+and a prominent **Try Yourself** link to `/ai-lead-recovery`. The homepage no
+longer embeds the recovery simulation, metrics or setup controls. The dedicated
+page opens recovery in the dashboard shell in Demo Mode;
+`/ai-lead-recovery?setup=1` opens the existing administrator connection gate.
+The dashboard overview's demo card also links to that page as **Try Yourself**;
+connected workspaces retain their in-place recovery action and authentication.
+Shared desktop/mobile navigation and the Operations sidebar expose the feature.
+Legacy `/lead-recovery` links permanently redirect to the new route, preserving
+`?setup=1` when present.
 
 Demo Mode uses a deterministic client-only cohort of 24 fictional opportunities:
 eight recovered, six scheduled, five awaiting responses, three needing review
@@ -29,8 +34,8 @@ and metrics update in local React state. STOP closes the fictional case. Used
 slots cannot be selected twice; review/closed cases cannot be contacted. Reset
 Demo restores all records, slots, activity and the fictional job value. State is
 ephemeral and never written to storage, customer tables or recovery jobs.
-Homepage and dashboard simulations are independent sessions; dashboard overview
-and recovery share their state while navigating within that workspace.
+Dashboard overview and recovery share their state while navigating within that
+workspace. Opening the dedicated page starts a new demo session.
 
 Demo recovery components make no backend or provider requests. Other pre-existing
 homepage features retain their own behavior. A database outage or missing AI key
@@ -355,8 +360,14 @@ npm run format:check:web
 
 ## Manual acceptance — fictional customers only
 
-1. Signed out and with backend access unavailable, open the homepage recovery
-   preview and `/lead-recovery`. Confirm DEMO MODE / DEMO DATA,24 opportunities,
+1. Signed out, confirm the homepage has a compact recovery card, one **Try
+   Yourself** link and no embedded recovery table, metrics or simulation.
+   Follow that link, the dashboard overview's **Try Yourself** link and the
+   desktop/mobile AI Recovery navigation to `/ai-lead-recovery`. With backend
+   access unavailable, confirm the dedicated page still opens in the dashboard
+   shell. Check legacy `/lead-recovery` redirects to the new route and preserves
+   `?setup=1`; the new setup route must retain the administrator gate when the
+   backend origin is configured. Confirm DEMO MODE / DEMO DATA,24 opportunities,
    eight recovered, six scheduled, five awaiting,33.3% and the$5,200 estimate.
    Confirm no recovery API/provider requests occur in Demo Mode.
 2. Select a scheduled fictional missed call; review its reference, routine
@@ -442,7 +453,7 @@ Modified backend paths (same prefix):
 
 New frontend paths (under `apps/web/src/`):
 
-- `app/lead-recovery/page.tsx`
+- `app/ai-lead-recovery/page.tsx` and legacy `app/lead-recovery/page.tsx` redirect
 - `features/recovery/api.ts`
 - `features/recovery/demo.ts`
 - `features/recovery/demo.test.ts`
