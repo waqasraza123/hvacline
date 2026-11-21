@@ -1,5 +1,17 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Professional presentation — November 21, 2026 — UNVERIFIED
+
+Further homepage refinement adds scoped typography/spacing, softer navigation
+and buttons, a framed Voice/Text demo and a full-width six-tag feature strip.
+Multilingual remains after WebRTC with its Preview caption. A concise HVAC
+workflow, refined recovery/phone sections, consistently dark closing CTA and
+clearer footer complete the page. The orange/charcoal brand, existing destinations
+and sign-in/consent/booking/provider behavior remain. Source is local only;
+no execution checks, services, publication or deployment ran. Exact source scope,
+owner commands and manual checklist: [homepage branding](homepage-branding.md).
+Implementation and visual/runtime acceptance remain **UNVERIFIED**.
+
 ## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
 
 The authorized first UI pass removes duplicate provider/GitHub header branding

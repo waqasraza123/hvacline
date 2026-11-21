@@ -1,5 +1,55 @@
 # Homepage branding handoff
 
+## Professional homepage presentation — November 21, 2026 — UNVERIFIED
+
+Owner requested a further visual refinement after the first hierarchy pass was
+published. Added homepage.module.css and a route-local wrapper, retaining the
+orange/charcoal identity and full-width page gutters. The header uses quieter
+navigation and softer buttons; hero typography uses the system sans-serif stack
+with clearer spacing and an Explore the dashboard secondary link. The existing
+conversation panel now sits in a bordered frame with larger Voice/Text labels,
+message text, composer text and supporting copy.
+
+All six hero feature tags now span the hero's full width beneath the copy/demo,
+with six/three/two columns at desktop/tablet/phone widths. Titles precede captions
+in both markup and visual order. Multilingual remains after WebRTC; Preview and
+Sandbox labels stay visible. The new short HVAC workflow section explains the
+existing describe/select/confirm flow without adding a provider or booking path.
+
+The compact recovery teaser gains an icon and a calmer surface. Phone-example
+cards, the footer integration row and floating launcher share the same visual
+rhythm. The closing CTA uses a consistently dark background in both themes,
+replacing the prior theme-dependent ink gradient. Theme controls remain in the
+mobile drawer; the duplicate header switch is hidden at480px and below to leave
+room for the brand, account control and menu. Other page layouts are not restyled.
+
+Source changes: apps/web/src/app/page.tsx, the new homepage.module.css,
+features/homepage-chat/homepage-chat.module.css, features/recovery/homepage.tsx
+and features/recovery/recovery.module.css. Homepage chat/recovery components are
+used only on this route. No dependencies, backend/provider configuration, booking
+rules, consent, authentication or activation flags changed. No new regression
+tests were added for this presentation-only pass.
+
+No tests, builds, linters, formatters, type checks, browser checks, services,
+provider operations, publication or deployment ran. Implementation and visual/
+runtime acceptance remain **UNVERIFIED**. Owner commands from repository root:
+
+```sh
+npm run test:web -- src/app/page.test.ts
+npm run verify:web
+```
+
+Manual: inspect / at320/390/480/640/768/850/1100/1440/1920px and200% zoom in both
+themes. Check balanced hero copy/demo, feature-strip wrapping and every Preview/
+Sandbox caption, workflow stacking, recovery CTA, phone cards, closing contrast,
+footer marks and fixed-launcher clearance. Check keyboard focus, drawer open/
+close and mobile drawer theme switching; ensure no horizontal overflow. Follow
+Voice /book, dashboard /operations, recovery /ai-lead-recovery and phone/callback
+actions. Switch the demo between Voice/Text, type and retain a draft through the
+existing sign-in flow; navigation alone must not request a microphone or a call.
+Confirm pricing/billing/booking retain their existing layouts. Source is local;
+publication and deployment are separate from this implementation.
+
 ## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
 
 Owner authorized the first UI pass: simplified homepage header, hero spacing,

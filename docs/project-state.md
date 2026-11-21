@@ -1,3 +1,48 @@
+## Homepage polish publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push of the professional homepage presentation. Scope is five
+source paths (one new CSS module), three homepage guides and durable memory.
+Publish from canonical main8655d8d while preserving unrelated remote/local source,
+remote historical notes and divergent local branch/index/history. Retain
+[skip ci] [skip render]. No execution checks/services/deployment authorized.
+Implementation and visual/runtime acceptance remain UNVERIFIED; publication
+result is recorded separately.
+
+## Professional homepage presentation — local, UNVERIFIED — 2026-11-21
+
+Owner requested further homepage beautification. Added a route-scoped CSS module
+and wrapper for system typography, quieter navigation, softer buttons, framed
+demo, full-width six-tag feature strip and consistent section/footer spacing.
+Retained orange/charcoal/full-width identity and all Preview/Sandbox labels.
+Added a concise explanation of the existing HVAC describe/select/confirm flow
+and secondary dashboard link. Homepage-only conversation/recovery styles have
+larger text and a refined teaser. Closing CTA has a fixed dark surface in both
+themes; mobile theme remains in the drawer while duplicate header toggle hides
+at480px. Existing authentication/consent/booking/provider behavior is retained.
+
+Five source paths: apps/web/src/app/page.tsx, new homepage.module.css,
+features/homepage-chat/homepage-chat.module.css, features/recovery/homepage.tsx
+and features/recovery/recovery.module.css; plus three homepage guides and notes.
+No tests/builds/linters/formatters/type checks/browser checks/services/providers/
+dependencies/publication/deployment ran. Implementation and visual/runtime
+acceptance remain UNVERIFIED. Owner commands: `npm run test:web -- src/app/page.test.ts`,
+`npm run verify:web`; exact responsive/theme/interaction checks:
+docs/homepage-branding.md. Source is local only; preserve unrelated edits,
+index and divergent history. Latest published main remains8655d8d.
+
+## Homepage UI published — runtime UNVERIFIED — 2026-11-21
+
+Published8655d8d9b32a17a6485505e4ee0df34417ba20be on canonical main from
+2ed275a905b132536f8a934e10fb5a5cf658cac1 through expected-head non-force
+Git-data update; remote main readback matches. Commit comparison confirms exactly
+eight scoped source/test/guide/memory paths and one new descendant commit.
+Unrelated remote source/historical notes, local branch/index/history and tags
+remain preserved. Commit retains [skip ci] [skip render]. No tests/builds/linters/
+formatters/type checks/browser checks/services/provider/deployment commands ran.
+Implementation and visual/runtime acceptance remain UNVERIFIED. Owner commands:
+`npm run test:web -- src/app/page.test.ts`, `npm run verify:web`; responsive,
+theme and navigation manual checks: docs/homepage-branding.md.
+
 ## Homepage UI publication authorized — UNVERIFIED — 2026-11-21
 
 Owner requests push to main. Publish the homepage hierarchy pass in eight scoped

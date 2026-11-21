@@ -19,12 +19,15 @@ questions, capture enquiries, and support your business.
 
 Primary hero/header/launcher action: **Try Voice Chat**, linking to `/book`.
 
+Secondary hero action: **Explore the dashboard**, linking to `/operations`.
+
 Action note: Try the HVAC example. Sign in, then connect when you’re ready.
 
 The existing headline markup retains its break after “AI voice agents,” and
 accented second line. The hero feature badges include **Multilingual** with a
 language icon and **Language support · Preview** caption, using the existing
-orange icon, typography, surface and responsive wrapping. The standalone
+orange icon and responsive wrapping. All six tags form a full-width strip beneath
+the hero copy/demo, with titles before captions. The standalone
 multilingual demo card is removed from the homepage; the dedicated demo remains
 accessible through Operations and the README.
 
@@ -35,11 +38,18 @@ Voice remains its initial mode; Text chat and the existing guest exchange/sign-i
 continuation are preserved. The phone section is labeled **HVAC PHONE EXAMPLE**.
 Its configured number, callback flow, service wording and limits are unchanged.
 
+The concise **HOW THE HVAC EXAMPLE WORKS** section reads **A conversation. A clear
+next step.**, followed by **Start with what you need.**, **Find a time that fits.**
+and **You make the final call.** It explains the existing HVAC demo flow; it does
+not advertise additional industry implementations or automatic confirmation.
+
 Closing eyebrow: **EXPLORE THE HVAC EXAMPLE**
 
 Closing headline: **Experience AI voice in action.**
 
 Closing button: **Try Voice Chat**, linking to `/book`.
+
+Closing support: Meet Line. Ask a question. See where the conversation takes you.
 
 The customer workspace retains its current Voice default, Text choice,
 authentication/MFA, AI disclosure, microphone permission and explicit connection.
@@ -80,7 +90,8 @@ and connection remain separate steps. Inspect the page title, description and
 Open Graph text. Confirm the homepage identifies the HVAC example and makes no
 instant self-service, worldwide availability or ready-made all-industry claim.
 
-Only source copy, existing headline test expectations and documentation changed.
+The latest pass changes homepage presentation, explanatory copy and component
+styles. Exact scope and manual checks are in [homepage branding](homepage-branding.md).
 No tests, builds, linters, type checks, services or browser acceptance ran.
 Implementation and visual/runtime acceptance remain **UNVERIFIED**. Deployment
 and publication are separate owner actions; this slice needs no migration,

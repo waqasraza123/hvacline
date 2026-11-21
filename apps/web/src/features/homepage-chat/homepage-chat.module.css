@@ -5,15 +5,14 @@
   scroll-margin-top: 2rem;
   background: #18181b;
   color: #fafaf9;
-  border: 1px solid #52525b;
+  border: 1px solid #3f3f46;
   border-radius: 24px;
   overflow: hidden;
-  box-shadow:
-    0 28px 70px -36px #18181b80,
-    0 0 0 6px #f9731610;
+  box-shadow: 0 18px 40px -24px #09090b80;
 }
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding: 22px 24px;
@@ -44,7 +43,7 @@
   display: block;
   margin-top: 4px;
   color: #a1a1aa;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0;
 }
@@ -56,7 +55,7 @@
   padding: 6px 9px;
   border: 1px solid #ffffff24;
   border-radius: 30px;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 .badge > span {
   width: 5px;
@@ -86,7 +85,7 @@
   background: transparent;
   color: #a1a1aa;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -100,16 +99,16 @@
   height: 17px;
 }
 .voicePreview {
-  padding: 30px 32px 28px;
+  padding: 28px 32px;
   text-align: center;
   background: radial-gradient(ellipse at 50% 30%, #f9731614, transparent 65%);
 }
 .voiceOrb {
   display: grid;
   place-items: center;
-  width: 104px;
-  height: 104px;
-  margin: 4px auto 28px;
+  width: 88px;
+  height: 88px;
+  margin: 4px auto 24px;
   border: 1px solid #fdba7470;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 25%, #fdba74, #f97316 55%, #9a3412);
@@ -120,22 +119,22 @@
 }
 .eyebrow {
   color: #fb923c;
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1.7;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.06em;
 }
 .voicePreview h3 {
   margin: 16px 0 12px;
   color: #fafaf9;
-  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-size: clamp(2rem, 3vw, 2.75rem);
   line-height: 1.08;
   font-weight: 600;
   letter-spacing: -0.055em;
 }
 .voicePreview > p:not(.eyebrow) {
   color: #d4d4d8;
-  font-size: 0.85rem;
+  font-size: 1rem;
   line-height: 1.7;
 }
 .voiceAction {
@@ -161,7 +160,7 @@
 .voicePreview > .voiceHelp {
   margin: 12px 0 0;
   color: #a1a1aa;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
 }
 .messages {
   margin-top: 16px;
@@ -196,7 +195,7 @@
 .lineMessage span,
 .userMessage span {
   display: block;
-  font-size: 0.5rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   opacity: 0.65;
@@ -204,7 +203,7 @@
 .lineMessage p,
 .userMessage p {
   margin: 6px 0 0;
-  font-size: 0.78rem;
+  font-size: 1rem;
   line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -220,10 +219,11 @@
   color: #d4d4d8;
   border: 1px solid #ffffff20;
   border-radius: 9px;
-  padding: 8px 10px;
+  min-height: 44px;
+  padding: 10px 12px;
   text-align: left;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: 0.875rem;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -246,7 +246,7 @@
   display: block;
   margin-bottom: 8px;
   color: #d4d4d8;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
 }
 .composer {
   display: flex;
@@ -273,7 +273,7 @@
   border: 0;
   outline: none;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 1rem;
   line-height: 1.65;
 }
 .composer textarea::placeholder {
@@ -285,14 +285,14 @@
   justify-content: center;
   gap: 5px;
   flex: none;
-  min-height: 40px;
+  min-height: 44px;
   padding: 10px;
   border: 0;
   border-radius: 8px;
   background: #f97316;
   color: #18181b;
   font: inherit;
-  font-size: 0.62rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -307,14 +307,14 @@
 }
 .help {
   color: #a1a1aa;
-  font-size: 0.63rem;
+  font-size: 0.75rem;
   line-height: 1.7;
   margin: 9px 0 0;
 }
 .disclosure {
   margin-top: 8px;
   color: #a1a1aa;
-  font-size: 0.61rem;
+  font-size: 0.75rem;
   line-height: 1.8;
 }
 .disclosure summary {
@@ -333,7 +333,7 @@
   color: #a1a1aa;
   border-top: 1px solid #ffffff12;
   padding: 14px 18px;
-  font-size: 0.58rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 .footer svg {
