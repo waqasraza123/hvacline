@@ -15,7 +15,6 @@ import {
 } from "@/features/outbound-demo/outbound-demo-dialog";
 import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
 import { RecoveryHomepage } from "@/features/recovery/homepage";
-import { MultilingualHomepage } from "@/features/conversation/multilingual-homepage";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 
@@ -79,13 +78,20 @@ export default function Home() {
             </div>
             <ul
               className="hero-trust-badges"
-              aria-label="Voice, memory, CRM, account and payment features"
+              aria-label="Voice, multilingual, memory, CRM, account and payment features"
             >
               <li className="hero-trust-badge">
                 <ProductIcon name="mic" />
                 <span>
                   <small>Real-time voice</small>
                   <strong>WebRTC</strong>
+                </span>
+              </li>
+              <li className="hero-trust-badge">
+                <ProductIcon name="languages" />
+                <span>
+                  <small>Language support · Preview</small>
+                  <strong>Multilingual</strong>
                 </span>
               </li>
               <li className="hero-trust-badge">
@@ -123,7 +129,6 @@ export default function Home() {
           </div>
         </section>
         <RecoveryHomepage />
-        <MultilingualHomepage />
         <OutboundDemo />
         <section className="product-final-cta product-container">
           <div>

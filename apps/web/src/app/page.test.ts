@@ -29,7 +29,7 @@ it("renders broader business positioning beside the existing hero badges and pri
   expect(html).toContain("<strong>GoHighLevel</strong>");
   expect(html).toContain("CRM sync · Preview");
   expect(html).toContain(
-    'aria-label="Voice, memory, CRM, account and payment features"',
+    'aria-label="Voice, multilingual, memory, CRM, account and payment features"',
   );
   const css = readFileSync(new URL("./product.css", import.meta.url), "utf8");
   expect(css).toMatch(/\.hero-trust-badges\s*\{[^}]*flex-wrap:\s*wrap/s);

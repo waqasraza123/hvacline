@@ -23,7 +23,11 @@ Primary hero/header/launcher action: **Try Voice Chat**, linking to `/book`.
 Action note: Try the HVAC example. Sign in, then connect when you’re ready.
 
 The existing headline markup retains its break after “AI voice agents,” and
-accented second line. Current layout, badges and appearance are preserved.
+accented second line. The hero feature badges include **Multilingual** with a
+language icon and **Language support · Preview** caption, using the existing
+orange icon, typography, surface and responsive wrapping. The standalone
+multilingual demo card is removed from the homepage; the dedicated demo remains
+accessible through Operations and the README.
 
 ## Examples and closing action
 

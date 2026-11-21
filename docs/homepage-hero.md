@@ -1,5 +1,20 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Multilingual hero badge — November 21, 2026 — UNVERIFIED
+
+The hero now places Multilingual after WebRTC in the existing feature badge row,
+with a language/translation line icon and Language support · Preview caption.
+It reuses the current orange accents, badge surface, typography and wrapping.
+The standalone multilingual homepage card and its unused component/styles are
+removed. The separate demo route, Operations entry and README link remain.
+No language/channel availability or provider configuration changes.
+
+No tests/builds/linters/formatters/type checks/browser checks/services ran. Owner
+commands: `npm run test:web -- src/app/page.test.ts`, `npm run verify:web`.
+Manual: confirm the card is absent, badge/icon align with other tags on phone
+and desktop in both themes, no overflow, and Operations still opens the demo.
+Visual/runtime acceptance remains UNVERIFIED.
+
 ## Broader business positioning — November 20, 2026 — UNVERIFIED
 
 The homepage now leads with “AI voice agents, built around your business.” and

@@ -1,7 +1,12 @@
 # Multilingual AI Voice
 
-Source implementation and every execution/runtime/security/provider/native/visual
-acceptance check are **UNVERIFIED**. No tests, builds, linters, formatters, type
+Migration0028 was applied to the configured Neon development target on2026-11-21
+at the owner's explicit request. Revision/schema readback confirmed sole0028,
+the non-null JSONB column with empty-object default, validated object constraint
+and no non-default language settings. Other targets remain outside that operation.
+Application/provider/native/security/visual/language acceptance is **UNVERIFIED**.
+
+During the original source implementation, no tests, builds, linters, formatters, type
 checks, browser automation/screenshots, services, simulators, migrations, seeds,
 live provider requests, speech generation, calls, deployments, commits or pushes
 were executed for this task. No dependency or lockfile change was made by this
@@ -263,9 +268,11 @@ delivery must still be accepted by the owner.
 
 ## Public demo
 
-The homepage compact Multilingual AI Voice card links to
-`/multilingual-ai-voice`, using the existing dashboard shell and one Operations
-navigation entry. It starts with local fictional messages and an explicit
+The homepage shows a compact **Multilingual** hero badge with a language icon
+and **Language support · Preview** caption beside the existing feature tags.
+The standalone homepage demo card is removed. The separate
+`/multilingual-ai-voice` route remains accessible through Operations and the
+README, using the existing dashboard shell. It starts with local fictional messages and an explicit
 **DEMO DATA · text simulation** label. No login, API credential, backend request,
 microphone, paid speech, real call or customer data is used by the simulation.
 
@@ -301,9 +308,10 @@ disposable `TEST_DATABASE_URL`, distinct from runtime/migration targets:
 APP_ENVIRONMENT=test .venv/bin/python -m pytest tests/database/test_migrations.py tests/database/test_table_ownership.py tests/database/test_receptionist_settings_api.py tests/database/test_conversation_api.py tests/database/test_hvac_scheduling.py
 ```
 
-Migration0028 is **UNAPPLIED**. Review the source, select/back up the intended
-database and independently authorize schema execution. Then, on that selected
-development target only, the owner command is:
+Migration0028 is **APPLIED ONLY TO THE CONFIGURED NEON DEVELOPMENT TARGET**.
+Do not rerun that completed migration on the same target. For another database,
+review the source, select/back up the intended target and independently authorize
+schema execution. On that selected development target, the owner command is:
 
 ```sh
 APP_ENVIRONMENT=development .venv/bin/alembic upgrade 20261121_0028
@@ -383,7 +391,6 @@ New:
 - `apps/web/src/features/conversation/language-settings.tsx`
 - `apps/web/src/features/conversation/multilingual-demo.ts`
 - `apps/web/src/features/conversation/multilingual-demo-panel.tsx`
-- `apps/web/src/features/conversation/multilingual-homepage.tsx`
 - `apps/web/src/features/conversation/multilingual.module.css`
 - `apps/web/src/app/multilingual-ai-voice/page.tsx`
 - `apps/web/src/features/conversation/multilingual-demo.test.ts`
@@ -424,6 +431,8 @@ Modified (task-scoped edits within existing, sometimes already modified files):
 - `apps/web/src/features/operations/dashboard-shell.tsx`
 - `apps/web/src/features/operations/workspace.tsx`
 - `apps/web/src/app/page.tsx`
+- `apps/web/src/app/page.test.ts`
+- `apps/web/src/components/product-icons.tsx`
 - `apps/mobile/src/lib/models.ts`
 - `apps/mobile/src/features/booking-session.ts`
 - `apps/mobile/src/features/use-booking.ts`
