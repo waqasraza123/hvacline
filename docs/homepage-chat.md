@@ -4,7 +4,18 @@ The owner selected one live text message/reply on the homepage, a sign-in popup 
 
 ## Experience
 
-The orange/charcoal hero card opens on Voice AI, linking to the existing signed-in booking workspace. Selecting Text chat exposes suggested questions, an editable composer, explicit Send & agree processing disclosure, real loading/error states and a dismissible native sign-in dialog. Suggested questions fill the field without sending. The first completed answer remains readable, with an inline continuation invitation; the dialog opens only when the visitor chooses to continue. Header Try Line and the floating launcher focus the card's current action. Voice requires sign-in, selecting Voice in the workspace and explicit microphone consent. See [homepage hero](homepage-hero.md) for the October 31 presentation change and owner checks.
+The orange/charcoal hero card opens on Voice chat, linking to the existing
+signed-in booking workspace. The hero, header and floating launcher say Try Voice
+Chat and link directly to `/book`, which now defaults to Voice chat. Sign-in/MFA,
+AI disclosure, microphone consent and deliberate Start Voice Chat remain required.
+Selecting Text chat exposes suggested questions, an editable composer, explicit
+Send & agree processing disclosure, real loading/error states and a dismissible
+native sign-in dialog. Suggested questions fill the field without sending. The
+first completed answer remains readable, with an inline continuation invitation;
+the dialog opens only when the visitor chooses to continue. The saved exchange
+and unsent draft remain available after authentication; choose Text chat to keep
+typing or use Voice chat to speak. See [homepage hero](homepage-hero.md) for
+presentation changes and owner checks.
 
 Already-authenticated visitors carry their typed question directly into `/book` without spending a guest allowance. Earlier text is shown separately, and the pending message is prefilled when Chat starts. The SDK receives the earlier exchange as untrusted contextual background, outside the active confirmation transcript. The pending message is not sent automatically; ordinary disclosure, MFA, intake and booking confirmations remain required. Start fresh discards the handoff.
 

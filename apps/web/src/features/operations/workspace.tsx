@@ -1,14 +1,33 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
+
+import { MultilingualDemoPanel } from "../conversation/multilingual-demo-panel";
+import { useReducer, useState } from "react";
+import { demoReducer, initialDemo } from "@/features/recovery/demo";
+import { RecoveryDemo } from "@/features/recovery/demo-panel";
+import { RecoveryLive } from "@/features/recovery/live";
+import { RecoverySpotlight } from "@/features/recovery/spotlight";
 import { LaborRecorder } from "@/features/billing/labor-recorder";
 import { LoadingSpinner } from "@/components/loading-spinner";
-import { Brand } from "@/components/brand";
 import { ApprovedFaqManager } from "@/features/approved-faqs/approved-faq-manager";
 import { ReceptionistSettingsEditor } from "@/features/receptionist/receptionist-settings";
 import { BrowserVoicePanel } from "@/features/conversation/browser-voice-panel";
 import { ScheduleForm } from "./schedule-form";
 import { CalendarConnections } from "./calendar-connections";
+import { DashboardShell } from "./dashboard-shell";
+import type { OperationsSection } from "./dashboard-shell";
+import { DashboardOverview } from "./dashboard-overview";
+import { DashboardTable, StatusBadge } from "./dashboard-table";
+import { WebsiteManager } from "@/features/websites/website-manager";
+import { GhlIntegration } from "@/features/ghl/integration";
+import { GhlDemo } from "@/features/ghl/demo";
+import { GhlSetupPreview, GhlSpotlight } from "@/features/ghl/spotlight";
+import {
+  demoOperations,
+  demoSchedule,
+  demoReferenceTime,
+  DemoSection,
+} from "./dashboard-demo";
+import styles from "./dashboard.module.css";
 import { requestApi } from "./api";
 import type {
   Appointment,
@@ -23,14 +42,25 @@ import type {
 export function OperationsWorkspace({
   apiBaseUrl,
   conversationAiEnabled,
+  initialSection = "overview",
+  initialSetup = false,
+  backendConfigured = true,
 }: {
   apiBaseUrl: string;
   conversationAiEnabled: boolean;
+  initialSection?: OperationsSection;
+  initialSetup?: boolean;
+  backendConfigured?: boolean;
 }) {
   const [token, setToken] = useState("");
-  const [data, setData] = useState<Operations | null>(null);
-  const [schedule, setSchedule] = useState<ScheduleResponse | null>(null);
-  const [tab, setTab] = useState("requests");
+  const [demo, setDemo] = useState(!initialSetup);
+  const [recoveryDemo, recoveryDispatch] = useReducer(demoReducer, undefined, initialDemo);
+  const [data, setData] = useState<Operations | null>(initialSetup ? null : demoOperations);
+  const [schedule, setSchedule] = useState<ScheduleResponse | null>(
+    initialSetup ? null : demoSchedule,
+  );
+  const [tab, setTab] = useState<OperationsSection>(initialSection);
+  const [loadedAt, setLoadedAt] = useState(demoReferenceTime);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -38,8 +68,10 @@ export function OperationsWorkspace({
   const [day, setDay] = useState("");
   const [availability, setAvailability] = useState<Availability | null>(null);
   const [reservation, setReservation] = useState<Appointment | null>(null);
-  const api = <T,>(path: string, method = "GET", body?: unknown) =>
-    requestApi<T>(apiBaseUrl, token, path, method, body);
+  const api = <T,>(path: string, method = "GET", body?: unknown) => {
+    if (demo) throw new Error("Connect a workspace to use this action.");
+    return requestApi<T>(apiBaseUrl, token, path, method, body);
+  };
   async function load() {
     const [operations, configuration] = await Promise.all([
       api<Operations>("hvac/operations"),
@@ -47,6 +79,7 @@ export function OperationsWorkspace({
     ]);
     setData(operations);
     setSchedule(configuration);
+    setLoadedAt(Date.now());
   }
   async function act(task: () => Promise<void>) {
     setBusy(true);
@@ -76,6 +109,27 @@ export function OperationsWorkspace({
     setAvailability(null);
     setMessage("Reserved for five minutes. Confirm the appointment below.");
   }
+  function connectWorkspace(section: OperationsSection = "overview") {
+    if (!backendConfigured) {
+      setError("Live setup requires the existing NEXT_PUBLIC_API_BASE_URL configuration for your authenticated backend. The interactive demos remain available without it.");
+      return;
+    }
+    setDemo(false);
+    setData(null);
+    setSchedule(null);
+    setTab(section);
+    setMessage("");
+    setError("");
+  }
+  function exploreDemo() {
+    setDemo(true);
+    setToken("");
+    setData(demoOperations);
+    setSchedule(demoSchedule);
+    setLoadedAt(demoReferenceTime);
+    setError("");
+    setMessage("");
+  }
   function timestamp(value: string) {
     return new Intl.DateTimeFormat("en-US", {
       dateStyle: "medium",
@@ -84,27 +138,33 @@ export function OperationsWorkspace({
     }).format(new Date(value));
   }
   return (
-    <main className="ops-shell">
-      <nav className="top-nav">
-        <Brand />
-        <div className="nav-links">
-          <Link href="/phone-demo">Phone receptionist</Link>
-        </div>
-      </nav>
-      <div className="ops-heading">
-        <div>
-          <p className="eyebrow">YOUR SERVICE WORKSPACE</p>
-          <h1>Keep the next job moving.</h1>
-          <p className="section-help">
-            Manage service requests, appointments, calls and follow-up.
-          </p>
-        </div>
-        {data && (
-          <button onClick={() => void act(load)} disabled={busy}>
-            Refresh workspace ↻
+    <DashboardShell
+      section={tab}
+      onSelect={setTab}
+      connected={data !== null}
+      busy={busy}
+      conversationAiEnabled={conversationAiEnabled}
+      onRefresh={() => {
+        if (!demo) void act(load);
+      }}
+      demo={demo}
+    >
+      {!backendConfigured && tab === "recovery" && <p className="ops-message" role="status">Demo Mode works without a backend connection. Live setup needs a configured backend origin, administrator sign-in, an AI model, communication providers and reviewed contact permissions.</p>}
+      {demo && (
+        <div className={styles.demoBanner}>
+          <div>
+            <strong>Demo workspace · sample data</strong>
+            <p>
+              Calls, visits and business details here are sample records.
+              Explore Multilingual AI Voice, AI Lead Recovery or GoHighLevel
+              integration setup.
+            </p>
+          </div>
+          <button type="button" onClick={() => connectWorkspace()}>
+            Connect your workspace
           </button>
-        )}
-      </div>
+        </div>
+      )}
       {!data && (
         <form
           className="ops-card access-form"
@@ -113,7 +173,7 @@ export function OperationsWorkspace({
             void act(load);
           }}
         >
-          <h2>Connect to your workspace</h2>
+          <h2>{tab === "recovery" ? "Live Mode · connect your administrator workspace" : "Connect to your workspace"}</h2>
           <p className="section-help">
             Enter the configured admin token. It stays in this page’s memory and
             is sent only to your backend.
@@ -128,7 +188,14 @@ export function OperationsWorkspace({
             />
           </label>
           <button className="primary-link" disabled={busy}>
-            {busy ? <LoadingSpinner label="Connecting…" /> : "Open workspace"}
+            {busy ? <LoadingSpinner label="Connecting…" /> : "Open dashboard"}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={exploreDemo}
+          >
+            Explore demo instead
           </button>
         </form>
       )}
@@ -144,68 +211,65 @@ export function OperationsWorkspace({
       )}
       {data && (
         <>
-          <p className="section-help">
-            Showing the latest 100 records per queue. Times in{" "}
-            {schedule?.configuration?.timezone ?? "America/New_York"}.
-          </p>
-          <section className="ops-metrics" aria-label="Current queues">
-            {[
-              ["Incoming calls", data.calls.length],
-              ["Service requests", data.service_requests.length],
-              [
-                "Confirmed bookings",
-                data.appointments.filter((row) => row.status === "CONFIRMED")
-                  .length,
-              ],
-              [
-                "Missed / failed calls",
-                data.calls.filter((row) =>
-                  ["FAILED", "REJECTED"].includes(row.status),
-                ).length,
-              ],
-              [
-                "Pending callbacks",
-                data.handoffs.filter((row) => row.kind === "CALLBACK").length,
-              ],
-              [
-                "Human handoffs",
-                data.handoffs.filter((row) => row.kind === "LIVE_TRANSFER")
-                  .length,
-              ],
-            ].map(([label, value]) => (
-              <article key={label}>
-                <span>{label}</span>
-                <strong>{value}</strong>
-              </article>
-            ))}
-          </section>
-          <div
-            className="ops-tabs"
-            role="tablist"
-            aria-label="Workspace sections"
-          >
-            {[
-              "requests",
-              "bookings",
-              "calls",
-              "handoffs",
-              "scheduling",
-              "receptionist",
-              "knowledge",
-              "maintenance hours",
-              ...(conversationAiEnabled ? ["browser voice"] : []),
-            ].map((name) => (
-              <button
-                role="tab"
-                aria-selected={tab === name}
-                key={name}
-                onClick={() => setTab(name)}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-          {tab === "maintenance hours" && (
+          {tab !== "multilingual" && tab !== "recovery" && (!demo || tab !== "integrations") && (
+            <p className={styles.queueNote}>
+              {demo ? "Sample schedule for November 12, 2026. " : ""}
+              Up to 100 latest records per queue. Counts reflect loaded records,
+              not business totals. Times in{" "}
+              {schedule?.configuration?.timezone ?? "America/New_York"}.
+              {!demo && (
+                <>
+                  {" "}
+                  Last refreshed {timestamp(new Date(loadedAt).toISOString())}.
+                </>
+              )}
+            </p>
+          )}
+          {tab === "overview" && (
+            <DashboardOverview
+              data={data}
+              schedule={schedule}
+              loadedAt={loadedAt}
+              timestamp={timestamp}
+              onSelect={setTab}
+            >
+              <RecoverySpotlight
+                key={demo ? "recovery-demo" : "recovery-live"}
+                demo={demo} state={recoveryDemo} apiBaseUrl={apiBaseUrl} token={token} refreshedAt={loadedAt}
+                onOpen={() => setTab("recovery")} onSetup={() => demo ? connectWorkspace("recovery") : setTab("recovery")}
+              />
+              <GhlSpotlight
+                key={demo ? "demo" : "workspace"}
+                apiBaseUrl={apiBaseUrl}
+                token={token}
+                demo={demo}
+                refreshedAt={loadedAt}
+                onOpen={() => setTab("integrations")}
+                onConnect={() => connectWorkspace("integrations")}
+              />
+            </DashboardOverview>
+          )}
+          {tab === "recovery" && (demo
+            ? <RecoveryDemo state={recoveryDemo} dispatch={recoveryDispatch} onLive={() => connectWorkspace("recovery")} />
+            : <RecoveryLive apiBaseUrl={apiBaseUrl} token={token} onDemo={exploreDemo} />)}
+          {tab === "multilingual" && <MultilingualDemoPanel onSetup={() => demo ? connectWorkspace("receptionist") : setTab("receptionist")} />}
+          {demo && tab !== "integrations" && tab !== "recovery" && tab !== "multilingual" && <DemoSection section={tab} />}
+          {demo && tab === "integrations" && (
+            <>
+              <GhlDemo apiBaseUrl={apiBaseUrl} />
+              <GhlSetupPreview
+                onConnect={() => connectWorkspace("integrations")}
+                onBack={() => setTab("overview")}
+              />
+            </>
+          )}
+          {!demo && tab === "integrations" && (
+            <GhlIntegration apiBaseUrl={apiBaseUrl} token={token} />
+          )}
+          {!demo && tab === "websites" && (
+            <WebsiteManager apiBaseUrl={apiBaseUrl} token={token} />
+          )}
+          {!demo && tab === "maintenance hours" && (
             <LaborRecorder
               apiBaseUrl={apiBaseUrl}
               token={token}
@@ -235,9 +299,11 @@ export function OperationsWorkspace({
                         {row.customer.address.state_code}{" "}
                         {row.customer.address.postal_code}
                       </p>
-                      <a href={"tel:" + row.customer.phone}>
-                        {row.customer.phone}
-                      </a>
+                      {row.customer.phone && (
+                        <a href={"tel:" + row.customer.phone}>
+                          {row.customer.phone}
+                        </a>
+                      )}
                       <p className="section-help">
                         Preferred: {row.service.preferred_window}
                       </p>
@@ -255,7 +321,7 @@ export function OperationsWorkspace({
                       {!row.service.hazardous_condition &&
                         row.status !== "BOOKED" && (
                           <button
-                            disabled={busy}
+                            disabled={busy || demo}
                             onClick={() => {
                               setSelected(row);
                               setAvailability(null);
@@ -352,47 +418,64 @@ export function OperationsWorkspace({
                   bookings.
                 </p>
               ) : (
-                data.appointments.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>{timestamp(row.starts_at)}</h3>
-                      <p>
+                <DashboardTable
+                  caption="Appointment calendar"
+                  headings={[
+                    "Appointment",
+                    "Team",
+                    "Customer",
+                    "Status",
+                    "Action",
+                  ]}
+                >
+                  {data.appointments.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <strong>{timestamp(row.starts_at)}</strong>
+                      </td>
+                      <td>
                         {schedule?.configuration?.teams.find(
                           (team) => team.key === row.team_key,
                         )?.name ?? row.team_key}
-                      </p>
-                      <p>
+                      </td>
+                      <td>
                         {data.service_requests.find(
                           (request) => request.id === row.service_request_id,
                         )?.customer.full_name ?? "Service request"}
-                      </p>
-                    </div>
-                    <span className="sample-badge">
-                      {row.status === "HELD" &&
-                      new Date(row.hold_expires_at) < new Date()
-                        ? "EXPIRED"
-                        : row.status}
-                    </span>
-                    {row.status === "CONFIRMED" && (
-                      <button
-                        disabled={busy}
-                        onClick={() =>
-                          void act(async () => {
-                            await api(
-                              "hvac/appointments/" + row.id + "/cancel",
-                              "POST",
-                              { explicit_confirmation: true },
-                            );
-                            await load();
-                            setMessage("Appointment cancelled.");
-                          })
-                        }
-                      >
-                        Cancel appointment
-                      </button>
-                    )}
-                  </article>
-                ))
+                      </td>
+                      <td>
+                        <StatusBadge
+                          status={
+                            row.status === "HELD" &&
+                            new Date(row.hold_expires_at) < new Date()
+                              ? "EXPIRED"
+                              : row.status
+                          }
+                        />
+                      </td>
+                      <td>
+                        {row.status === "CONFIRMED" && (
+                          <button
+                            disabled={busy || demo}
+                            onClick={() =>
+                              void act(async () => {
+                                await api(
+                                  "hvac/appointments/" + row.id + "/cancel",
+                                  "POST",
+                                  { explicit_confirmation: true },
+                                );
+                                await load();
+                                setMessage("Appointment cancelled.");
+                              })
+                            }
+                          >
+                            Cancel appointment
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
@@ -405,19 +488,24 @@ export function OperationsWorkspace({
                   are required.
                 </p>
               ) : (
-                data.calls.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>
-                        {row.caller_number ?? "Caller number unavailable"}
-                      </h3>
-                      <p>{timestamp(row.received_at)}</p>
-                    </div>
-                    <span className="sample-badge">
-                      {row.status.replaceAll("_", " ")}
-                    </span>
-                  </article>
-                ))
+                <DashboardTable
+                  caption="Incoming calls"
+                  headings={["Caller", "Received", "Status"]}
+                >
+                  {data.calls.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <strong>
+                          {row.caller_number ?? "Caller number unavailable"}
+                        </strong>
+                      </td>
+                      <td>{timestamp(row.received_at)}</td>
+                      <td>
+                        <StatusBadge status={row.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
@@ -429,36 +517,43 @@ export function OperationsWorkspace({
                   No pending callbacks or human handoffs.
                 </p>
               ) : (
-                data.handoffs.map((row) => (
-                  <article className="request-row" key={row.id}>
-                    <div>
-                      <h3>{row.kind.replaceAll("_", " ")}</h3>
-                      <p>{row.reason}</p>
-                    </div>
-                    <span className="sample-badge">{row.status}</span>
-                  </article>
-                ))
+                <DashboardTable
+                  caption="Pending human follow-up"
+                  headings={["Follow-up", "Reason", "Status"]}
+                >
+                  {data.handoffs.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <strong>{row.kind.replaceAll("_", " ")}</strong>
+                      </td>
+                      <td>{row.reason}</td>
+                      <td>
+                        <StatusBadge status={row.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </DashboardTable>
               )}
             </section>
           )}
-          {tab === "receptionist" && (
+          {!demo && tab === "receptionist" && (
             <ReceptionistSettingsEditor
               apiBaseUrl={apiBaseUrl}
               adminToken={token}
               embedded
             />
           )}
-          {tab === "browser voice" && (
+          {!demo && tab === "browser voice" && (
             <BrowserVoicePanel apiBaseUrl={apiBaseUrl} adminToken={token} />
           )}
-          {tab === "knowledge" && (
+          {!demo && tab === "knowledge" && (
             <ApprovedFaqManager
               apiBaseUrl={apiBaseUrl}
               adminToken={token}
               embedded
             />
           )}
-          {tab === "scheduling" && schedule && (
+          {!demo && tab === "scheduling" && schedule && (
             <>
               <CalendarConnections
                 baseUrl={apiBaseUrl}
@@ -484,6 +579,6 @@ export function OperationsWorkspace({
           )}
         </>
       )}
-    </main>
+    </DashboardShell>
   );
 }

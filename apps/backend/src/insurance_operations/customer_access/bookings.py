@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from insurance_operations.actors import ActorContext
 from insurance_operations.customers import CustomerInput
 from insurance_operations.database.models.conversation import ConversationSession
+from insurance_operations.database.models.ghl import GhlCalendarBooking
 from insurance_operations.database.models.hvac import (
     Appointment,
     BusinessSchedule,
@@ -102,6 +103,7 @@ def booking_details(
         and not request.service_details.get("hazardous_condition")
         and request.status != "CLOSED"
         and allowance.remaining > 0
+        and session.get(GhlCalendarBooking, appointment.id) is None
     )
     return BookingDetails(
         appointment=AppointmentView.model_validate(appointment),
@@ -112,7 +114,10 @@ def booking_details(
         change_allowance=allowance,
         change_message=None
         if can_reschedule
-        else f"You have used {allowance.used} of {allowance.maximum} allowed date/time changes. Contact the business for further changes."
+        else (
+            f"You have used {allowance.used} of {allowance.maximum} "
+            "allowed date/time changes. Contact the business for further changes."
+        )
         if allowance.remaining == 0
         else "Please contact the business to change this appointment.",
     )

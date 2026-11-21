@@ -8,7 +8,7 @@ import pytest
 from cryptography.fernet import Fernet
 from sqlalchemy import delete, func, select
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
 
 from insurance_operations.database.models.conversation import ConversationSession
 from insurance_operations.database.models.homepage_chat import (

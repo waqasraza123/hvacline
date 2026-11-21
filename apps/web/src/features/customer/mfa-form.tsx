@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon } from "@/components/product-icons";
 import {
   type AuthIntent,
@@ -202,9 +203,12 @@ export function CustomerMfaForm({ intent }: { intent?: AuthIntent }) {
     <div className={`customer-shell ${styles.page}`}>
       <header className="product-header product-container">
         <Brand />
-        <Link className="product-text-link" href="/">
-          Back to home <span aria-hidden="true">↗</span>
-        </Link>
+        <div className="product-page-actions">
+          <ThemeToggle />
+          <Link className="product-text-link" href="/">
+            Back to home <span aria-hidden="true">↗</span>
+          </Link>
+        </div>
       </header>
       <main className={`product-container ${styles.layout}`}>
         <aside className={styles.story} aria-labelledby="security-heading">

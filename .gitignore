@@ -20,6 +20,9 @@ dist/
 build/
 out/
 *.tsbuildinfo
+.expo/
+apps/mobile/ios/
+apps/mobile/android/
 
 .venv/
 venv/

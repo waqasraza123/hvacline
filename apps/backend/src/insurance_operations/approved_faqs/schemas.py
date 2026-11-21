@@ -1,17 +1,37 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+
+from insurance_operations.approved_faqs.text import normalize_faq_question
 
 ApprovedFaqStatusValue = Literal["ACTIVE", "INACTIVE"]
+QuestionVariation = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=300)
+]
 
 
 class ApprovedFaqContent(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(str_strip_whitespace=True, hide_input_in_errors=True)
 
     question: str = Field(min_length=1, max_length=300)
     approved_answer: str = Field(min_length=1, max_length=2_000)
+    question_variations: list[QuestionVariation] = Field(
+        default_factory=list, max_length=8
+    )
+
+    @model_validator(mode="after")
+    def distinct_questions(self) -> Self:
+        seen: set[str] = set()
+        for question in [self.question, *self.question_variations]:
+            normalized = normalize_faq_question(question)
+            if not normalized:
+                raise ValueError("Questions must contain letters or numbers")
+            if normalized in seen:
+                raise ValueError("Question variations must be distinct")
+            seen.add(normalized)
+        return self
 
 
 class ApprovedFaqCreateInput(ApprovedFaqContent):

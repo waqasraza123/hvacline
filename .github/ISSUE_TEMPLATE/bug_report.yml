@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible problem using fictional data.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For vulnerabilities, follow [SECURITY.md](https://github.com/waqasraza123/hvacline/blob/main/SECURITY.md).
+        Do not include credentials, customer details, transcripts, or recordings.
+        Reproduction must stay within your written authorization under LICENSE.
+  - type: input
+    id: version
+    attributes:
+      label: Commit or release
+      placeholder: Commit SHA or release tag
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Customer voice or chat
+        - Booking or scheduling
+        - Operations dashboard
+        - Accounts or MFA
+        - Telephone or WhatsApp
+        - Billing sandbox
+        - Website platform
+        - GoHighLevel or another integration
+        - Documentation or setup
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Use a minimal fictional example. Include the route and relevant nonsecret feature flags.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include sanitized error messages or screenshots when useful.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser/OS, Node/Python versions, and local or hosted environment. No connection strings or secrets.

@@ -1,0 +1,311 @@
+{
+  "conversation_config": {
+    "agent": {
+      "first_message": "Hi, this is the AI assistant for {{recovery_business_name}} calling about your unfinished HVAC service request. Would you like to continue scheduling?",
+      "prompt": {
+        "prompt": "You are the AI recovery assistant for {{recovery_business_name}}.\nYour first message identifies the business, AI disclosure and purpose. Wait for permission to continue.\nCall recovery_continue only after an explicit yes. If declined, call recovery_finish with DECLINED and end_call.\nFor STOP or no more calls, use recovery_finish with STOP and end_call immediately.\nAfter recovery_continue succeeds, recovery_context returns confirmed request details. Do not ask again for saved details.\nIf any saved details are wrong or missing, use recovery_finish with STAFF_REQUEST; never invent or overwrite them.\nCall recovery_availability with a requested date and offer only returned available slots in the returned timezone.\nCall recovery_reserve only for the customer's chosen slot, using the latest row_version. Holds are provisional.\nCall recovery_readback, speak its exact full readback, then wait for the customer's explicit yes or confirm.\nOnly then call recovery_confirm with the returned nonce, row_version and explicit_confirmation=true.\nSay confirmed only if that tool returns status CONFIRMED. Delivery, a hold or an unknown provider response is not a booking.\nFor a changed choice before approval, use recovery_release, then fetch availability again. For uncertain confirmation, refresh recovery_context; keep the same selection and nonce.\nFor hazards use recovery_finish with HAZARD and tell the caller to seek appropriate emergency help without promising a dispatch.\nFor staff assistance use recovery_finish with STAFF_REQUEST. Never promise a live transfer.\nNever invent pricing, availability, technicians or service commitments. Do not use external tools, other agents, SMS or other phone numbers.\nAfter confirmed booking or a finish action, end_call naturally. Tool failures require honest recovery/staff guidance; never claim success.\n",
+        "tools": [
+          {
+            "type": "webhook",
+            "name": "recovery_continue",
+            "description": "After the AI introduction and a clear customer yes, verify permission and retrieve saved details.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/continue",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "description": "After the AI introduction and a clear customer yes, verify permission and retrieve saved details."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_context",
+            "description": "Read the current saved request and booking outcome. Do not invent missing information.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/context",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "description": "Read the current saved request and booking outcome. Do not invent missing information."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_availability",
+            "description": "Fetch real available appointment slots for the requested date. Offer only returned slots.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/availability",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "day": {
+                    "type": "string",
+                    "description": "Requested date in YYYY-MM-DD, in the business timezone."
+                  }
+                },
+                "required": [
+                  "day"
+                ],
+                "description": "Fetch real available appointment slots for the requested date. Offer only returned slots."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_reserve",
+            "description": "Reserve the customer-selected returned slot using the latest session row version. This is not a confirmed booking.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/reserve",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "expected_row_version": {
+                    "type": "integer",
+                    "description": "Latest row_version returned by recovery_context or recovery_continue."
+                  },
+                  "team_key": {
+                    "type": "string",
+                    "description": "Exact team_key from a returned availability slot."
+                  },
+                  "starts_at": {
+                    "type": "string",
+                    "description": "Exact timezone-aware starts_at from the selected returned slot."
+                  }
+                },
+                "required": [
+                  "expected_row_version",
+                  "team_key",
+                  "starts_at"
+                ],
+                "description": "Reserve the customer-selected returned slot using the latest session row version. This is not a confirmed booking."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_readback",
+            "description": "Get the exact current readback and nonce. Speak the whole readback and wait for the customer.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/readback",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "description": "Get the exact current readback and nonce. Speak the whole readback and wait for the customer."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_confirm",
+            "description": "Only after the customer confirms the full readback, complete the existing appointment confirmation. Say confirmed only for CONFIRMED status.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/confirm",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "expected_row_version": {
+                    "type": "integer",
+                    "description": "row_version from the exact current readback."
+                  },
+                  "nonce": {
+                    "type": "string",
+                    "description": "Exact nonce from recovery_readback."
+                  },
+                  "explicit_confirmation": {
+                    "type": "boolean",
+                    "description": "true only after the customer explicitly confirms the whole readback."
+                  }
+                },
+                "required": [
+                  "expected_row_version",
+                  "nonce",
+                  "explicit_confirmation"
+                ],
+                "description": "Only after the customer confirms the full readback, complete the existing appointment confirmation. Say confirmed only for CONFIRMED status."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_release",
+            "description": "Release an unconfirmed reservation before changing the selection. An approved uncertain booking cannot be replaced.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/release",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+                "description": "Release an unconfirmed reservation before changing the selection. An approved uncertain booking cannot be replaced."
+              }
+            }
+          },
+          {
+            "type": "webhook",
+            "name": "recovery_finish",
+            "description": "Record DECLINED, STOP, STAFF_REQUEST or HAZARD, then use end_call. Never promise a live transfer.",
+            "response_timeout_secs": 30,
+            "api_schema": {
+              "url": "https://YOUR_API_HOST/api/v1/providers/recovery/voice/tools/finish",
+              "method": "POST",
+              "request_headers": {
+                "Authorization": {
+                  "secret_id": "YOUR_BEARER_SECRET_ID"
+                },
+                "X-Recovery-Context": {
+                  "variable_name": "secret__recovery_context"
+                },
+                "X-Recovery-Conversation": {
+                  "variable_name": "system__conversation_id"
+                }
+              },
+              "request_body_schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "DECLINED",
+                      "STOP",
+                      "STAFF_REQUEST",
+                      "HAZARD"
+                    ],
+                    "description": "Use STOP whenever the customer revokes automated contact permission."
+                  }
+                },
+                "required": [
+                  "action"
+                ],
+                "description": "Record DECLINED, STOP, STAFF_REQUEST or HAZARD, then use end_call. Never promise a live transfer."
+              }
+            }
+          },
+          {
+            "type": "system",
+            "name": "end_call",
+            "description": "End naturally after a saved confirmation or finish action.",
+            "params": {
+              "system_tool_type": "end_call"
+            }
+          }
+        ]
+      }
+    },
+    "conversation": {
+      "max_duration_seconds": 180
+    }
+  },
+  "platform_settings": {
+    "auth": {
+      "enable_auth": true
+    },
+    "privacy": {
+      "record_voice": false,
+      "retention_days": 0
+    },
+    "workspace_overrides": {
+      "webhooks": {
+        "post_call_webhook_id": "YOUR_RECOVERY_WEBHOOK_ID",
+        "events": [
+          "transcript",
+          "call_initiation_failure"
+        ]
+      }
+    }
+  }
+}

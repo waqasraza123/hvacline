@@ -1,6 +1,5 @@
 from typing import Self
 from urllib.parse import urlsplit
-from uuid import UUID
 
 from pydantic import SecretStr, field_validator, model_validator
 
@@ -9,7 +8,6 @@ from insurance_operations.settings import CommonSettings
 
 class BillingSettings(CommonSettings):
     billing_enabled: bool = False
-    billing_merchant_agency_id: UUID | None = None
     stripe_live_mode: bool = False
     stripe_secret_key: SecretStr | None = None
     stripe_webhook_secret: SecretStr | None = None
@@ -50,7 +48,6 @@ class BillingSettings(CommonSettings):
         if not self.billing_enabled:
             return self
         required = {
-            "BILLING_MERCHANT_AGENCY_ID": self.billing_merchant_agency_id,
             "STRIPE_SECRET_KEY": self.stripe_secret_key,
             "STRIPE_WEBHOOK_SECRET": self.stripe_webhook_secret,
             "STRIPE_PRODUCT_ID": self.stripe_product_id,

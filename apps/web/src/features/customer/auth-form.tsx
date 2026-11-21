@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
 import { type AuthIntent, authPageHref } from "./auth-continuation";
 
@@ -84,9 +85,12 @@ export function AuthForm({
     <div className="customer-shell auth-page">
       <header className="product-header product-container">
         <Brand />
-        <Link className="product-text-link" href="/">
-          Back to home <span>↗</span>
-        </Link>
+        <div className="product-page-actions">
+          <ThemeToggle />
+          <Link className="product-text-link" href="/">
+            Back to home <span>↗</span>
+          </Link>
+        </div>
       </header>
       <main className="auth-layout product-container">
         <section className="auth-story">

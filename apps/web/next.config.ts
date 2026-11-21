@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  transpilePackages: ["@insurance-operations/customer-core"],
   async headers() {
     return [
       {

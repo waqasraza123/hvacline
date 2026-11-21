@@ -112,7 +112,9 @@ class OutboundDemoService:
         except OutboundProviderError as error:
             logger.warning(
                 "Outbound demo %s failed (outcome_unknown=%s, call_id=%s)",
-                phase, error.outcome_unknown, call_id,
+                phase,
+                error.outcome_unknown,
+                call_id,
             )
             with self.sessions() as session, session.begin():
                 row = self._owned(session, call_id, owner, lock=True)
@@ -151,7 +153,10 @@ class OutboundDemoService:
             raise ApiError(
                 status_code=403,
                 code="DEMO_NUMBER_NOT_AUTHORIZED",
-                message="This private demo is limited to numbers approved by the demo owner.",
+                message=(
+                    "This private demo is limited to numbers approved "
+                    "by the demo owner."
+                ),
             )
         now = datetime.now(UTC)
         fingerprint = self._hash("request", data.model_dump_json())
@@ -176,7 +181,10 @@ class OutboundDemoService:
                     raise ApiError(
                         status_code=409,
                         code="DEMO_REQUEST_CONFLICT",
-                        message="This request key was already used. Check its existing status.",
+                        message=(
+                            "This request key was already used. Check its "
+                            "existing status."
+                        ),
                     )
                 return existing.id, self._response(existing)
             base = select(OutboundDemoCall).where(
@@ -235,13 +243,18 @@ class OutboundDemoService:
                     status_code=429,
                     code="DEMO_CALL_LIMIT",
                     message=(
-                        "The demo call limit has been reached. Please try browser Voice."
+                        "The demo call limit has been reached. Please try "
+                        "browser Voice."
                     ),
                 )
             if owner != "admin":
                 self.verification.consume(
-                    session, agency_id, owner_hash, destination,
-                    data.phone_verification_id, data.request_id,
+                    session,
+                    agency_id,
+                    owner_hash,
+                    destination,
+                    data.phone_verification_id,
+                    data.request_id,
                 )
             row = OutboundDemoCall(
                 agency_id=agency_id,
@@ -278,7 +291,10 @@ class OutboundDemoService:
                 raise ApiError(
                     status_code=404,
                     code="DEMO_CALL_NOT_FOUND",
-                    message="The request is not yet available. Do not request another call; contact the demo owner.",
+                    message=(
+                        "The request is not yet available. Do not request "
+                        "another call; contact the demo owner."
+                    ),
                 )
             return self._response(row)
 
@@ -333,7 +349,8 @@ class OutboundDemoService:
                 message="Unsupported demo call event.",
             )
         data = object_value(payload.get("data"))
-        # Store only a digest; provider transcripts, phone numbers and errors stay out of this table.
+        # Store only a digest; provider transcripts, phone numbers and
+        # errors stay out of this table.
         fingerprint = self._hash(
             "event", json.dumps(payload, sort_keys=True, separators=(",", ":"))
         )
@@ -416,7 +433,8 @@ class OutboundDemoService:
                         .with_for_update()
                     )
             if row is None:
-                # Retryable: the provider can finish before its outbound HTTP response arrives.
+                # Retryable: the provider can finish before its
+                # outbound HTTP response arrives.
                 raise ApiError(
                     status_code=503,
                     code="DEMO_EVENT_UNBOUND",
@@ -480,7 +498,7 @@ class OutboundDemoService:
                     "initiated": DemoCallStatus.DIALING,
                     "in-progress": DemoCallStatus.IN_PROGRESS,
                     "processing": DemoCallStatus.PROCESSING,
-                }.get(provider_status, DemoCallStatus.UNKNOWN)
+                }.get(provider_status or "", DemoCallStatus.UNKNOWN)
                 order = [
                     DemoCallStatus.RESERVED,
                     DemoCallStatus.DIALING,

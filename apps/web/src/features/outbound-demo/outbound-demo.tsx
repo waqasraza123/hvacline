@@ -10,7 +10,7 @@ export function OutboundDemo() {
       aria-labelledby="outbound-title"
     >
       <div className="outbound-demo-intro">
-        <p className="product-eyebrow">ON YOUR PHONE</p>
+        <p className="product-eyebrow">HVAC PHONE EXAMPLE</p>
         <h2 id="outbound-title">
           Inbound &amp;
           <br />
@@ -41,7 +41,9 @@ export function OutboundDemo() {
           <ProductIcon name="phone" />
           <div>
             <h3>Outbound calling</h3>
-            <p>Try the AI voice agent on your own phone with a short HVAC demo.</p>
+            <p>
+              Try the AI voice agent on your own phone with a short HVAC demo.
+            </p>
           </div>
         </article>
         <OutboundDemoTrigger />

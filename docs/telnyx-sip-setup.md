@@ -31,11 +31,17 @@ selected by `TELEPHONY_PROVIDER=twilio`.
 - Public HTTPS API, existing Neon schema and an active development operator with
   exactly one active business membership. The established development identity
   gate remains; this feature does not implement production tenant onboarding.
-- Configure that business's receptionist settings, approved FAQs and call policy
-  in Operations. Add the exact E.164 number under inbound numbers and mark it
-  ACTIVE. The number must belong to the configured operator's business; the
-  webhook cannot choose a tenant. Enable inbound policy and select concurrent/
-  daily limits and callback fallback deliberately.
+- Configure that business's receptionist settings and approved FAQs in Operations.
+  Provision the exact E.164 number through the authenticated backend
+  `GET/POST /api/v1/development/inbound-numbers` endpoints and mark it ACTIVE.
+  Existing inactive records use
+  `POST /api/v1/development/inbound-numbers/{number_id}/status` with their current
+  `expected_row_version`. Read/update inbound policy through
+  `GET/PUT /api/v1/development/call-policy`, preserving the current version and
+  deliberate concurrency/daily/callback settings. These endpoints use the existing
+  `X-Demo-Admin-Token` gate and resolve the configured operator's business on the
+  server. There is currently no inbound-number or call-policy editor in the web
+  UI. The webhook cannot choose a tenant or automatically provision its number.
 - Configure actual schedule, service ZIPs, timezone, technician teams and opening
   hours. Availability comes from this configuration and existing appointments;
   no telephone setup creates appointment slots. Retain existing Google Calendar

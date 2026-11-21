@@ -1,8 +1,11 @@
 import re
+import unicodedata
 from collections.abc import Sequence
 from typing import Protocol
 
 from insurance_operations.hvac.schemas import ServiceRequestInput
+from insurance_operations.voice_languages import LanguageCode
+from insurance_operations.conversations.language_readbacks import CONFIRMATIONS, localized_intake
 
 
 class SpokenTurn(Protocol):
@@ -18,7 +21,7 @@ def normalized_speech(value: str) -> str:
 
 
 def require_spoken_confirmation(
-    turns: Sequence[SpokenTurn], readback: str, action: str = "save my request"
+    turns: Sequence[SpokenTurn], readback: str, action: str = "save my request", *, language: LanguageCode = "en"
 ) -> None:
     if len(turns) < 2 or turns[-1].speaker != "USER":
         raise ValueError("Read back the details and wait for the customer's answer")
@@ -35,20 +38,30 @@ def require_spoken_confirmation(
         "yes i confirm",
         f"yes {action}",
     }
-    if normalized_speech(turns[-1].text) not in accepted:
+    normalize = normalized_speech if language == "en" else normalized_multilingual_speech
+    if language != "en":
+        accepted = {normalize(value) for value in CONFIRMATIONS[language]}
+    if normalize(turns[-1].text) not in accepted:
         raise ValueError("A clear yes or confirm after the full readback is required")
     agent_turns: list[str] = []
     for turn in reversed(turns[:-1]):
         if turn.speaker != "AGENT":
             break
         agent_turns.insert(0, turn.text)
-    if not normalized_speech(" ".join(agent_turns)).endswith(
-        normalized_speech(readback)
+    if not normalize(" ".join(agent_turns)).endswith(
+        normalize(readback)
     ):
         raise ValueError("Read the complete current details before asking for consent")
 
 
-def intake_readback(request: ServiceRequestInput) -> str:
+def normalized_multilingual_speech(value: str) -> str:
+    value = unicodedata.normalize("NFKC", value).casefold()
+    return " ".join("".join(character if (character.isalnum() or unicodedata.category(character).startswith("M")) else " " for character in value).split())
+
+
+def intake_readback(request: ServiceRequestInput, language: LanguageCode = "en") -> str:
+    if language != "en":
+        return localized_intake(request, language)
     customer = request.customer
     address = customer.address
     if address is None:

@@ -1,5 +1,11 @@
 # Development business content
 
+November 9 source refresh corrects old capability statements about website
+rescheduling, optional Google Calendar/email and sandbox maintenance billing.
+Existing approved database entries are preserved; this task does not reseed or
+overwrite their content. Review older saved answers in Operations → knowledge
+base. Alternate-question support and owner checks: [knowledge base](knowledge-base.md).
+
 The development seed supplies 28 source-backed FAQs for the fictional Harborline Heating & Air business. Questions and answers are defined in `apps/backend/src/insurance_operations/database/development_content.py` and the three original entries in `database/seed.py`. This is development content, not approved facts about a real HVAC company.
 
 On October 25, 2026 the owner-requested scoped application inserted 25 additional FAQs into the configured Neon development database, with 28 active seed FAQs reported afterward. It reused the existing receptionist profile, created and enabled the missing default calendar and skipped phone routing. Three newly inserted answers were subsequently clarified through the audited FAQ service to distinguish website bookings and browser memory from other channels. No migrations, tests or live voice conversations ran. This data-application result does not verify Render's effective database configuration or end-to-end booking.

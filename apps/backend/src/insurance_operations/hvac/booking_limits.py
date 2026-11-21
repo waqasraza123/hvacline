@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from insurance_operations.database.models.conversation import ConversationSession
 from insurance_operations.database.models.customer_account import CustomerAccount
+from insurance_operations.database.models.ghl import GhlCalendarBooking
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.database.models.operations import AuditEvent
 from insurance_operations.errors import ApiError
@@ -97,6 +98,15 @@ def customer_booking_limits(
             or_(
                 Appointment.status == "CONFIRMED",
                 (Appointment.status == "HELD") & (Appointment.hold_expires_at > now),
+                select(GhlCalendarBooking.appointment_id)
+                .where(
+                    GhlCalendarBooking.appointment_id == Appointment.id,
+                    GhlCalendarBooking.agency_id == agency_id,
+                    GhlCalendarBooking.status.in_(
+                        ["CONTACT_PENDING", "CREATING", "UNKNOWN", "NEEDS_REVIEW"]
+                    ),
+                )
+                .exists(),
             ),
         )
     )
@@ -133,7 +143,8 @@ def require_customer_booking_capacity(
             code="CUSTOMER_APPOINTMENT_LIMIT_REACHED",
             message=(
                 f"Your active appointment limit is {limits.max_active_appointments}. "
-                "Unexpired holds also use a place. Open your existing booking to make a change."
+                "Unexpired holds also use a place. "
+                "Open your existing booking to make a change."
             ),
             details=limits.model_dump(mode="json"),
         )
@@ -175,6 +186,9 @@ def require_customer_booking_change(
         raise ApiError(
             status_code=409,
             code="CUSTOMER_BOOKING_CHANGE_LIMIT_REACHED",
-            message=f"You have used {allowance.used} of {allowance.maximum} allowed date/time changes. Contact the business for further changes.",
+            message=(
+                f"You have used {allowance.used} of {allowance.maximum} "
+                "allowed date/time changes. Contact the business for further changes."
+            ),
             details=allowance.model_dump(),
         )

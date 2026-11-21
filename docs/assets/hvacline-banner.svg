@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title description">
+  <title id="title">HVACLine AI</title>
+  <desc id="description">Turn missed calls into HVAC bookings. Voice, chat, scheduling, and team handoff in one workflow.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#18181b"/>
+      <stop offset="1" stop-color="#30231c"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".035"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="420" rx="24" fill="url(#background)"/>
+  <rect width="1280" height="420" rx="24" fill="url(#grid)"/>
+  <g transform="translate(64 52)">
+    <rect width="46" height="46" rx="14" fill="#f97316"/>
+    <path d="M12 19v8m8-14v20m7-20v20m8-14v8M20 23h7" fill="none" stroke="#18181b" stroke-width="3" stroke-linecap="round"/>
+    <text x="62" y="31" fill="#fafafa" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">HVACLine <tspan fill="#fb923c">AI</tspan></text>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="64" y="174" fill="#fafafa" font-size="48" font-weight="700" letter-spacing="-1.5">Turn missed calls</text>
+    <text x="64" y="232" fill="#fb923c" font-size="48" font-weight="700" letter-spacing="-1.5">into HVAC bookings.</text>
+    <text x="64" y="280" fill="#a1a1aa" font-size="20">An AI receptionist that keeps the job moving.</text>
+    <text x="64" y="358" fill="#d4d4d8" font-size="14" letter-spacing="2">VOICE + CHAT</text>
+    <circle cx="208" cy="353" r="2" fill="#f97316"/>
+    <text x="225" y="358" fill="#d4d4d8" font-size="14" letter-spacing="2">SCHEDULING</text>
+    <circle cx="359" cy="353" r="2" fill="#f97316"/>
+    <text x="376" y="358" fill="#d4d4d8" font-size="14" letter-spacing="2">TEAM HANDOFF</text>
+  </g>
+  <g transform="translate(830 70)">
+    <rect width="360" height="280" rx="22" fill="#18181b" stroke="#48403b"/>
+    <circle cx="28" cy="28" r="4" fill="#f97316"/>
+    <text x="42" y="33" fill="#a1a1aa" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="2">ONE CONNECTED WORKFLOW</text>
+    <path d="M56 83v18m16-29v40m16-55v70m16-87v105m16-72v40m16-25v9m16-28v47m16-64v81m16-108v135m16-118v100m16-80v60m16-42v23m16-34v47m16-60v72m16-58v44m16-31v17" fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round"/>
+    <path d="M34 170h292" stroke="#333338"/>
+    <g font-family="Arial, Helvetica, sans-serif" font-size="13" text-anchor="middle">
+      <rect x="24" y="199" width="87" height="42" rx="9" fill="#27272a"/>
+      <text x="67.5" y="225" fill="#e4e4e7">Intake</text>
+      <path d="m120 220h12m-4-4 4 4-4 4" fill="none" stroke="#71717a"/>
+      <rect x="140" y="199" width="87" height="42" rx="9" fill="#f97316"/>
+      <text x="183.5" y="225" fill="#18181b" font-weight="700">Booking</text>
+      <path d="m236 220h12m-4-4 4 4-4 4" fill="none" stroke="#71717a"/>
+      <rect x="256" y="199" width="80" height="42" rx="9" fill="#27272a"/>
+      <text x="296" y="225" fill="#e4e4e7">Handoff</text>
+    </g>
+  </g>
+</svg>

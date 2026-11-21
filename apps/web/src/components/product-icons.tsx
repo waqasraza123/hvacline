@@ -11,9 +11,13 @@ type IconName =
   | "mic"
   | "phone"
   | "chat"
+  | "languages"
   | "close"
   | "calendar"
-  | "logout";
+  | "logout"
+  | "sun"
+  | "moon"
+  | "lock";
 
 const paths: Record<IconName, string> = {
   arrow: "M5 12h14m-6-6 6 6-6 6",
@@ -27,10 +31,15 @@ const paths: Record<IconName, string> = {
   phone:
     "M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.1 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .7 2.9a2 2 0 0 1-.5 2.1L8 10a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z",
   chat: "M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6 4V6a2 2 0 0 1 2-2Zm2 5h10m-10 4h7",
+  languages:
+    "M3 5h12M9 3v2M6 8c1.5 3 4 5.5 7 7M12 5c-.5 4-3 7.5-8 10m9 6 4-10 4 10M14.5 17h5",
   close: "m6 6 12 12M6 18 18 6",
   calendar:
     "M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm3 10h2m4 0h2m-8 4h2",
   logout: "M9 4H4v16h5m5-12 4 4-4 4m-6-4h12",
+  sun: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5",
+  moon: "M20.5 13A8.5 8.5 0 0 1 11 3.5 8.5 8.5 0 1 0 20.5 13Z",
+  lock: "M7 10V7a5 5 0 0 1 10 0v3M5 10h14v11H5V10Zm7 4v3",
 };
 
 export function ProductIcon({

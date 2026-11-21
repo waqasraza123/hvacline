@@ -6,6 +6,13 @@ import {
 } from "./auth-continuation";
 
 describe("callback sign-in continuation", () => {
+  it("returns a website conversation to the same published site after MFA", () => {
+    const intent = parseAuthIntent("website:studio-one");
+    expect(authPageHref("/mfa", intent)).toBe("/mfa?intent=website:studio-one");
+    expect(authReturnHref(intent)).toBe("/sites/studio-one");
+    expect(parseAuthIntent("website:../other")).toBeUndefined();
+    expect(parseAuthIntent("website:https://other.example")).toBeUndefined();
+  });
   it("returns a package purchase to billing after login, signup and MFA", () => {
     const intent = parseAuthIntent("billing");
     expect(authPageHref("/login", intent)).toBe("/login?intent=billing");

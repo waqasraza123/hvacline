@@ -13,12 +13,16 @@ def upgrade() -> None:
     op.create_table(
         "outbound_phone_verifications",
         sa.Column(
-            "id", sa.Uuid(), primary_key=True,
+            "id",
+            sa.Uuid(),
+            primary_key=True,
             server_default=sa.text("gen_random_uuid()"),
         ),
         sa.Column(
-            "agency_id", sa.Uuid(),
-            sa.ForeignKey("agencies.id", ondelete="RESTRICT"), nullable=False,
+            "agency_id",
+            sa.Uuid(),
+            sa.ForeignKey("agencies.id", ondelete="RESTRICT"),
+            nullable=False,
         ),
         sa.Column("owner_hash", sa.Text(), nullable=False),
         sa.Column("destination_hash", sa.Text(), nullable=False),

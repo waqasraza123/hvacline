@@ -18,6 +18,7 @@ from insurance_operations.database.models.booking_integrations import (
     CalendarConnection,
 )
 from insurance_operations.database.models.hvac import Appointment
+from insurance_operations.ghl.jobs import collect_ghl_jobs
 from insurance_operations.hvac.calendar_sync import (
     reconcile_booking,
     reconcile_connection,
@@ -30,6 +31,7 @@ from insurance_operations.job_execution import (
 )
 from insurance_operations.notifications.booking import deliver_notification
 from insurance_operations.notifications.email_events import apply_delivery_events
+from insurance_operations.recovery.jobs import collect_recovery_jobs
 
 # Shared by HTTP invocations and the standalone worker in this database.
 JOB_LOCK_NAME = "hvacline.booking-jobs"
@@ -101,7 +103,9 @@ def collect_booking_jobs(
                     CalendarBooking.status.not_in(["CANCELLED", "COMPLETED"]),
                     CalendarBooking.next_attempt_at <= now,
                 )
-                .order_by(CalendarBooking.next_attempt_at, CalendarBooking.appointment_id)
+                .order_by(
+                    CalendarBooking.next_attempt_at, CalendarBooking.appointment_id
+                )
                 .limit(batch_size)
             ).all()
         )
@@ -122,7 +126,9 @@ def collect_booking_jobs(
                 .where(
                     CalendarConnection.status == "CONNECTED",
                     CalendarConnection.last_checked_at.is_(None)
-                    | (CalendarConnection.last_checked_at <= now - timedelta(minutes=5)),
+                    | (
+                        CalendarConnection.last_checked_at <= now - timedelta(minutes=5)
+                    ),
                 )
                 .order_by(
                     CalendarConnection.last_checked_at.nulls_first(),
@@ -132,17 +138,25 @@ def collect_booking_jobs(
             ).all()
         )
     jobs: list[Callable[[], None]] = []
-    for notification, binding, connection in zip_longest(
-        notifications, bindings, connections
+    for notification, binding, connection, ghl_job, recovery_job in zip_longest(
+        notifications, bindings, connections, collect_ghl_jobs(sessions, batch_size), collect_recovery_jobs(sessions, batch_size)
     ):
         if notification is not None:
             jobs.append(partial(deliver_notification, sessions, notification))
         if binding is not None:
-            jobs.append(partial(reconcile_booking_job, sessions, binding[0], binding[1]))
+            jobs.append(
+                partial(reconcile_booking_job, sessions, binding[0], binding[1])
+            )
         if connection is not None:
             jobs.append(
-                partial(reconcile_connection_job, sessions, connection[0], connection[1])
+                partial(
+                    reconcile_connection_job, sessions, connection[0], connection[1]
+                )
             )
+        if ghl_job is not None:
+            jobs.append(ghl_job)
+        if recovery_job is not None:
+            jobs.append(recovery_job)
     return jobs
 
 

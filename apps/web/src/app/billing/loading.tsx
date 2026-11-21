@@ -1,9 +1,5 @@
-import { LoadingSpinner } from "@/components/loading-spinner";
+import { LoadingScreen } from "@/components/loading-screen";
 
 export default function LoadingBilling() {
-  return (
-    <main className="product-container" style={{ paddingBlock: "5rem" }}>
-      <LoadingSpinner label="Opening your maintenance account…" />
-    </main>
-  );
+  return <LoadingScreen label="Opening your maintenance account…" />;
 }

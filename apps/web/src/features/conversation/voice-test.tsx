@@ -48,6 +48,7 @@ import {
   readHomepageHandoff,
 } from "@/features/homepage-chat/handoff";
 import type { HomepageHandoff } from "@/features/homepage-chat/handoff";
+import { LanguageSelector, useVoiceLanguages } from "./language-selector";
 
 type VoiceTestProperties = Readonly<{
   apiBaseUrl: string;
@@ -292,6 +293,8 @@ export function VoiceTest({
       onError={handleError}
       onTranscript={handleTranscript}
       onBookingTool={handleBookingTool}
+      onLanguageChange={(language) => voiceBookingRef.current?.observeLanguageChange(language)}
+      onReadbackInterrupted={() => voiceBookingRef.current?.invalidateReadbacks()}
     >
       {(client) => (
         <VoiceTestExperience
@@ -386,6 +389,7 @@ function VoiceTestExperience({
   onViewBooking,
   onBookingChanged,
 }: ExperienceProperties) {
+  const { registry: languageRegistry, language, setLanguage, languageError } = useVoiceLanguages(apiBaseUrl, adminToken);
   const [homepageHandoff, setHomepageHandoff] =
     useState<HomepageHandoff | null>(null);
   useEffect(() => {
@@ -399,9 +403,7 @@ function VoiceTestExperience({
   const sessionDeadlineRef = useRef<number | undefined>(undefined);
   const [confirmationLocked, setConfirmationLocked] = useState(false);
   const [blockedSessionId, setBlockedSessionId] = useState<string>();
-  const [inputMode, setInputMode] = useState<ConversationInputMode>(
-    presentation === "customer" ? "TEXT" : "VOICE",
-  );
+  const [inputMode, setInputMode] = useState<ConversationInputMode>("VOICE");
   const textOnly = inputMode === "TEXT";
   const confirmationKeyRef = useRef<string | undefined>(undefined);
   const finishConversationRef = useRef<() => Promise<void>>(
@@ -488,6 +490,10 @@ function VoiceTestExperience({
 
   async function startConversation() {
     if (!["idle", "error"].includes(phaseRef.current)) return;
+    if (!languageRegistry || languageError) { setErrorMessage(languageError || "Wait for language settings to load."); return; }
+    if (!languageRegistry.languages.some((item) => item.channel === "browser" && item.code === language && item.available)) {
+      setErrorMessage("This language requires verified provider setup. Choose an available language or contact staff."); return;
+    }
     if (blockedSessionId !== undefined) return;
     setTimeLimitReached(false);
     setRemainingSeconds(maximumDuration);
@@ -544,12 +550,15 @@ function VoiceTestExperience({
         apiBaseUrl,
         adminToken,
         inputMode,
+        undefined,
+        language,
       );
       sessionIdRef.current = authorization.sessionId;
       voiceBookingRef.current = new VoiceBookingSession({
         apiBaseUrl,
         adminToken,
         sessionId: authorization.sessionId,
+        initialLanguage: authorization.voiceLanguage?.language,
         isActive: () =>
           sessionIdRef.current === authorization.sessionId &&
           isLiveConversationPhase(phaseRef.current),
@@ -791,8 +800,9 @@ function VoiceTestExperience({
             </button>
           </div>
           <p>
-            Your next message is ready below. Accept the conversation
-            permissions and start Chat to continue.
+            Your next message is ready below. Use Voice chat to speak, or choose
+            Text chat to keep typing. Accept the conversation permissions, then
+            start when you’re ready.
           </p>
           {homepageHandoff.message && (
             <div className="homepage-history-turn">
@@ -835,20 +845,20 @@ function VoiceTestExperience({
           aria-label="Conversation mode"
         >
           <button
-            aria-pressed={textOnly}
-            disabled={!canStart || isBusy}
-            onClick={() => setInputMode("TEXT")}
-            type="button"
-          >
-            <ProductIcon name="chat" /> Chat
-          </button>
-          <button
             aria-pressed={!textOnly}
             disabled={!canStart || isBusy}
             onClick={() => setInputMode("VOICE")}
             type="button"
           >
-            <ProductIcon name="mic" /> Voice
+            <ProductIcon name="mic" /> Voice chat
+          </button>
+          <button
+            aria-pressed={textOnly}
+            disabled={!canStart || isBusy}
+            onClick={() => setInputMode("TEXT")}
+            type="button"
+          >
+            <ProductIcon name="chat" /> Text chat
           </button>
         </div>
         <p className="section-help">
@@ -906,6 +916,7 @@ function VoiceTestExperience({
         <div
           className={`voice-permissions ${customerView && !canStart ? "permissions-complete" : ""}`}
         >
+          <LanguageSelector registry={languageRegistry} language={language} onChange={setLanguage} disabled={!canStart} error={languageError} observedLanguage={client.observedLanguage} switchFailed={client.languageSwitchFailed} live={client.status === "connected"} />
           {customerView && <h3>Before we begin</h3>}
           <div className="disclosure" role="note">
             You are interacting with an AI, not a human. Your messages
@@ -951,6 +962,7 @@ function VoiceTestExperience({
             <button
               className={customerView ? "product-button" : "primary-button"}
               disabled={
+                !languageRegistry?.languages.some((item) => item.channel === "browser" && item.code === language && item.available) || !!languageError ||
                 !disclosureAccepted ||
                 (!textOnly && !microphoneConsent) ||
                 blockedSessionId !== undefined ||
@@ -965,7 +977,7 @@ function VoiceTestExperience({
                 : customerView
                   ? textOnly
                     ? "Start chatting with Line"
-                    : "Start talking to Line"
+                    : "Start Voice Chat"
                   : "Start conversation"}
             </button>
           )}

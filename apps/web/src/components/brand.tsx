@@ -9,12 +9,7 @@ export function Brand() {
         viewBox="0 0 36 36"
         className="brand-symbol"
       >
-        <rect
-          width="36"
-          height="36"
-          rx="11"
-          fill="var(--brand-charcoal)"
-        />
+        <rect width="36" height="36" rx="11" fill="var(--brand-charcoal)" />
         <path
           d="M9 15v6m6-11v16m6-16v16m6-11v6M15 18h6"
           fill="none"

@@ -1,11 +1,14 @@
 {
   "name": "insurance-operations-ai",
   "private": true,
+  "license": "UNLICENSED",
   "engines": {
     "node": "24.x"
   },
   "workspaces": [
-    "apps/web"
+    "apps/web",
+    "apps/mobile",
+    "packages/customer-core"
   ],
   "devDependencies": {
     "eslint": "9.39.5",
@@ -25,6 +28,11 @@
     "lint:web": "npm run lint --workspace @insurance-operations/web",
     "test:web": "npm run test --workspace @insurance-operations/web",
     "typecheck:web": "npm run typecheck --workspace @insurance-operations/web",
-    "verify:web": "npm run format:check:web && npm run lint:web && npm run typecheck:web && npm run test:web && npm run build:web"
+    "verify:web": "npm run format:check:web && npm run lint:web && npm run typecheck:web && npm run test:web && npm run build:web",
+    "dev:mobile": "npm run start --workspace @insurance-operations/mobile",
+    "mobile:ios": "npm run ios --workspace @insurance-operations/mobile",
+    "mobile:android": "npm run android --workspace @insurance-operations/mobile",
+    "typecheck:mobile": "npm run typecheck --workspace @insurance-operations/customer-core && npm run typecheck --workspace @insurance-operations/mobile",
+    "test:mobile": "npm run test --workspace @insurance-operations/mobile"
   }
 }

@@ -72,7 +72,9 @@ availability, change service areas or bypass existing booking/consent gates.
   end. Mid-period tier switching is disabled to prevent resetting the included
   allowance through Stripe price changes. After cancellation finishes, customers
   can choose a new package; purchased-hour balances remain.
-- All new asynchronous states use the same circular `LoadingSpinner`, with a
+- Full-page route fallbacks use the shared centered `LoadingScreen`; owner
+  commands and acceptance are in [Loading screens](loading-screens.md).
+  Inline asynchronous states use the circular `LoadingSpinner`, with a
   descriptive status, disabled actions and stable surrounding layout. Sign-in,
   MFA and Operations connection use the same spinner. Reduced-motion preferences
   slow the spinner and remove decorative transitions.
@@ -89,11 +91,11 @@ availability, change service areas or bypass existing booking/consent gates.
 
 Add these variables to the API environment, with secret values kept in the
 provider's secret store. Existing customer portal, MFA and database settings still
-apply. Billing uses one configured HVAC business/merchant, not Stripe Connect.
+apply. Billing uses the existing authenticated customer or administrator's
+business context and one configured Stripe sandbox account, not Stripe Connect.
 
 ```dotenv
 BILLING_ENABLED=false
-BILLING_MERCHANT_AGENCY_ID=
 STRIPE_LIVE_MODE=false
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
@@ -104,8 +106,14 @@ STRIPE_COMPLETE_PRICE_ID=
 STRIPE_PORTAL_CONFIGURATION_ID=
 ```
 
-`BILLING_MERCHANT_AGENCY_ID` is the existing business's agency UUID. It must match
-the development/customer context. The web server needs its existing
+The business is resolved automatically from the signed-in customer's stored
+account; administrator labor entries use the authenticated administrator's
+business. Client requests cannot select another business or customer account.
+Billing rows retain their account/business foreign keys, and webhook processing
+uses the saved Stripe customer binding. `BILLING_MERCHANT_AGENCY_ID` is no longer
+used and can be removed from existing environments after deploying this change.
+No new migration is required for automatic business resolution; the original
+billing migration 0020 is still required. The web server needs its existing
 `NEXT_PUBLIC_API_BASE_URL` and server-only `CUSTOMER_PORTAL_SECRET`; no Stripe
 secret or publishable key is exposed to the browser. Set the API `WEB_ORIGIN` to
 the intended website origin for Checkout and portal return URLs.
@@ -219,8 +227,12 @@ Manual acceptance, still pending:
 1. Desktop and 320px/mobile: package cards, calculator, account balances, history
    overflow, keyboard/focus, reduced motion, spinner/status text and pending-action
    disabling. Refresh/page navigation must not flash invented balances.
-2. Anonymous `/billing` → sign-in/signup → MFA → `/billing`. Another account or
-   business must not see or spend the first homeowner's hours.
+2. With `BILLING_MERCHANT_AGENCY_ID` unset, enable billing with the sandbox
+   settings above. Confirm startup and `/api/v1/billing/plans` reports
+   `checkout_enabled=true`. Anonymous `/billing` → sign-in/signup → MFA →
+   `/billing`. Confirm billing resolves the account's existing business. Another
+   account or business must not see, cancel or spend the first homeowner's hours;
+   administrator labor entries must reject another business's appointment.
 3. Buy a package with Stripe test card `4242 4242 4242 4242`, a future expiry and
    any three-digit CVC. Confirm its initial price is collected immediately;
    cancel, decline and an unpaid subscription must not grant package hours.

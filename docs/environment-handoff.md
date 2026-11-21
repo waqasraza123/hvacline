@@ -92,11 +92,19 @@ Google's OAuth client must register the redirect URI above exactly. The Resend w
 | Render API                     | `APP_ENVIRONMENT`          | `development`                                                                                      |
 | Render API                     | `API_HOST`                 | `0.0.0.0`                                                                                          |
 | Render API                     | `API_PORT`                 | `10000`                                                                                            |
-| Render API                     | `WEB_ORIGIN`               | `https://hvacline.online`, if this is the exact browser origin; use the actual origin if different |
+| Render API                     | `WEB_ORIGIN`               | `https://www.hvacline.online` for the reported public browser origin; use the actual origin if different |
 | Vercel frontend                | `NEXT_PUBLIC_API_BASE_URL` | `https://api.hvacline.online`                                                                      |
 | Render API and Vercel frontend | `CUSTOMER_PORTAL_SECRET`   | The same existing server-only customer-portal secret                                               |
 
 Keep the existing database, identity, portal/voice feature flags and ElevenLabs credentials. The new booking limits do not require replacing them. All application environments remain development-only despite hosting dashboards labelling the deployment environment Production.
+
+The API allows the single exact `WEB_ORIGIN`. The apex and `www` hosts are
+different origins; do not enter a comma-separated list or a page path. After
+editing the API service's environment in Render, choose **Save and deploy** to
+apply the value to the running service. Saving without deployment does not
+change the running API. This environment-only correction requires no frontend
+source change or Vercel redeployment. Public GHL demo acceptance and the exact
+deferred header command are in `docs/gohighlevel-public-demo.md`.
 
 ## Deployment and owner checks
 

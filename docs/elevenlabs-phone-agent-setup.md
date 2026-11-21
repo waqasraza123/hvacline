@@ -2,6 +2,14 @@
 
 # ElevenLabs Phone Agent Setup
 
+The [Multilingual AI Voice registry](multilingual-voice.md) reports additional
+telephone languages as unsupported in this revision. Browser/native verification
+does not establish localized phone disclosure, consent or booking acceptance.
+Keep the existing English agent and eight-tool workflow, explain unavailable
+language requests and offer the existing safe staff/callback path. Do not
+disconnect/recreate calls, change hosted agents or bypass transfer restrictions
+to simulate switching. All new language/runtime acceptance is **UNVERIFIED**.
+
 Create a private phone agent separate from the browser agent. Use controlled test
 data for owner acceptance. See [current deployment and owner checks](customer-data-requirements.md)
 for the removal of fictional-data requirements and the required schema update.
@@ -23,6 +31,10 @@ for the removal of fictional-data requirements and the required schema update.
   `/api/v1/providers/elevenlabs/post-call`.
 
 ## Agent behavior
+
+For the optional GHL calendar demonstration, apply the current eight-tool HVAC
+contract and [GHL demo additions](gohighlevel-voice-demo.md#inbound-demo-prompt-additions).
+The historical sequence below does not replace that booking contract.
 
 The first message must disclose that the caller is speaking to AI and that provider
 processing occurs. Ask

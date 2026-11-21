@@ -1,8 +1,14 @@
+import {
+  intakePayload,
+  type ConfirmationInput,
+  type LanguageCode,
+  type VoiceLanguageSession,
+  parseVoiceLanguageSession,
+} from "@insurance-operations/customer-core";
 import type {
   ConfirmedConversationIntake,
   ConversationInputMode,
   ConversationSessionAuthorization,
-  ConversationTurn,
 } from "./contracts";
 
 type ErrorBody = Readonly<{
@@ -43,9 +49,11 @@ export async function authorizeConversationSession(
   apiBaseUrl: string,
   adminToken?: string,
   inputMode: ConversationInputMode = "VOICE",
+  websiteSlug?: string,
+  language?: LanguageCode,
 ): Promise<ConversationSessionAuthorization> {
   const response = await fetch(
-    `${apiBaseUrl}/api/v1/development/conversation-sessions`,
+    conversationApiPath(apiBaseUrl, "conversation-sessions", websiteSlug),
     {
       method: "POST",
       headers: {
@@ -54,6 +62,7 @@ export async function authorizeConversationSession(
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({
+        ...(language ? { language } : {}),
         input_mode: inputMode,
         ai_disclosure_accepted: true,
         microphone_consent_granted: inputMode === "VOICE",
@@ -103,6 +112,7 @@ export async function authorizeConversationSession(
         sessionId,
         "FAILED",
         adminToken,
+        websiteSlug,
       ).catch(() => undefined);
     }
     throw new ConversationApiError(
@@ -110,7 +120,15 @@ export async function authorizeConversationSession(
       "The conversation service returned invalid data",
     );
   }
+  let voiceLanguage: VoiceLanguageSession | undefined;
+  try {
+    voiceLanguage = parseVoiceLanguageSession(body.voice_language);
+  } catch {
+    await endConversationSession(apiBaseUrl, sessionId, "FAILED", adminToken, websiteSlug).catch(() => undefined);
+    throw new ConversationApiError(502, "The conversation service returned invalid language authorization.");
+  }
   return {
+    ...(voiceLanguage ? { voiceLanguage } : {}),
     sessionId,
     provider,
     websocketPath,
@@ -128,9 +146,14 @@ export async function endConversationSession(
   sessionId: string,
   outcome: "COMPLETED" | "INTERRUPTED" | "FAILED",
   adminToken?: string,
+  websiteSlug?: string,
 ): Promise<boolean> {
   const response = await fetch(
-    `${apiBaseUrl}/api/v1/development/conversation-sessions/${sessionId}/end`,
+    conversationApiPath(
+      apiBaseUrl,
+      `conversation-sessions/${sessionId}/end`,
+      websiteSlug,
+    ),
     {
       method: "POST",
       headers: {
@@ -155,50 +178,24 @@ export async function endConversationSession(
   return body.review_available;
 }
 
-export type ConfirmationInput = Readonly<{
-  sessionId: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  intakeIntent: string;
-  transcript: readonly ConversationTurn[];
-  idempotencyKey: string;
-  addressLine1: string;
-  city: string;
-  stateCode: string;
-  postalCode: string;
-  serviceKind: string;
-  preferredWindow: string;
-  hazardousCondition: boolean;
-  spokenConfirmation?: boolean;
-}>;
-
-export function intakePayload(input: ConfirmationInput) {
-  return {
-    conversation_session_id: input.sessionId,
-    customer: {
-      full_name: input.fullName,
-      email: input.email || null,
-      phone: input.phone || null,
-      address: {
-        line1: input.addressLine1,
-        city: input.city,
-        state_code: input.stateCode,
-        postal_code: input.postalCode,
-        country_code: "US",
-      },
-    },
-    intake_intent: input.intakeIntent,
-    service: {
-      kind: input.serviceKind,
-      equipment_issue: input.intakeIntent,
-      preferred_window: input.preferredWindow,
-      hazardous_condition: input.hazardousCondition,
-    },
-    spoken_confirmation: input.spokenConfirmation ?? false,
-    transcript: input.transcript,
-  };
+export function conversationApiPath(
+  baseUrl: string,
+  path: string,
+  websiteSlug?: string,
+): string {
+  if (websiteSlug !== undefined) {
+    if (
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(websiteSlug) ||
+      websiteSlug.length > 64
+    )
+      throw new Error("Invalid website slug");
+    return `/api/websites/${websiteSlug}/${path}`;
+  }
+  return `${baseUrl}/api/v1/development/${path}`;
 }
+
+export { intakePayload } from "@insurance-operations/customer-core";
+export type { ConfirmationInput } from "@insurance-operations/customer-core";
 
 export async function confirmConversationIntake(
   apiBaseUrl: string,

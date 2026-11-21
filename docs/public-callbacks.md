@@ -1,5 +1,14 @@
 # Public callback requests — UNVERIFIED
 
+## SMS-capable numbers — November7,2026 — UNVERIFIED
+
+Owner now authorizes SMS verification for US mobile, landline and VoIP numbers.
+The adapter retains lookup identity/region/carrier-error checks but removes its
+line-type restriction; correct code verification remains mandatory. This
+supersedes the mobile-only policy below. No new migration or setting. Deploy
+both backend and frontend after publication; checks and runtime remain unverified.
+Owner commands/manual checks: [SMS-capable numbers](sms-capable-demo-numbers.md).
+
 ## Mobile-only production hardening — November5,2026 — UNVERIFIED
 
 Owner clarifies public fictional demo calls, with mobile numbers only. New

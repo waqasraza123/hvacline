@@ -93,12 +93,14 @@ export async function requestApi<T>(
   path: string,
   method = "GET",
   body?: unknown,
+  idempotencyKey?: string,
 ): Promise<T> {
   const response = await fetch(`${baseUrl}/api/v1/development/${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",
       "X-Demo-Admin-Token": token,
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
     cache: "no-store",

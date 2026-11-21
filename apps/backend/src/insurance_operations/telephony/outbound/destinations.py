@@ -13,11 +13,15 @@ def normalize_phone_number(value: str) -> str:
     if E164.fullmatch(value):
         return value
     if re.fullmatch(r"\+?[0-9 ().-]+", value) is None:
-        raise ValueError("Use a phone number without extensions or dialing instructions")
+        raise ValueError(
+            "Use a phone number without extensions or dialing instructions"
+        )
     try:
         number = phonenumbers.parse(value, "US")
     except phonenumbers.NumberParseException:
-        raise ValueError("Use a complete phone number including its area code") from None
+        raise ValueError(
+            "Use a complete phone number including its area code"
+        ) from None
     normalized = phonenumbers.format_number(number, phonenumbers.PhoneNumberFormat.E164)
     if number.extension or E164.fullmatch(normalized) is None:
         raise ValueError("Use a complete phone number without an extension")
@@ -35,6 +39,7 @@ def validate_us_destination(value: str) -> None:
         phonenumbers.PhoneNumberType.FIXED_LINE,
         phonenumbers.PhoneNumberType.MOBILE,
         phonenumbers.PhoneNumberType.FIXED_LINE_OR_MOBILE,
+        phonenumbers.PhoneNumberType.VOIP,
     }
     if (
         number.country_code != 1
@@ -44,7 +49,7 @@ def validate_us_destination(value: str) -> None:
         raise ApiError(
             status_code=422,
             code="DEMO_DESTINATION_UNSUPPORTED",
-            message="Only US mobile and landline destinations are supported.",
+            message="Only US mobile, landline and VoIP destinations are supported.",
             details={"field": "phone_number"},
         )
 

@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from insurance_operations.actors import ActorContext
 from insurance_operations.conversations.contracts import (
     ConversationProvider,
+    ConversationLanguageConfigurationError,
     ConversationProviderError,
 )
 from insurance_operations.conversations.schemas import (
@@ -40,6 +41,8 @@ from insurance_operations.database.models.operations import (
 )
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings
+from insurance_operations.websites.guards import active_website, session_website
+from insurance_operations.voice_languages import authorize_language, configuration, require_readback_language
 
 CONFIRM_INTAKE_ROUTE_KEY = "POST /api/v1/development/conversation-intakes"
 ACTIVE_SESSION_STATUSES = {
@@ -54,7 +57,7 @@ class ConversationService:
         *,
         session_factory: sessionmaker[Session],
         settings: ApiSettings,
-        provider: ConversationProvider,
+        provider: ConversationProvider | None,
     ) -> None:
         self._session_factory = session_factory
         self._settings = settings
@@ -65,6 +68,9 @@ class ConversationService:
         *,
         actor: ActorContext,
         request: ConversationSessionCreateInput,
+        website_id: UUID | None = None,
+        website_agent_binding_id: UUID | None = None,
+        website_version_id: UUID | None = None,
     ) -> ConversationSessionResponse:
         if not request.ai_disclosure_accepted:
             raise ApiError(
@@ -94,13 +100,41 @@ class ConversationService:
         )
         with self._session_factory() as session, session.begin():
             self._lock_agency(session, actor.agency_id)
+            if website_id is not None and request.language not in {None, "en"}:
+                raise ApiError(status_code=409, code="VOICE_LANGUAGE_UNAVAILABLE", message="This website agent has no verified multilingual configuration.")
+            language_config = configuration(session, actor.agency_id)
+            language = authorize_language(self._settings, actor.agency_id,
+                language_config, request.language, request.voice_channel) if website_id is None else {
+                    "language": "en", "allowed_languages": ["en"], "automatic_switching": False, "overrides": None}
             self._expire_stale_sessions(session, actor.agency_id, now)
             self._enforce_concurrency_limit(session, actor, now)
             self._enforce_daily_limit(session, actor.agency_id, now)
+            capabilities: dict[str, bool] = {}
+            if website_id is not None:
+                if website_agent_binding_id is None or website_version_id is None:
+                    raise self._session_state_conflict()
+                website = active_website(
+                    session,
+                    actor.agency_id,
+                    website_id,
+                    website_agent_binding_id,
+                    website_version_id,
+                )
+                capabilities = {
+                    "knowledge": True,
+                    "lead_capture": website.lead_capture_enabled,
+                    "booking": False,
+                    "memory": False,
+                }
             conversation_session = ConversationSession(
+                website_id=website_id,
+                website_agent_binding_id=website_agent_binding_id,
+                website_version_id=website_version_id,
+                website_capabilities=capabilities,
                 agency_id=actor.agency_id,
                 initiated_by=actor.app_user_id,
                 status=ConversationSessionStatus.REQUESTING.value,
+                provider_metadata={"voice_language": language},
                 input_mode=request.input_mode,
                 disclosure_accepted_at=now,
                 microphone_consent_at=(
@@ -117,8 +151,16 @@ class ConversationService:
             conversation_session_id = conversation_session.id
 
         try:
+            if self._provider is None:
+                raise ConversationProviderError("Provider unavailable")
+            if language["overrides"] is not None:
+                validate_language = getattr(self._provider, "validate_language_configuration", None)
+                if not callable(validate_language):
+                    raise ConversationLanguageConfigurationError("Provider language verification is unavailable")
+                validate_language(language_config, request.voice_channel)
             grant = self._provider.authorize_session(input_mode=request.input_mode)
         except ConversationProviderError as error:
+            language_failure = isinstance(error, ConversationLanguageConfigurationError)
             with self._session_factory() as session, session.begin():
                 failed_session = session.get(
                     ConversationSession,
@@ -127,12 +169,21 @@ class ConversationService:
                 )
                 if failed_session is not None:
                     failed_session.status = ConversationSessionStatus.FAILED.value
-                    failed_session.failure_code = "PROVIDER_UNAVAILABLE"
+                    failed_session.failure_code = (
+                        "VOICE_LANGUAGE_PROVIDER_SETUP_REQUIRED"
+                        if language_failure else "PROVIDER_UNAVAILABLE"
+                    )
                     failed_session.ended_at = datetime.now(UTC)
             raise ApiError(
-                status_code=503,
-                code="CONVERSATION_PROVIDER_UNAVAILABLE",
-                message="The conversation service is temporarily unavailable",
+                status_code=409 if language_failure else 503,
+                code=("VOICE_LANGUAGE_PROVIDER_SETUP_REQUIRED" if language_failure
+                    else "CONVERSATION_PROVIDER_UNAVAILABLE"),
+                message=(
+                    "Language and voice provider setup could not be verified. "
+                    "Ask staff to review Languages & Voice."
+                    if language_failure
+                    else "The conversation service is temporarily unavailable"
+                ),
             ) from error
 
         authorized_at = datetime.now(UTC)
@@ -144,6 +195,7 @@ class ConversationService:
             )
             if authorized_session is None:
                 raise RuntimeError("conversation session was not persisted")
+            session_website(session, authorized_session)
             if (
                 authorized_session.status != ConversationSessionStatus.REQUESTING.value
                 or authorized_session.authorization_expires_at <= authorized_at
@@ -151,13 +203,17 @@ class ConversationService:
                 raise ApiError(
                     status_code=409,
                     code="CONVERSATION_SESSION_NOT_ACTIVE",
-                    message="The conversation was closed before authorization completed",
+                    message=(
+                        "The conversation was closed before authorization completed"
+                    ),
                 )
             authorized_session.status = ConversationSessionStatus.AUTHORIZED.value
             authorized_session.authorized_at = authorized_at
             authorized_session.provider_metadata = grant.metadata.as_storage_value()
+            authorized_session.provider_metadata = {**authorized_session.provider_metadata, "voice_language": language}
 
         return ConversationSessionResponse(
+            voice_language=language,
             session_id=conversation_session_id,
             input_mode=request.input_mode,
             connection=ConversationConnection(
@@ -255,6 +311,10 @@ class ConversationService:
             ):
                 conversation_session.ended_at = conversation_session.ended_at or now
 
+            from insurance_operations.recovery.domain import detect_terminal
+
+            session.flush()
+            detect_terminal(session, actor.agency_id, conversation_id=conversation_session.id)
             return ConversationEndResponse(
                 session_id=conversation_session.id,
                 status=conversation_session.status,
@@ -304,6 +364,7 @@ class ConversationService:
                 existing_record = session.scalar(
                     select(IdempotencyRecord)
                     .where(
+                        IdempotencyRecord.agency_id == actor.agency_id,
                         IdempotencyRecord.actor_scope_type == "APP_USER",
                         IdempotencyRecord.actor_scope_id == actor.app_user_id,
                         IdempotencyRecord.route_key == CONFIRM_INTAKE_ROUTE_KEY,
@@ -328,6 +389,20 @@ class ConversationService:
                     code="CONVERSATION_SESSION_EXPIRED",
                     message="The conversation confirmation window has expired",
                 )
+            if conversation_session.website_id is not None:
+                session_website(session, conversation_session, "lead_capture")
+                if request.service is not None:
+                    raise ApiError(
+                        status_code=403,
+                        code="WEBSITE_CAPABILITY_DISABLED",
+                        message="HVAC booking is not enabled for this website session.",
+                    )
+                if getattr(request, "explicit_confirmation", False) is not True:
+                    raise ApiError(
+                        status_code=422,
+                        code="WEBSITE_CONFIRMATION_REQUIRED",
+                        message="Review and explicitly confirm the website inquiry.",
+                    )
             live_confirmation = (
                 (
                     request.spoken_confirmation
@@ -353,6 +428,7 @@ class ConversationService:
             ):
                 raise self._session_state_conflict()
 
+            require_readback_language(conversation_session, request.readback_language)
             customer = customer_from_input(request.customer, actor)
             session.add(customer)
             session.flush()
@@ -397,6 +473,9 @@ class ConversationService:
                 )
                 session.add(service_request)
                 session.flush()
+                from insurance_operations.recovery.domain import detect_request
+
+                detect_request(session, service_request)
                 session.add(
                     AuditEvent(
                         agency_id=actor.agency_id,
@@ -643,9 +722,12 @@ def replay_intake_confirmation(
 
 
 def request_fingerprint(request: ConversationIntakeConfirmationInput) -> str:
+    excluded = {"service"} if request.service is None else set()
+    if request.readback_language == "en":
+        excluded.add("readback_language")
     canonical_request = json.dumps(
         request.model_dump(
-            mode="json", exclude={"service"} if request.service is None else set()
+            mode="json", exclude=excluded
         ),
         sort_keys=True,
         separators=(",", ":"),

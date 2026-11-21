@@ -1,46 +1,50 @@
 <p align="center">
-  <img src="apps/web/public/icon.svg" alt="HVACLine AI logo" width="96" height="96">
-</p>
-
-<h1 align="center">HVACLine AI</h1>
-
-<p align="center">
-  <strong>Turn missed calls into HVAC bookings.</strong><br>
-  An AI receptionist for U.S. heating and air businesses.
+  <img src="docs/assets/hvacline-banner.svg" alt="HVACLine AI — Turn missed calls into HVAC bookings." width="100%">
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/HVAC-F97316?style=flat-square" alt="HVAC">
-  <img src="https://img.shields.io/badge/AI_Receptionist-18181B?style=flat-square" alt="AI receptionist">
-  <img src="https://img.shields.io/badge/Appointment_Booking-18181B?style=flat-square" alt="Appointment booking">
+  <strong>AI receptionist and appointment booking for HVAC businesses.</strong><br>
+  Answer customer questions, capture service requests, and keep bookings moving.
 </p>
 
 <p align="center">
-  <a href="https://elevenlabs.io/"><img src="https://img.shields.io/badge/ElevenLabs-18181B?style=for-the-badge&amp;logo=elevenlabs&amp;logoColor=white" alt="ElevenLabs voice AI"></a>
-  <a href="https://www.twilio.com/"><img src="https://img.shields.io/badge/Twilio-F22F46?style=for-the-badge&amp;logo=twilio&amp;logoColor=white" alt="Twilio telephone integration"></a>
-  <a href="docs/whatsapp-inbound-calling.md"><img src="https://img.shields.io/badge/WhatsApp-25D366?style=for-the-badge&amp;logo=whatsapp&amp;logoColor=white" alt="WhatsApp inbound voice integration"></a>
+  <a href="https://hvacline.online">Visit HVACLine</a> ·
+  <a href="https://www.hvacline.online/operations">Dashboard</a> ·
+  <a href="https://www.hvacline.online/ai-lead-recovery">Try Yourself</a> ·
+  <a href="https://www.hvacline.online/multilingual-ai-voice">Try Multilingual Demo</a> ·
+  <a href="LICENSE">Proprietary license</a>
 </p>
 
-HVACLine collects service requests, answers business-approved questions, and guides customers toward an available appointment while your team is on the job.
+<p align="center">
+  <a href="https://reactnative.dev"><img src="docs/assets/react-native-logo.svg" alt="React Native logo" width="40" height="36"></a><br>
+  <a href="https://reactnative.dev"><img src="https://img.shields.io/badge/React_Native-0.88.1-20232A?logo=react&amp;logoColor=61DAFB" alt="React Native 0.88.1"></a>
+  <a href="https://expo.dev"><img src="https://img.shields.io/badge/Expo-SDK_58-000020?logo=expo&amp;logoColor=white" alt="Expo SDK 58"></a>
+</p>
 
-## What it does
+## Features
 
-- **Meet customers where they are.** Browser chat and voice, with telephone and inbound WhatsApp voice integrations.
-- **Capture the job details.** Contact information, service address, equipment issue, requested service and preferred time.
-- **Book against real availability.** Service areas, business hours and technician schedules determine offered slots; customers explicitly confirm before booking.
-- **Keep the team informed.** One operations workspace for requests, appointments, calls, callbacks and handoffs.
-- **Support returning customers.** Appointment history, rescheduling and optional customer-controlled memory. Google Calendar sync and booking emails/reminders are opt-in integrations.
+- **Voice & chat:** Help customers through browser conversations, telephone, and inbound WhatsApp voice.
+- **Multilingual AI Voice · Preview:** Explore a fictional [multilingual HVAC conversation](https://www.hvacline.online/multilingual-ai-voice), switch languages during intake, and keep customer details and booking confirmations together.
+- **Appointment booking:** Match requests to service areas, business hours, and technician availability, with customer confirmation.
+- **Service intake:** Collect contact details, service addresses, equipment issues, and preferred appointment times.
+- **Operations dashboard:** Manage requests, appointments, calls, callbacks, and team handoffs in one workspace.
+- **AI Lead Recovery · Preview:** Explore missed-call follow-up and unfinished bookings in an interactive dashboard demo.
+- **Customer accounts:** Appointment history, rescheduling, authenticator MFA, and optional customer-controlled memory.
+- **iOS & Android app · Preview:** An Expo and React Native [customer app](apps/mobile) for voice/chat booking, authenticator MFA, appointments, and rescheduling.
+- **Business knowledge:** Answer from approved FAQs and route hazardous or unsupported requests to staff.
+- **Calendar & reminders:** Optional Google Calendar sync and booking emails/reminders.
+- **Voice AI websites · Preview:** Customize three templates, save drafts, publish versions, and restore previous content.
+- **GoHighLevel · Preview:** Sync confirmed leads, route calendar bookings, and add contact summaries.
+- **Maintenance billing · Sandbox:** Stripe packages, purchased labor hours, and billing history.
 
-## From request to appointment
+## Multilingual AI Voice · Preview
 
-1. A customer describes the issue and reviews their details with the receptionist.
-2. HVACLine checks the configured service area and schedule, then holds an available time.
-3. The customer confirms, and the saved appointment appears in the operations workspace.
+Language targets: **English (en), Spanish (es), French (fr), Arabic (ar), Hindi (hi), and Mandarin Chinese (zh)**. **Urdu (ur)** is conditional on verified support across the configured speech recognition, language model, voice and agent.
 
-Answers stay within approved business information. Hazards and unsupported requests go to staff; the receptionist does not diagnose equipment or invent prices. The application stores no raw audio.
+English remains the existing default. Additional browser and mobile languages require configured ElevenLabs support and channel-specific verification. Additional inbound telephone and lead-recovery languages remain unsupported in this revision. The public demo uses clearly labeled fictional text, without real calls or generated speech.
 
-## Explore
+Live language quality and runtime acceptance are **UNVERIFIED**. See [language availability and setup](docs/multilingual-voice.md).
 
-[Setup guide](docs/development-setup.md) · [Browser chat & voice](docs/customer-chat.md) · [Telephone](docs/hvacline-live-validation.md) · [WhatsApp voice](docs/whatsapp-inbound-calling.md) · [Calendar & reminders](docs/calendar-and-booking-messages.md) · [Architecture](docs/hvacline-architecture.md)
+## License
 
-Optional development-only [local browser conversations](docs/local-browser-voice.md) use whisper.cpp, Ollama and Piper; implementation and runtime acceptance remain unverified.
+**Proprietary. All rights reserved.** Any use, including free or noncommercial use, requires prior written permission. See [LICENSE](LICENSE) for full terms and exceptions.

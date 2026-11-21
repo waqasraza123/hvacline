@@ -15,6 +15,26 @@ import type { VoiceAppointment } from "./voice-booking";
 
 afterEach(() => vi.useRealTimers());
 
+it("keeps GHL creation uncertainty unresolved even when the API returns a conflict", () => {
+  const failure = bookingFailure(
+    "confirm_appointment",
+    new OperationsApiError(
+      409,
+      "Review original appointment",
+      "GHL_APPOINTMENT_CREATION_UNKNOWN",
+    ),
+  );
+  expect(failure).toMatchObject({ uncertain: true, staffReview: true });
+  expect(failure.message).toContain("staff review");
+  expect(
+    bookingPresentation(
+      { ...INITIAL_BOOKING_PROGRESS, failure },
+      undefined,
+      Date.now(),
+    ).message,
+  ).toContain("original reservation reference");
+});
+
 const now = Date.parse("2026-11-02T12:00:00Z");
 const appointment: VoiceAppointment = {
   appointment: {

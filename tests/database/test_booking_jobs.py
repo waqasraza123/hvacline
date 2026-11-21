@@ -79,7 +79,8 @@ def test_deadline_rolls_back_current_job_and_retry_keeps_completed_work(
         assert session.get(Agency, completed_id) is not None
         assert session.get(Agency, pending_id) is None
     with patch(
-        "insurance_operations.booking_jobs.collect_booking_jobs", return_value=[retry_job]
+        "insurance_operations.booking_jobs.collect_booking_jobs",
+        return_value=[retry_job],
     ):
         assert process_booking_jobs(sessions) == JobBatchResult(processed=1)
     with sessions() as session:

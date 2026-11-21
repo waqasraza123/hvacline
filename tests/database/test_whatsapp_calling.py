@@ -307,7 +307,8 @@ def test_whatsapp_inbound_call_is_scoped_consented_idempotent_and_persisted(
                 )
                 assert reservation.status_code == 200, reservation.text
                 assert reservation.json()["appointment"]["status"] == "HELD"
-                confirm_url = f"{root}/booking/appointments/{reservation.json()['appointment']['id']}/confirm"
+                appointment_id = reservation.json()["appointment"]["id"]
+                confirm_url = f"{root}/booking/appointments/{appointment_id}/confirm"
                 assert (
                     await client.post(
                         confirm_url,

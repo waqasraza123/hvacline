@@ -78,11 +78,24 @@ MESSAGES = {
     DemoCallStatus.RESERVED: "Your request is reserved. Do not submit another request.",
     DemoCallStatus.DIALING: "The call was requested. Your phone may ring shortly.",
     DemoCallStatus.IN_PROGRESS: "Your conversation with Line is in progress.",
-    DemoCallStatus.PROCESSING: "The call has ended. Its final status is being processed.",
-    DemoCallStatus.UNKNOWN: "The call outcome is unconfirmed. Do not request another call; contact the demo owner.",
-    DemoCallStatus.FAILED: "The call could not be completed. No automatic redial will occur.",
-    DemoCallStatus.REJECTED: "The call was declined or busy. No automatic redial will occur.",
-    DemoCallStatus.UNANSWERED: "The call was not answered. No automatic redial will occur.",
+    DemoCallStatus.PROCESSING: (
+        "The call has ended. Its final status is being processed."
+    ),
+    DemoCallStatus.UNKNOWN: (
+        "The call outcome is unconfirmed. Do not request "
+        "another call; contact the demo owner."
+    ),
+    DemoCallStatus.FAILED: (
+        "The call could not be completed. No automatic redial will occur."
+    ),
+    DemoCallStatus.REJECTED: (
+        "The call was declined or busy. No automatic redial will occur."
+    ),
+    DemoCallStatus.UNANSWERED: (
+        "The call was not answered. No automatic redial will occur."
+    ),
     DemoCallStatus.COMPLETED: "The demo call ended. No appointment was booked.",
-    DemoCallStatus.DISCONNECTED: "The call disconnected. No automatic redial will occur.",
+    DemoCallStatus.DISCONNECTED: (
+        "The call disconnected. No automatic redial will occur."
+    ),
 }

@@ -1,5 +1,15 @@
 # Outbound AI demo calling with human transfer
 
+## SMS-capable US numbers — November 7, 2026 — UNVERIFIED
+
+Owner authorizes relaxing mobile-only verification. Carrier line type no longer
+blocks SMS; US VoIP/landline numbers can proceed when the lookup identity/region
+and carrier-error checks pass. SMS delivery and a correct provider-generated code
+are still mandatory. US destination validation now includes explicit VoIP types.
+This supersedes the mobile-only descriptions below. No new migration or setting;
+deploy both backend and frontend after publication. No checks or live SMS ran.
+Exact owner commands/manual checks: [SMS-capable numbers](sms-capable-demo-numbers.md).
+
 ## Workflows and additional tools — November 7, 2026 — UNVERIFIED
 
 Owner authorizes outbound agents with workflows and additional tools. Backend

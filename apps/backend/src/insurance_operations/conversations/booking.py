@@ -39,9 +39,13 @@ from insurance_operations.hvac.schemas import (
     ServiceRequestInput,
 )
 from insurance_operations.hvac.service import SchedulingService, unavailable
+from insurance_operations.websites.guards import session_website
+from insurance_operations.voice_languages import LanguageCode, require_readback_language
+from insurance_operations.conversations.language_readbacks import APPOINTMENT_TEMPLATES
 
 
 class BrowserIntakeDraft(BaseModel):
+    readback_language: LanguageCode = "en"
     customer: CustomerInput
     service: ServiceDetails
 
@@ -51,6 +55,7 @@ class BrowserAvailabilityInput(BaseModel):
 
 
 class BrowserReservationInput(BaseModel):
+    readback_language: LanguageCode = "en"
     team_key: str = Field(min_length=1, max_length=40)
     starts_at: datetime
     idempotency_key: str = Field(
@@ -59,6 +64,7 @@ class BrowserReservationInput(BaseModel):
 
 
 class BrowserAppointmentConfirmation(BaseModel):
+    readback_language: LanguageCode = "en"
     explicit_confirmation: bool
     transcript: list[ConversationTurn] = Field(default_factory=list, max_length=60)
     provider_history: str | None = Field(default=None, min_length=1, max_length=65_536)
@@ -76,8 +82,10 @@ class BrowserReservationResponse(BaseModel):
     readback: str
 
 
-def appointment_readback(appointment: AppointmentView, timezone: str) -> str:
+def appointment_readback(appointment: AppointmentView, timezone: str, language: LanguageCode = "en") -> str:
     local = appointment.starts_at.astimezone(ZoneInfo(timezone))
+    if language != "en":
+        return APPOINTMENT_TEMPLATES[language].format(time=local.strftime("%Y-%m-%d %H:%M"), timezone=timezone)
     spoken_time = local.strftime("%A, %B %d, %Y at %I:%M %p")
     return (
         f"Your appointment is temporarily held for {spoken_time}, "
@@ -106,6 +114,12 @@ def create_browser_booking_router(
         session: Session, actor: ActorContext, session_id: UUID
     ) -> ConversationSession:
         row = session.get(ConversationSession, session_id)
+        if (
+            row is not None
+            and row.agency_id == actor.agency_id
+            and row.initiated_by == actor.app_user_id
+        ):
+            session_website(session, row, "booking")
         if (
             row is None
             or row.agency_id != actor.agency_id
@@ -163,7 +177,7 @@ def create_browser_booking_router(
             return row
 
     def reservation_response(
-        actor: ActorContext, appointment: AppointmentView
+        actor: ActorContext, appointment: AppointmentView, language: LanguageCode = "en"
     ) -> BrowserReservationResponse:
         configuration = scheduling.configuration(actor.agency_id)["configuration"]
         if not isinstance(configuration, dict):
@@ -174,7 +188,7 @@ def create_browser_booking_router(
         return BrowserReservationResponse(
             appointment=appointment,
             timezone=timezone,
-            readback=appointment_readback(appointment, timezone),
+            readback=appointment_readback(appointment, timezone, language),
         )
 
     @router.post("/intake-readback")
@@ -182,17 +196,19 @@ def create_browser_booking_router(
         session_id: UUID, data: BrowserIntakeDraft, actor: Actor
     ) -> dict[str, object]:
         with sessions() as session:
-            require_live_session(session, actor, session_id)
+            require_readback_language(require_live_session(session, actor, session_id), data.readback_language)
         try:
             validated = ServiceRequestInput(
                 customer=data.customer, service=data.service, explicit_confirmation=True
             )
-            readback = intake_readback(validated)
+            readback = intake_readback(validated, data.readback_language)
         except ValueError as error:
             raise ApiError(
                 status_code=422,
                 code="INTAKE_INCOMPLETE",
-                message="Complete the callback number, U.S. address and service details.",
+                message=(
+                    "Complete the callback number, U.S. address and service details."
+                ),
             ) from error
         configuration = scheduling.configuration(actor.agency_id)["configuration"]
         timezone = (
@@ -240,12 +256,14 @@ def create_browser_booking_router(
         session_id: UUID, data: BrowserReservationInput, request: Request, actor: Actor
     ) -> BrowserReservationResponse:
         row = confirmed_request(actor, session_id)
+        with sessions() as session:
+            require_readback_language(require_live_session(session, actor, session_id), data.readback_language)
         appointment = scheduling.reserve(
             actor.agency_id,
-            ReservationInput(service_request_id=row.id, **data.model_dump()),
+            ReservationInput(service_request_id=row.id, **data.model_dump(exclude={"readback_language"})),
             UUID(request.state.correlation_id),
         )
-        return reservation_response(actor, appointment)
+        return reservation_response(actor, appointment, data.readback_language)
 
     @router.post(
         "/appointments/{appointment_id}/release", response_model=AppointmentView
@@ -279,6 +297,7 @@ def create_browser_booking_router(
     ) -> BrowserReservationResponse:
         row = confirmed_request(actor, session_id)
         with sessions() as session:
+            require_readback_language(require_live_session(session, actor, session_id), data.readback_language)
             appointment = scheduling._appointment(
                 session, actor.agency_id, appointment_id
             )
@@ -287,7 +306,7 @@ def create_browser_booking_router(
                     "This appointment does not belong to this conversation."
                 )
             result = reservation_response(
-                actor, AppointmentView.model_validate(appointment)
+                actor, AppointmentView.model_validate(appointment), data.readback_language
             )
             if appointment.status == "CONFIRMED":
                 return result
@@ -296,6 +315,7 @@ def create_browser_booking_router(
                 confirmation_history(data) if confirmation_history else data.transcript,
                 result.readback,
                 "confirm my appointment",
+                language=data.readback_language,
             )
         except ValueError as error:
             raise unavailable(str(error), "SPOKEN_CONFIRMATION_REQUIRED") from error

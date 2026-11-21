@@ -1,15 +1,21 @@
+import asyncio
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
+from insurance_operations.actors import ActorContext
 from insurance_operations.billing.catalog import PLANS, PaidPlanKey
 from insurance_operations.billing.gateway import StripeGateway
+from insurance_operations.billing.routes import create_billing_customer_router
 from insurance_operations.billing.service import BillingService
 from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.database.models.billing import (
@@ -19,7 +25,7 @@ from insurance_operations.database.models.billing import (
 )
 from insurance_operations.database.models.customer_account import CustomerAccount
 from insurance_operations.database.models.identity import Agency, AppUser
-from insurance_operations.errors import ApiError
+from insurance_operations.errors import ApiError, api_error_handler
 
 
 class SandboxStripe(StripeGateway):
@@ -132,12 +138,11 @@ def billing(
             )
             session.add(account)
             session.flush()
-            account_id, agency_id = account.id, agency.id
+            account_id = account.id
         settings = BillingSettings(
             _env_file=None,
             app_environment="test",
             billing_enabled=True,
-            billing_merchant_agency_id=agency_id,
             stripe_secret_key="sk_test_synthetic",
             stripe_webhook_secret="whsec_synthetic",
             stripe_product_id="prod_synthetic",
@@ -256,3 +261,95 @@ def test_canceling_an_unpaid_checkout_does_not_cancel_a_paid_package(
     service.cancel_package_checkout(account_id, request_id)
     assert not service.summary(account_id).checkout_pending
     assert service.summary(account_id).remaining_package_minutes == 180
+
+
+@pytest.mark.parametrize("other_business", [False, True])
+def test_automatic_business_resolution_keeps_customer_billing_isolated(
+    billing: tuple[BillingService, SandboxStripe, UUID], other_business: bool
+) -> None:
+    service, gateway, account_id = billing
+    request_id = uuid4()
+    service.create_topup(account_id, 1, 8500, request_id)
+    with service.sessions() as session, session.begin():
+        customer = session.get(CustomerAccount, account_id)
+        assert customer is not None
+        agency = session.get(Agency, customer.agency_id)
+        assert agency is not None
+        owner = ActorContext(
+            app_user_id=customer.app_user_id,
+            display_name="Fictional Homeowner",
+            agency_id=agency.id,
+            agency_name=agency.name,
+            agency_environment=agency.environment_kind,
+        )
+        if other_business:
+            agency = Agency(
+                name="Another Fictional HVAC",
+                slug=f"billing-isolation-{uuid4()}",
+                environment_kind="DEVELOPMENT",
+            )
+            session.add(agency)
+        user = AppUser(auth_subject=uuid4(), display_name="Another Homeowner")
+        session.add(user)
+        session.flush()
+        other_customer = CustomerAccount(
+            agency_id=agency.id,
+            app_user_id=user.id,
+            email=f"{uuid4()}@example.test",
+            password_hash="unused-synthetic",
+            created_at=datetime.now(UTC),
+        )
+        session.add(other_customer)
+        session.flush()
+        other_account_id = other_customer.id
+        other_actor = ActorContext(
+            app_user_id=user.id,
+            display_name=user.display_name,
+            agency_id=agency.id,
+            agency_name=agency.name,
+            agency_environment=agency.environment_kind,
+        )
+        other_billing = service._account(session, other_account_id)
+        assert other_billing.agency_id == other_actor.agency_id
+
+    def actor() -> ActorContext:
+        return owner
+
+    application = FastAPI()
+    application.add_exception_handler(ApiError, api_error_handler)
+    application.include_router(
+        create_billing_customer_router(service.settings, service.sessions, actor)
+    )
+
+    async def requests() -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            own = await client.get("/billing/status")
+            assert own.status_code == 200
+            assert own.json()["account_id"] == str(account_id)
+            assert own.json()["checkout_enabled"] is True
+            assert own.json()["remaining_package_minutes"] == 180
+
+            application.dependency_overrides[actor] = lambda: other_actor
+            other = await client.get("/billing/status")
+            assert other.status_code == 200
+            assert other.json()["account_id"] == str(other_account_id)
+            assert other.json()["remaining_package_minutes"] == 0
+            history = await client.get("/billing/history")
+            assert history.status_code == 200
+            assert history.json()["topups"] == []
+
+            cancel = await client.post(f"/billing/topups/{request_id}/cancel")
+            assert cancel.status_code == 404
+            assert cancel.json()["error"]["code"] == "TOPUP_MISSING"
+
+            mismatched = replace(owner, agency_id=uuid4())
+            application.dependency_overrides[actor] = lambda: mismatched
+            denied = await client.get("/billing/status")
+            assert denied.status_code == 404
+            assert denied.json()["error"]["code"] == "billing_unavailable"
+
+    asyncio.run(requests())
+    assert service.history(account_id)["topups"][0].status == "open"
+    assert gateway.topup_calls == 1

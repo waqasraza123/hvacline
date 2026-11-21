@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000" viewBox="0 0 1200 1000" fill="none">
+<defs>
+  <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0v50" stroke="#fff" stroke-opacity=".06"/></pattern>
+  <linearGradient id="panel" x1="460" y1="450" x2="950" y2="900" gradientUnits="userSpaceOnUse"><stop stop-color="#6c6b67"/><stop offset="1" stop-color="#303034"/></linearGradient>
+  <linearGradient id="wall" x1="190" y1="200" x2="900" y2="700" gradientUnits="userSpaceOnUse"><stop stop-color="#4a4845"/><stop offset="1" stop-color="#242426"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#f97316" stop-opacity=".18"/><stop offset="1" stop-color="#f97316" stop-opacity="0"/></radialGradient>
+</defs>
+<path fill="#222225" d="M0 0h1200v1000H0z"/><path fill="url(#grid)" d="M0 0h1200v1000H0z"/><ellipse cx="700" cy="590" rx="520" ry="420" fill="url(#glow)"/>
+<path d="m80 795 560-210 480 180-570 215Z" fill="#18181b"/>
+<path d="M190 432 536 223l362 159v291L537 845 190 679Z" fill="url(#wall)" stroke="#7a756d"/>
+<path d="m152 433 384-237 411 181-46 23-365-157-345 212Z" fill="#8f8980"/>
+<path d="m190 451 346-208v595L190 679Z" fill="#59564e"/><path d="m536 243 365 157v273L536 838Z" fill="#353536"/>
+<g stroke="#91897a" stroke-opacity=".4"><path d="m190 488 346-204M190 526l346-201M190 564l346-198M190 602l346-195M190 640l346-192M190 678l346-189M240 702l296-173M292 726l244-144M344 751l192-115M397 776l139-87"/></g>
+<path d="m257 476 174-102v224L257 699Z" fill="#191d21" stroke="#b7a88c" stroke-width="9"/>
+<path d="m262 551 167-99M341 426v222" stroke="#b7a88c" stroke-width="6"/><path d="m266 486 72-42v94l-72 42Z" fill="#7b8a88" opacity=".6"/>
+<path d="m608 421 147 65v169l-147 65Z" fill="#151719" stroke="#918b7d" stroke-width="7"/>
+<path d="m612 500 140 61M681 454v232" stroke="#918b7d" stroke-width="5"/>
+<path d="m603 767 216-118 222 94-214 127Z" fill="#0e0e10"/>
+<path d="m598 586 219-109 204 95v234L804 929 598 823Z" fill="url(#panel)" stroke="#aaa297" stroke-width="2"/>
+<path d="m598 586 219-109 204 95-217 117Z" fill="#b9b2a6"/>
+<path d="m804 689 217-117v234L804 929Z" fill="#3b3b3d"/>
+<ellipse cx="809" cy="584" rx="132" ry="62" fill="#2a2929" stroke="#e1d7c6" stroke-width="4"/>
+<ellipse cx="809" cy="584" rx="112" ry="51" stroke="#8c8880" stroke-width="2"/><ellipse cx="809" cy="584" rx="88" ry="40" stroke="#8c8880" stroke-width="2"/><ellipse cx="809" cy="584" rx="65" ry="29" stroke="#8c8880" stroke-width="2"/>
+<path d="m698 568 218 33m-169-59 125 84m-63-97v108m-84-90 167 71m-198-34h234" stroke="#aaa297" stroke-width="3"/><ellipse cx="809" cy="584" rx="17" ry="8" fill="#d5cabb"/>
+<g stroke="#222225" stroke-width="6"><path d="m620 643 158 79m-158-56 158 79m-158-56 158 79m-158-56 158 79m-158-56 158 79m-158-56 158 79m-158-56 158 79"/></g>
+<g stroke="#78766e" stroke-width="3"><path d="m834 712 160-87m-160 108 160-87m-160 108 160-87m-160 108 160-87m-160 108 160-87m-160 108 160-87m-160 108 160-87m-160 108 160-87"/></g>
+<path d="m650 787 88 44v25l-88-44Z" fill="#f97316"/><path d="m664 803 10 5m9 5 40 20" stroke="#252525" stroke-width="3"/>
+<g stroke="#f97316" stroke-width="1.5"><path d="M1020 356h77v285M1020 356h-60M1097 641h-60M165 858v51h337"/><circle cx="960" cy="356" r="6" fill="#f97316"/><circle cx="502" cy="909" r="6" fill="#f97316"/></g>
+<g fill="#b9b5ad" font-family="monospace" font-size="17" letter-spacing="3"><text x="65" y="85">SYSTEM / SERVICE / SUPPORT</text><text x="65" y="118" font-size="12">HVACLINE — ILLUSTRATED SERVICE SCENARIO</text><text x="855" y="951">FIG. 01 / COMFORT</text></g>
+</svg>

@@ -1,6 +1,6 @@
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid4
@@ -21,16 +21,21 @@ from insurance_operations.conversations.contracts import (
     ProviderSessionMetadata,
 )
 from insurance_operations.customer_access.mfa_crypto import hotp
-from insurance_operations.database.models.customer_account import CustomerAccount, CustomerLoginSession
-from insurance_operations.database.models.customer_mfa import (
-    CustomerMfaChallenge, CustomerMfaFactor, CustomerMfaRecoveryCode,
-)
 from insurance_operations.database.models.conversation import (
     ConversationIntake,
     ConversationSession,
     ConversationSessionStatus,
 )
 from insurance_operations.database.models.customer import Customer
+from insurance_operations.database.models.customer_account import (
+    CustomerAccount,
+    CustomerLoginSession,
+)
+from insurance_operations.database.models.customer_mfa import (
+    CustomerMfaChallenge,
+    CustomerMfaFactor,
+    CustomerMfaRecoveryCode,
+)
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
 from insurance_operations.database.models.identity import (
     Agency,
@@ -127,8 +132,15 @@ def development_conversation_api(
         app_user_id,
     )
     with Session(migrated_database) as session, session.begin():
-        accounts = select(CustomerAccount.id).where(CustomerAccount.agency_id == agency_id)
-        for model in (CustomerLoginSession, CustomerMfaRecoveryCode, CustomerMfaChallenge, CustomerMfaFactor):
+        accounts = select(CustomerAccount.id).where(
+            CustomerAccount.agency_id == agency_id
+        )
+        for model in (
+            CustomerLoginSession,
+            CustomerMfaRecoveryCode,
+            CustomerMfaChallenge,
+            CustomerMfaFactor,
+        ):
             session.execute(delete(model).where(model.account_id.in_(accounts)))
 
 
@@ -1039,9 +1051,17 @@ def test_customer_accounts_cannot_access_another_customers_booking(
         setup_status, setup = asyncio.run(send("auth/mfa/setup", {}, challenge))
         assert setup_status == 200
         assert isinstance(setup["secret"], str)
-        verified_status, verified = asyncio.run(send("auth/mfa/verify", {
-            "code": hotp(setup["secret"], int(datetime.now(UTC).timestamp() // 30)),
-        }, challenge))
+        verified_status, verified = asyncio.run(
+            send(
+                "auth/mfa/verify",
+                {
+                    "code": hotp(
+                        setup["secret"], int(datetime.now(UTC).timestamp() // 30)
+                    ),
+                },
+                challenge,
+            )
+        )
         assert verified_status == 200
         token = verified["session_token"]
         assert isinstance(token, str)

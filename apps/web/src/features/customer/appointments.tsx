@@ -34,36 +34,43 @@ export function CustomerAppointments({
   const mounted = useRef(false);
   const requestVersion = useRef(0);
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     const version = ++requestVersion.current;
+    return requestApi<unknown>("", "", "appointments")
+      .then((response) => {
+        const result = parseAppointments(response);
+        if (mounted.current && version === requestVersion.current) {
+          setData(result);
+          setNow(Date.now());
+          setError("");
+          setExpiredSession(false);
+        }
+      })
+      .catch((failure: unknown) => {
+        if (mounted.current && version === requestVersion.current) {
+          const expired =
+            failure instanceof OperationsApiError && failure.status === 401;
+          setExpiredSession(expired);
+          setError(
+            expired
+              ? "Your session has ended. Sign in again to see your appointments."
+              : "We couldn’t load your appointments. Please try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (mounted.current && version === requestVersion.current)
+          setLoading(false);
+      });
+  }, []);
+
+  function reload() {
     setLoading(true);
     setError("");
     setExpiredSession(false);
     setData(undefined);
-    try {
-      const result = parseAppointments(
-        await requestApi<unknown>("", "", "appointments"),
-      );
-      if (mounted.current && version === requestVersion.current) {
-        setData(result);
-        setNow(Date.now());
-      }
-    } catch (failure) {
-      if (mounted.current && version === requestVersion.current) {
-        const expired =
-          failure instanceof OperationsApiError && failure.status === 401;
-        setExpiredSession(expired);
-        setError(
-          expired
-            ? "Your session has ended. Sign in again to see your appointments."
-            : "We couldn’t load your appointments. Please try again.",
-        );
-      }
-    } finally {
-      if (mounted.current && version === requestVersion.current)
-        setLoading(false);
-    }
-  }, []);
+    void load();
+  }
 
   useEffect(() => {
     mounted.current = true;
@@ -74,7 +81,6 @@ export function CustomerAppointments({
     window.addEventListener("focus", focus);
     return () => {
       mounted.current = false;
-      ++requestVersion.current;
       window.removeEventListener("focus", focus);
     };
   }, [load]);
@@ -134,7 +140,7 @@ export function CustomerAppointments({
           type="button"
           className={styles.secondary}
           disabled={loading}
-          onClick={() => void load()}
+          onClick={reload}
         >
           <ProductIcon name="clock" />
           {loading ? "Refreshing…" : "Refresh bookings"}
@@ -160,11 +166,7 @@ export function CustomerAppointments({
               Sign in again
             </Link>
           ) : (
-            <button
-              type="button"
-              className="product-button"
-              onClick={() => void load()}
-            >
+            <button type="button" className="product-button" onClick={reload}>
               Try again
             </button>
           )}

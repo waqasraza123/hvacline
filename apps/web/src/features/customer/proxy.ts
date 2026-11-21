@@ -19,7 +19,8 @@ export async function requestBody(
   if (!request.headers.get("content-type")?.startsWith("application/json"))
     throw new CustomerBackendError(415, "Please send the form again.");
   const reader = request.body?.getReader();
-  if (!reader) throw new CustomerBackendError(400, "The form could not be read.");
+  if (!reader)
+    throw new CustomerBackendError(400, "The form could not be read.");
   const chunks: Uint8Array[] = [];
   let size = 0;
   while (true) {
@@ -28,7 +29,10 @@ export async function requestBody(
     size += value.byteLength;
     if (size > 65_536) {
       await reader.cancel();
-      throw new CustomerBackendError(413, "This request is too large. Send a smaller form.");
+      throw new CustomerBackendError(
+        413,
+        "This request is too large. Send a smaller form.",
+      );
     }
     chunks.push(value);
   }

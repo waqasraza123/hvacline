@@ -1,5 +1,85 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Professional presentation — November 21, 2026 — UNVERIFIED
+
+Further homepage refinement adds scoped typography/spacing, softer navigation
+and buttons, a framed Voice/Text demo and a full-width six-tag feature strip.
+Multilingual remains after WebRTC with its Preview caption. A concise HVAC
+workflow, refined recovery/phone sections, consistently dark closing CTA and
+clearer footer complete the page. The orange/charcoal brand, existing destinations
+and sign-in/consent/booking/provider behavior remain. Source is local only;
+no execution checks, services, publication or deployment ran. Exact source scope,
+owner commands and manual checklist: [homepage branding](homepage-branding.md).
+Implementation and visual/runtime acceptance remain **UNVERIFIED**.
+
+## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
+
+The authorized first UI pass removes duplicate provider/GitHub header branding
+on home, shortens hero supporting copy, adjusts responsive spacing and compacts
+all six existing badges while enlarging captions. Multilingual stays after
+WebRTC with its Preview label. Shared navigation now selects only the current
+pathname; home no longer highlights Dashboard. Exact source behavior, owner
+commands and responsive/theme/navigation manual checks:
+[homepage branding](homepage-branding.md#homepage-hierarchy-pass--november-21-2026--unverified).
+No checks/services/publication/deployment ran; implementation is **UNVERIFIED**.
+
+## Multilingual hero badge — November 21, 2026 — UNVERIFIED
+
+The hero now places Multilingual after WebRTC in the existing feature badge row,
+with a language/translation line icon and Language support · Preview caption.
+It reuses the current orange accents, badge surface, typography and wrapping.
+The standalone multilingual homepage card and its unused component/styles are
+removed. The separate demo route, Operations entry and README link remain.
+No language/channel availability or provider configuration changes.
+
+No tests/builds/linters/formatters/type checks/browser checks/services ran. Owner
+commands: `npm run test:web -- src/app/page.test.ts`, `npm run verify:web`.
+Manual: confirm the card is absent, badge/icon align with other tags on phone
+and desktop in both themes, no overflow, and Operations still opens the demo.
+Visual/runtime acceptance remains UNVERIFIED.
+
+## Broader business positioning — November 20, 2026 — UNVERIFIED
+
+The homepage now leads with “AI voice agents, built around your business.” and
+describes configurable voice, knowledge and workflows for business owners.
+HVACLine remains the brand. The conversation card and phone section explicitly
+identify the HVAC example; the closing CTA, footer, launcher and default/search
+sharing metadata use the broader positioning. The primary action remains
+Try Voice Chat at `/book`, including the closing CTA. Exact current copy:
+[homepage copy](homepage-copy.md). Older sections below are historical context.
+
+Source copy and the existing headline test expectations only; layout, links,
+phone number, recovery preview, authentication/consent, provider behavior and
+HVAC booking/safety boundaries remain. README/mobile branding is outside this
+change. Broader positioning does not add countries, languages, industry-specific
+implementations or public self-service setup.
+
+No tests/builds/linters/type checks/services/browser acceptance ran. Runtime and
+visual acceptance remain UNVERIFIED. Owner command: `npm run verify:web`.
+Manually inspect narrow phone/desktop headline wraps and both themes, example
+labels, closing/footer/launcher copy, existing CTA/phone/callback destinations,
+sign-in/consent separation and title/description/Open Graph text. Publication and
+deployment remain separate owner actions; no migration or provider setup needed.
+
+## Try Voice Chat is primary — November 9, 2026 — UNVERIFIED
+
+The hero now clearly offers Try Voice Chat as its primary action and explains
+that visitors speak in the browser after sign-in. Header and floating-launcher
+actions use the same wording and link directly to `/book`. The homepage card
+retains its Voice chat default; the customer workspace now defaults to Voice
+chat too, with Text chat still available before starting. Callback and inbound
+phone choices remain separate secondary hero actions.
+
+AI disclosure and microphone consent stay unchecked. Navigation does not request
+microphone access, start a provider connection or place a phone call. Existing
+session mode locks, text handoff/drafts and confirmations remain. No migration,
+environment or provider change is required. Source is local/unpublished and
+runtime-unverified; no tests/builds/lints/type checks, services or live sessions
+ran. Owner command: `npm run verify:web`. Manually check hero/header/launcher
+links, sign-in/MFA continuation, Voice default, consent/start/denied-mic behavior,
+silent Text chat, preserved drafts, active-session mode lock, callback separation
+and desktop/mobile light/dark layouts.
+
 ## Mobile verification — November5,2026 — UNVERIFIED
 
 Callback source adds a separate opt-in SMS verification step for a US
@@ -152,3 +232,12 @@ Manual checks after the owner starts or deploys the frontend:
 
 The owner authorized publication to `main` on October 31. Hosting deployment
 and runtime acceptance remain unverified; no deployment command was requested.
+## GoHighLevel hero badge — 2026-11-13
+
+The hero adds GoHighLevel with the qualifier `CRM sync · Preview`, alongside
+existing feature badges. Shared wrapping, theme and responsive styles are reused.
+The badge does not claim live acceptance; GHL defaults off pending setup and
+owner verification. No tests/builds/browser checks ran. Owner command:
+`npm run verify:web`; manually inspect badge wrapping at320/390/768/1440px in
+both themes, screen-reader labeling and the existing Voice/calling actions.
+

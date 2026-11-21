@@ -45,7 +45,11 @@ def upgrade() -> None:
             name="status_valid",
         ),
         sa.CheckConstraint(
-            "transfer_status IN ('not_requested','refer_accepted','failed','unconfirmed')",
+            (
+                "transfer_status IN "
+                "('not_requested','refer_accepted','failed','unconf"
+                "irmed')"
+            ),
             name="transfer_status_valid",
         ),
     )

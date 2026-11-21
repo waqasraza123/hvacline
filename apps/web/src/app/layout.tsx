@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { themeInitializationScript } from "@/components/theme-preference";
+import { ThemeSync } from "@/components/theme-sync";
 import "./styles.css";
 export const metadata: Metadata = {
   title: {
-    default: "HVACLine | Turn Missed Calls into HVAC Bookings",
+    default: "HVACLine | Customizable AI Voice Agents for Business",
     template: "%s | HVACLine AI",
   },
   description:
-    "Stop losing jobs to missed calls. HVACLine talks with homeowners, checks live appointment slots, and confirms HVAC bookings in one conversation.",
+    "Customizable AI voice agents for customer conversations, lead capture, and business workflows. Explore HVACLine’s HVAC voice and appointment-booking example.",
   openGraph: {
-    title: "HVACLine | Turn Missed Calls into HVAC Bookings",
+    title: "HVACLine | Customizable AI Voice Agents for Business",
     description:
-      "Stop losing jobs to missed calls. HVACLine talks with homeowners, checks live appointment slots, and confirms HVAC bookings in one conversation.",
+      "Customizable AI voice agents for customer conversations, lead capture, and business workflows. Explore HVACLine’s HVAC voice and appointment-booking example.",
     type: "website",
   },
   icons: {
@@ -26,8 +28,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{ __html: themeInitializationScript }}
+        />
+      </head>
+      <body>
+        <ThemeSync />
+        {children}
+      </body>
     </html>
   );
 }

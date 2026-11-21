@@ -26,6 +26,10 @@ from insurance_operations.settings import DatabaseSettings
 def enqueue_booking_notifications(
     session: Session, appointment: Appointment, kind: str = "CONFIRMATION"
 ) -> None:
+    from insurance_operations.recovery.domain import stop_for_booking
+    from insurance_operations.recovery.grants import attribution_for
+
+    stop_for_booking(session, appointment, attributable_attempt_id=attribution_for(session, appointment) if appointment.status == "CONFIRMED" else None)
     request = session.get(HvacServiceRequest, appointment.service_request_id)
     schedule = session.get(BusinessSchedule, appointment.agency_id)
     if request is None or schedule is None:
@@ -164,7 +168,8 @@ def deliver_notification(
         if candidate is None:
             return
         agency_id = candidate.agency_id
-    # Persist the first attempt before contacting a provider with a bounded deduplication window.
+    # Persist the first attempt before contacting a provider with a bounded
+    # deduplication window.
     with sessions() as session, session.begin():
         lock_business_schedule(session, agency_id)
         row = session.scalar(

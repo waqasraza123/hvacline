@@ -76,7 +76,7 @@ def create_billing_customer_router(
                     CustomerAccount.agency_id == actor.agency_id,
                 )
             )
-            if row is None or actor.agency_id != settings.billing_merchant_agency_id:
+            if row is None:
                 raise billing_error(
                     404,
                     "billing_unavailable",
@@ -163,10 +163,6 @@ def create_billing_admin_router(
                 401,
                 "billing_admin_required",
                 "Business administrator authentication is required.",
-            )
-        if actor.agency_id != settings.billing_merchant_agency_id:
-            raise billing_error(
-                404, "billing_unavailable", "Billing is unavailable for this business."
             )
         return actor
 

@@ -4,12 +4,25 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "lead_recovery_grants": ("recovery", "agency_id"),
+    "lead_recovery_webhooks": ("recovery", "agency_id"),
+    "lead_recovery_cases": ("recovery", "agency_id"),
+    "lead_recovery_attempts": ("recovery", "agency_id"),
+    "lead_recovery_policies": ("recovery", "agency_id"),
+    "lead_recovery_permissions": ("recovery", "agency_id"),
+    "lead_recovery_ai_connections": ("recovery", "agency_id"),
+    "lead_recovery_provider_events": ("recovery", "agency_id"),
+    "ghl_calendar_bookings": ("ghl", "agency_id"),
+    "ghl_connections": ("ghl", "agency_id"),
+    "ghl_deliveries": ("ghl", "agency_id"),
+    "websites": ("websites", "agency_id"),
+    "website_versions": ("websites", "agency_id"),
+    "website_agent_bindings": ("websites", "agency_id"),
     "billing_accounts": ("billing", "agency_id"),
     "billing_checkouts": ("billing", "agency_id"),
     "billing_events": ("billing", "agency_id"),
     "billing_topups": ("billing", "agency_id"),
     "billing_labor": ("billing", "agency_id"),
-
     "outbound_phone_verifications": ("telephony", "agency_id"),
     "outbound_demo_calls": ("telephony", "agency_id"),
     "homepage_chat_visitors": ("homepage_chat", "agency_id"),
@@ -90,35 +103,86 @@ def test_foundation_relationships_match_available_parent_tables(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_relationships: dict[str, set[tuple[tuple[str, ...], str]]] = {
+        "lead_recovery_grants": {
+            (("agency_id",), "agencies"),
+            (("agency_id", "attempt_id"), "lead_recovery_attempts"),
+            (("agency_id", "recovery_case_id"), "lead_recovery_cases"),
+            (("agency_id", "appointment_id"), "hvac_appointments"),
+        },
+        "lead_recovery_webhooks": {(("agency_id",), "agencies"), (("agency_id", "attempt_id"), "lead_recovery_attempts")},
+        "lead_recovery_cases": {
+            (("agency_id",), "agencies"),
+            (("agency_id", "service_request_id"), "hvac_service_requests"),
+            (("agency_id", "lead_id"), "agency_leads"),
+            (("agency_id", "recovered_appointment_id"), "hvac_appointments"),
+            (("agency_id", "assigned_to"), "agency_memberships"),
+            (("assigned_to",), "app_users"),
+        },
+        "lead_recovery_attempts": {(("agency_id",), "agencies"), (("agency_id", "recovery_case_id"), "lead_recovery_cases")},
+        "lead_recovery_provider_events": {(("agency_id",), "agencies"), (("agency_id", "attempt_id"), "lead_recovery_attempts")},
+        "lead_recovery_policies": {(("agency_id",), "agencies")},
+        "lead_recovery_permissions": {(("agency_id",), "agencies")},
+        "lead_recovery_ai_connections": {(("agency_id",), "agencies")},
+        "ghl_calendar_bookings": {
+            (("agency_id",), "agencies"),
+            (("agency_id", "connection_id"), "ghl_connections"),
+            (("agency_id", "appointment_id"), "hvac_appointments"),
+        },
+        "ghl_connections": {(("agency_id",), "agencies")},
+        "ghl_deliveries": {
+            (("agency_id",), "agencies"),
+            (("agency_id", "connection_id"), "ghl_connections"),
+            (("agency_id", "lead_id"), "agency_leads"),
+        },
+        "websites": {
+            (("agency_id",), "agencies"),
+            (("agent_binding_id", "agency_id"), "website_agent_bindings"),
+            (("published_version_id", "id", "agency_id"), "website_versions"),
+        },
+        "website_versions": {
+            (("agency_id",), "agencies"),
+            (("website_id", "agency_id"), "websites"),
+            (("agent_binding_id", "agency_id"), "website_agent_bindings"),
+            (("created_by",), "app_users"),
+        },
+        "website_agent_bindings": {(("agency_id",), "agencies")},
         "outbound_phone_verifications": {(("agency_id",), "agencies")},
         "outbound_demo_calls": {(("agency_id",), "agencies")},
         "homepage_chat_visitors": {(("agency_id",), "agencies")},
         "homepage_chat_daily_usage": {(("agency_id",), "agencies")},
         "customer_mfa_factors": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_mfa_challenges": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_mfa_recovery_codes": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_policies": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_facts": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
             (("source_intake_id",), "conversation_intakes"),
         },
         "customer_memory_summaries": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
             (("intake_id",), "conversation_intakes"),
         },
         "customer_whatsapp_identities": {
-            (("agency_id",), "agencies"), (("account_id",), "customer_accounts"),
+            (("agency_id",), "agencies"),
+            (("account_id",), "customer_accounts"),
         },
         "customer_memory_pairings": {
-            (("agency_id",), "agencies"), (("binding_id",), "whatsapp_conversations"),
+            (("agency_id",), "agencies"),
+            (("binding_id",), "whatsapp_conversations"),
         },
         "whatsapp_conversations": {
             (("agency_id",), "agencies"),
@@ -157,6 +221,9 @@ def test_foundation_relationships_match_available_parent_tables(
             (("created_by",), "app_users"),
         },
         "conversation_sessions": {
+            (("website_version_id", "website_id", "agency_id"), "website_versions"),
+            (("website_id", "agency_id"), "websites"),
+            (("website_agent_binding_id", "agency_id"), "website_agent_bindings"),
             (("agency_id",), "agencies"),
             (("initiated_by",), "app_users"),
             (("inbound_call_id",), "inbound_calls"),

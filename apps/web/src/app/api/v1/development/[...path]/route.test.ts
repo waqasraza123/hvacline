@@ -10,14 +10,27 @@ const context = (path: string) => ({
   params: Promise.resolve({ path: path.split("/") }),
 });
 
+it("does not forward customer language-administration writes", async () => {
+  const response = await POST(new NextRequest("https://hvacline.example/api/v1/development/voice-languages", {
+    method: "POST", headers: { Origin: "https://hvacline.example", "Content-Type": "application/json" }, body: "{}",
+  }), context("voice-languages"));
+  expect(response.status).toBe(404);
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
 it("does not forward cross-origin memory or account-link changes", async () => {
   const path = "memory/whatsapp/link";
-  const response = await POST(new NextRequest(
-    `https://hvacline.example/api/v1/development/${path}`, {
-      method: "POST", headers: { Origin: "https://another.example", "Content-Type": "application/json" },
+  const response = await POST(
+    new NextRequest(`https://hvacline.example/api/v1/development/${path}`, {
+      method: "POST",
+      headers: {
+        Origin: "https://another.example",
+        "Content-Type": "application/json",
+      },
       body: "{}",
-    },
-  ), context(path));
+    }),
+    context(path),
+  );
   expect(response.status).toBe(403);
   expect(fetcher).not.toHaveBeenCalled();
 });

@@ -11,6 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
+from insurance_operations.voice_languages import ProviderLanguageEvidence, VoiceChannel
+
 DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS = 1
 DEFAULT_CUSTOMER_MAX_BOOKING_CHANGES = 1
 
@@ -117,6 +119,78 @@ class DatabaseConnectionSettings(CommonSettings):
 
 
 class DatabaseSettings(DatabaseConnectionSettings):
+    voice_language_provider_evidence: dict[VoiceChannel, ProviderLanguageEvidence] = Field(default_factory=dict)
+    elevenlabs_phone_agent_id: str | None = None
+    outbound_demo_agent_id: str | None = None
+    elevenlabs_agent_id: str | None = None
+    recovery_agency_id: UUID | None = None
+    recovery_public_api_origin: str | None = None
+    recovery_web_origin: str | None = None
+    recovery_sms_enabled: bool = False
+    recovery_sms_compliance_confirmed: bool = False
+    recovery_twilio_account_sid: str | None = None
+    recovery_twilio_auth_token: SecretStr | None = None
+    recovery_sms_from_number: str | None = None
+    recovery_sms_daily_limit: int = Field(default=50, ge=1, le=100)
+    recovery_voice_enabled: bool = False
+    recovery_voice_compliance_confirmed: bool = False
+    recovery_voice_api_key: SecretStr | None = None
+    recovery_voice_agent_id: str | None = None
+    recovery_voice_phone_number_id: str | None = None
+    recovery_voice_from_number: str | None = None
+    recovery_voice_tool_secret: SecretStr | None = None
+    recovery_voice_webhook_secret: SecretStr | None = None
+    recovery_voice_webhook_id: str | None = None
+    recovery_voice_daily_limit: int = Field(default=5, ge=1, le=10)
+    recovery_voice_max_seconds: int = Field(default=180, ge=30, le=180)
+
+    @field_validator(
+        "recovery_agency_id", "recovery_public_api_origin", "recovery_web_origin",
+        "recovery_twilio_account_sid", "recovery_twilio_auth_token",
+        "recovery_sms_from_number", "recovery_voice_api_key",
+        "recovery_voice_agent_id", "recovery_voice_phone_number_id",
+        "recovery_voice_from_number", "recovery_voice_tool_secret",
+        "recovery_voice_webhook_secret", "recovery_voice_webhook_id", mode="before",
+    )
+    @classmethod
+    def normalize_recovery_transport(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @model_validator(mode="after")
+    def validate_recovery_transport(self) -> Self:
+        from insurance_operations.recovery.configuration import validate_transport
+
+        validate_transport(self)
+        return self
+
+    recovery_enabled: bool = False
+    recovery_token_encryption_key: SecretStr | None = None
+    recovery_ai_allowed_origins: list[str] = Field(default_factory=list)
+
+    @field_validator("recovery_token_encryption_key", mode="before")
+    @classmethod
+    def normalize_recovery_key(cls, value: object) -> object:
+        if isinstance(value, SecretStr):
+            value = value.get_secret_value()
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @model_validator(mode="after")
+    def validate_recovery_settings(self) -> Self:
+        from cryptography.fernet import Fernet
+
+        if self.recovery_token_encryption_key is not None:
+            try:
+                Fernet(self.recovery_token_encryption_key.get_secret_value().encode())
+            except (ValueError, TypeError) as error:
+                raise ValueError("RECOVERY_TOKEN_ENCRYPTION_KEY must be a Fernet key") from error
+        if self.recovery_enabled and self.recovery_token_encryption_key is None:
+            raise ValueError("Recovery requires RECOVERY_TOKEN_ENCRYPTION_KEY")
+        return self
+
     customer_max_active_appointments: int = Field(
         default=DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS, ge=1, le=20
     )
@@ -136,6 +210,24 @@ class DatabaseSettings(DatabaseConnectionSettings):
     booking_email_from: EmailStr | None = None
     booking_reminder_hours: int = Field(default=24, ge=1, le=168)
     worker_poll_seconds: int = Field(default=30, ge=5, le=60)
+    ghl_enabled: bool = False
+    ghl_token_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_ghl_integration(self) -> Self:
+        if not self.ghl_enabled:
+            return self
+        if self.app_environment is RuntimeEnvironment.PRODUCTION:
+            raise ValueError("GHL requires the development identity gates")
+        from cryptography.fernet import Fernet
+
+        if self.ghl_token_encryption_key is None:
+            raise ValueError("GHL_TOKEN_ENCRYPTION_KEY is required")
+        try:
+            Fernet(self.ghl_token_encryption_key.get_secret_value().encode())
+        except (ValueError, TypeError) as error:
+            raise ValueError("GHL_TOKEN_ENCRYPTION_KEY must be a Fernet key") from error
+        return self
 
     @field_validator(
         "demo_inbound_number_e164",
@@ -202,7 +294,8 @@ class DatabaseSettings(DatabaseConnectionSettings):
                 or uri.path != "/api/v1/development/hvac/integrations/google/callback"
             ):
                 raise ValueError(
-                    "GOOGLE_REDIRECT_URI must be an HTTPS callback URL (HTTP loopback is allowed)"
+                    "GOOGLE_REDIRECT_URI must be an HTTPS callback URL "
+                    "(HTTP loopback is allowed)"
                 )
         if self.booking_email_enabled and not (
             self.resend_api_key
@@ -215,7 +308,8 @@ class DatabaseSettings(DatabaseConnectionSettings):
             and "\r" not in self.booking_email_from
         ):
             raise ValueError(
-                "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and BOOKING_EMAIL_FROM are required"
+                "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and "
+                "BOOKING_EMAIL_FROM are required"
             )
         if self.booking_email_enabled and self.resend_webhook_secret:
             try:
@@ -232,6 +326,11 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
 
 class ApiSettings(DatabaseSettings):
+    ghl_demo_enabled: bool = False
+    ghl_demo_fictional_data_only: bool = False
+    ghl_demo_location_id: str | None = None
+    ghl_demo_private_integration_token: SecretStr | None = None
+    website_platform_enabled: bool = False
     homepage_chat_enabled: bool = False
     homepage_chat_daily_limit: int = Field(default=20, ge=1, le=1000)
     homepage_chat_concurrent_limit: int = Field(default=1, ge=1, le=10)
@@ -270,6 +369,30 @@ class ApiSettings(DatabaseSettings):
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
     customer_mfa_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_ghl_demo(self) -> Self:
+        if not self.ghl_demo_enabled:
+            return self
+        if not self.ghl_demo_fictional_data_only:
+            raise ValueError("GHL demo requires a fictional-data-only sub-account")
+        from insurance_operations.ghl.schemas import CredentialInput
+
+        if (
+            not self.ghl_demo_location_id
+            or self.ghl_demo_private_integration_token is None
+        ):
+            raise ValueError(
+                "GHL demo requires a location ID and private integration token"
+            )
+        try:
+            CredentialInput(
+                location_id=self.ghl_demo_location_id,
+                token=self.ghl_demo_private_integration_token,
+            )
+        except ValueError:
+            raise ValueError("GHL demo location ID or token is invalid") from None
+        return self
 
     @model_validator(mode="after")
     def validate_homepage_chat(self) -> Self:
@@ -396,7 +519,7 @@ class ApiSettings(DatabaseSettings):
         if (
             self.app_environment is not RuntimeEnvironment.DEVELOPMENT
             or not self.demo_sandbox_enabled
-            or not self.conversation_ai_enabled
+            or (not self.conversation_ai_enabled and not self.website_platform_enabled)
         ):
             raise ValueError(
                 "customer portal requires the protected development voice environment"
@@ -450,7 +573,8 @@ class JobRunnerSettings(WorkerSettings):
         secret = value.get_secret_value()
         if len(secret) < 32 or any(character.isspace() for character in secret):
             raise ValueError(
-                "BOOKING_JOBS_SECRET must contain at least 32 characters without whitespace"
+                "BOOKING_JOBS_SECRET must contain at least 32 "
+                "characters without whitespace"
             )
         return value
 

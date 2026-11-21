@@ -1,5 +1,227 @@
 # Homepage branding handoff
 
+## Professional homepage presentation — November 21, 2026 — UNVERIFIED
+
+Owner requested a further visual refinement after the first hierarchy pass was
+published. Added homepage.module.css and a route-local wrapper, retaining the
+orange/charcoal identity and full-width page gutters. The header uses quieter
+navigation and softer buttons; hero typography uses the system sans-serif stack
+with clearer spacing and an Explore the dashboard secondary link. The existing
+conversation panel now sits in a bordered frame with larger Voice/Text labels,
+message text, composer text and supporting copy.
+
+All six hero feature tags now span the hero's full width beneath the copy/demo,
+with six/three/two columns at desktop/tablet/phone widths. Titles precede captions
+in both markup and visual order. Multilingual remains after WebRTC; Preview and
+Sandbox labels stay visible. The new short HVAC workflow section explains the
+existing describe/select/confirm flow without adding a provider or booking path.
+
+The compact recovery teaser gains an icon and a calmer surface. Phone-example
+cards, the footer integration row and floating launcher share the same visual
+rhythm. The closing CTA uses a consistently dark background in both themes,
+replacing the prior theme-dependent ink gradient. Theme controls remain in the
+mobile drawer; the duplicate header switch is hidden at480px and below to leave
+room for the brand, account control and menu. Other page layouts are not restyled.
+
+Source changes: apps/web/src/app/page.tsx, the new homepage.module.css,
+features/homepage-chat/homepage-chat.module.css, features/recovery/homepage.tsx
+and features/recovery/recovery.module.css. Homepage chat/recovery components are
+used only on this route. No dependencies, backend/provider configuration, booking
+rules, consent, authentication or activation flags changed. No new regression
+tests were added for this presentation-only pass.
+
+No tests, builds, linters, formatters, type checks, browser checks, services,
+provider operations, publication or deployment ran. Implementation and visual/
+runtime acceptance remain **UNVERIFIED**. Owner commands from repository root:
+
+```sh
+npm run test:web -- src/app/page.test.ts
+npm run verify:web
+```
+
+Manual: inspect / at320/390/480/640/768/850/1100/1440/1920px and200% zoom in both
+themes. Check balanced hero copy/demo, feature-strip wrapping and every Preview/
+Sandbox caption, workflow stacking, recovery CTA, phone cards, closing contrast,
+footer marks and fixed-launcher clearance. Check keyboard focus, drawer open/
+close and mobile drawer theme switching; ensure no horizontal overflow. Follow
+Voice /book, dashboard /operations, recovery /ai-lead-recovery and phone/callback
+actions. Switch the demo between Voice/Text, type and retain a draft through the
+existing sign-in flow; navigation alone must not request a microphone or a call.
+Confirm pricing/billing/booking retain their existing layouts. Source is local;
+publication and deployment are separate from this implementation.
+
+## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
+
+Owner authorized the first UI pass: simplified homepage header, hero spacing,
+compact feature badges and accurate navigation selection. The homepage header
+now contains brand/navigation, theme/account controls and the existing primary
+Voice CTA; provider marks and GitHub remain in the existing footer integration
+row. Other pages retain their own header content.
+
+The hero uses shorter supporting copy, flexible columns with zero minimum width,
+balanced heading wrapping and a single column at850px and below. Secondary
+callback/phone links use muted colors while retaining44px interaction heights.
+Badges have reduced padding/icons, no shadow, larger captions and titles above
+captions. All six badges, including Multilingual/Preview and Stripe/Sandbox,
+remain. Full-width page gutters and orange/charcoal theme are retained.
+
+Shared navigation derives selection from Next.js pathname, with aria-current=page
+only on the matching destination. Home and other unmatched routes have no selected
+navigation link; browser back/forward follows the router. Existing regression
+source now includes matched/unmatched route scenarios; it has not run.
+
+No tests, builds, linters, formatters, type checks, browser checks, services,
+provider changes, publication or deployment ran. Implementation and visual/runtime
+acceptance remain **UNVERIFIED**. Owner commands from the repository root:
+
+```sh
+npm run test:web -- src/app/page.test.ts
+npm run verify:web
+```
+
+Manual checks: inspect homepage at320/390/768/850/1100/1440/1920px and200% zoom
+in both themes. Check header alignment, heading/badge wrapping, demo stacking and
+no horizontal overflow; all six captions must remain readable. Confirm provider
+marks/GitHub exist in the footer, Voice opens /book, callback opens its existing
+dialog and the phone link retains its destination. Check keyboard focus and the
+mobile drawer. Home must highlight no navigation destination; direct loads and
+back/forward on /operations, /pricing and /ai-lead-recovery must select only the
+matching link, including query-string URLs. Review shared navigation on pricing,
+billing and booking. Connection, authentication and consent remain separate steps.
+
+## Full-width website containers — 2026-11-10 — UNVERIFIED
+
+Removed the shared product/customer container's 1240px width cap. It now uses
+100% width with responsive inner gutters: 3rem on desktop, 2rem at1100px and
+below, and1.25rem at640px and below. Pricing uses the same gutter and full-width
+layout; its page main no longer inherits the global1180px cap. Existing content
+grids, typography, form/dialog reading widths, themes and actions are retained.
+
+No tests, builds, lints, type checks, previews or services ran, per the owner's
+coding-only instruction. Implementation is unverified. On a future authorized
+run, use `npm run verify:web`. Manually inspect home, pricing, billing and Book
+at320/640/1100/1440/1920px: full-width alignment, comfortable gutters, no horizontal
+overflow, badge/card wrapping, usable Voice CTA and both light/dark themes.
+
+## Signed-in header avatar — 2026-11-09 — UNVERIFIED
+
+The homepage and pricing headers now resolve the existing customer session on the
+server. Authenticated visitors see a circular, clickable first/last-name initials
+avatar linking to `/book`; anonymous visitors see Sign in. A neutral placeholder
+occupies the same space during lookup, and an unavailable lookup offers My
+account rather than claiming the visitor is signed out. Billing reuses its
+already-resolved customer, and the booking header uses the same avatar while
+retaining its existing active-conversation navigation guard.
+
+Initials and accessible labels come from the session-verified customer name.
+The existing HttpOnly cookie, MFA checks and uncached backend identity lookup
+remain authoritative; the avatar does not store identity in browser storage or
+change authentication. Styling follows light/dark tokens, includes a 44px target
+and keyboard focus, and respects reduced motion.
+
+Implementation is local/unpublished and **unverified**. No tests, builds, lint,
+type checks, previews, provider/database operations or deployment ran. No new
+dependency, migration or setting is required. Owner command: `npm run verify:web`.
+Manually check anonymous Sign in; completed sign-in/MFA → home/pricing initials;
+avatar click to the customer workspace; full-name accessible label; single-word,
+multi-word and Unicode initials; sign-out removing the old identity; unavailable
+identity lookup; and desktop/320px layout, focus and light/dark contrast. During
+an active booking conversation, the account avatar must not navigate away.
+
+## Hero platform badges — 2026-11-09 — UNVERIFIED
+
+Added compact hero badges below the phone link for WebRTC real-time browser
+voice, Protected by Google Authenticator, and Secure payments with a Stripe text
+wordmark. The payment badge explicitly says Sandbox to match the test-only
+checkout. Authenticator wording refers to existing TOTP account protection;
+the badge does not change authentication or payment behavior. Shared icons,
+theme colors and flexible wrapping support light/dark and narrow screens.
+
+Implementation is local/unpublished and **unverified**. No checks, preview,
+services, provider operations or deployment ran. Owner command:
+`npm run verify:web`. Manually inspect hero placement, badge wrapping/readability
+at desktop/tablet/320px mobile, light/dark contrast, accessible list/icon behavior,
+Stripe wordmark and visible Sandbox wording. Existing hero actions and phone
+link must remain usable.
+
+## Automatic day/night theme and manual switch — 2026-11-20 — UNVERIFIED
+
+Added a shared animated sun/moon switch to the homepage, pricing, billing,
+booking, sign-in/signup and MFA headers. Customer surfaces use white/charcoal
+palettes with the existing orange accents. Pricing cards, account balances,
+notices, customer panels, dialogs and billing/pricing loading states use shared
+theme colors. Existing charcoal feature panels remain charcoal with readable
+light text; the MFA QR code keeps its white background.
+
+The default theme follows the device's local clock: light from 07:00 inclusive
+to 19:00 exclusive, dark overnight. This schedule uses local time rather than
+the operating system's color preference or the server's timezone; it does not
+estimate sunrise/sunset or request location. Named day/night hour constants live
+in `components/theme-preference.ts`.
+
+A small static script applies the theme before content renders. A shared root
+subscriber checks once per minute while the app is mounted, including routes
+without a theme switch. Focus and visibility changes refresh it after sleep or
+device clock/timezone changes. An open page switches within one minute of the
+boundary, or immediately when the page becomes active again.
+
+Manual switches apply immediately and last until the next local 07:00 or 19:00
+boundary. Browser storage retains the choice and its expiry as a validated
+`{theme, expiresAt}` value under `hvacline-theme`, so reloads and other tabs use
+the same temporary choice. Old permanent string preferences and invalid or
+expired values revert to automatic mode. Storage failures keep the control
+usable in the current tab. Multiple switches share one timer and theme state.
+The switch has an accessible Dark mode name/state, a keyboard focus ring, a
+44px minimum touch target and disabled animation with reduced motion.
+Customer theme styles are scoped to product/customer surfaces.
+
+Implementation is local/unpublished and **unverified**. No tests, builds, lint,
+type checks, previews, services or deployment ran. No dependency, backend setting
+or migration is needed. Owner command from the repository root:
+
+```sh
+npm run test:web -- src/components/theme-preference.test.ts
+npm run verify:web
+```
+
+Regression specifications cover local boundaries, startup/live agreement,
+temporary manual choices, overnight expiry, legacy/invalid storage, tab sync,
+sleep/clock changes, timer cleanup and blocked storage. They have not run.
+
+Owner manual checks: switch both directions using mouse/touch/Space/Enter;
+confirm the screen reader reports Dark mode on/off. Check desktop/tablet/320px
+header spacing and all existing provider/navigation links. Reload directly into
+both temporary saved themes and navigate among `/`, `/pricing`, `/billing`, `/book`,
+`/login`, `/signup` and `/mfa` without a light-background flash. Inspect cards,
+inputs, native selects, loading screens, warnings/errors, dialogs, focus rings,
+MFA QR contrast and reduced motion in both themes. On a test device or browser
+with a controlled local clock, check 06:59 → 07:00 and 18:59 → 19:00, including
+an open page, overnight and after returning to a sleeping tab. Confirm a manual
+choice survives reload but expires at the next boundary. Check device timezone
+changes in automatic mode; changing only the OS color preference should not
+change the scheduled theme. Check another tab, clearing or blocking local
+storage, legacy saved preferences and theme switching during an existing
+conversation without losing its state. Confirm route loading screens also use
+the current clock-based theme.
+
+## Header pricing label and providers — 2026-11-09 — UNVERIFIED
+
+The homepage navigation label is now Stripe Pricing, still linking to `/pricing`.
+Restored the Twilio header SVG at the owner's request; ElevenLabs, Twilio, Telnyx
+and WhatsApp are displayed. Changes are local and visual acceptance is pending.
+Owner command: `npm run verify:web`. Manually check the label/link, provider
+alignment, keyboard focus and absence of header overflow at desktop, tablet and
+320px mobile widths; confirm the Twilio symbol has its accessible name.
+
+## ElevenLabs wordmark — 2026-11-09 — UNVERIFIED
+
+The homepage header now displays ElevenLabs as a bold text wordmark in place of
+the two-bar symbol, using the existing muted provider color. Implementation is
+local; no verification commands, previews or deployment ran. Owner command:
+`npm run verify:web`. Manually inspect `/` at desktop, tablet and 320px mobile
+widths for readable text, aligned provider symbols, header wrapping and horizontal
+overflow; confirm assistive technology reads ElevenLabs once.
+
 The homepage presents HVACLine with the Line AI voice-receptionist identity, electric blue/navy colors, responsive layouts, a matching favicon, and keyboard/reduced-motion support. The October 27 copy update targets HVAC business owners with missed-call/job loss, live appointment availability and caller-confirmed booking. Sections follow hero, three-step workflow, services, FAQ and final CTA. Demo entry points reuse the existing customer booking route. Full copy, three ranked hero options and current owner checks are in `docs/homepage-copy.md`. No performance metrics, reviews or customer counts are invented.
 
 Booking/sign-in links target `/book`, `/login` and `/signup`. These customer routes and their draft authentication remain development-only and owner-unverified; they require the private portal configuration and customer-access migration before use. `/operations` remains a separate protected administrator workspace. Do not give customers the administrator token or treat the customer draft as production authentication.

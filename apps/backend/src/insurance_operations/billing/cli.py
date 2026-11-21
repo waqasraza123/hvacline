@@ -31,9 +31,7 @@ def main() -> None:
     refresh = sub.add_parser("refresh")
     refresh.add_argument("account_id", type=UUID)
     arguments = parser.parse_args()
-    settings = BillingSettings(
-        billing_enabled=False if arguments.command == "setup-catalog" else True
-    )
+    settings = BillingSettings(billing_enabled=arguments.command != "setup-catalog")
     gateway = StripeGateway(settings)
     if arguments.command == "setup-catalog":
         fingerprint = hashlib.sha256(
@@ -50,7 +48,10 @@ def main() -> None:
                 product = client.v1.products.create(
                     {
                         "name": "HVACLine home maintenance packages",
-                        "description": "Prepaid technician maintenance hours with optional separately purchased extra hours.",
+                        "description": (
+                            "Prepaid technician maintenance hours with "
+                            "optional separately purchased extra hours."
+                        ),
                         "metadata": {"hvacline_catalog": "maintenance_v1"},
                     },
                     options={
@@ -77,7 +78,10 @@ def main() -> None:
                             "unit_amount": plan.amount,
                             "recurring": {"interval": "month"},
                             "lookup_key": lookup,
-                            "nickname": f"{plan.name} · {plan.included_hours} maintenance hours/month",
+                            "nickname": (
+                                f"{plan.name} · "
+                                f"{plan.included_hours} maintenance hours/month"
+                            ),
                             "metadata": {
                                 "hvacline_plan": key,
                                 "included_hours": str(plan.included_hours),
@@ -85,7 +89,9 @@ def main() -> None:
                             },
                         },
                         options={
-                            "idempotency_key": f"hvacline:sandbox:price:{key}:{fingerprint}"
+                            "idempotency_key": (
+                                f"hvacline:sandbox:price:{key}:{fingerprint}"
+                            )
                         },
                     )
                 print(f"STRIPE_{key.upper()}_PRICE_ID={price.id}")

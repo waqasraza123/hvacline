@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Brand } from "@/components/brand";
+import { AccountAvatar } from "@/components/account-avatar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { BillingDashboard } from "@/features/billing/dashboard";
 import { currentCustomer } from "@/features/customer/server";
 import "../product.css";
@@ -18,9 +20,15 @@ export default async function BillingPage() {
           <Link href="/book">My appointments</Link>
           <Link href="/pricing">Packages</Link>
         </nav>
-        <Link className="product-button button-small" href="/book">
-          Book a visit ↗
-        </Link>
+        <div className="product-page-actions">
+          <ThemeToggle />
+          {customer.status === "authenticated" && (
+            <AccountAvatar fullName={customer.user.full_name} />
+          )}
+          <Link className="product-button button-small" href="/book">
+            Book a visit ↗
+          </Link>
+        </div>
       </header>
       {customer.status === "authenticated" ? (
         <BillingDashboard accountId={customer.user.id} />

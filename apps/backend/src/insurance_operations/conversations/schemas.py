@@ -16,9 +16,12 @@ from insurance_operations.conversations.spoken import (
 from insurance_operations.customers import CustomerInput, CustomerView
 from insurance_operations.database.models.lead import LeadUrgency
 from insurance_operations.hvac.schemas import ServiceDetails, ServiceRequestInput
+from insurance_operations.voice_languages import LanguageCode
 
 
 class ConversationSessionCreateInput(BaseModel):
+    language: LanguageCode | None = None
+    voice_channel: Literal["browser", "mobile"] = "browser"
     input_mode: ConversationInputMode = "VOICE"
     ai_disclosure_accepted: bool
     microphone_consent_granted: bool
@@ -32,6 +35,7 @@ class ConversationConnection(BaseModel):
 
 
 class ConversationSessionResponse(BaseModel):
+    voice_language: dict[str, object] | None = None
     session_id: UUID
     input_mode: ConversationInputMode = "VOICE"
     connection: ConversationConnection
@@ -65,6 +69,7 @@ class ConversationTurn(BaseModel):
 
 
 class ConversationIntakeConfirmationInput(BaseModel):
+    readback_language: LanguageCode = "en"
     conversation_session_id: UUID
     customer: CustomerInput
     intake_intent: str = Field(min_length=1, max_length=2_000)
@@ -92,7 +97,7 @@ class ConversationIntakeConfirmationInput(BaseModel):
                 if self.intake_intent.strip() != self.service.equipment_issue:
                     raise ValueError("The spoken request must match the readback issue")
                 require_spoken_confirmation(
-                    self.transcript, intake_readback(service_request)
+                    self.transcript, intake_readback(service_request, self.readback_language), language=self.readback_language
                 )
         elif self.spoken_confirmation:
             raise ValueError("Spoken confirmation requires complete HVAC details")

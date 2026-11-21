@@ -16,8 +16,14 @@ from insurance_operations.customer_access.mfa_crypto import (
 
 @pytest.mark.parametrize(
     ("timestamp", "expected"),
-    [(59, "287082"), (1111111109, "081804"), (1111111111, "050471"),
-     (1234567890, "005924"), (2000000000, "279037"), (20000000000, "353130")],
+    [
+        (59, "287082"),
+        (1111111109, "081804"),
+        (1111111111, "050471"),
+        (1234567890, "005924"),
+        (2000000000, "279037"),
+        (20000000000, "353130"),
+    ],
 )
 def test_totp_matches_rfc6238_sha1_vectors(timestamp: int, expected: str) -> None:
     secret = base64.b32encode(b"12345678901234567890").decode()
@@ -33,10 +39,12 @@ def test_totp_rejects_replay_distant_codes_and_non_ascii_digits() -> None:
         code = hotp(secret, counter + offset)
         assert valid_totp_counter(secret, code, counter * 30, None) == counter + offset
         assert valid_totp_counter(secret, code, counter * 30, counter + 1) is None
-    for code in ("１２３４５６", "12345", "1234567", "12 456"):
+    for code in ("\uff11\uff12\uff13\uff14\uff15\uff16", "12345", "1234567", "12 456"):
         assert valid_totp_counter(secret, code, counter * 30, None) is None
     distant = counter + 10
-    while hotp(secret, distant) in {hotp(secret, counter + offset) for offset in (-1, 0, 1)}:
+    while hotp(secret, distant) in {
+        hotp(secret, counter + offset) for offset in (-1, 0, 1)
+    }:
         distant += 1
     assert valid_totp_counter(secret, hotp(secret, distant), counter * 30, None) is None
 

@@ -1,5 +1,9 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { AccountAvatarPlaceholder } from "@/components/account-avatar";
+import { HeaderAccount } from "@/components/header-account";
 import { Brand } from "@/components/brand";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Pricing } from "@/features/billing/pricing";
 import "../product.css";
 
@@ -14,11 +18,17 @@ export default function PricingPage() {
           <Link href="/">How Line works</Link>
           <Link href="/book">Book a visit</Link>
         </nav>
-        <Link className="product-button button-small" href="/billing">
-          My package ↗
-        </Link>
+        <div className="product-page-actions">
+          <ThemeToggle />
+          <Suspense fallback={<AccountAvatarPlaceholder />}>
+            <HeaderAccount />
+          </Suspense>
+          <Link className="product-button button-small" href="/billing">
+            My package ↗
+          </Link>
+        </div>
       </header>
-      <main>
+      <main className="product-main">
         <Pricing />
       </main>
       <footer className="product-footer product-container">

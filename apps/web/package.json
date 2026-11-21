@@ -2,6 +2,7 @@
   "name": "@insurance-operations/web",
   "version": "0.1.0",
   "private": true,
+  "license": "UNLICENSED",
   "engines": {
     "node": "24.x"
   },
@@ -21,7 +22,8 @@
     "next": "16.2.12",
     "qrcode.react": "4.2.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "@insurance-operations/customer-core": "*"
   },
   "devDependencies": {
     "@types/node": "24.10.1",

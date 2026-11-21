@@ -1,0 +1,48 @@
+[
+  {
+    "type": "client",
+    "name": "lookup_approved_faq",
+    "description": "Retrieve only matched approved business facts. Otherwise use fallback_message; never speak internal source identifiers.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string",
+          "description": "The visitor's business question."
+        }
+      },
+      "required": [
+        "query"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "submit_intake_draft",
+    "description": "Fill the visitor's inquiry draft. This does not save or book anything; the visitor must review and explicitly confirm the form after ending the conversation.",
+    "expects_response": true,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "full_name": {
+          "type": "string",
+          "description": "Visitor name, if provided."
+        },
+        "email": {
+          "type": "string",
+          "description": "Visitor email, if provided."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Visitor callback phone, if provided."
+        },
+        "intake_intent": {
+          "type": "string",
+          "description": "Requested human follow-up, using only visitor-provided details."
+        }
+      },
+      "required": []
+    }
+  }
+]

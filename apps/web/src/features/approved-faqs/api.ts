@@ -4,17 +4,20 @@ import type {
   ApprovedFaqLookup,
   ApprovedFaqStatus,
 } from "./contracts";
+import { cleanFaqDraft } from "./knowledge";
 
 const REQUEST_TIMEOUT_MILLISECONDS = 15_000;
 const FAQ_PATH = "/api/v1/development/approved-faqs";
 
 export class ApprovedFaqApiError extends Error {
   readonly status: number;
+  readonly code?: string;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = "ApprovedFaqApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -36,13 +39,15 @@ export async function createApprovedFaq(
   draft: ApprovedFaqDraft,
   adminToken?: string,
 ): Promise<ApprovedFaq> {
+  const cleaned = cleanFaqDraft(draft);
   const body = await requestJson(
     `${apiBaseUrl}${FAQ_PATH}`,
     {
       method: "POST",
       body: JSON.stringify({
-        question: draft.question.trim(),
-        approved_answer: draft.approvedAnswer.trim(),
+        question: cleaned.question,
+        approved_answer: cleaned.approvedAnswer,
+        question_variations: cleaned.questionVariations,
         status: "INACTIVE",
       }),
     },
@@ -57,13 +62,15 @@ export async function updateApprovedFaq(
   draft: ApprovedFaqDraft,
   adminToken?: string,
 ): Promise<ApprovedFaq> {
+  const cleaned = cleanFaqDraft(draft);
   const body = await requestJson(
     `${apiBaseUrl}${FAQ_PATH}/${faq.id}`,
     {
       method: "PUT",
       body: JSON.stringify({
-        question: draft.question.trim(),
-        approved_answer: draft.approvedAnswer.trim(),
+        question: cleaned.question,
+        approved_answer: cleaned.approvedAnswer,
+        question_variations: cleaned.questionVariations,
         expected_row_version: faq.rowVersion,
       }),
     },
@@ -140,7 +147,9 @@ export function parseApprovedFaq(body: unknown): ApprovedFaq {
     createdAt === undefined ||
     updatedAt === undefined ||
     (body.status !== "ACTIVE" && body.status !== "INACTIVE") ||
-    typeof body.row_version !== "number"
+    !positiveVersion(body.row_version) ||
+    !Number.isFinite(Date.parse(createdAt)) ||
+    !Number.isFinite(Date.parse(updatedAt))
   ) {
     throw invalidResponse();
   }
@@ -149,6 +158,7 @@ export function parseApprovedFaq(body: unknown): ApprovedFaq {
     agencyId,
     question,
     approvedAnswer,
+    questionVariations: parseQuestionVariations(body.question_variations),
     status: body.status,
     rowVersion: body.row_version,
     createdAt,
@@ -176,13 +186,17 @@ export function parseApprovedFaqLookup(body: unknown): ApprovedFaqLookup {
     if (
       faqId === undefined ||
       question === undefined ||
-      typeof body.source.row_version !== "number"
+      !positiveVersion(body.source.row_version)
     ) {
       throw invalidResponse();
     }
     source = { faqId, question, rowVersion: body.source.row_version };
   }
-  if (body.matched !== (answer !== null && source !== null)) {
+  if (
+    body.matched
+      ? answer === null || source === null
+      : answer !== null || source !== null
+  ) {
     throw invalidResponse();
   }
   return { matched: body.matched, answer, fallbackMessage, source };
@@ -215,6 +229,7 @@ async function requestJson(
       response.status,
       (error && requiredString(error.message)) ??
         "The approved FAQ request could not be completed",
+      error ? requiredString(error.code) : undefined,
     );
   }
   return body;
@@ -233,4 +248,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function requiredString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function positiveVersion(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function parseQuestionVariations(value: unknown): readonly string[] {
+  if (value === undefined) return [];
+  if (
+    !Array.isArray(value) ||
+    value.length > 8 ||
+    !value.every(
+      (question: unknown) =>
+        typeof question === "string" &&
+        question.trim().length > 0 &&
+        question.length <= 300,
+    )
+  )
+    throw invalidResponse();
+  return value as string[];
 }

@@ -102,13 +102,17 @@ export function HomepageChat() {
 
   useEffect(() => {
     mounted.current = true;
-    const saved = readHomepageHandoff();
-    if (saved) {
-      setExchange({ message: saved.message, reply: saved.reply });
-      setDraft(saved.pendingMessage);
-    }
-    setRestored(true);
-    void refreshStatus();
+    const restore = async () => {
+      await refreshStatus();
+      if (!mounted.current) return;
+      const saved = readHomepageHandoff();
+      if (saved) {
+        setExchange({ message: saved.message, reply: saved.reply });
+        setDraft(saved.pendingMessage);
+      }
+      setRestored(true);
+    };
+    void restore();
     const refresh = () => {
       if (!sending.current) void refreshStatus();
     };
@@ -122,9 +126,7 @@ export function HomepageChat() {
   useEffect(() => {
     if (restored) {
       if (draft || exchange.message)
-        setStorageAvailable(
-          saveHomepageHandoff(exchange.message, exchange.reply, draft),
-        );
+        saveHomepageHandoff(exchange.message, exchange.reply, draft);
       else clearHomepageHandoff();
     }
   }, [draft, exchange, restored]);
@@ -256,7 +258,7 @@ export function HomepageChat() {
         </span>
         <div>
           <h2 id="try-line-title">
-            Meet Line<span>Your AI voice receptionist</span>
+            Meet Line<span>HVAC example</span>
           </h2>
         </div>
         <span className={styles.badge}>
@@ -273,7 +275,7 @@ export function HomepageChat() {
           aria-pressed={mode === "voice"}
           onClick={() => setMode("voice")}
         >
-          <ProductIcon name="mic" /> Voice AI
+          <ProductIcon name="mic" /> Voice chat
         </button>
         <button
           type="button"
@@ -292,7 +294,7 @@ export function HomepageChat() {
             SPEAK NATURALLY. LINE TAKES IT FROM HERE.
           </p>
           <h3>
-            Talk it through.
+            Try Voice Chat.
             <br />
             Book with Line.
           </h3>
@@ -306,7 +308,7 @@ export function HomepageChat() {
             <ProductIcon name="arrow" />
           </Link>
           <p className={styles.voiceHelp}>
-            Sign in, then choose Voice to get started.
+            Sign in to start. Connect your microphone when you’re ready.
           </p>
         </div>
       ) : (

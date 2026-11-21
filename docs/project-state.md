@@ -1,4 +1,1149 @@
+## Professional homepage presentation published — UNVERIFIED — 2026-11-21
+
+Publishedb956ac8c895c68719a8a1b6cbc949e4fa4e20eea on canonical main from
+8655d8d9b32a17a6485505e4ee0df34417ba20be via expected-head non-force Git-data
+update; remote main readback matches. Commit comparison confirms exactly nine
+scoped paths (one new CSS module) and one descendant commit. Unrelated remote
+source/historical notes, local branch/index/divergent history and tags remain
+preserved. Retained [skip ci] [skip render]. No tests/builds/linters/formatters/
+type checks/browser checks/services/providers/deployment commands ran. Visual/
+runtime acceptance remains UNVERIFIED. Owner commands: `npm run test:web -- src/app/page.test.ts`,
+`npm run verify:web`; exact manual checks: docs/homepage-branding.md.
+
+## Homepage polish publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push of the professional homepage presentation. Scope is five
+source paths (one new CSS module), three homepage guides and durable memory.
+Publish from canonical main8655d8d while preserving unrelated remote/local source,
+remote historical notes and divergent local branch/index/history. Retain
+[skip ci] [skip render]. No execution checks/services/deployment authorized.
+Implementation and visual/runtime acceptance remain UNVERIFIED; publication
+result is recorded separately.
+
+## Professional homepage presentation — local, UNVERIFIED — 2026-11-21
+
+Owner requested further homepage beautification. Added a route-scoped CSS module
+and wrapper for system typography, quieter navigation, softer buttons, framed
+demo, full-width six-tag feature strip and consistent section/footer spacing.
+Retained orange/charcoal/full-width identity and all Preview/Sandbox labels.
+Added a concise explanation of the existing HVAC describe/select/confirm flow
+and secondary dashboard link. Homepage-only conversation/recovery styles have
+larger text and a refined teaser. Closing CTA has a fixed dark surface in both
+themes; mobile theme remains in the drawer while duplicate header toggle hides
+at480px. Existing authentication/consent/booking/provider behavior is retained.
+
+Five source paths: apps/web/src/app/page.tsx, new homepage.module.css,
+features/homepage-chat/homepage-chat.module.css, features/recovery/homepage.tsx
+and features/recovery/recovery.module.css; plus three homepage guides and notes.
+No tests/builds/linters/formatters/type checks/browser checks/services/providers/
+dependencies/publication/deployment ran. Implementation and visual/runtime
+acceptance remain UNVERIFIED. Owner commands: `npm run test:web -- src/app/page.test.ts`,
+`npm run verify:web`; exact responsive/theme/interaction checks:
+docs/homepage-branding.md. Source is local only; preserve unrelated edits,
+index and divergent history. Latest published main remains8655d8d.
+
+## Homepage UI published — runtime UNVERIFIED — 2026-11-21
+
+Published8655d8d9b32a17a6485505e4ee0df34417ba20be on canonical main from
+2ed275a905b132536f8a934e10fb5a5cf658cac1 through expected-head non-force
+Git-data update; remote main readback matches. Commit comparison confirms exactly
+eight scoped source/test/guide/memory paths and one new descendant commit.
+Unrelated remote source/historical notes, local branch/index/history and tags
+remain preserved. Commit retains [skip ci] [skip render]. No tests/builds/linters/
+formatters/type checks/browser checks/services/provider/deployment commands ran.
+Implementation and visual/runtime acceptance remain UNVERIFIED. Owner commands:
+`npm run test:web -- src/app/page.test.ts`, `npm run verify:web`; responsive,
+theme and navigation manual checks: docs/homepage-branding.md.
+
+## Homepage UI publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push to main. Publish the homepage hierarchy pass in eight scoped
+source/test/guide/memory paths from canonical main, preserving unrelated source,
+remote historical notes and divergent local branch/index/history. Retain
+[skip ci] [skip render]. No tests/builds/linters/type checks/browser checks/services
+or deployment commands are authorized by this publication. Runtime and visual
+acceptance remain UNVERIFIED; publication result is recorded separately.
+
+## Homepage hierarchy pass — local source, UNVERIFIED — 2026-11-21
+
+Owner authorized simplified homepage header, improved hero spacing, compact
+badges and corrected navigation selection. Home keeps provider/GitHub branding
+in the existing footer; header retains brand/navigation, theme/account and Voice
+CTA. Hero copy is shorter, columns use zero minimum widths and stack at850px.
+Secondary call links are quieter; six badges retain their feature/Preview/Sandbox
+labels with reduced chrome and larger captions. Existing orange/charcoal theme,
+full-width gutters and authentication/consent/provider behavior remain.
+
+Shared HeaderNavigation now derives the active destination from Next pathname,
+with aria-current=page on matching routes only; home has no selected destination.
+Added unexecuted matched/unmatched route cases to the existing homepage suite.
+No tests/builds/linters/formatters/type checks/browser checks/services/publication/
+deployment ran. Implementation and visual/runtime acceptance are UNVERIFIED.
+Owner commands: `npm run test:web -- src/app/page.test.ts`, `npm run verify:web`.
+Manual responsive/theme/navigation checks: docs/homepage-branding.md. Changes
+are local only; preserve existing unrelated edits, index and divergent history.
+
+## Multilingual homepage hero badge published — UNVERIFIED — 2026-11-21
+
+Owner requests a hero tag instead of the separate multilingual homepage card.
+Homepage now adds Multilingual after WebRTC with a shared language/translation
+SVG and Language support · Preview caption, reusing the current responsive badge
+style and theme. Removed the unused card component/teaser CSS; dedicated demo,
+Operations entry and README link remain. Existing hero aria-label expectation
+and homepage/multilingual guides are updated. No backend/provider/schema change.
+
+No tests/builds/linters/formatters/type checks/browser checks/services ran.
+Owner commands: `npm run test:web -- src/app/page.test.ts`, `npm run verify:web`.
+Manual: absent card, aligned icon/tag, mobile/desktop wrapping, both themes and
+Operations demo access. Published 2ed275a905b132536f8a934e10fb5a5cf658cac1 on
+canonical main from d62e390 via expected-head non-force update; remote readback
+matches. Eight scoped paths include the deleted card component and current guide
+status for the previously applied migration0028. Retained [skip ci] [skip render],
+local index/history, unrelated source and tags. No deployment command ran.
+Visual/runtime acceptance remains UNVERIFIED.
+
+## Multilingual demo reducer correction — owner-confirmed — 2026-11-21
+
+Owner reports a Vercel TypeScript failure for comparing booked after the reducer's
+early terminal guard. Source removes both redundant later booked checks; Reset
+still precedes the terminal guard and conversation transitions are unchanged.
+No checks/services/migrations/deployment commands ran. Owner commands:
+`npm run typecheck:web`, focused multilingual-demo.test.ts and `npm run build:web`.
+Published the one-file correction as d62e390be6dfffbaf455cbdc75c7012e7ecf2c04
+on canonical main from a897702 via expected-head non-force update; remote
+readback matches. Retained [skip ci] [skip render], unrelated source/index/history
+and tags. Owner subsequently reports “it worked,” confirming resolution of the
+reported build issue. Specific command results were not supplied; no additional
+checks ran here. Broader multilingual/provider/native/runtime acceptance remains
+UNVERIFIED.
+
+## Configured Neon upgraded through multilingual0028 — 2026-11-21
+
+Owner explicitly requested migrations. The configured direct Neon development
+target matches the application database and is distinct from the disposable
+test target. Initial sole revision20261120_0027; applied20261121_0028 successfully.
+Post-migration readback confirms sole0028, non-null JSONB voice_languages with
+empty-object default and the validated object-type constraint. No non-default
+language configuration exists. Do not rerun this completed migration on the
+same target; other database targets require deliberate selection.
+
+Only migration preflight, the authorized upgrade and necessary schema/configuration
+readback ran. Initial sandbox connection failed; approved network access completed
+the operation. No customer records, tests/builds/linters/type checks/services,
+providers/calls, credentials/activation changes, publication or deployment commands.
+Application/provider/native/security/visual/language acceptance remains UNVERIFIED.
+Owner acceptance and external provider setup: docs/multilingual-voice.md.
+
+## Multilingual AI Voice published — runtime UNVERIFIED — 2026-11-21
+
+Published a8977021a2380b1648ee9c5718c2694a083af590 on canonical
+waqasraza123/hvacline main from c84d3022c31450fca0069a0f152d9e0a325d7847
+through an expected-head non-force Git-data update; remote ref readback matches.
+Exactly60 scoped files (17 new) match prepared blob identities; unrelated remote
+source/historical notes and local branch/index/divergent history are preserved.
+README includes the multilingual demo link and en/es/fr/ar/hi/zh, conditional ur,
+channel/setup limits and UNVERIFIED status. Existing tags remain unchanged.
+
+Commit retains [skip ci] [skip render]. No tests/builds/linters/formatters/type
+checks/services/simulators/migrations/providers/paid AI/calls/deployment commands
+ran. Migration0028 remains unapplied; hosted agents, credentials and activation
+flags remain unchanged. Runtime/security/provider/native/visual/language quality
+acceptance is UNVERIFIED. Exact owner commands/manual scenarios:
+docs/multilingual-voice.md. Publication is complete; owner setup and acceptance
+remain separate. Do not reset or blindly push the older local main.
+
+## Multilingual publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push to main and README multilingual/language coverage. README now
+links the fictional demo and lists en/es/fr/ar/hi/zh, conditional ur, verified
+browser/mobile setup requirements and unsupported additional phone/recovery
+languages. Publication is scoped to the multilingual manifest plus README and
+notes, using canonical remote main as parent while preserving unrelated work
+and divergent local history. Retain [skip ci] [skip render]. No execution checks,
+schema/provider/activation changes or deployment commands are authorized by this
+publication request. Migration0028 remains unapplied and runtime UNVERIFIED.
+Publication result is recorded separately.
+
+## Multilingual AI Voice — source implemented, UNVERIFIED — 2026-11-21
+
+Added a central agency/channel language registry with separate saved intent and
+server-only owner capability evidence. Forward migration20261121_0028 after0027
+adds only agency_receptionist_settings.voice_languages JSONB; UNAPPLIED. Existing
+profile ownership/version triggers and administrator-token checks protect writes.
+Customer web/native proxies permit authenticated configuration reads only.
+
+Browser/native use shared customer-core language contracts, initial overrides,
+strict localized readback/affirmative gates and native provider result handling.
+English remains the existing effective default without additional evidence.
+Additional en/es/fr/ar/hi/zh and conditional ur require exact agency/agent/channel
+evidence; runtime source reads hosted languages/presets/detection/events before
+additional-language grants. No hosted agent writes or alternate speech engine.
+Native system-tool requests and interruptions invalidate pending readbacks;
+complete successful authorized results alone establish observed active language.
+Drafts, saved requests, original sessions, held slots and uncertain retry payloads
+are preserved. Server switch/fluency metrics remain explicitly unavailable.
+
+Operations Receptionist contains Languages & Voice settings, compatibility/setup
+states and existing session/appointment outcome diagnostics without customer text.
+Homepage preview and /multilingual-ai-voice use the dashboard shell with a purely
+fictional interactive text simulation. Phone/recovery additional languages remain
+unsupported by their existing consent/finalization/preflight contracts. Recovery
+also rejects non-English primary language; no contact-language inference or
+outbound activation is added. Production identity/onboarding gates remain.
+
+Added unexecuted regression source and docs/multilingual-voice.md with the exact
+source manifest, provider setup/evidence schema, owner commands and fictional
+acceptance checklist. No tests/builds/linters/formatters/type checks/browser checks,
+services/simulators/migrations/provider requests/paid AI/calls/deployments/commits/
+pushes ran. Public provider documentation and pinned SDK declarations were read;
+no dependencies/lockfile or credentials changed by this task. All runtime, security,
+language quality, provider, native and visual acceptance is **UNVERIFIED**.
+Preserve unrelated working changes, index and divergent local/remote history.
+
+## Broader homepage positioning published — runtime UNVERIFIED — 2026-11-20
+
+Published c84d3022c31450fca0069a0f152d9e0a325d7847 on canonical main from
+98c1c8efcc2f2583ef2a33f046c91514da193098 via expected-head non-force Git-data
+update; remote ref readback matches. Eight scoped copy/test/docs files; unrelated
+remote source/memory and divergent local branch/index/history preserved. Commit
+retains [skip ci] [skip render]. Existing tags unchanged. No tests/builds/linters/
+type checks/services/browser acceptance or deployment commands ran. Runtime and
+visual acceptance remain UNVERIFIED. Owner command: `npm run verify:web`;
+manual copy/layout/theme/CTA/metadata checks: docs/homepage-copy.md.
+
+## Broader homepage positioning — source UNVERIFIED — 2026-11-20
+
+Owner selects business owners and homepage-wide messaging while retaining
+HVACLine. Hero now reads “AI voice agents, built around your business.” and
+describes customizable voice/knowledge/workflows. Card and phone section label
+the HVAC example; closing CTA/footer/launcher/default and Open Graph metadata
+align with the broader positioning. All primary actions retain Try Voice Chat
+at /book; existing layout and behavior remain. Geographic/language coverage,
+industry implementations, self-service and backend booking/safety gates do not
+expand. README/mobile branding remain outside this slice.
+
+Updated existing headline expectations and current homepage copy/hero guides.
+No tests/builds/linters/type checks/services/browser checks/publication/deployment
+ran. Runtime/visual acceptance remains UNVERIFIED. Owner command:
+`npm run verify:web`; exact manual checks: docs/homepage-copy.md. Preserve
+unrelated local/remote source and divergent history. Latest published main/tag
+remain the Expo publication recorded below; this copy change is local only.
+
+## Expo mobile app and React Native branding published — UNVERIFIED — 2026-11-20
+
+Published98c1c8efcc2f2583ef2a33f046c91514da193098 on canonical main from
+fa59bac8fe671c7ff70880e0e491dab6e8d055cc through expected-head non-force
+Git-data update; remote readback matches. Exactly57 scoped files (40 new) include
+Expo app/core/web adapters/gateway/config/lockfile/docs, README React Native/Expo
+badges/mobile Preview and official SVG logo. Prepared blob identities match;
+unrelated remote files/memory and divergent local source/index/history preserved.
+Annotated v0.1.0-beta.2 resolves to that commit; existing beta.1 remains595994f.
+Commit retains [skip ci] [skip render]. No tests/builds/linters/type checks,
+services/simulators/migrations/providers/deployment commands ran. Runtime/native/
+security/visual acceptance remains UNVERIFIED. Owner setup/commands/manual checks:
+docs/mobile-app.md and docs/repository-presentation.md. Publication alone does not
+activate the disabled mobile gateway or create an app-store binary/release.
+
+## Expo mobile publication authorized — UNVERIFIED — 2026-11-20
+
+Owner requests publishing the Expo customer app to main, updating README and
+adding a tag/React Native logo. README adds the official SVG logo, React Native/
+Expo badges and a customer-app Preview feature. Intended new tag is
+v0.1.0-beta.2; existing beta.1 remains pinned. Publication uses the current remote
+main as parent and preserves unrelated local/remote source and divergent history.
+Commit retains [skip ci] [skip render]; no execution checks/deployment authorized.
+App/native/provider/security/visual acceptance remains UNVERIFIED. Owner setup,
+exact checks and device acceptance: docs/mobile-app.md; README/logo/tag manual
+review: docs/repository-presentation.md. Publication result is recorded separately.
+
+## Expo customer app — source implemented, UNVERIFIED — 2026-11-20
+
+Owner requests an Expo mobile app using the latest stable stack. Added apps/mobile
+with Expo58.0.26, React Native0.88.1, Expo-supported React19.3.0, Router58.0.32
+and TypeScript6.0.3. Native customer screens cover signup/login, mandatory MFA/
+recovery, voice/silent Chat booking, appointments/details and explicit rescheduling.
+SecureStore holds origin-bound expiring sessions and account/appointment-scoped
+reschedule retry references. Disclosure, microphone consent, backend ownership,
+readback confirmation, scheduling/provider guards and development gates remain.
+
+Extracted the existing portable booking controller/contracts/transcript/text/
+appointment helpers into packages/customer-core; web modules retain adapters.
+Disabled-by-default Next.js /api/mobile allowlist injects the existing portal key
+server-side and forwards scoped native bearers, without browser cookie reuse or
+admin routes. Native ElevenLabs1.2.42 uses its supported LiveKit2.12/WebRTC144
+peers; silent Chat uses documented text-only WebSocket events. Persistent customer
+memory and process-restored active conversations/intake retries are outside this
+version. Production identity/onboarding remains incomplete.
+
+Resolved the workspace lockfile with scripts disabled and applied source
+formatting only. Resolver Node26 emitted warnings against retained Node24.x
+requirements. No dependency installation, tests, builds, linters, type checks,
+simulators, services, migrations, provider calls, hosted changes, publication or
+deployment. Added unexecuted gateway/contracts/text/reschedule regressions.
+Runtime/security/provider/native/visual behavior remains UNVERIFIED. Exact setup,
+owner commands and iOS/Android acceptance: docs/mobile-app.md. No mobile/server
+secret or activation setting was changed; preserve unrelated source/history/index.
+
+## Compact recovery homepage and dedicated route — published, runtime UNVERIFIED — 2026-11-20
+
+Published fa59bac8fe671c7ff70880e0e491dab6e8d055cc on canonical main from
+c21ced66079c76a2d25ac64d46ed7d130034961e via expected-head non-force update;
+remote ref readback matches. Eleven scoped paths (one new route); unrelated
+remote files and divergent local branch/index/history preserved. Commit retains
+[skip ci] [skip render]. No checks or deployment commands ran.
+
+Owner requests a shorter Lead Recovery homepage section, prominent dashboard
+access, README refresh and publication to main; final CTA text is Try Yourself
+and destination is /ai-lead-recovery. Homepage now renders a static compact card
+without the recovery demo/reducer/metrics/setup controls. The dedicated route
+retains the dashboard shell, fictional demo and existing protected setup gate;
+legacy /lead-recovery permanently redirects, preserving setup=1. Header/mobile
+navigation and demo overview link to the new route. Connected overview retains
+its in-place authenticated action. README remains product-only, adds dashboard/
+recovery links and a preview bullet, and updates GHL calendar/summary wording.
+
+No backend/schema/provider/dependency/configuration change. No tests, builds,
+linters, formatters, type checks, browser checks or services ran. Runtime and
+visual acceptance remain UNVERIFIED. Owner command: npm run verify:web;
+manual homepage/link/redirect/setup/dashboard/demo/mobile/theme/README checks:
+docs/ai-lead-recovery.md, docs/operations-dashboard.md and
+docs/repository-presentation.md. Existing unrelated source/index/history preserved.
+
+## Configured Neon upgraded through recovery 0027 — 2026-11-20
+
+Owner explicitly requested applying the migration. The configured direct Neon
+development target matches the runtime database and is distinct from the test
+target. Initial sole revision was 20261120_0026; Alembic upgraded explicitly to
+20261120_0027 successfully. Narrow readback confirms sole revision 0027, both
+new tables, five attempt columns, four indexes, three triggers and two new guard
+functions. Zero recovery policies are enabled; server/channel/compliance flags
+remain off. Do not rerun this completed migration on this target.
+
+Only migration preflight, the requested upgrade and necessary schema/policy
+readback ran. No customer records were read, secrets changed, tests/builds/lints/
+type checks/services/providers/deployments/publication performed. Application,
+provider, security and visual acceptance remain UNVERIFIED. Next: compatible
+deployment, provider provisioning and separately authorized acceptance using
+docs/ai-lead-recovery.md. Other database targets need deliberate selection.
+
+## Recovery delivery published — 2026-11-20
+
+Owner-authorized publication c21ced66079c76a2d25ac64d46ed7d130034961e extends canonical main from 0314b3db5f2f3a9a6ca5865c07e6912884350834. Expected-head non-force Git-data update and remote ref readback confirm publication of43 recovery-scoped files (18 new); unrelated remote files and local branch/index/history were preserved. Commit retains [skip ci] [skip render]. No execution checks, migration0027, provider actions or deployment commands ran. All outbound flags remain off; runtime/provider/security/visual acceptance is UNVERIFIED. Setup and owner commands: docs/ai-lead-recovery.md.
+
+## Recovery delivery and attributed continuation — source UNVERIFIED — 2026-11-20
+
+The recovery runtime now selects a configured, agency-bound Twilio Programmable Messaging adapter or a separate ElevenLabs SIP recovery agent. New migration20261120_0027 adds durable provider ingress, scoped booking grants, dispatch snapshots, receipt/expiry indexes and guards for owned scope, approved selection, immutable references and reply transitions. It follows the previously owner-applied0026 and has NOT been applied. All delivery/automation flags remain off; no hosted agent, provider or local secret configuration was changed.
+
+Signed callbacks feed the existing booking-job runner; YES requests one short-lived SMS booking continuation, STOP suppresses all recovery channels, and ambiguous replies/staff pauses block automatic continuation. Voice tools require static secret headers, a per-call capability, provider conversation binding and actual transcript confirmation. Provider POST outcomes are checkpointed before I/O; unknown outcomes permit authoritative reads, never blind resend. Existing SchedulingService handles availability, reservation/release, exact selection confirmation and notifications/Google/GHL. Durable approved selection supplies attribution; independent bookings stop recovery without credit. Custom text-model settings still support staff drafts, while live voice uses the dedicated hosted agent's model.
+
+Added /recover with fragment exchange and a scoped HttpOnly cookie, sanitized administrator continuation history and read-only outcome reconciliation, provider setup artifact, focused regression source and runbook. Existing public demo/header/sidebar/spotlight remain separate and unchanged by this follow-up. No tests, builds, linters, formatters, type checks, new migrations, services, live provider requests, calls/messages, deployments, commits or pushes ran. Runtime, security, provider compatibility and visual acceptance remain **UNVERIFIED**; production identity/onboarding remains blocked by the existing development gates. Exact files, disabled configuration, external prerequisites, owner commands and fictional acceptance checklist: docs/ai-lead-recovery.md.
+
 # Project State
+
+## Configured Neon upgraded through recovery0026 — 2026-11-20
+
+Owner explicitly requested migrations. Selected the existing configured direct
+Neon development database; its pooled/direct URLs match the same branch/database
+and the disposable test target is distinct. Initial revision0025; applied
+20261118_0025 →20261120_0026 successfully. Narrow readback confirms sole0026,
+six recovery tables, seven triggers, three guard functions and zero enabled
+recovery policies. No historical recovery candidates or customer data were read
+for acceptance. Do not rerun the completed migration on this target.
+
+Generated a dedicated Fernet key in ignored local.env without displaying it;
+kept RECOVERY_ENABLED=false and RECOVERY_AI_ALLOWED_ORIGINS=[]. Reuse that same
+key privately on the API and existing job runner; no hosted configuration changed.
+No key values, database credentials or account identifiers belong in notes.
+
+Only the requested migration and necessary revision/schema/configuration readback
+ran. No tests/builds/linters/type checks/services/provider requests/calls/messages,
+new publication or deployment. Application/runtime/visual acceptance remains
+UNVERIFIED. Other targets require deliberate migration selection; provider delivery
+remains unavailable and activation blocked. Acceptance: docs/ai-lead-recovery.md.
+
+## AI Lead Recovery — published, runtime UNVERIFIED — 2026-11-20
+
+Published 0314b3db5f2f3a9a6ca5865c07e6912884350834 on canonical main from cc733b4147d95ce87e3088e9e7e501fe1dab2857
+via expected-head non-force update; remote readback matches. Exactly 46 scoped
+paths; unrelated remote documentation and local source/index/history preserved.
+Commit retains [skip ci] [skip render]; no checks or deployment commands ran.
+
+Source adds prospective recovery cases/attempts/policy/explicit permission and
+encrypted text-model connections through forward migration 20261120_0026 after 0025.
+New persisted confirmed requests and normalized browser/phone terminal events
+identify cases without a historical scan; a persisted capture watermark excludes
+pre-installation requests arriving through delayed events. Existing booking jobs own scheduling;
+existing confirmed-booking notification hooks stop recovery without independent
+booking credit. Consent, suppression, versioning, idempotent case actions and
+unknown-outcome review remain backend gates. No migration or runtime check ran.
+
+Homepage preview, /lead-recovery, header/sidebar links and overview spotlight
+use a client-only 24-record fictional demo. Simulated conversation, explicit slot
+confirmation, STOP, reset and fictional estimates stay separate from protected
+live records. Administrator model save/test/revoke uses Fernet context binding,
+public HTTPS origin allowlisting, validated DNS and pinned TLS destinations.
+OpenAI/compatible models support staff-reviewed text drafts only; custom-model
+live voice is unsupported. Existing ElevenLabs agents/demo calling are unchanged.
+
+SMS Verify is not general messaging; runtime recovery delivery has no configured
+SMS adapter or dedicated voice-agent/tool binding. Both channels are reported
+unavailable, automation defaults off and enabling is rejected. Trusted receipt/
+reply processing is an internal adapter boundary, not a public unsigned webhook.
+Live attributed customer continuation and provider reconciliation need concrete
+adapters before activation. Existing development/admin identity gates remain;
+this is not a production-readiness or operational recovery claim.
+
+Focused regression sources, schema/ownership expectations and disposable fixture
+cleanup are added but unexecuted. No tests/builds/linters/formatters/type checks,
+browser checks, services, migrations, provider requests, calls/messages, hosted
+changes or deployment ran. Publication is recorded above. No subagents. Existing unrelated source
+is preserved. Exact manifest, configuration, owner commands, acceptance and
+remaining boundaries: docs/ai-lead-recovery.md.
+
+
+## Clock-based automatic day/night theme — published, runtime UNVERIFIED — 2026-11-20
+
+Publishedcc733b4147d95ce87e3088e9e7e501fe1dab2857 on canonical main from9bc5b12
+via expected-head non-force update; remote readback matches. Eight scoped paths
+add local-clock light07:00–19:00/dark overnight, shared root minute/focus/visibility
+refresh and temporary manual choices expiring at the next local boundary.
+Legacy permanent preferences return to automatic; regression sources unexecuted.
+No backend/schema/dependency change. Unrelated source/history/index preserved;
+retained [skip ci] [skip render]. No tests/builds/linters/type checks/services,
+browser acceptance or deployment ran. Runtime UNVERIFIED. Owner commands:
+`npm run test:web -- src/components/theme-preference.test.ts`, then
+`npm run verify:web`; manual checks: docs/homepage-branding.md.
+
+## Shared route loader and navigation — published, runtime UNVERIFIED — 2026-11-20
+
+Published9bc5b12457ff6abc4b8f9b8324d0fcfa4615ebf3 to canonical main from7b6a42f
+through an expected-head non-force update; remote readback matches. Eleven scoped
+paths add the centered, themed LoadingScreen to root/Pricing/Billing/published-site
+fallbacks, remove Calling from desktop/mobile navigation and document acceptance.
+Existing Brand and inline spinners remain; no backend/schema/dependency change.
+Unrelated divergent source/history preserved; retained [skip ci] [skip render].
+No tests/builds/linters/type checks/services/browser acceptance or deployment ran.
+Runtime UNVERIFIED. Owner command: `npm run verify:web`; manual checks:
+docs/loading-screens.md. Owner manages deployment and validation.
+
+## Public browser origin configuration — 2026-11-18
+
+Source CORS permits only settings.web_origin; WEB_ORIGIN is a single exact
+origin also used by OAuth/WebSocket guards. Owner browser log uses the www
+public origin and reports demo GET200 blocked for a missing CORS header. Hosted
+value is uninspected. Environment handoff now shows https://www.hvacline.online;
+public-demo guide documents Render Save and deploy plus deferred header/browser
+acceptance. No runtime change, hosted configuration or verification ran. Owner
+reports demo token and location already set in Render; no re-entry requested.
+
+## Public live GHL demo published — activation pending — 2026-11-18
+
+Owner authorizes publishing/deploying the read-only public pipeline view,
+configuring hosted server-only GHL_DEMO_* settings and performing focused mock
+checks plus live read-only acceptance. Dedicated sub-account is fictional-only.
+Python test_ghl_demo/test_ghl_routes/test_ghl:37 passed; frontend demo-contracts:
+6 passed. No database tests, broad verification, local services or migrations ran.
+
+Source adds the public aggregate API, strict enabled-config validation, bounded
+cached GET-only provider reads, credential-free UI and honest empty/error/previous
+snapshot states. The live card precedes the static workflow preview. No package
+or schema change. Hosted endpoint currently404; local private demo token absent,
+activation off. Hosting connections/private credential setup remain pending;
+no GHL reads/writes or deployment completed yet. Published14 scoped paths as
+7b6a42f on canonical main fromf81299f via expected-head non-force ref update;
+remote readback matches. [skip ci] [skip render] retained pending hosted access.
+Next: finish authorized hosted configuration/deployment and read-only acceptance
+once private token and Render/Vercel access are supplied. Setup guide:
+docs/gohighlevel-public-demo.md. No secret values or account IDs retained.
+
+## Prominent GoHighLevel dashboard feature — source UNVERIFIED — 2026-11-18
+
+Overview leads with a GHL feature card covering CRM sync, calendar booking and
+contact summaries. Named GoHighLevel sidebar entry/CRM badge and direct actions
+reuse the existing integrations section. Demo connect flow retains that target
+through administrator authentication. Demo overview adds no requests; connected
+overview reads existing protected saved connection status, not live provider
+health. No backend, schema, provider, permission or dependency changes.
+Source formatting only; no checks/services/provider calls/publication/deployment.
+Owner command: `npm run verify:web`; exact UI/status/auth/demo/mobile/theme
+acceptance in docs/operations-dashboard.md. Implementation remains UNVERIFIED.
+Publishedf81299f to canonical main froma6b9a47 without force. Eight scoped paths
+include the static public workflow preview; unpublished live-demo dependencies
+and unrelated source remain separate. [skip ci] [skip render] retained; no checks
+or deployment ran during publication.
+
+## Navbar active dot — source UNVERIFIED — 2026-11-18
+
+Shared desktop/mobile top navigation initially marks Dashboard with a green dot
+and short pulse. Client navigation moves the dot and active styling to the chosen
+item; browser/hash history updates the selection. Reduced motion disables the
+pulse while retaining the dot. No verification, services or publication ran.
+Owner command: `npm run verify:web`; fresh-load/click/mobile/keyboard/history,
+theme and reduced-motion acceptance: docs/operations-dashboard.md.
+Publisheda6b9a47 to canonical main fromcc24fc5 without force; retained
+[skip ci] [skip render]. No verification or deployment ran during publication.
+
+## Configured development database upgraded through0025 — 2026-11-18
+
+Owner explicitly requests applying the published GHL voice migration. Selected
+the existing configured direct development migration database, excluding the
+disposable test target. Initial revision0024; applied0024 →20261118_0025
+successfully. Readback confirms sole revision0025, new connection/delivery
+columns, ghl_calendar_bookings and its business/connection/appointment foreign
+keys. No customer rows were queried for acceptance.
+
+Only the requested migration and narrow revision/schema readback ran. No tests,
+builds, lints, type checks, seeds, services, provider actions, hosted configuration,
+calls, deployments or new publication. Runtime/visual acceptance remains
+UNVERIFIED. Do not rerun the migration after this completed handoff. Next:
+deploy the compatible source, configure GHL scopes/calendar routes/note author
+and separately authorize acceptance using docs/gohighlevel-voice-demo.md.
+
+## GHL voice priorities — published source UNVERIFIED — 2026-11-18
+
+Owner selects only the first three priorities: direct GHL calendar booking,
+contact-level request summaries and an inbound fictional-business demo flow.
+Optional team/calendar routes reuse existing scheduling and phone/browser tools.
+Mapped teams intersect local rules/capacity with GHL availability; confirmation
+creates and verifies a GHL event before local CONFIRMED. Durable attempt state,
+original-destination bindings and explicit owner recovery guard uncertain writes.
+Unresolved attempts retain capacity after ordinary hold expiry. Existing routes
+remain the default; Google/GHL routing cannot overlap on a team.
+
+Optional contact notes use confirmed persisted lead data and the current notes
+API, one note per request, with independent unknown-create recovery. Existing
+notes/identities are preserved. Administrator UI adds mapping, note setup and
+booking history/recovery; customer booking failures preserve staff-review state.
+Migration20261118_0025 follows0024 and must precede backend deployment; applied
+to the configured development database on2026-11-18 as recorded above.
+GHL cancellation/rescheduling, continuous external-edit reconciliation, emergency
+live transfer, lead reactivation and agency onboarding remain outside this slice.
+
+Inbound demo uses the existing authenticated eight-tool phone flow plus documented
+emergency/routine prompt additions. No number/agent/provider was configured or
+activated, no call made, and no migration or deployment performed. Source
+formatting only; all regression sources and runtime/visual behavior UNVERIFIED.
+Owner setup, exact deferred commands and manual acceptance:
+docs/gohighlevel-voice-demo.md. Existing execution stop and unrelated work preserved.
+Publishedcc24fc5 to canonical main from901fdf5 via expected-head non-force update;
+30 scoped paths, [skip ci] [skip render]. No checks/migrations/deployment ran.
+
+## Public Dashboard navigation — source UNVERIFIED — 2026-11-17
+
+Shared desktop/mobile navigation labels the existing `/operations` link
+Dashboard, with demo wording in the mobile menu. All visitors can open the
+existing sample-data dashboard without sign-in; live workspace access retains
+the admin-token gate. No authentication/backend change is required.
+Owner requests commit/push to main. No checks or services ran. Owner command:
+`npm run verify:web`; manually open Dashboard signed out and signed in from
+desktop/mobile navigation and confirm live workspace access remains protected.
+Published901fdf5 to canonical main via non-force ref update; retained
+[skip ci] [skip render]. Unrelated divergent source preserved; no deployment ran.
+
+## Public read-only GHL demo — source UNVERIFIED — 2026-11-16
+
+Owner requests environment configuration and public proof of GHL reads, and
+confirms the selected sub-account contains only fictional demo records. Added
+server-only GHL_DEMO_ENABLED/FICTIONAL_DATA_ONLY/LOCATION_ID/PRIVATE_INTEGRATION_TOKEN
+settings and a public GET-only aggregate endpoint. Existing managed CRM delivery
+and administrator authentication remain separate; no tenant/token bootstrap or
+provider writes are introduced. No dependency or database migration is required.
+
+Operations demo → Integrations now shows live-read timestamps, pipeline/stage
+counts for up to100 latest opportunities and explicit disabled/empty/error/previous
+snapshot states. Public projection excludes contact details, opportunity titles,
+custom fields, values and all provider IDs. Fixed location/origin, v3 read-only
+scope, bounded responses/deadlines and one-minute per-process cache/cooldown
+protect provider access. Unknown/foreign/duplicate data fails closed.
+
+Local gitignored .env now has the supplied location and blank private-token field;
+activation remains off pending secure owner token entry. Never retain credential
+or account identifiers in notes. Hosted environment/deployment remains separate.
+No live GHL pull, tests/builds/linters/type checks/formatters/services/migrations,
+publication or deployment ran. Source/runtime/visual acceptance UNVERIFIED.
+Focused mock regression sources added, unexecuted. Exact owner commands and
+manual checks: docs/gohighlevel-public-demo.md. Existing unrelated work preserved.
+
+## Short product-only README — 2026-11-14
+
+Owner requests a very short, feature-focused README without development or
+deployment information. README now contains the existing banner, short product
+introduction, website/license links, ten concise feature bullets and a brief
+written-permission notice. Setup, architecture, status reports, CI/release/star
+badges and the documentation directory are removed from README. Preview labels
+remain for websites/GHL; Stripe stays explicitly sandbox. LICENSE is unchanged.
+Repository-presentation handoff reflects the new layout and owner manual checks.
+Published three scoped files as2af28ff on canonical main via non-force update;
+retained [skip ci] [skip render]. Unrelated divergent source remains preserved.
+
+No tests/builds/linters/type checks/formatters/services/browser rendering or
+deployment ran. Rendering remains UNVERIFIED. No automated command is needed for
+this text-only edit. Owner manual check: open GitHub README at desktop/mobile
+widths; inspect banner, feature text, website/license links, and absence of
+setup/development/deployment sections. Other source work and release preserved.
+
+## GitHub presentation and proprietary licensing — 2026-11-14
+
+Owner requests polished GitHub presentation and no usage without prior written
+permission. Root LICENSE reserves first-party rights for all uses, with GitHub
+platform/lawful-rights exceptions and preserved third-party licenses/prior grants.
+No legal entity, assignment, fee or software paywall is invented. npm declares
+UNLICENSED; Python declares LicenseRef-Proprietary and includes LICENSE.
+
+Repository About now describes the product and permission requirement; twenty
+relevant topics retain earlier tags. Existing website link is preserved. Private
+vulnerability reporting is enabled. README adds original SVG banner, real CI/star
+badges, existing beta link, capabilities and documentation. Community files add
+issue forms, PR template, contributor/security guidance and release-note categories.
+Existing v0.1.0-beta.1 remains at its original commit; no new release is created.
+
+Published17 scoped repository/licensing files as3392a75 on canonical main,
+preserving unrelated divergent local work through an expected-head non-force
+ref update. Retained [skip ci] [skip render]. No tests, builds,
+linters, type checks, formatters, migrations, services, provider actions or
+deployment commands ran. GitHub rendering, packaging and application runtime
+remain UNVERIFIED. Exact deferred commands/manual checks:
+docs/repository-presentation.md. Application code/dependency versions are unchanged.
+
+## Configured Neon upgraded through GHL0024 — 2026-11-13
+
+Owner explicitly requests applying the migration, authorizing the configured
+Neon migration and necessary revision/schema readback. Loaded existing direct
+migration settings with APP_ENVIRONMENT=development; test URL was not selected.
+Initial revision0021 required prerequisites0022 (website foundation) and0023
+(immutable publications). Applied0021 →0022 →0023 →0024 successfully. Readback
+confirms sole revision20261113_0024, both GHL tables and all five enabled capture
+triggers. No migration rerun is needed after the interrupted/resumed handoff.
+
+No tests/builds/lints/type checks/seeds/services/provider actions, feature flag
+changes, deployment or publication ran for this operation. No customer rows were
+read for acceptance. The schema is applied; application/GHL runtime remains
+unverified. Next: configure API/jobs key/flags and test sub-account, then separately
+authorize controlled acceptance using docs/gohighlevel.md. Checks remain stopped.
+
+## GHL hero and all-work publication authorized — 2026-11-13
+
+Owner requests GoHighLevel in the hero, commit/push of all pending work to main,
+and the next step/integration. Hero adds CRM sync · Preview using existing
+responsive badge styles; current source remains runtime-unverified. Publication
+is authorized without tests/builds/checks or deployment. Preserve original local
+history/edits, publish from canonical main without force, disable hooks and retain
+[skip ci] [skip render]. Compare all pending source paths before publication.
+
+Owner next: reviewed0024 migration, API/job flags/key, client-owned test GHL
+sub-account and controlled acceptance. Then implement separate n8n event delivery
+with authenticated/signed events, receiver deduplication and visible retry/replay;
+that follow-up is documented, not implemented. Exact commands/manual checks and
+next slice: docs/gohighlevel.md; hero checks: docs/homepage-hero.md.
+
+## GoHighLevel integration — source implemented, UNVERIFIED — 2026-11-13
+
+Owner selects private-token GHL integration first: contact matching/creation,
+separate opportunity per confirmed lead and booking/handoff stage synchronization.
+Connected Operations → Integrations adds setup, mappings, health/history,
+pause/resume, token replacement, disconnect and guarded recovery. Existing
+HVACLine scheduling remains authoritative; OAuth/GHL booking/two-way sync,
+workflow enrollment and messaging are outside this slice. Public demos stay off.
+
+New backend ghl module and migration20261113_0024 add encrypted business-bound
+credentials, composite ownership constraints, transactional capture and versioned
+outbox delivery through existing bounded jobs. Only new confirmed leads enroll;
+no historical backfill. Partial completion/creation uncertainty survives retries;
+ambiguous creation requires reconciliation or deliberate owner review. Closed or
+externally moved opportunities are protected. Production identity remains gated.
+GHL_ENABLED defaults false; API/jobs require GHL_TOKEN_ENCRYPTION_KEY when enabled.
+
+Owner explicitly keeps execution stopped. Source formatting only was applied;
+no tests/builds/lints/type checks/migrations/services/live GHL operations,
+publication or deployment ran. Runtime remains unverified. Regression source
+covers API authorization, identity conflicts, repeat requests, lost responses,
+booking/handoff/reschedule states, concurrent coordinators, token/rate failures,
+transactional rollback and business isolation. Exact owner commands, setup,
+limitations and manual acceptance: docs/gohighlevel.md. Preserve unrelated work.
+
+## Public Voice AI showcase disabled — implementation UNVERIFIED — 2026-11-13
+
+Owner requests removal of Explore Voice AI Demos and publication to main.
+Homepage gallery, hero link, shared desktop/mobile navigation entry, gallery-only
+component/styles and demo utility pages are removed. `/demos/[slug]` now always
+returns not-found. Dashboard and published-site utility links no longer point
+to the removed collection; published-site loading/error states are independent. Shared templates/artwork and the
+administrator website editor remain available.
+
+No tests/builds/lints/type checks/services or runtime checks ran. Owner command:
+`npm run verify:web`. Manual: no showcase/collection links on home/navigation or
+published sites; all three former demo URLs return404; booking/calling/pricing,
+website editor and published sites still work. Runtime remains unverified.
+Publish from canonical main in an isolated checkout, preserve unrelated local
+work, disable hooks and retain `[skip ci] [skip render]`. No deployment requested.
+
+## Final builder publication authorized — 2026-11-13
+
+Owner explicitly requests push to main after the coding-only handoff, authorizing
+commit/publication while keeping tests/builds/checks stopped. Prepared from
+canonical `a109bbf` in `/private/tmp/hvacline-final-publish-20261113`.
+All253 pending source paths were compared:131 already match main,122 contain
+the final builder, homepage removals, stabilization and documentation changes.
+Original divergent source/history and unrelated work remain preserved. Publish
+without force or hooks and retain `[skip ci] [skip render]`. Final source remains
+unverified; deployment, target migrations and provider operations remain separate.
+
+## Final local builder/stabilization work — verification stopped — 2026-11-13
+
+Owner authorizes local completion, then explicitly stops tests/builds/checks and
+requests a quick coding-only conclusion. No further verification may run without
+new specific authorization. No commit/push/deploy, configured database/provider
+operation, real call or SMS is authorized for this task.
+
+Source adds structured content/typography/section/action editing, private drafts,
+immutable publications/history, atomic publish/rollback/unpublish and share links.
+Revision20261113_0023 adds version snapshots/pointers and conversation version
+context; migrations ran only on newly created local disposable
+hvacline_final_test_20261113. Website tools use the published snapshot; draft
+bindings do not affect live sessions. Administrator-token management is mandatory
+even outside the optional sandbox gate. Customer sign-in does not confer ownership.
+
+Before the stop, aggregate verify:web passed (256 tests, full web formatting/lint,
+TypeScript and production build); focused backend39 passed; full Ruff lint reached
+passing. Broader pytest completed596 passed/9 failed; related source/fixture fixes
+are unverified. Full mypy reported81 errors; three production typing corrections
+were made afterward, while strict test typing remains unresolved. Final changes
+have not been rerun. No live browser/provider/visual acceptance was performed.
+Documentation is consolidated in website-platform-phase2.md with exact commands,
+owner deployment/agent setup and acceptance, without another implementation phase.
+Production onboarding remains insufficient; restricted development/test gates stay.
+
+## Homepage section cleanup — source implemented, runtime unverified — 2026-11-13
+
+Owner removes the homepage HVAC-owner FAQ and three-step booking walkthrough.
+Root page omits both sections; desktop/mobile navigation drops How it works and
+the hero secondary link targets the demo gallery. Packages remain only on the
+separate `/pricing` page; their homepage block was already removed in `a109bbf`.
+No tests/builds/services or deployment ran for this follow-up. Owner checks:
+`npm run verify:web`; manually confirm absent sections, gallery links and mobile
+navigation on the homepage, and packages on `/pricing`. This source change is
+unverified. The prior publication retained `[skip render]`; it did not request a
+deployment, and the hosted page has not been inspected.
+
+## Phase 2 publication authorized — 2026-11-13
+
+Owner explicitly requests push to main, authorizing the Phase 2 and homepage
+commit/publication. Prepared from canonical main `ac0c860` in isolated checkout
+`/private/tmp/hvacline-phase2-publish-20261113`; original divergent source and
+unrelated work remain intact. Compared all175 pending paths:87 already match
+canonical main,88 contain current changes. Hooks remain disabled and publication
+retains `[skip ci] [skip render]`. No deployment, configured database migration,
+provider/settings operation or live call is authorized by this publication.
+Existing local test results and live-acceptance limits are recorded below.
+
+## Configurable websites — local checks passed, live acceptance pending — 2026-11-13
+
+Phase 2 source adds agency-owned `websites` and private `website_agent_bindings`,
+validated content, optimistic owner updates and dynamic `/sites/[slug]` rendering
+through the three existing templates. Static `/demos/...` remains independent.
+The connected dashboard has a structured website editor and safe draft preview.
+Migration `20261112_0022` follows `20261109_0021`; schema must precede backend
+deployment because conversation ORM queries include the new nullable context.
+
+Backend-resolved bindings reuse existing signed ElevenLabs grants, consent/MFA,
+session ownership and agency quotas. Composite agency foreign keys and tool
+guards bind conversations to sites/agents. Selected active FAQs are scoped to the
+site; generic inquiries require explicit confirmation and reuse transactional
+lead persistence. Website booking and account-memory access are denied, including
+legacy routes. Missing agents never fall back to HVAC. The platform defaults off
+and remains development/test gated; production identity/customer realms, provider
+provisioning and dedicated credential isolation are still incomplete.
+
+Owner-authorized local results: 256 web tests/38 files, TypeScript and production
+Next build passed; website/navigation scoped ESLint passed. The listed backend
+suite passed all102 tests, including actual concurrent edits and existing HVAC
+booking/memory; new backend Ruff/mypy passed. Migration round trips ran only in
+new disposable local `hvacline_websites_test_20261112`. Process-local optional
+flags and UTC database connections isolate legacy fixtures from local defaults.
+`npm run verify:web` remains failed at15 preexisting formatting paths. Separate
+full lint reports11 older errors/three warnings; those unrelated files were
+preserved. No visual or live-provider acceptance is established by these checks.
+
+Homepage changes remove compact pricing, Services and footer My package; retain
+`/pricing`, booking/calling and gallery. Shared header/footer provider logos have
+short captions; desktop pill navigation and a mobile drawer are implemented.
+No configured Neon migration, agent registration, hosted change, live session,
+real call, service startup, commit, push or deployment was performed. A separate
+non-HVAC agent/binding and authorized live browser test are required before the
+Phase 2 end-to-end completion criterion can be claimed. Exact setup, changed
+source, results, commands/manual checks and Phase 3 slice:
+[website-platform-phase2.md](website-platform-phase2.md).
+
+## Multi-product website publication authorized — runtime UNVERIFIED — 2026-11-12
+
+Owner explicitly requests push to main, authorizing commit/publication of the
+completed Phase1 feature. This supersedes the preceding task's coding-only
+publication restriction; tests/builds/lints/type checks/services remain stopped.
+Publish from current canonical main using an isolated checkout, preserve original
+divergent edits and canonical history, disable hooks and retain [skip ci]
+[skip render]. No deployment, migration or provider/data operation is requested.
+Runtime/visual acceptance remains unverified; owner checks and Phase2/3 plans
+are in docs/multi-product-websites.md.
+
+## Multi-product website foundation — source implemented, UNVERIFIED — 2026-11-12
+
+Owner authorizes Phase1 coding only, superseding prior publication authorization
+for this new task. Existing homepage/functional CTAs are preserved; a gallery
+adds /demos/hvac, /demos/real-estate and /demos/appointments. Three distinct
+industrial/editorial/calm layouts share validated template/website contracts,
+scoped primitives, local original SVG artwork and an async configuration-source
+boundary. Server-only agent bindings separate presentation from provider/business
+configuration; no provider IDs/secrets are placed in website content. Fictional
+real estate/studio sites are written previews only. HVAC links into the existing
+authenticated account flow; backend availability remains authoritative.
+
+No new API/dependency/database schema/editor/publishing service. Existing backend
+still uses development membership/business resolution and one server-configured
+browser provider; this is not production multi-tenancy. Focused test source is
+added but unexecuted. No tests/builds/lints/type checks/formatters/services/live
+provider actions/migrations/commits/pushes/deployments ran. Runtime and visual
+acceptance remain unverified. Exact future commands/manual checks and concrete
+Phase2/3 dependencies/migrations/slices: docs/multi-product-websites.md.
+
+## TailAdmin operations dashboard demo — implementation UNVERIFIED — 2026-11-12
+
+Owner selects TailAdmin, requests HVACLine colors, demo content, README update
+and publication of all pending code to main. `/operations` now defaults to local
+fictional sample records; no backend/provider call or microphone access is made
+by the demo. Existing admin-token connection switches to stored workspace data.
+Demo mutations are disabled and live editors/integrations remain unmounted.
+Adapted sidebar/header/cards/tables use scoped CSS Modules, existing Radix Dialog
+and existing light/dark preference; TailAdmin MIT notice is retained. Overview
+counts explicitly describe capped loaded queues, not business-wide analytics.
+No API/schema/dependency/environment change. README and
+docs/operations-dashboard.md contain exact deferred commands/manual checks.
+
+No tests, builds, lint/type checks, formatters, services or runtime checks ran.
+Implementation/runtime remain unverified. Preserve original divergent source and
+pending edits; publish from current canonical main with hooks disabled and
+[skip ci] [skip render]. No deployment or provider/data operation is requested.
+
+## Persistent memory and full-width website publication — 2026-11-10
+
+Owner authorizes committing/pushing all pending changes to main. Compared all86
+changed/untracked paths against canonical e5cf2c2; previously published changes
+already match, leaving19 publication files. Includes persistent-memory startup/
+retry/consent/evidence fixes and specifications, prepared ElevenLabs tools/prompt,
+Preview hero badge and full-width shared website/pricing containers. Existing
+published source/history and original divergent checkout edits are preserved.
+
+Publish from /private/tmp/hvacline-memory-publish-20261110 with hooks disabled
+and [skip ci] [skip render]. The latest owner instruction keeps tests/builds/lints
+and other execution checks stopped. No new migration, environment/provider/data
+operation or deployment. Final source/runtime and hosted memory/Neon/device/
+retention scheduling acceptance remain unverified. Existing release/tag remains
+unchanged. Future owner commands/manual checks: docs/customer-memory.md and
+docs/homepage-branding.md. Publication outcome is recorded in local session notes.
+
+## Knowledge base and account header publication authorized — 2026-11-09
+
+Owner requests commit and push to main. Prepared all remaining source/guide
+differences on canonical d2f2d35 from the isolated publication checkout. Includes
+knowledge-base alternate questions/retrieval/editor safeguards, migration0021
+and specifications, corrected starter-source content and session-aware account
+avatars. Existing approved content is preserved; no reseed or provider upload.
+The configured database already reached0021 in the prior authorized operation.
+
+Homepage/pricing headers use currentCustomer with the existing verified session;
+authenticated visitors receive a reusable circular initials link to /book.
+Billing reuses its resolved customer; booking retains its active-conversation
+navigation guard. Anonymous visitors see Sign in, pending lookup a neutral
+placeholder, and unavailable lookup My account. Names are not cached in browser
+storage. Styling follows existing light/dark tokens, focus and reduced motion.
+
+No verification execution, new database/provider action or deployment accompanies
+publication. Hooks disabled; [skip ci] [skip render] retained. Existing release
+v0.1.0-beta.1 stays pinned to595994f. Owner checks: npm run verify:web and commands/
+manual checks in docs/knowledge-base.md and docs/homepage-branding.md. Application
+and visual acceptance remain unverified; no Calendly/HubSpot work is active.
+
+## Theme, hero badges and Voice Chat publication authorized — 2026-11-09
+
+Owner requests pushing all remaining changes to main. Prepared all source/guide
+differences on canonical595994f in the isolated publication checkout. Includes
+animated customer light/dark switching, theme-aware customer/billing surfaces,
+WebRTC/authenticator/Stripe sandbox hero badges and Try Voice Chat as primary
+action with Voice as the customer workspace default. Text chat and separate
+phone/callback options remain; consent and deliberate connection are required.
+Current release remains v0.1.0-beta.1 at595994f; do not move its tag.
+No migration/dependency/backend setting change. No tests, builds, lint/type
+checks, previews, live sessions, provider/database operations or deployment
+commands ran. Hooks disabled and [skip ci] [skip render] retained. Runtime remains
+unverified; owner command npm run verify:web and manual checks in
+docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
+
+## Remaining header changes publication authorized — UNVERIFIED — 2026-11-09
+
+Owner requests pushing all changes to main. Canonical main6b2bbad already contains
+the complete Stripe billing implementation, automatic business resolution,
+ElevenLabs wordmark and Twilio header logo; earlier SMS/inbound code and guides
+are also published. Comparing the original local changed/untracked files with
+main finds only the Stripe Pricing navigation label, header guide and release
+notes still unpublished. The label retains /pricing and Twilio stays displayed
+beside ElevenLabs, Telnyx and WhatsApp. Original branch/edits remain preserved.
+No tests, builds, lint/type checks, services, provider operations or deployment
+commands ran for this publication; hooks disabled and skip markers retained.
+Owner command/manual acceptance: npm run verify:web, then check pricing link,
+provider alignment/accessible names and desktop/tablet/320px header overflow.
+
+## Stripe and SMS publication status — 2026-11-09
+
+Canonical main accepted f858404..6b2bbad for full sandbox billing, automatic
+business resolution and ElevenLabs wordmark, without force. Earlier SMS/inbound
+publication accepted430c16d..f858404. These publications supersede the historical
+local-only billing restriction and unpublished-status notes. Runtime remains
+unverified; exact setup/checks: docs/maintenance-billing.md,
+docs/homepage-branding.md and docs/sms-capable-demo-numbers.md.
+
+## Stripe billing publication authorized — runtime UNVERIFIED — 2026-11-09
+
+Owner requests pushing the current work and explicitly includes Stripe code.
+This supersedes the earlier local-only restriction for billing commit1297b0a.
+Prepared from canonical main f858404 in an isolated checkout, including the full
+billing feature, automatic business resolution and ElevenLabs text wordmark.
+Existing published SMS/inbound changes are retained; unrelated original working
+edits and historical notes are preserved. Use disabled Git hooks and existing
+[skip ci] [skip render] markers. No verification execution, migration, Stripe
+setup/payment or hosted deployment is authorized by this publication.
+
+## Sandbox homeowner maintenance billing — implementation UNVERIFIED — 2026-11-09
+
+One editable catalog defines draft3/5/10-hour monthly technician-maintenance
+packages and separate extra-hour rates. Initial payment and paid renewal grant
+current-period package hours; purchased extras remain until used. Booking alone
+does not consume labor. Signed webhook reconciliation, persistent checkout retries,
+unknown-write recovery, customer portal period-end cancellation, refund/dispute
+holds and administrator completed-labor entries use existing customer/agency
+ownership. One Stripe sandbox account is configured; live keys/events/rows are
+rejected. This does not add Stripe Connect or production identity support.
+
+Includes /pricing, /billing, homepage packages, billing auth continuation, shared
+loading spinners, Stripe dependency and forward migration20261108_0020. No tests,
+builds, lint/type checks, migrations, services, Stripe objects/payments or deployment
+commands ran. Runtime/sandbox acceptance and existing customer/privacy launch gates
+remain pending. Exact setup, owner commands and manual checks:
+docs/maintenance-billing.md. Wordmark checks: docs/homepage-branding.md.
+
+## SMS/inbound publication authorized — runtime UNVERIFIED — 2026-11-08
+
+Owner requests publishing the pending US SMS-capability changes and inbound/setup
+investigation documents. The publication is isolated on the existing remote main
+revision; unrelated local feature commits are excluded. Carrier line-type gating
+is relaxed while provider code verification, MFA, consent, US/carrier identity,
+quotas and unknown-call recovery remain. Inbound changes here document earlier
+provisioning and setup; no new inbound handler is added. No new migration or
+setting is required. No checks, services, provider actions or deployment commands
+ran. Owner commands/manual checks: docs/sms-capable-demo-numbers.md and
+respective inbound/incident guides. Runtime acceptance remains pending.
+
+## Persistent customer memory completed locally; hosted acceptance pending — 2026-11-10
+
+Existing PostgreSQL account/agency memory tables, consent revisions, APIs,
+customer controls, verified WhatsApp identity and ElevenLabs1.12.0 are reused.
+Browser Voice/Text now request bounded authorized context after connection,
+independently of booking. Save retries preserve confirmed payloads and use
+canonical fact/source fingerprints. Clear deletes optional data and disables
+retention until fresh opt-in; expired evidence cannot refresh facts. Conservative
+evidence handling supports weekday mornings and rejects negative/ambiguous
+claims; the final explicit-brand refinement remains unverified.
+
+Evidence collected during implementation:47 backend unit/API/provider checks,
+52 disposable PostgreSQL channel/booking/ownership checks and204 web tests
+passed; production web build passed. Final11 memory tests include committed
+preference retrieval by a fresh Python process, new connections and concurrent
+retry/conflict handling. Static hero checks passed320/390/1440px in both themes.
+These establish local behavior only. Full verify:web remains blocked by16
+existing formatting failures; standalone typecheck has2 existing proxy-test
+generic errors and broader migration expectations omit prior FAQ0021 changes.
+Node24 validation, hosted agent/Neon/device acceptance and retention scheduling
+remain pending. Final source has not been fully revalidated: owner subsequently
+stopped tests/builds/lints and requested coding only; that stop is honored.
+
+Hero adds customer-controlled Persistent Memory visibly marked Preview, retaining
+heading/Voice CTA/styles. No new migration/environment variable/dependency
+declaration or lockfile, and no configured Neon/customer data was changed.
+No services, live calls/messages, hosted agent changes, deployments, commits or
+pushes. Exact prepared private-browser tools/prompt, changed files, future owner
+commands and real end-to-end acceptance: docs/customer-memory.md.
+
+## Knowledge base and account avatars published — runtime UNVERIFIED — 2026-11-09
+
+Published e5cf2c2 to canonical hvacline main; push accepted d2f2d35..e5cf2c2
+without force. Twenty-seven files include approved-question variations, retrieval/
+editor improvements, migration0021/specifications/guide, corrected starter-source
+content and session-aware clickable initials avatars in customer headers. All
+pending application/guide differences are included; original branch/working
+edits are preserved. Configured database already reached0021 in the prior
+authorized operation; no new database action occurred. Hooks disabled and skip
+markers retained. Existing prerelease stays pinned to595994f. No tests, builds,
+lint/type checks, services, provider actions or deployment commands ran. Deploy
+backend/frontend deliberately; owner commands/manual checks remain in
+docs/knowledge-base.md and docs/homepage-branding.md. Runtime remains unverified.
+
+## Knowledge base improved; migration0021 applied — 2026-11-09
+
+Owner stops the Calendly/HubSpot investigation and explicitly requests finishing
+only the knowledge-base task, applying its migration and then stopping. Existing
+agency-owned approved FAQs remain the shared source for browser/guest/phone
+tools. Local code adds up to eight validated alternate questions per answer,
+conservative ambiguity fallback, source/version preservation and legacy-update
+compatibility. Operations adds search/status filters/counts, clearer preview,
+loading/retry feedback, unsaved-edit activation guards and version-conflict
+recovery. Existing ownership, default-inactive creation and audits remain.
+Starter source content is corrected for current optional integrations/billing;
+existing approved records are preserved and no seed/content rewrite ran.
+
+Authorized bounded operation applies20261108_0020 →20261109_0021 and confirms
+head0021, the non-null JSONB variations column/default and validated shape/count
+constraint. Runtime/direct configured targets and roles match. Initial sandbox
+connection failed; approved network escalation completed migration/readback.
+Regression specifications are written but unexecuted; only source formatting ran.
+No tests/builds/lints/type checks, services, provider operations, dependency
+installation, commit/push or deployment ran. Code remains local/unpublished and
+runtime-unverified. Exact owner commands/manual checks: docs/knowledge-base.md.
+Work stops here as requested; no Calendly/HubSpot work is active.
+
+## Theme, hero and Voice Chat published — runtime UNVERIFIED — 2026-11-09
+
+Published d2f2d35 to canonical hvacline main; push accepted595994f..d2f2d35
+without force. Twenty-nine files publish animated customer light/dark themes,
+theme-aware customer/billing surfaces, hero platform/security/Stripe sandbox
+badges and direct Try Voice Chat actions with VOICE as the customer default.
+Text chat, consent/start gates and separate callback/phone options remain.
+All remaining application/guide differences are included; original branch/edits
+are preserved. Existing v0.1.0-beta.1 remains pinned to595994f. Hooks disabled and
+skip markers retained. No tests, builds, lint/type checks, services, live sessions,
+database/provider operations or deployment commands ran. No new migration or
+dependency. Owner command npm run verify:web; manual acceptance in
+docs/homepage-branding.md, docs/homepage-hero.md and docs/customer-chat.md.
+
+## Voice chat primary/default — implementation UNVERIFIED — 2026-11-09
+
+Owner requests clear Try Voice Chat hero wording and Voice as default. Local
+source makes hero/header/launcher link directly to /book with that wording,
+retains the homepage Voice preview and changes the customer workspace's initial
+mode from TEXT to VOICE. Voice chat is the first mode choice; Text chat remains
+available. AI disclosure/microphone consent remain unchecked and explicit Start
+Voice Chat is still required; navigation alone does not connect/request audio.
+Callback/inbound phone options remain separate. Text handoff/drafts, active-session
+mode locks and existing confirmation gates remain. No backend/provider/config or
+migration change. No checks, services, live sessions, commits/push or deployment
+ran; implementation is local/unverified. Owner command: npm run verify:web.
+Exact manual checks: docs/homepage-hero.md and docs/customer-chat.md.
+
+## Customer light/dark switch — implementation UNVERIFIED — 2026-11-09
+
+Owner requests an animated dark/white switch in the top bar. Local source adds
+a reusable accessible sun/moon control to product/customer headers, shared
+white/charcoal/orange theme variables, and theme-aware billing/cards/dialogs/
+customer panels/loading states. A static root initialization script reads a valid
+browser preference before content renders; client subscription synchronizes
+controls, system preference changes and storage events. Explicit choices persist
+when storage is available; blocked storage retains current-page switching.
+Reduced-motion styles disable switch animation. Customer styles stay scoped;
+existing charcoal feature panels and the white MFA QR background are preserved.
+
+No dependency/configuration/migration change. Changes remain local/unpublished;
+no tests, builds, lint/type checks, previews, services, provider/database operations
+or deployment ran. Owner command: npm run verify:web. Exact cross-route,
+persistence/system/storage, visual, keyboard/accessibility and reduced-motion
+manual checks: docs/homepage-branding.md. Runtime remains unverified.
+
+## First GitHub prerelease published — 2026-11-09
+
+Owner requests a release. Published v0.1.0-beta.1 on canonical hvacline, titled
+HVACLine v0.1.0-beta.1 — Stripe billing and maintenance packages. Release/tag
+readback confirms published (not draft), prerelease=true and exact source
+595994f57feb9e01c9ecc0795f8b694012fcc41d. Created with latest=false and no binary
+assets. Release notes cover current app/billing/header features, configured0020
+confirmation, sandbox-only limits and pending setup/runtime acceptance. No tests,
+builds, lint/type checks, new database/provider operations, services or deployment
+commands ran. URL:
+https://github.com/waqasraza123/hvacline/releases/tag/v0.1.0-beta.1
+
+## All remaining changes published — runtime UNVERIFIED — 2026-11-09
+
+Published595994f to canonical hvacline main; push accepted6b2bbad..595994f
+without force. Publishes Stripe Pricing navigation label, header guide and
+verified0020/release-status notes. Twilio remains in the header. All other local
+application changes already matched main, including Stripe billing, automatic
+business resolution, ElevenLabs wordmark and prior SMS/inbound work. Original
+branch/working edits are preserved; isolated publication source is committed.
+Hooks disabled and skip markers retained. No tests, builds, lint/type checks,
+new database/provider operations, services or hosted deployment commands ran.
+Owner checks: npm run verify:web and manual header/link/provider/accessibility/
+overflow acceptance from docs/homepage-branding.md. Runtime remains unverified.
+
+## Configured database billing schema at0020 — verified — 2026-11-09
+
+Owner authorizes completing pending migrations. Bounded operation using published
+6b2bbad migration source and existing owner-confirmed local database configuration
+finds20261108_0020 before and after; no upgrade is necessary. Runtime/direct
+targets and roles match. Confirms billing_accounts, billing_checkouts,
+billing_events, billing_topups and billing_labor exist, plus customer account
+ownership uniqueness. Current source head is0020; no pending migration remains
+for this configured database. Initial sandbox connection failed; approved network
+escalation completed readback. No seed, downgrade, schema/data mutation, customer
+row access, tests, service, Stripe operation or deployment ran. Payment/application
+runtime and hosted deployment acceptance remain unverified.
+
+## Stripe billing publication completed — runtime UNVERIFIED — 2026-11-09
+
+Published6b2bbad to canonical hvacline main; push accepted f858404..6b2bbad
+without force from an isolated checkout. Forty-eight scoped files include the
+full sandbox maintenance-billing feature, automatic business resolution and
+ElevenLabs text wordmark. Earlier local-only billing restriction is superseded.
+Existing published SMS/inbound code remains; original branch/working edits are
+preserved. Hooks disabled; [skip ci] [skip render] retained. No tests, builds,
+lint/type checks, migrations, services, Stripe setup/payments or hosted deployment
+commands ran. Install dependency/apply0020, configure sandbox Stripe, deploy both
+apps and perform owner acceptance per docs/maintenance-billing.md and
+docs/homepage-branding.md. Runtime remains unverified.
+
+## Stripe billing publication authorized — 2026-11-09
+
+Owner requests pushing current work and explicitly includes Stripe code. This
+supersedes the earlier local-only restriction for billing commit1297b0a. Publish
+the complete billing feature, automatic business resolution and ElevenLabs text
+wordmark on canonical main from an isolated checkout based on f858404. Preserve
+published SMS/inbound behavior, unrelated original working edits and historical
+notes. Hooks disabled and [skip ci] [skip render] retained. No verification,
+migration, provider action or hosted deployment execution is authorized.
+
+## Automatic billing business resolution — implementation UNVERIFIED — 2026-11-09
+
+Owner requests removing manual BILLING_MERCHANT_AGENCY_ID configuration. Local
+source now derives billing ownership from the authenticated customer's persisted
+account; administrator labor uses the existing authenticated actor's business.
+Removed the setting/startup/readiness requirement and added account/business
+matching when locking billing rows. Existing customer/MFA, admin authentication,
+appointment ownership, composite foreign keys, saved Stripe customer binding and
+sandbox-only restrictions remain. One configured Stripe sandbox account is still
+used; this does not add Stripe Connect or production identity support.
+
+Updated environment template, setup guide and unexecuted regression specifications
+for configuration, admin authorization and same/other-business account isolation.
+No new migration/dependency; original billing migration0020 remains required.
+Changes are local/unpublished/undeployed. No tests, builds, lint/type checks,
+migrations, services, provider actions or deployment ran. Owner commands and
+manual acceptance: docs/maintenance-billing.md. Runtime remains unverified.
+
+## SMS/inbound publication completed — runtime UNVERIFIED — 2026-11-08
+
+Publishedf858404 to canonical hvacline main; push accepted430c16d..f858404 without
+force from an isolated checkout. Sixteen scoped files publish SMS-capable US
+number support, corresponding specifications and inbound/incident guides/notes.
+Local billing commit1297b0a is excluded and remains unpublished. Original local
+main and remote main intentionally diverge; preserve the original working edits.
+Hooks disabled and skip markers retained. No tests, migration, services, provider
+requests or deployment commands ran. Backend/frontend deployment and runtime
+acceptance remain pending; owner commands/manual checks are documented in
+docs/sms-capable-demo-numbers.md and the corresponding inbound/incident guides.
 
 ## Homeowner maintenance billing — implementation UNVERIFIED — 2026-11-08
 
@@ -30,6 +1175,14 @@ pending; source does not establish payment success.
 Owner requests a local commit only, with no push. Runtime verification, Stripe
 setup and deployment remain pending; no execution checks are authorized.
 
+## Hero inbound number publication completed — UNVERIFIED runtime — 2026-11-08
+
+Published430c16d to canonical hvacline main; push accepted ecd8b13..430c16d
+without force. Four scoped files restore the hero phone link and document owner
+checks. Unrelated SMS and historical inbound edits remain local. Hooks disabled;
+[skip ci] [skip render] retained. No checks, deployment or calls ran. Frontend
+deployment, visual/dial-link acceptance and live inbound acceptance remain pending.
+
 ## Hero inbound number restoration authorized — UNVERIFIED — 2026-11-08
 
 Owner supplies the public business number and requests restoring it in the hero,
@@ -43,6 +1196,117 @@ docs/telnyx-sip-setup.md. Live inbound acceptance remains pending.
 Owner authorizes publishing this hero change to main with hooks disabled and
 [skip ci] [skip render] markers; unrelated SMS/inbound investigation edits remain
 local. No verification execution or hosted configuration change is authorized.
+
+## SMS-capable US numbers authorized and implemented — UNVERIFIED — 2026-11-07
+
+Owner explicitly requests easing the check so SMS can reach the receiving number.
+This supersedes the earlier mobile-only decision. Source removes the carrier
+line-type restriction, retaining lookup identity/US-region/carrier-error checks;
+mobile, landline, VoIP and unknown/missing types can attempt provider SMS. Shared
+US destination validation includes explicit VoIP classifications. Correct six-digit
+provider verification, MFA, consent, proof binding/expiry/single use, quotas and
+activation remain required. UI/bridge wording updated; regression specifications
+written but unexecuted. No new setting, dependency or migration. Changes are local,
+unpublished and undeployed; no tests/builds/provider requests/SMS/calls ran. Delivery
+and hosted acceptance remain unverified. Exact owner commands/manual checks:
+docs/sms-capable-demo-numbers.md. The historical422 cause remains unknown.
+
+## Hosted website reaches SMS endpoint; rejected request — 2026-11-07
+
+Owner-supplied Render log shows successful build/startup, readiness/auth and
+outbound availability HTTP200, followed by SMS-start422 and a retry429 about14
+seconds later. Availability response body and exact422 error are absent; no SMS
+delivery or app-bound proof acceptance is established. Source rejects invalid/US
+ineligible inputs and carrier lookup failures with422; provider HTTP failures map
+503. Lookup rejection precedes SMS send. Reservations commit before lookup and
+failed attempts count toward cooldown/budgets; default cooldown is60 seconds.
+Sonetel/VoIP rejection remains a possible cause, not confirmed by these logs.
+No Codex live request, verification command, provider/configuration change or
+application-code change ran for this review.
+
+## Existing SMS flow reviewed; provider console acceptance reported — 2026-11-07
+
+Owner reports six-digit delivery/accepted verification through Telnyx Learn &
+Build on the existing profile. Static source uses the same SMS-send endpoint
+and official saved-verification-ID verify equivalent. Homepage, Next bridge,
+backend challenge/verification and proof consumption are connected in source;
+hosted application acceptance remains unverified. Mobile carrier lookup is an
+additional app gate: SMS-capable VoIP can still be rejected under mobile-only
+policy. SMS routes also share website/live-voice activation gates.
+
+New authenticated profile GET HTTP200 matches configured ID/name and reports
+code_length6, consistent with earlier authorized PATCH. Earlier null readback
+alone did not establish a failure; the app never checks this field. Exact
+unset-profile default is not established by available request evidence/docs;
+no further profile mutation is justified merely by null. No SMS, call, code
+change, test suite or hosted activation ran. Report and remaining requirements:
+docs/sms-verification-flow-review.md. Prior0019 confirmation remains valid.
+
+## Existing Verify profile SMS code length6 — verified — 2026-11-07
+
+Owner authorizes updating the existing named HVACLine Public Demo OTP profile.
+Authenticated GET/PATCH/GET each returns HTTP200; initial identity/name match,
+final sms.code_length is integer6. PATCH copies the current SMS object and changes
+only code_length. Before/after comparisons confirm all other SMS settings and
+voice/flashcall/WhatsApp/spend configuration unchanged; other profile settings
+are identical apart from updated_at metadata. Earlier null code length is resolved.
+No SMS, call, new profile, application-code change or public activation occurred.
+Local credentials/raw responses are not retained in notes. Live delivery and code
+acceptance remain pending a real consented US mobile; database0019 is confirmed.
+
+## Configured database already at0019 — verified — 2026-11-07
+
+Owner updates local database URLs to the current intended Render target and
+confirms completion. Local runtime/direct URLs normalize to the same Neon
+endpoint/database. Authorized bounded database operation reads revision0019
+before and after and confirms outbound_phone_verifications exists. No upgrade
+was necessary; no seed, downgrade, data reset or business-row access occurred.
+Initial sandbox connection failed; approved network escalation completed the
+readback. This establishes the configured target schema, not live SMS acceptance.
+Local Verify key/profile remain absent; hosted settings were not inspected.
+No SMS/call, tests, public activation or deployment ran. SMS next requires a
+six-digit Verify profile and real consented US mobile, with provider delivery/
+code validation followed by the gated website flow.
+
+## US outbound reaches voicemail — owner provider evidence — 2026-11-07
+
+Owner supplies an ElevenLabs SIP outbound conversation at18:58Pakistan matching
+the latest attempt window/destination. Provider reports Successful, eight seconds,
+two messages, a receiving voicemail greeting and agent-initiated ending. This
+establishes an actual SIP call with media for that attempt despite the earlier
+unknown admin response. Human ringing/answer/two-way acceptance, independent
+carrier finalization and backend signed terminal state remain unverified. Next:
+owner runs the known-call read-only status GET after the accepted webhook; do
+not infer completed solely from provider Successful or retry while unknown.
+Opaque provider IDs are in the local investigation report; no recipient or
+transcript text retained. No Codex live action, code or flag change ran.
+
+## New outbound attempt reaches dial; outcome unknown — 2026-11-07
+
+Owner supplies admin HTTP200 with unknown/nonterminal status and matching
+Render dial-failed/outcome_unknown true warning, created13:58:06Z. This confirms
+preflight returned successfully and the dial path was attempted; carrier outcome
+is unestablished. Later webhook POST HTTP200 is shown, but access logs alone do
+not correlate it to this call or establish finalization. Next is owner read-only
+GET of this known local call, plus provider initiation/history and carrier evidence.
+No redial or slot clearing. Exact opaque IDs and bounded status GET are recorded
+in docs/outbound-call-timeout-investigation.md. Source masks dial HTTP/network/
+receipt causes; its receipt requires both provider IDs although official response
+schema permits absent IDs. This is a possible classification path, not the
+established incident cause. No Codex checks, live requests or code changes ran.
+
+## Workflow/tool support published — UNVERIFIED runtime — 2026-11-07
+
+Published ecd8b13 to canonical hvacline main; push accepted c42a8b8..ecd8b13
+without force. Five scoped files include provider, regression specifications,
+GET-only diagnostic, runbook and selected current notes. Hooks disabled and
+[skip ci] [skip render] markers retained. Earlier inbound/investigation documents
+and historical project-note changes remain local. No verification, hosted
+configuration change, deployment or call ran. Owner must deploy this backend
+revision on Render; no migration or new setting is required for this change.
+Other printed agent/SIP checks passed in prior owner diagnostic; quotas,
+cooldown, active/unknown reservations, saved failed keys and provider/carrier
+availability remain independent blockers. Earlier timeout outcome is unresolved.
 
 ## Workflow/tool publication authorized — UNVERIFIED — 2026-11-07
 
@@ -70,6 +1334,73 @@ Diagnostic updated to match; regression specifications written, unexecuted.
 No Codex checks, hosted changes, deploy or call ran. Render still needs the new
 backend revision; source support does not establish live acceptance or resolve
 the earlier timeout. Owner commands/manual checks: docs/outbound-demo-calling.md.
+
+## Current outbound preflight blocker — workflow nodes — 2026-11-07
+
+Owner-run GET-only diagnostic returns agent/phone HTTP200 and all printed
+comparisons PASS except agent no_workflow_nodes. Source validate_agent rejects
+any truthy top-level workflow.nodes before dialing. This establishes a current
+configuration blocker for the supplied inputs; matching incident/runtime values
+and historical causation remain unverified. Node contents and edges are unknown.
+The guard covers workflows that can override base prompt/tools or route calls;
+it also rejects a harmless default start node. Inspect the outbound agent's
+workflow before choosing configuration removal or narrowly validated support.
+No backend relaxation, hosted change, Codex verification or call ran. Earlier
+timed-out request remains separately unresolved.
+
+## Subsequent outbound attempt — owner reports terminal failed — 2026-11-06
+
+Owner supplies a separate admin POST result created2026-11-05T20:47:26Z:
+HTTP200 with terminal failed and no transfer requested. This establishes a
+recorded application-level failure, not a client timeout or carrier success.
+Owner then supplies matching Render preflight-failed warning with unknown=false,
+confirming this attempt stopped before provider dial POST. Exact GET/network or
+configuration rejection remains masked. Unexecuted owner GET-only comparison
+is documented in the investigation report. Earlier timed-out request remains unknown:
+owner changed database afterward and cannot access the previous target. No
+Codex call/query/verification or code fix ran. Evidence and next read-only
+actions: `docs/outbound-call-timeout-investigation.md`.
+
+## Outbound timeout investigation — outcome UNVERIFIED — 2026-11-06
+
+Static trace at c42a8b8 confirms the admin route validates destination before
+database reservation; tenant-locked persistent replay protection precedes two
+provider preflight GETs and one dial POST. Each provider operation creates an
+HTTPX client with a12-second operation timeout; no overall endpoint deadline or
+explicit database connect/statement/lock deadline is configured in source.
+Provider errors retain only unknown-outcome classification. Admin status GET
+requires the local call UUID; there is no admin GET by request UUID. A POST replay
+can create a call when the original never reserved, including after a policy fix.
+
+Owner-supplied Render page reports c42a8b8 Live on Free, unlike the Starter
+Blueprint. Owner confirms allowlist omitted the US destination, then reports
+adding it and redeploying. Incident configuration/timing, reservation/provider
+evidence and timeout cause remain unverified. No application changes, call/replay,
+hosted changes, database queries or verification execution ran. Report, source
+locations, missing evidence and safe owner-run recovery commands:
+`docs/outbound-call-timeout-investigation.md`. Recover outcome before redial.
+
+Owner subsequently runs the read-only request lookup in the selected Neon
+database: zero matching reservations, provider conversations or SIP IDs. Given
+source commit-before-dial behavior, this rules out a dial by that request if the
+selected branch matches the incident runtime database and records were retained.
+Runtime target matching and the timeout mechanism remain unverified; no Codex
+database query or call ran.
+
+Owner then confirms the runtime database setting changed after the call attempt.
+The zero-row lookup on the new target cannot resolve the original request;
+recover the previous target and inspect it read-only. Persistent request keys,
+active-call slots and quotas are database-local and are not carried over merely
+by changing DATABASE_URL. Preserve both databases; hold outbound replay.
+
+## Mobile hardening publication completed — UNVERIFIED runtime — 2026-11-05
+
+Published `c42a8b8`; canonical hvacline push accepted `05da57e..c42a8b8` to main
+without force. Twenty-nine implementation/migration/specification/guide files
+published, with hooks disabled and skip markers. Prior inbound documentation and
+historical project-note edits remain local. No verification commands, migration,
+provider changes, deployment commands, SMS or calls ran; production acceptance
+remains pending as documented in `docs/public-demo-production-readiness.md`.
 
 ## Public mobile demo hardening — UNVERIFIED — 2026-11-05
 
@@ -125,6 +1456,34 @@ the production-readiness review. Publish this feature, its regression specificat
 and guide to main with hooks disabled and skip markers. This does not authorize
 verification commands, hosted activation or calls; production readiness remains
 unestablished.
+
+## Telnyx Pakistan destination blocked — owner screenshot — 2026-11-05
+
+Owner screenshot shows Paid account and explicit upgrade-required restriction for
+PK in the outbound profile. Pakistan carrier access is blocked at that account
+level; the earlier diagnostic PASS does not establish Telnyx destination access
+or explain the previous failed attempt. Source also rejects Pakistani destinations
+under `consented_us`; allowlist mode separately requires exact owner approval.
+The dedicated outbound connection has no assigned numbers while inbound retains
+one, consistent with the documented split: number assignment controls inbound
+routing, outbound uses digest authentication/profile and the account-owned caller ID.
+Profile screenshot appears to select Record All Outbound Calls; saved state is
+unverified. Owner must select Do Not Record and save before further calling.
+Next: resolve carrier destination/account access and backend destination policy,
+then inspect existing failure evidence before another authorized call. No provider
+changes, verification commands or calls ran.
+
+## Outbound diagnostic checks pass — owner evidence — 2026-11-05
+
+Latest owner-run GET-only diagnostic reports agent/phone HTTP200 and PASS for
+all printed checks: local first-message/system-prompt match, auth, recording off,
+zero-day retention, <=180-second duration, webhook assignment/events, native End
+call and SIP resource/provider/Telnyx address/TLS/digest. This supersedes the
+earlier first-message/privacy mismatches. The diagnostic covers selected checks,
+not full deployed preflight or live acceptance. Next is one owner-run consented
+admin AI-only call if configured cooldown/quotas allow it. Previous failed attempt
+counts toward limits and its terminal request key cannot redial. No Codex check,
+provider edit or call ran; deployed alignment and carrier acceptance remain unverified.
 
 ## Outbound prompt publication authorized — UNVERIFIED — 2026-11-04
 
@@ -432,6 +1791,28 @@ Exact owner command and responsive, keyboard, consent and chat checks:
 `docs/homepage-hero.md`. Earlier phone-CTA activation instructions are superseded.
 The owner subsequently authorized committing and pushing this frontend change to
 `main`; no test execution or hosting deployment command was requested.
+
+## Live inbound-number provisioning corrected — fresh-call acceptance pending — 2026-10-30
+
+After the owner supplied the existing deployed operator token locally,
+authenticated hosted APIs confirmed zero inbound numbers and no call policy for
+the configured business. This establishes the provisioning gap behind the new
+initialization 404. The existing FastAPI endpoint had already been confirmed by
+its unauthenticated 401 response; no endpoint or tenant-validation bypass was
+needed.
+
+Registered the provider-confirmed assigned number as ACTIVE using the existing
+audited, tenant-scoped API. Created the missing inbound policy using established
+development defaults: UTC daily reception windows, two concurrent calls, ten
+daily calls, callback fallback and no human transfer destination. Fallback wording
+reuses the business's approved stored escalation message. Authenticated readback
+confirmed that the exact canonical called number and enabled policy belong to
+the same business. No credential, phone number or caller payload is stored here.
+
+No Telnyx/ElevenLabs setting changes, migrations, deployment or simulated call
+records were required. A fresh real inbound call must still confirm hosted
+initialization 200 with the persisted UUID, audio/tools and signed finalization.
+Older failed calls remain unbound; never synthesize their UUIDs or confirmations.
 
 ## Inbound phone webhook repair — checks passed, live acceptance pending — 2026-10-30
 

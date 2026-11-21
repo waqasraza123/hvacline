@@ -103,7 +103,9 @@ def validate_agent(agent: dict[str, Any], settings: OutboundDemoSettings) -> Non
                 destination
                 != {
                     "type": "phone",
-                    "phone_number": settings.outbound_demo_human_number.get_secret_value(),
+                    "phone_number": (
+                        settings.outbound_demo_human_number.get_secret_value()
+                    ),
                 }
                 or rule.get("transfer_type") != "sip_refer"
                 or rule.get("condition") != TRANSFER_CONDITION
@@ -149,16 +151,18 @@ class ElevenLabsOutboundProvider:
                 client.close()
 
     def preflight(self, phone_number: str) -> None:
+        agent_id = quote(self.settings.outbound_demo_agent_id or "", safe="")
+        phone_id = quote(self.settings.outbound_demo_phone_number_id or "", safe="")
         try:
             agent = self._request(
                 "GET",
-                f"/v1/convai/agents/{quote(self.settings.outbound_demo_agent_id or '', safe='')}",
+                f"/v1/convai/agents/{agent_id}",
             )
             agent.raise_for_status()
             validate_agent(object_value(agent.json()), self.settings)
             phone = self._request(
                 "GET",
-                f"/v1/convai/phone-numbers/{quote(self.settings.outbound_demo_phone_number_id or '', safe='')}",
+                f"/v1/convai/phone-numbers/{phone_id}",
             )
             phone.raise_for_status()
             value = object_value(phone.json())
@@ -174,32 +178,36 @@ class ElevenLabsOutboundProvider:
                 or trunk.get("has_auth_credentials") is not True
                 or not isinstance(caller, str)
                 or E164.fullmatch(caller) is None
-                or caller == phone_number
+                or caller in (phone_number, human)
                 or caller in self.settings.allowed_numbers
-                or caller == human
             ):
                 raise OutboundProviderError(outcome_unknown=False)
         except (httpx.HTTPError, ValueError, TypeError) as error:
             raise OutboundProviderError(outcome_unknown=False) from error
 
     def dial(self, data: DemoCallInput, call_id: str) -> OutboundCallReceipt:
+        settings = self.settings
         try:
             response = self._request(
                 "POST",
                 "/v1/convai/sip-trunk/outbound-call",
                 {
-                    "agent_id": self.settings.outbound_demo_agent_id,
-                    "agent_phone_number_id": self.settings.outbound_demo_phone_number_id,
+                    "agent_id": settings.outbound_demo_agent_id,
+                    "agent_phone_number_id": settings.outbound_demo_phone_number_id,
                     "to_number": data.phone_number,
                     "telephony_call_config": {
-                        "ringing_timeout_secs": self.settings.outbound_demo_ringing_seconds
+                        "ringing_timeout_secs": settings.outbound_demo_ringing_seconds
                     },
                     "conversation_initiation_client_data": {
                         "dynamic_variables": {
                             "outbound_demo_call_id": call_id,
                             "demo_scenario": data.scenario.value,
-                            "demo_transfer_enabled": self.settings.outbound_demo_transfer_enabled,
-                            "demo_max_duration_seconds": self.settings.outbound_demo_max_duration_seconds,
+                            "demo_transfer_enabled": (
+                                settings.outbound_demo_transfer_enabled
+                            ),
+                            "demo_max_duration_seconds": (
+                                settings.outbound_demo_max_duration_seconds
+                            ),
                         }
                     },
                 },

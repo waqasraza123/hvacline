@@ -1,0 +1,69 @@
+.logos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  color: var(--customer-muted);
+}
+.logos li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.logos[data-detailed="true"] {
+  gap: 24px 32px;
+}
+.logos[data-detailed="true"] .mark {
+  min-width: 32px;
+}
+.logos[data-detailed="true"] .mark > span {
+  font-size: 14px;
+}
+.logos strong,
+.github strong {
+  display: block;
+  font-size: 11px;
+  color: var(--customer-ink);
+  font-weight: 600;
+}
+.logos small,
+.github small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+  color: var(--customer-muted);
+}
+.github {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--customer-muted);
+}
+.github:hover {
+  color: var(--customer-accent-ink);
+}
+.github > svg {
+  width: 20px;
+  height: 20px;
+}
+@media (max-width: 640px) {
+  .logos[data-detailed="true"] {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+}

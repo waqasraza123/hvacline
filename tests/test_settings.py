@@ -312,7 +312,7 @@ def test_browser_sandbox_does_not_require_phone_numbers(number: str | None) -> N
 
 
 def test_invalid_configured_phone_number_is_rejected() -> None:
-    with pytest.raises(ValidationError, match="E.164"):
+    with pytest.raises(ValidationError, match=r"E\.164"):
         ApiSettings(
             _env_file=None,
             app_environment=RuntimeEnvironment.DEVELOPMENT,

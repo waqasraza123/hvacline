@@ -1,3 +1,4 @@
+import asyncio
 import hashlib
 import hmac
 import json
@@ -7,16 +8,20 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
-from pydantic import ValidationError
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+from pydantic import SecretStr, ValidationError
 
+from insurance_operations.actors import ActorContext
 from insurance_operations.billing.catalog import PLANS
 from insurance_operations.billing.gateway import StripeGateway
-from insurance_operations.billing.schemas import CheckoutCreate, TopUpCreate
+from insurance_operations.billing.routes import create_billing_admin_router
+from insurance_operations.billing.schemas import CheckoutCreate, LaborRead, TopUpCreate
 from insurance_operations.billing.service import BillingService, stripe_url
 from insurance_operations.billing.settings import BillingSettings
 from insurance_operations.billing.state import active_plan, apply_subscription
 from insurance_operations.database.models.billing import BillingAccount, BillingTopUp
-from insurance_operations.errors import ApiError
+from insurance_operations.errors import ApiError, api_error_handler
 
 
 def billing_settings(**values: object) -> BillingSettings:
@@ -68,6 +73,84 @@ def test_configuration_never_accepts_live_billing() -> None:
     ):
         with pytest.raises(ValidationError):
             billing_settings(**values)
+
+
+def test_billing_can_be_enabled_without_a_manual_business_id() -> None:
+    settings = billing_settings(
+        billing_enabled=True,
+        stripe_secret_key="sk_test_synthetic",
+        stripe_webhook_secret="whsec_synthetic",
+        stripe_product_id="prod_synthetic",
+        stripe_essential_price_id="price_essential",
+        stripe_comfort_price_id="price_comfort",
+        stripe_complete_price_id="price_complete",
+        stripe_portal_configuration_id="bpc_synthetic",
+    )
+    assert StripeGateway(settings).ready
+
+
+def test_labor_uses_authenticated_business_and_requires_admin_token(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    actor = ActorContext(
+        app_user_id=uuid4(),
+        display_name="Synthetic Administrator",
+        agency_id=uuid4(),
+        agency_name="Synthetic HVAC",
+        agency_environment="DEVELOPMENT",
+    )
+    token = "synthetic-billing-administrator-token"
+    request_id, appointment_id = uuid4(), uuid4()
+    service = Mock()
+    service.record_labor.return_value = LaborRead(
+        id=request_id,
+        appointment_id=appointment_id,
+        minutes=60,
+        package_minutes=60,
+        purchased_minutes=0,
+        created_at=datetime.now(UTC),
+    )
+    monkeypatch.setattr(
+        "insurance_operations.billing.routes.BillingService",
+        Mock(return_value=service),
+    )
+    application = FastAPI()
+    application.add_exception_handler(ApiError, api_error_handler)
+    application.include_router(
+        create_billing_admin_router(
+            Mock(demo_admin_token=SecretStr(token)),
+            billing_settings(),
+            Mock(),
+            lambda: actor,
+        )
+    )
+    body = {
+        "request_id": str(request_id),
+        "appointment_id": str(appointment_id),
+        "minutes": 60,
+        "work_completed": True,
+    }
+
+    async def requests() -> None:
+        async with AsyncClient(
+            transport=ASGITransport(app=application), base_url="http://test"
+        ) as client:
+            path = "/api/v1/development/billing/labor"
+            for headers in ({}, {"X-Demo-Admin-Token": "invalid"}):
+                denied = await client.post(path, json=body, headers=headers)
+                assert denied.status_code == 401
+                service.record_labor.assert_not_called()
+            accepted = await client.post(
+                path, json=body, headers={"X-Demo-Admin-Token": token}
+            )
+            assert accepted.status_code == 200
+            assert accepted.json()["id"] == str(request_id)
+            service.record_labor.assert_called_once()
+            agency_id, labor = service.record_labor.call_args.args
+            assert agency_id == actor.agency_id
+            assert labor.appointment_id == appointment_id
+
+    asyncio.run(requests())
 
 
 def test_package_hours_require_a_paid_current_subscription() -> None:

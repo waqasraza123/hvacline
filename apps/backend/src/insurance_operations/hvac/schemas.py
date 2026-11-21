@@ -104,7 +104,11 @@ class ServiceRequestInput(BaseModel):
         ):
             raise ValueError("a complete service address is required")
         postal_code = address.postal_code or ""
-        if len(postal_code) != 5 or not postal_code.isascii() or not postal_code.isdigit():
+        if (
+            len(postal_code) != 5
+            or not postal_code.isascii()
+            or not postal_code.isdigit()
+        ):
             raise ValueError("a five-digit U.S. service ZIP code is required")
         if address.country_code != "US":
             raise ValueError("only U.S. service addresses are supported")

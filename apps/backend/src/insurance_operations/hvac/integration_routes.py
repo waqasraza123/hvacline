@@ -291,6 +291,12 @@ def create_booking_integration_router(
                     )
                 if team_key not in {team.key for team in configuration.teams}:
                     raise integration_error("The selected team no longer exists.")
+                from insurance_operations.ghl.booking import routed_connection
+
+                if routed_connection(session, agency_id, team_key):
+                    raise integration_error(
+                        "Remove this team's GHL calendar route before connecting Google Calendar."
+                    )
                 connection = session.scalar(
                     select(CalendarConnection).where(
                         CalendarConnection.agency_id == agency_id,
@@ -340,7 +346,8 @@ def create_booking_integration_router(
                     connection is None or connection.calendar_id != resolved_id
                 ):
                     raise integration_error(
-                        "Finish existing bookings and calendar cleanup before changing this team's calendar."
+                        "Finish existing bookings and calendar cleanup "
+                        "before changing this team's calendar."
                     )
                 if connection is None:
                     connection = CalendarConnection(
@@ -365,17 +372,31 @@ def create_booking_integration_router(
                         correlation_id=UUID(request.state.correlation_id),
                     )
                 )
-            message = "Google Calendar connected. Close this tab and refresh Scheduling in your operations workspace."
+            message = (
+                "Google Calendar connected. Close this tab and "
+                "refresh Scheduling in your operations workspace."
+            )
         except (CalendarUnavailable, ApiError) as failure:
             message = (
                 "Google Calendar was not connected. "
                 + str(failure)
-                + " Close this tab and return to Scheduling. Existing bookings were preserved."
+                + (
+                    " Close this tab and return to Scheduling. "
+                    "Existing bookings were preserved."
+                )
             )
         except ActorResolutionError:
-            message = "Google Calendar was not connected. Close this tab, refresh Scheduling, and start again. Existing bookings were preserved."
+            message = (
+                "Google Calendar was not connected. Close this "
+                "tab, refresh Scheduling, and start again. "
+                "Existing bookings were preserved."
+            )
         response = HTMLResponse(
-            "<!doctype html><html lang='en'><meta name='referrer' content='no-referrer'><title>Calendar connection</title><body><p>"
+            (
+                "<!doctype html><html lang='en'><meta "
+                "name='referrer' content='no-referrer'><title>Calen"
+                "dar connection</title><body><p>"
+            )
             + escape(message)
             + "</p></body></html>",
             headers={
@@ -411,7 +432,8 @@ def create_booking_integration_router(
             )
             if active:
                 raise integration_error(
-                    "Finish or cancel bookings and wait for calendar cleanup before disconnecting."
+                    "Finish or cancel bookings and wait for calendar "
+                    "cleanup before disconnecting."
                 )
             connection.status = "DISCONNECTED"
             connection.refresh_token_ciphertext = ""
