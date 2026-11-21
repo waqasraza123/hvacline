@@ -31,8 +31,6 @@ export default function Home() {
         <HeaderNavigation />
         <div className="product-header-actions">
           <ThemeToggle />
-          <ProviderLogos />
-          <GitHubLink />
           <Suspense fallback={<AccountAvatarPlaceholder />}>
             <HeaderAccount />
           </Suspense>
@@ -53,9 +51,8 @@ export default function Home() {
               <span>built around your business.</span>
             </h1>
             <p className="product-lead">
-              Customize the voice, knowledge, and workflows to fit your
-              business—from answering customer questions to capturing
-              enquiries and supporting your day-to-day operations.
+              Shape your agent’s voice, knowledge, and workflows to answer
+              questions, capture enquiries, and support your business.
             </p>
             <div className="product-hero-actions">
               <Link className="product-button" href="/book">

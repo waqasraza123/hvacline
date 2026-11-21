@@ -1,3 +1,31 @@
+## Homepage UI publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push to main. Publish the homepage hierarchy pass in eight scoped
+source/test/guide/memory paths from canonical main, preserving unrelated source,
+remote historical notes and divergent local branch/index/history. Retain
+[skip ci] [skip render]. No tests/builds/linters/type checks/browser checks/services
+or deployment commands are authorized by this publication. Runtime and visual
+acceptance remain UNVERIFIED; publication result is recorded separately.
+
+## Homepage hierarchy pass — local source, UNVERIFIED — 2026-11-21
+
+Owner authorized simplified homepage header, improved hero spacing, compact
+badges and corrected navigation selection. Home keeps provider/GitHub branding
+in the existing footer; header retains brand/navigation, theme/account and Voice
+CTA. Hero copy is shorter, columns use zero minimum widths and stack at850px.
+Secondary call links are quieter; six badges retain their feature/Preview/Sandbox
+labels with reduced chrome and larger captions. Existing orange/charcoal theme,
+full-width gutters and authentication/consent/provider behavior remain.
+
+Shared HeaderNavigation now derives the active destination from Next pathname,
+with aria-current=page on matching routes only; home has no selected destination.
+Added unexecuted matched/unmatched route cases to the existing homepage suite.
+No tests/builds/linters/formatters/type checks/browser checks/services/publication/
+deployment ran. Implementation and visual/runtime acceptance are UNVERIFIED.
+Owner commands: `npm run test:web -- src/app/page.test.ts`, `npm run verify:web`.
+Manual responsive/theme/navigation checks: docs/homepage-branding.md. Changes
+are local only; preserve existing unrelated edits, index and divergent history.
+
 ## Multilingual publication authorized — UNVERIFIED — 2026-11-21
 
 Owner requests push to main and README multilingual/language coverage. README now

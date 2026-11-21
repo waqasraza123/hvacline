@@ -1,5 +1,44 @@
 # Homepage branding handoff
 
+## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
+
+Owner authorized the first UI pass: simplified homepage header, hero spacing,
+compact feature badges and accurate navigation selection. The homepage header
+now contains brand/navigation, theme/account controls and the existing primary
+Voice CTA; provider marks and GitHub remain in the existing footer integration
+row. Other pages retain their own header content.
+
+The hero uses shorter supporting copy, flexible columns with zero minimum width,
+balanced heading wrapping and a single column at850px and below. Secondary
+callback/phone links use muted colors while retaining44px interaction heights.
+Badges have reduced padding/icons, no shadow, larger captions and titles above
+captions. All six badges, including Multilingual/Preview and Stripe/Sandbox,
+remain. Full-width page gutters and orange/charcoal theme are retained.
+
+Shared navigation derives selection from Next.js pathname, with aria-current=page
+only on the matching destination. Home and other unmatched routes have no selected
+navigation link; browser back/forward follows the router. Existing regression
+source now includes matched/unmatched route scenarios; it has not run.
+
+No tests, builds, linters, formatters, type checks, browser checks, services,
+provider changes, publication or deployment ran. Implementation and visual/runtime
+acceptance remain **UNVERIFIED**. Owner commands from the repository root:
+
+```sh
+npm run test:web -- src/app/page.test.ts
+npm run verify:web
+```
+
+Manual checks: inspect homepage at320/390/768/850/1100/1440/1920px and200% zoom
+in both themes. Check header alignment, heading/badge wrapping, demo stacking and
+no horizontal overflow; all six captions must remain readable. Confirm provider
+marks/GitHub exist in the footer, Voice opens /book, callback opens its existing
+dialog and the phone link retains its destination. Check keyboard focus and the
+mobile drawer. Home must highlight no navigation destination; direct loads and
+back/forward on /operations, /pricing and /ai-lead-recovery must select only the
+matching link, including query-string URLs. Review shared navigation on pricing,
+billing and booking. Connection, authentication and consent remain separate steps.
+
 ## Full-width website containers — 2026-11-10 — UNVERIFIED
 
 Removed the shared product/customer container's 1240px width cap. It now uses

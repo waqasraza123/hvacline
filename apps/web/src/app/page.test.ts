@@ -2,8 +2,15 @@ import { createElement } from "react";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync, writeFileSync } from "node:fs";
-import { expect, it, vi } from "vitest";
+import { usePathname } from "next/navigation";
+import { beforeEach, expect, it, vi } from "vitest";
 import Home from "./page";
+
+vi.mock("next/navigation", () => ({ usePathname: vi.fn(() => "/") }));
+
+beforeEach(() => {
+  vi.mocked(usePathname).mockReturnValue("/");
+});
 
 vi.mock("@/components/header-account", () => ({ HeaderAccount: () => null }));
 vi.mock("@/features/billing/pricing", () => ({ Pricing: () => null }));
@@ -75,3 +82,22 @@ it("keeps pricing separate and removes homepage service and package navigation",
   ])
     expect(html).toContain(caption);
 });
+
+it.each([
+  ["/", undefined],
+  ["/book", undefined],
+  ["/operations", "/operations"],
+  ["/pricing", "/pricing"],
+  ["/ai-lead-recovery", "/ai-lead-recovery"],
+] as const)(
+  "marks only the current navigation destination on %s",
+  (pathname, activeHref) => {
+    vi.mocked(usePathname).mockReturnValue(pathname);
+    const html = renderToStaticMarkup(createElement(Home));
+    const header = html.match(/<header\b[\s\S]*?<\/header>/)?.[0] ?? "";
+    expect(header).not.toBe("");
+    const currentLinks = header.match(/<a\b[^>]*aria-current="page"[^>]*>/g) ?? [];
+    expect(currentLinks).toHaveLength(activeHref ? 1 : 0);
+    if (activeHref) expect(currentLinks[0]).toContain(`href="${activeHref}"`);
+  },
+);

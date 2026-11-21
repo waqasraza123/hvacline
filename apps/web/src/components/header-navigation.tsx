@@ -2,6 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brand } from "./brand";
 import { ProductIcon } from "./product-icons";
@@ -15,27 +16,17 @@ const links = [
     description: "Explore the dashboard demo",
   },
   { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
-  { href: "/ai-lead-recovery", label: "AI Recovery", description: "Try the interactive lead recovery demo" },
+  {
+    href: "/ai-lead-recovery",
+    label: "AI Recovery",
+    description: "Try the interactive lead recovery demo",
+  },
 ] as const;
 
 export function HeaderNavigation() {
   const [open, setOpen] = useState(false);
-  const [activeHref, setActiveHref] = useState<(typeof links)[number]["href"]>(
-    links[0].href,
-  );
-  useEffect(() => {
-    const syncNavigation = () => {
-      const destination = window.location.pathname + window.location.hash;
-      const selected = links.find((link) => link.href === destination);
-      setActiveHref(selected?.href ?? links[0].href);
-    };
-    window.addEventListener("popstate", syncNavigation);
-    window.addEventListener("hashchange", syncNavigation);
-    return () => {
-      window.removeEventListener("popstate", syncNavigation);
-      window.removeEventListener("hashchange", syncNavigation);
-    };
-  }, []);
+  const pathname = usePathname();
+  const activeHref = links.find((link) => link.href === pathname)?.href;
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1121px)");
     const closeOnDesktop = () => {
@@ -52,8 +43,7 @@ export function HeaderNavigation() {
             key={link.href}
             href={link.href}
             data-active={activeHref === link.href ? "true" : undefined}
-            aria-current={activeHref === link.href ? "true" : undefined}
-            onNavigate={() => setActiveHref(link.href)}
+            aria-current={activeHref === link.href ? "page" : undefined}
           >
             {activeHref === link.href && (
               <span className={styles.activeDot} aria-hidden="true" />
@@ -106,7 +96,8 @@ export function HeaderNavigation() {
               Find your next step.
             </Dialog.Title>
             <Dialog.Description className={styles.description}>
-              Explore AI lead recovery, view maintenance packages or open your workspace.
+              Explore AI lead recovery, view maintenance packages or open your
+              workspace.
             </Dialog.Description>
             <nav className={styles.mobile} aria-label="Mobile navigation">
               {links.map((link, index) => (
@@ -114,8 +105,7 @@ export function HeaderNavigation() {
                   <Link
                     href={link.href}
                     data-active={activeHref === link.href ? "true" : undefined}
-                    aria-current={activeHref === link.href ? "true" : undefined}
-                    onNavigate={() => setActiveHref(link.href)}
+                    aria-current={activeHref === link.href ? "page" : undefined}
                   >
                     <span className={styles.number}>0{index + 1}</span>
                     <span>

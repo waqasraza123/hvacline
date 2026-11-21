@@ -1,6 +1,6 @@
 # HVACLine homepage copy
 
-## Current positioning — November 20, 2026 — UNVERIFIED
+## Current positioning — November 21, 2026 — UNVERIFIED
 
 The homepage speaks to business owners across industries. HVACLine remains the
 brand; customization is the broader product proposition, and the working example
@@ -14,9 +14,8 @@ Eyebrow: **CUSTOMIZABLE AI VOICE AGENTS**
 
 Headline: **AI voice agents, built around your business.**
 
-Supporting paragraph: Customize the voice, knowledge, and workflows to fit your
-business—from answering customer questions to capturing enquiries and supporting
-your day-to-day operations.
+Supporting paragraph: Shape your agent’s voice, knowledge, and workflows to answer
+questions, capture enquiries, and support your business.
 
 Primary hero/header/launcher action: **Try Voice Chat**, linking to `/book`.
 

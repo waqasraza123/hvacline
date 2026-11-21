@@ -1,5 +1,16 @@
 # Simplified homepage and voice AI hero — UNVERIFIED
 
+## Homepage hierarchy pass — November 21, 2026 — UNVERIFIED
+
+The authorized first UI pass removes duplicate provider/GitHub header branding
+on home, shortens hero supporting copy, adjusts responsive spacing and compacts
+all six existing badges while enlarging captions. Multilingual stays after
+WebRTC with its Preview label. Shared navigation now selects only the current
+pathname; home no longer highlights Dashboard. Exact source behavior, owner
+commands and responsive/theme/navigation manual checks:
+[homepage branding](homepage-branding.md#homepage-hierarchy-pass--november-21-2026--unverified).
+No checks/services/publication/deployment ran; implementation is **UNVERIFIED**.
+
 ## Multilingual hero badge — November 21, 2026 — UNVERIFIED
 
 The hero now places Multilingual after WebRTC in the existing feature badge row,
