@@ -31,7 +31,7 @@ export function multilingualDemoReducer(state: MultilingualDemo, action: DemoAct
   if (action.type === "mixed" && state.stage !== "intake") return state;
   if ((action.type === "ambiguous" || action.type === "interrupt") && !["readback", "held"].includes(state.stage)) return state;
   if (action.type === "language") {
-    if (state.language === action.language || state.stage === "booked") return state;
+    if (state.language === action.language) return state;
     const next = DEMO_COPY[action.language];
     const readback = state.stage === "readback" ? next.summary : state.stage === "held" ? next.held : null;
     return { ...state, language: action.language, switches: state.switches + 1, interrupted: false,
@@ -49,7 +49,6 @@ export function multilingualDemoReducer(state: MultilingualDemo, action: DemoAct
   if (action.type === "ambiguous" || action.type === "interrupt") return { ...state, interrupted: true,
     turns: [...state.turns, append("CUSTOMER", action.type === "interrupt" ? "Wait—" : "Maybe…", "en"),
       append("LINE", "[DEMO: nothing confirmed. Repeat the complete readback and ask for a fresh explicit answer.]", "en")] };
-  if (state.stage === "booked") return state;
   if (state.interrupted) return { ...state, interrupted: false, turns: [...state.turns,
     append("LINE", state.stage === "held" ? copy.held : copy.summary)] };
   if (state.stage === "intake") return { ...state, stage: "readback", turns: [...state.turns, append("LINE", copy.summary)] };
