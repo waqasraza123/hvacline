@@ -5,6 +5,7 @@ import type {
   ConfirmedConversationIntake,
   VoiceAppointment,
 } from "@insurance-operations/customer-core";
+import { parseVoiceLanguageSession } from "@insurance-operations/customer-core";
 
 export const TOKEN = /^[A-Za-z0-9_-]{32,128}$/;
 export const UUID =
@@ -308,6 +309,7 @@ export function authorization(
   if (Date.parse(expires) <= Date.now())
     throw new Error("The conversation connection has expired.");
   return {
+    ...(data.voice_language == null ? {} : { voiceLanguage: parseVoiceLanguageSession(data.voice_language) }),
     sessionId: id(data.session_id),
     provider: "elevenlabs",
     inputMode: mode,

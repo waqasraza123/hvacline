@@ -84,7 +84,13 @@
     "expects_response": true,
     "parameters": {
       "type": "object",
-      "properties": {},
+      "properties": {
+        "readback_language": {
+          "type": "string",
+          "enum": ["en", "es", "fr", "ar", "hi", "zh", "ur"],
+          "description": "Current configured conversation language. After a language change, prepare and present a fresh full readback before requesting confirmation. Backend rejects languages not authorized for this session. Urdu requires separately verified complete stack support."
+        }
+      },
       "required": []
     }
   },
@@ -96,6 +102,11 @@
     "parameters": {
       "type": "object",
       "properties": {
+        "readback_language": {
+          "type": "string",
+          "enum": ["en", "es", "fr", "ar", "hi", "zh", "ur"],
+          "description": "Copy the language of the current complete readback. Language changes require a fresh readback and new explicit customer confirmation."
+        },
         "explicit_confirmation": {
           "type": "boolean",
           "description": "True only after the customer clearly says yes following the complete current readback."
@@ -128,6 +139,11 @@
     "parameters": {
       "type": "object",
       "properties": {
+        "readback_language": {
+          "type": "string",
+          "enum": ["en", "es", "fr", "ar", "hi", "zh", "ur"],
+          "description": "Current authorized language for the backend appointment readback. Reuse the exact same held slot after a language change to obtain a new readback; never create a replacement booking."
+        },
         "team_key": {
           "type": "string",
           "description": "Copy team_key exactly from the selected returned slot."
@@ -148,6 +164,11 @@
     "parameters": {
       "type": "object",
       "properties": {
+        "readback_language": {
+          "type": "string",
+          "enum": ["en", "es", "fr", "ar", "hi", "zh", "ur"],
+          "description": "Language of the latest complete appointment readback. Require new explicit confirmation after switching languages or an interruption."
+        },
         "explicit_confirmation": {
           "type": "boolean",
           "description": "True only after the customer clearly says yes following the complete current readback."

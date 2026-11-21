@@ -6,6 +6,7 @@ import {
   useConversationControls,
 } from "@elevenlabs/react";
 import { useState } from "react";
+import { languageSessionOverrides, ProviderLanguageObserver, type LanguageCode } from "@insurance-operations/customer-core";
 import type { ReactNode } from "react";
 import { sessionConnection } from "./connection";
 import { customerMemorySession } from "./customer-memory";
@@ -20,6 +21,8 @@ import type {
 } from "./contracts";
 
 export type AdapterProperties = Readonly<{
+  onLanguageChange?: (language: LanguageCode) => void;
+  onReadbackInterrupted?: () => void;
   memoryEnabled?: boolean;
   children: (client: ConversationClient) => ReactNode;
   onDisconnect: () => void;
@@ -68,11 +71,34 @@ function AdapterBridge({
   onTranscript,
   onBookingTool,
   memoryEnabled = true,
+  onLanguageChange,
+  onReadbackInterrupted,
 }: AdapterProperties) {
+  const [languageObserver] = useState(() => new ProviderLanguageObserver());
+  const [observedLanguage, setObservedLanguage] = useState<LanguageCode>();
+  const [languageSwitchFailed, setLanguageSwitchFailed] = useState(false);
   const controls = useConversationControls();
   const [pendingTextEchoes] = useState(() => new PendingTextEchoes());
   const [memory] = useState(customerMemorySession);
   const conversation = useConversation({
+    onInterruption: () => onReadbackInterrupted?.(),
+    onAgentToolRequest: (event) => {
+      if (event.tool_name === "language_detection" && event.tool_type === "system") {
+        setObservedLanguage(undefined);
+        onReadbackInterrupted?.();
+      }
+    },
+    onAgentToolResponse: (event) => {
+      const result = languageObserver.receive(event);
+      if (result?.kind === "switched") {
+        setObservedLanguage(result.language); setLanguageSwitchFailed(false);
+        onLanguageChange?.(result.language);
+      } else if (result) {
+        setObservedLanguage(undefined);
+        onReadbackInterrupted?.();
+        if (result.kind === "failed") setLanguageSwitchFailed(true);
+      }
+    },
     clientTools: {
       retrieve_customer_memory: () =>
         memoryEnabled
@@ -163,6 +189,7 @@ function AdapterBridge({
         onBookingTool("release_appointment_hold", parameters),
     },
     onDisconnect: () => {
+      languageObserver.start();
       memory.end();
       pendingTextEchoes.clear();
       onDisconnect();
@@ -188,11 +215,14 @@ function AdapterBridge({
   });
 
   const client: ConversationClient = {
+    observedLanguage, languageSwitchFailed,
     status:
       conversation.status === "error" ? "disconnected" : conversation.status,
     mode: conversation.mode,
     isMuted: conversation.isMuted,
     start: async (authorization, backgroundContext) => {
+      languageObserver.start(authorization.voiceLanguage);
+      setObservedLanguage(undefined); setLanguageSwitchFailed(false);
       const connection = sessionConnection(authorization);
       if (memoryEnabled) memory.start(authorization.sessionId);
       pendingTextEchoes.clear();
@@ -215,6 +245,7 @@ function AdapterBridge({
         try {
           conversation.startSession({
             ...connection,
+            ...languageSessionOverrides(authorization.voiceLanguage),
             dynamicVariables: { homepage_guest: false },
             onConnect: () => {
               if (memoryEnabled && !memoryStarted) {

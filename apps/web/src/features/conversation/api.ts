@@ -1,6 +1,9 @@
 import {
   intakePayload,
   type ConfirmationInput,
+  type LanguageCode,
+  type VoiceLanguageSession,
+  parseVoiceLanguageSession,
 } from "@insurance-operations/customer-core";
 import type {
   ConfirmedConversationIntake,
@@ -47,6 +50,7 @@ export async function authorizeConversationSession(
   adminToken?: string,
   inputMode: ConversationInputMode = "VOICE",
   websiteSlug?: string,
+  language?: LanguageCode,
 ): Promise<ConversationSessionAuthorization> {
   const response = await fetch(
     conversationApiPath(apiBaseUrl, "conversation-sessions", websiteSlug),
@@ -58,6 +62,7 @@ export async function authorizeConversationSession(
       },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
       body: JSON.stringify({
+        ...(language ? { language } : {}),
         input_mode: inputMode,
         ai_disclosure_accepted: true,
         microphone_consent_granted: inputMode === "VOICE",
@@ -115,7 +120,15 @@ export async function authorizeConversationSession(
       "The conversation service returned invalid data",
     );
   }
+  let voiceLanguage: VoiceLanguageSession | undefined;
+  try {
+    voiceLanguage = parseVoiceLanguageSession(body.voice_language);
+  } catch {
+    await endConversationSession(apiBaseUrl, sessionId, "FAILED", adminToken, websiteSlug).catch(() => undefined);
+    throw new ConversationApiError(502, "The conversation service returned invalid language authorization.");
+  }
   return {
+    ...(voiceLanguage ? { voiceLanguage } : {}),
     sessionId,
     provider,
     websocketPath,

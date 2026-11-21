@@ -1,3 +1,5 @@
+import type { LanguageCode, VoiceLanguageSession } from "./voice-languages";
+
 export type ConversationSpeaker = "USER" | "AGENT";
 
 export type ConversationTurn = Readonly<{
@@ -43,6 +45,8 @@ export type ConversationInputMode = "VOICE" | "TEXT";
 export type ConversationTransport = "webrtc" | "websocket";
 
 export type ConversationClient = Readonly<{
+  observedLanguage?: LanguageCode;
+  languageSwitchFailed?: boolean;
   status: ConversationConnectionStatus;
   mode: ConversationMode;
   isMuted: boolean;
@@ -57,6 +61,7 @@ export type ConversationClient = Readonly<{
 }>;
 
 export type ConversationSessionAuthorization = Readonly<{
+  voiceLanguage?: VoiceLanguageSession;
   provider?: "elevenlabs" | "local";
   websocketPath?: string;
   sessionId: string;
@@ -96,6 +101,7 @@ export type Availability = {
 };
 
 export type ConfirmationInput = Readonly<{
+  readbackLanguage?: LanguageCode;
   sessionId: string;
   fullName: string;
   email: string;
@@ -115,6 +121,7 @@ export type ConfirmationInput = Readonly<{
 
 export function intakePayload(input: ConfirmationInput) {
   return {
+    ...(input.readbackLanguage ? { readback_language: input.readbackLanguage } : {}),
     conversation_session_id: input.sessionId,
     customer: {
       full_name: input.fullName,

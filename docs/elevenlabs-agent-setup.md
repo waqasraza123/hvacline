@@ -1,5 +1,13 @@
 # HVACLine AI browser chat and voice setup
 
+Multilingual source is **UNVERIFIED**. Follow
+[Multilingual AI Voice](multilingual-voice.md) for the agency language registry,
+reviewed hosted presets, language-only session override, native detection/event
+setup, optional `readback_language` tool fields and owner acceptance. Local saves
+do not update ElevenLabs. Additional languages remain unavailable until matching
+owner evidence and current hosted configuration are established. Retain all
+existing booking, consent, privacy and activation requirements below.
+
 This is a protected customer booking flow. Customers use account authentication; never give customers the admin token. Browser voice needs no Twilio number and no human transfer destination. For the October 29 removal of fictional-data requirements, deployment order and owner checks, see [customer-facing wording and data requirements](customer-data-requirements.md).
 
 ## Agent

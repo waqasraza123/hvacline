@@ -57,6 +57,19 @@ function connection(onTool = vi.fn().mockResolvedValue('{"ok":true}')) {
   };
 }
 
+it("applies the server language override while retaining silent Chat transport", () => {
+  const client = new TextConnection({
+    credential: "wss://api.elevenlabs.io/v1/convai/conversation?signature=fictional",
+    voiceLanguage: { language: "es", allowed_languages: ["en", "es"], automatic_switching: true, overrides: { agent: { language: "es" } } },
+    onConnect: vi.fn(), onTurn: vi.fn(), onTool: vi.fn(), onDisconnect: vi.fn(), onError: vi.fn(),
+  });
+  client.connect(); FakeSocket.latest.onopen?.();
+  expect(FakeSocket.latest.sent[0]).toMatchObject({
+    conversation_config_override: { agent: { language: "es" }, conversation: { text_only: true } },
+  });
+  client.close();
+});
+
 it("requests text-only transport and enables sending only after metadata", async () => {
   const value = connection();
   try {

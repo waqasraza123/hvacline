@@ -1,10 +1,16 @@
 import {
   customerMessage,
   type ConversationSpeaker,
+  type VoiceLanguageSession,
+  ProviderLanguageObserver,
+  type ObservedLanguageResult,
 } from "@insurance-operations/customer-core";
 import { object, record, string } from "../lib/models";
 
 type Options = {
+  voiceLanguage?: VoiceLanguageSession;
+  onLanguageResult?: (value?: ObservedLanguageResult) => void;
+  onReadbackInterrupted?: () => void;
   credential: string;
   onConnect: () => void;
   onTurn: (speaker: ConversationSpeaker, text: string) => void;
@@ -25,7 +31,10 @@ export class TextConnection {
   private results = new Map<string, { signature: string; result: string }>();
   private agentEvents = new Set<number>();
   private lastActivityAt = 0;
-  constructor(private readonly options: Options) {}
+  private languageObserver = new ProviderLanguageObserver();
+  constructor(private readonly options: Options) {
+    this.languageObserver.start(options.voiceLanguage);
+  }
 
   connect() {
     const socket = new WebSocket(this.options.credential);
@@ -38,7 +47,7 @@ export class TextConnection {
       if (this.closed) return;
       this.send({
         type: "conversation_initiation_client_data",
-        conversation_config_override: { conversation: { text_only: true } },
+        conversation_config_override: { ...this.options.voiceLanguage?.overrides, conversation: { text_only: true } },
         dynamic_variables: { homepage_guest: false },
       });
     };
@@ -101,6 +110,13 @@ export class TextConnection {
         this.agentEvents.add(eventId);
       }
       this.options.onTurn("AGENT", text);
+    } else if (event.type === "agent_tool_request") {
+      const tool = event.agent_tool_request;
+      if (record(tool) && tool.tool_name === "language_detection" && tool.tool_type === "system") this.options.onReadbackInterrupted?.();
+    } else if (event.type === "interruption") {
+      this.options.onReadbackInterrupted?.();
+    } else if (event.type === "agent_tool_response_full_payload" || event.type === "agent_tool_response") {
+      this.options.onLanguageResult?.(this.languageObserver.receive(event.agent_tool_response_full_payload ?? event.agent_tool_response));
     } else if (event.type === "client_tool_call") {
       const call = object(event.client_tool_call);
       const name = string(call.tool_name),

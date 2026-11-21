@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import styles from "./dashboard.module.css";
 
 const sections = [
+  { key: "multilingual", label: "Multilingual AI Voice", icon: "mic", group: "Workspace" },
   { key: "recovery", label: "AI Lead Recovery", icon: "phone", group: "Workspace" },
   {
     key: "integrations",

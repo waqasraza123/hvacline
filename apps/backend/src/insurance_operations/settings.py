@@ -11,6 +11,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
+from insurance_operations.voice_languages import ProviderLanguageEvidence, VoiceChannel
+
 DEFAULT_CUSTOMER_MAX_ACTIVE_APPOINTMENTS = 1
 DEFAULT_CUSTOMER_MAX_BOOKING_CHANGES = 1
 
@@ -117,6 +119,7 @@ class DatabaseConnectionSettings(CommonSettings):
 
 
 class DatabaseSettings(DatabaseConnectionSettings):
+    voice_language_provider_evidence: dict[VoiceChannel, ProviderLanguageEvidence] = Field(default_factory=dict)
     elevenlabs_phone_agent_id: str | None = None
     outbound_demo_agent_id: str | None = None
     elevenlabs_agent_id: str | None = None

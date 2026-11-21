@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Brand } from "@/components/brand";
+import { LanguageSettings } from "../conversation/language-settings";
 
 import {
   getReceptionistSettings,
@@ -204,6 +205,7 @@ export function ReceptionistSettingsEditor({
           </p>
         )}
       </section>
+      <LanguageSettings apiBaseUrl={apiBaseUrl} adminToken={adminToken} />
     </Container>
   );
 }

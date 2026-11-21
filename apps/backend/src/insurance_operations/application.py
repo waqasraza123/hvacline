@@ -60,6 +60,7 @@ from insurance_operations.conversations.schemas import (
     ConversationSessionResponse,
 )
 from insurance_operations.conversations.service import ConversationService
+from insurance_operations.voice_languages import create_voice_language_router
 from insurance_operations.customer_access.routes import create_customer_router
 from insurance_operations.database.connection import (
     DatabaseReadinessError,
@@ -859,6 +860,7 @@ def create_app(
         )
     )
     application.include_router(create_hvac_router(session_factory, development_actor))
+    application.include_router(create_voice_language_router(session_factory, settings, development_actor, administrator=True))
     application.include_router(create_recovery_router(settings, session_factory, development_actor))
     application.include_router(
         create_ghl_router(settings, session_factory, development_actor)

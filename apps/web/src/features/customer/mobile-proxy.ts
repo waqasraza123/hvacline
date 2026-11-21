@@ -7,6 +7,7 @@ const UUID =
   "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}";
 const PUBLIC_POSTS = new Set(["auth/login", "auth/signup"]);
 const GET_PATHS = [
+  /^voice-languages$/,
   /^auth\/(me|mfa\/status)$/,
   /^appointments$/,
   /^booking-limits$/,

@@ -1,4 +1,6 @@
 "use client";
+
+import { MultilingualDemoPanel } from "../conversation/multilingual-demo-panel";
 import { useReducer, useState } from "react";
 import { demoReducer, initialDemo } from "@/features/recovery/demo";
 import { RecoveryDemo } from "@/features/recovery/demo-panel";
@@ -109,7 +111,7 @@ export function OperationsWorkspace({
   }
   function connectWorkspace(section: OperationsSection = "overview") {
     if (!backendConfigured) {
-      setError("Live setup requires the existing NEXT_PUBLIC_API_BASE_URL configuration for your authenticated backend. The recovery demo remains available without it.");
+      setError("Live setup requires the existing NEXT_PUBLIC_API_BASE_URL configuration for your authenticated backend. The interactive demos remain available without it.");
       return;
     }
     setDemo(false);
@@ -154,7 +156,7 @@ export function OperationsWorkspace({
             <strong>Demo workspace · sample data</strong>
             <p>
               Calls, visits and business details here are sample records.
-              Explore the interactive AI Lead Recovery demo or GoHighLevel
+              Explore Multilingual AI Voice, AI Lead Recovery or GoHighLevel
               integration setup.
             </p>
           </div>
@@ -209,7 +211,7 @@ export function OperationsWorkspace({
       )}
       {data && (
         <>
-          {tab !== "recovery" && (!demo || tab !== "integrations") && (
+          {tab !== "multilingual" && tab !== "recovery" && (!demo || tab !== "integrations") && (
             <p className={styles.queueNote}>
               {demo ? "Sample schedule for November 12, 2026. " : ""}
               Up to 100 latest records per queue. Counts reflect loaded records,
@@ -250,7 +252,8 @@ export function OperationsWorkspace({
           {tab === "recovery" && (demo
             ? <RecoveryDemo state={recoveryDemo} dispatch={recoveryDispatch} onLive={() => connectWorkspace("recovery")} />
             : <RecoveryLive apiBaseUrl={apiBaseUrl} token={token} onDemo={exploreDemo} />)}
-          {demo && tab !== "integrations" && tab !== "recovery" && <DemoSection section={tab} />}
+          {tab === "multilingual" && <MultilingualDemoPanel onSetup={() => demo ? connectWorkspace("receptionist") : setTab("receptionist")} />}
+          {demo && tab !== "integrations" && tab !== "recovery" && tab !== "multilingual" && <DemoSection section={tab} />}
           {demo && tab === "integrations" && (
             <>
               <GhlDemo apiBaseUrl={apiBaseUrl} />

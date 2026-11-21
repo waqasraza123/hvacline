@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, ForeignKey, Text, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -20,6 +20,7 @@ class AgencyReceptionistSettings(
 ):
     __tablename__ = "agency_receptionist_settings"
     __table_args__ = (
+        CheckConstraint("jsonb_typeof(voice_languages) = 'object'", name="voice_languages_object"),
         CheckConstraint(
             "length(btrim(public_name)) BETWEEN 1 AND 160",
             name="public_name_length_valid",
@@ -74,6 +75,9 @@ class AgencyReceptionistSettings(
         nullable=False,
     )
     escalation_message: Mapped[str] = mapped_column(Text, nullable=False)
+    voice_languages: Mapped[dict[str, object]] = mapped_column(
+        JSONB, nullable=False, default=dict, server_default=text("'{}'::jsonb"),
+    )
     created_by: Mapped[UUID] = mapped_column(
         ForeignKey("app_users.id", ondelete="RESTRICT"),
         nullable=False,

@@ -18,7 +18,7 @@ from insurance_operations.recovery.delivery_jobs import read_provider_outcome
 from insurance_operations.recovery.domain import destination_digest
 from insurance_operations.recovery.grants import authenticate, grant_token
 from insurance_operations.recovery.inbox import decrypt_recipient, encrypt_recipient, event_fingerprint
-from insurance_operations.recovery.providers import RecoveryContact, sms_message
+from insurance_operations.recovery.providers import RecoveryContact, sms_message, VOICE_FIRST_MESSAGE, RECOVERY_VOICE_INSTRUCTIONS
 from insurance_operations.recovery.transports import ElevenLabsRecoveryVoice, TransportFailure, TwilioRecoverySms
 from insurance_operations.recovery.webhooks import PREFIX, explicit_voice_opt_out, record_incoming, record_voice, twilio_form
 from insurance_operations.recovery.voice import RecoveryVoice, SpokenTurn
@@ -108,6 +108,26 @@ def test_voice_preflight_failure_never_places_a_call() -> None:
         outcome = ElevenLabsRecoveryVoice(settings).send(request)
     assert outcome.status == "FAILED" and outcome.failure_code == "RECOVERY_TOOLS_INVALID"
     send.assert_not_called()
+
+
+def test_recovery_preflight_rejects_non_english_without_confirmed_language_permission() -> None:
+    settings = transport_settings()
+    adapter = ElevenLabsRecoveryVoice(settings)
+    with patch.object(adapter, "request", return_value={
+        "agent_id": settings.recovery_voice_agent_id,
+        "conversation_config": {
+            "agent": {"language": "es", "first_message": VOICE_FIRST_MESSAGE, "prompt": {"prompt": RECOVERY_VOICE_INSTRUCTIONS}},
+            "conversation": {"max_duration_seconds": settings.recovery_voice_max_seconds},
+        },
+        "platform_settings": {
+            "privacy": {"record_voice": False, "retention_days": 0},
+            "auth": {"enable_auth": True},
+            "workspace_overrides": {"webhooks": {"post_call_webhook_id": settings.recovery_voice_webhook_id, "events": ["transcript", "call_initiation_failure"]}},
+        },
+    }) as request:
+        with pytest.raises(TransportFailure, match="RECOVERY_AGENT_CONFIGURATION_INVALID"):
+            adapter.preflight(contact(settings))
+    assert request.call_count == 1
 
 
 def test_twilio_signatures_bind_exact_public_url_account_and_all_form_values() -> None:

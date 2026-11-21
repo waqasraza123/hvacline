@@ -9,6 +9,10 @@ class ConversationProviderError(RuntimeError):
     pass
 
 
+class ConversationLanguageConfigurationError(ConversationProviderError):
+    pass
+
+
 @dataclass(frozen=True)
 class ProviderSessionMetadata:
     adapter: str

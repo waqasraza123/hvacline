@@ -119,6 +119,7 @@ class ElevenLabsRecoveryVoice:
         hooks = workspace.get("webhooks") or {}
         duration = (config.get("conversation") or {}).get("max_duration_seconds")
         if (agent.get("agent_id") != s.recovery_voice_agent_id or agent_config.get("first_message") != VOICE_FIRST_MESSAGE
+            or agent_config.get("language", "en") != "en"
             or str(prompt.get("prompt", "")).strip() != RECOVERY_VOICE_INSTRUCTIONS.strip()
             or type(duration) is not int or not 1 <= duration <= s.recovery_voice_max_seconds
             or privacy.get("record_voice") is not False or privacy.get("retention_days") != 0

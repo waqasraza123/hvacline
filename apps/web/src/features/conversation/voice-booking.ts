@@ -12,7 +12,7 @@ export type {
 
 type SessionOptions = Pick<
   BookingSessionOptions,
-  "sessionId" | "isActive" | "onSaved" | "onAppointment" | "onProgress"
+  "sessionId" | "isActive" | "onSaved" | "onAppointment" | "onProgress" | "initialLanguage"
 > &
   Readonly<{ apiBaseUrl: string; adminToken?: string }>;
 

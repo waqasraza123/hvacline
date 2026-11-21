@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { ConversationProvider } from "@elevenlabs/react-native";
 import { Text, View } from "react-native";
 import type { ConversationInputMode } from "@insurance-operations/customer-core";
+import { LANGUAGE_NAMES } from "@insurance-operations/customer-core";
 import {
   Body,
   Button,
@@ -69,6 +70,13 @@ function BookingScreen() {
         </View>
         {!active && (
           <>
+            <Body>Conversation language</Body>
+            <View style={{ gap: 8 }}>
+              {booking.languageRegistry?.languages.filter((item) => item.channel === "mobile" && item.available).map((item) =>
+                <Choice key={item.code} label={item.name} selected={booking.language === item.code} onPress={() => booking.setLanguage(item.code)} />)}
+              {!booking.languageRegistry && <Body>{booking.languageError || "Loading language availability…"}</Body>}
+              {booking.languageRegistry && !booking.languageRegistry.languages.some((item) => item.channel === "mobile" && item.available) && <Body>No verified voice language is available for mobile. Ask staff for help.</Body>}
+            </View>
             <View style={{ gap: 10 }}>
               <Choice
                 label="Voice — speak with Line"
@@ -100,6 +108,7 @@ function BookingScreen() {
               title={mode === "VOICE" ? "Talk to Line" : "Start chat"}
               disabled={
                 !consent ||
+                !booking.languageRegistry?.languages.some((item) => item.channel === "mobile" && item.code === booking.language && item.available) || !!booking.languageError ||
                 !!booking.cleanupId ||
                 !!booking.progress.failure?.uncertain
               }
@@ -112,6 +121,8 @@ function BookingScreen() {
         )}
         {active && (
           <>
+            <Body>{booking.observedLanguage ? `Active language: ${LANGUAGE_NAMES[booking.observedLanguage]} · provider result observed.` : `Initial language: ${LANGUAGE_NAMES[booking.language]}. Current language is not confirmed by a provider result.`}</Body>
+            {booking.languageSwitchFailed && <Body error>The provider could not confirm a language switch. Continue in the current language or ask for staff assistance.</Body>}
             <Button
               secondary
               title={

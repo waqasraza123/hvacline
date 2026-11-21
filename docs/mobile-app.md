@@ -1,5 +1,15 @@
 # Expo customer app
 
+Multilingual source is **UNVERIFIED**. The existing booking entrypoint now reads
+the shared customer language registry, offers only available mobile languages
+before consent and applies the server language override to native Voice or silent
+Chat. Successful complete native provider language results update the live label;
+switch requests/results and interruptions require fresh booking readbacks while
+preserving details and immutable retry references. Mobile needs its own verified
+capability evidence for the existing agent. No new provider/dependency is added.
+Exact hosted setup, limitations, owner commands and physical-device scenarios:
+[Multilingual AI Voice](multilingual-voice.md).
+
 Implementation is **UNVERIFIED**. This is the customer app for iOS and Android:
 account creation/sign-in, mandatory authenticator MFA and recovery, voice/chat
 booking, appointment history/details, and explicit date/time changes. It does not

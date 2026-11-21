@@ -15,6 +15,12 @@ import {
   type CustomerBookingSession,
   type VoiceAppointment,
   type VoiceBookingTool,
+  type VoiceLanguageRegistry,
+  type LanguageCode,
+  languageSessionOverrides,
+  ProviderLanguageObserver,
+  type ObservedLanguageResult,
+  parseVoiceLanguageRegistry,
 } from "@insurance-operations/customer-core";
 import { MobileApiError } from "../lib/api";
 import { authorization, object, record, string, UUID } from "../lib/models";
@@ -39,6 +45,21 @@ type Phase = "idle" | "connecting" | "connected" | "ended";
 
 export function useBooking() {
   const { api } = useSession();
+  const [languageRegistry, setLanguageRegistry] = useState<VoiceLanguageRegistry>();
+  const [language, setLanguage] = useState<LanguageCode>("en");
+  const [languageError, setLanguageError] = useState("");
+  const [observedLanguage, setObservedLanguage] = useState<LanguageCode>();
+  const [languageSwitchFailed, setLanguageSwitchFailed] = useState(false);
+  const [languageObserver] = useState(() => new ProviderLanguageObserver());
+  useEffect(() => {
+    if (!api) return;
+    let current = true;
+    void api.request("voice-languages").then((raw) => {
+      const value = parseVoiceLanguageRegistry(raw);
+      if (current) { setLanguageRegistry(value); setLanguage(value.effective_defaults.mobile ?? "en"); setLanguageError(""); }
+    }).catch(() => { if (current) setLanguageError("Language settings could not be loaded. Reopen this screen before starting."); });
+    return () => { current = false; };
+  }, [api]);
   const [phase, setPhase] = useState<Phase>("idle"),
     [mode, setMode] = useState<ConversationInputMode>("VOICE");
   const [turns, setTurns] = useState<ConversationTurn[]>([]),
@@ -163,7 +184,27 @@ export function useBooking() {
     }
   };
 
+  function languageResult(result?: ObservedLanguageResult) {
+    if (!live.current || !mounted.current) return;
+    if (result?.kind === "switched") {
+      setObservedLanguage(result.language); setLanguageSwitchFailed(false);
+      controller.current?.observeLanguageChange(result.language);
+    } else if (result) {
+      setObservedLanguage(undefined);
+      controller.current?.invalidateReadbacks();
+      if (result.kind === "failed") setLanguageSwitchFailed(true);
+    }
+  }
+
   const conversation = useConversation({
+    onInterruption: () => controller.current?.invalidateReadbacks(),
+    onAgentToolRequest: (event) => {
+      if (event.tool_name === "language_detection" && event.tool_type === "system") {
+        setObservedLanguage(undefined);
+        controller.current?.invalidateReadbacks();
+      }
+    },
+    onAgentToolResponse: (event) => languageResult(languageObserver.receive(event)),
     clientTools: Object.fromEntries(
       [
         ...BOOKING_TOOLS,
@@ -277,6 +318,10 @@ export function useBooking() {
   }, [phase]);
 
   async function start(inputMode: ConversationInputMode) {
+    if (!languageRegistry || languageError) { setError(languageError || "Wait for language settings to load."); return; }
+    if (!languageRegistry.languages.some((item) => item.channel === "mobile" && item.code === language && item.available)) {
+      setError("This language is not configured for mobile. Choose an available language or contact staff."); return;
+    }
     if (
       !api ||
       starting.current ||
@@ -307,6 +352,8 @@ export function useBooking() {
       }
       if (current !== generation.current || !focused.current) return;
       const raw = await api.request("conversation-sessions", "POST", {
+        language,
+        voice_channel: "mobile",
         input_mode: inputMode,
         ai_disclosure_accepted: true,
         microphone_consent_granted: inputMode === "VOICE",
@@ -328,6 +375,8 @@ export function useBooking() {
         return;
       }
       const grant = authorization(raw, inputMode);
+      languageObserver.start(grant.voiceLanguage);
+      setObservedLanguage(undefined); setLanguageSwitchFailed(false);
       const active = {
         id: grant.sessionId,
         mode: inputMode,
@@ -343,6 +392,7 @@ export function useBooking() {
       setProgress(INITIAL_PROGRESS);
       retryTool.current = undefined;
       controller.current = createBookingSession({
+        initialLanguage: grant.voiceLanguage?.language,
         api,
         sessionId: grant.sessionId,
         isActive: () =>
@@ -378,6 +428,9 @@ export function useBooking() {
       if (inputMode === "TEXT") {
         const connection = new TextConnection({
           credential: grant.credential,
+          voiceLanguage: grant.voiceLanguage,
+          onLanguageResult: languageResult,
+          onReadbackInterrupted: () => { setObservedLanguage(undefined); controller.current?.invalidateReadbacks(); },
           onConnect: connected,
           onTurn: recordTurn,
           onTool: executeTool,
@@ -405,6 +458,7 @@ export function useBooking() {
         }, 20_000);
         conversation.startSession({
           ...connection,
+          ...languageSessionOverrides(grant.voiceLanguage),
           dynamicVariables: { homepage_guest: false },
           onConnect: connected,
         });
@@ -487,6 +541,7 @@ export function useBooking() {
     await executeTool(value.name, value.parameters);
   };
   return {
+    languageRegistry, language, setLanguage, languageError, observedLanguage, languageSwitchFailed,
     phase,
     mode,
     turns,

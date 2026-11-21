@@ -41,6 +41,7 @@ async function handle(request: NextRequest, context: Context) {
       request.method === "GET"
         ? [
             "receptionist-settings",
+            "voice-languages",
             "appointments",
             "booking-limits",
             "memory",

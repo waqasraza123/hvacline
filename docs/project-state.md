@@ -1,3 +1,51 @@
+## Multilingual publication authorized — UNVERIFIED — 2026-11-21
+
+Owner requests push to main and README multilingual/language coverage. README now
+links the fictional demo and lists en/es/fr/ar/hi/zh, conditional ur, verified
+browser/mobile setup requirements and unsupported additional phone/recovery
+languages. Publication is scoped to the multilingual manifest plus README and
+notes, using canonical remote main as parent while preserving unrelated work
+and divergent local history. Retain [skip ci] [skip render]. No execution checks,
+schema/provider/activation changes or deployment commands are authorized by this
+publication request. Migration0028 remains unapplied and runtime UNVERIFIED.
+Publication result is recorded separately.
+
+## Multilingual AI Voice — source implemented, UNVERIFIED — 2026-11-21
+
+Added a central agency/channel language registry with separate saved intent and
+server-only owner capability evidence. Forward migration20261121_0028 after0027
+adds only agency_receptionist_settings.voice_languages JSONB; UNAPPLIED. Existing
+profile ownership/version triggers and administrator-token checks protect writes.
+Customer web/native proxies permit authenticated configuration reads only.
+
+Browser/native use shared customer-core language contracts, initial overrides,
+strict localized readback/affirmative gates and native provider result handling.
+English remains the existing effective default without additional evidence.
+Additional en/es/fr/ar/hi/zh and conditional ur require exact agency/agent/channel
+evidence; runtime source reads hosted languages/presets/detection/events before
+additional-language grants. No hosted agent writes or alternate speech engine.
+Native system-tool requests and interruptions invalidate pending readbacks;
+complete successful authorized results alone establish observed active language.
+Drafts, saved requests, original sessions, held slots and uncertain retry payloads
+are preserved. Server switch/fluency metrics remain explicitly unavailable.
+
+Operations Receptionist contains Languages & Voice settings, compatibility/setup
+states and existing session/appointment outcome diagnostics without customer text.
+Homepage preview and /multilingual-ai-voice use the dashboard shell with a purely
+fictional interactive text simulation. Phone/recovery additional languages remain
+unsupported by their existing consent/finalization/preflight contracts. Recovery
+also rejects non-English primary language; no contact-language inference or
+outbound activation is added. Production identity/onboarding gates remain.
+
+Added unexecuted regression source and docs/multilingual-voice.md with the exact
+source manifest, provider setup/evidence schema, owner commands and fictional
+acceptance checklist. No tests/builds/linters/formatters/type checks/browser checks,
+services/simulators/migrations/provider requests/paid AI/calls/deployments/commits/
+pushes ran. Public provider documentation and pinned SDK declarations were read;
+no dependencies/lockfile or credentials changed by this task. All runtime, security,
+language quality, provider, native and visual acceptance is **UNVERIFIED**.
+Preserve unrelated working changes, index and divergent local/remote history.
+
 ## Broader homepage positioning — source UNVERIFIED — 2026-11-20
 
 Owner selects business owners and homepage-wide messaging while retaining

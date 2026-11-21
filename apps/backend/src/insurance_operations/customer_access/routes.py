@@ -57,6 +57,7 @@ from insurance_operations.receptionist import (
     ReceptionistSettingsService,
 )
 from insurance_operations.settings import ApiSettings, RuntimeEnvironment
+from insurance_operations.voice_languages import create_voice_language_router
 
 
 def create_customer_router(
@@ -373,4 +374,5 @@ def create_customer_router(
     )
     router.include_router(create_customer_booking_router(sessions, actor))
     router.include_router(create_customer_memory_router(settings, sessions, actor))
+    router.include_router(create_voice_language_router(sessions, settings, actor, prefix="/voice-languages"))
     return router

@@ -6,6 +6,7 @@ import {
   type VoiceAppointment,
   type VoiceBookingTool,
   type ConversationDraft,
+  type LanguageCode,
 } from "@insurance-operations/customer-core";
 import { randomUUID } from "expo-crypto";
 import { MobileApi, MobileApiError } from "../lib/api";
@@ -58,6 +59,7 @@ export function classifyFailure(
 }
 
 export function createBookingSession(options: {
+  initialLanguage?: LanguageCode;
   api: MobileApi;
   sessionId: string;
   isActive: () => boolean;

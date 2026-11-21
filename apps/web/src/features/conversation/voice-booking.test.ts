@@ -19,6 +19,47 @@ const draft = {
   hazardousCondition: false,
 };
 
+it("switches readback language without resetting details, session identity or an already saved request", async () => {
+  const fetcher = vi.fn()
+    .mockResolvedValueOnce(Response.json({ readback: "Fictional English readback", business_date: "2026-11-25", timezone: "America/New_York" }))
+    .mockResolvedValueOnce(Response.json({ readback: "Resumen ficticio completo", business_date: "2026-11-25", timezone: "America/New_York" }))
+    .mockResolvedValueOnce(Response.json({ conversation_intake_id: "intake-1", service_request_id: "request-1", customer: { id: "customer-1", full_name: draft.fullName }, confirmed_at: "2026-11-21T12:00:00Z" }));
+  vi.stubGlobal("fetch", fetcher);
+  const booking = session();
+  await booking.updateDraft(draft);
+  await booking.execute("prepare_intake_confirmation", {});
+  booking.observeLanguageChange("es");
+  expect(await booking.execute("confirm_service_request", { explicit_confirmation: true, readback_language: "es" })).toMatchObject({ ok: false });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  await booking.execute("prepare_intake_confirmation", { readback_language: "es" });
+  const preparation = JSON.parse(fetcher.mock.calls[1][1].body);
+  expect(preparation.customer.full_name).toBe(draft.fullName);
+  expect(preparation.service.kind).toBe("AC_REPAIR");
+  expect(preparation.readback_language).toBe("es");
+  booking.recordTurn("AGENT", "Resumen ficticio completo");
+  booking.recordTurn("USER", "Sí");
+  await booking.execute("confirm_service_request", { explicit_confirmation: true, readback_language: "es" });
+  const saved = booking.savedIntake;
+  expect(saved?.serviceRequestId).toBe("request-1");
+  booking.observeLanguageChange("en");
+  await booking.execute("prepare_intake_confirmation", { readback_language: "en" });
+  expect(booking.savedIntake).toBe(saved);
+  expect(fetcher).toHaveBeenCalledTimes(3);
+  expect(JSON.parse(fetcher.mock.calls[2][1].body).conversation_session_id).toBe("session-1");
+});
+
+it("requires a fresh readback after the provider reports an interruption", async () => {
+  const fetcher = vi.fn().mockResolvedValue(Response.json({ readback: "Fictional readback", business_date: "2026-11-25", timezone: "America/New_York" }));
+  vi.stubGlobal("fetch", fetcher);
+  const booking = session();
+  await booking.updateDraft(draft);
+  await booking.execute("prepare_intake_confirmation", {});
+  booking.invalidateReadbacks();
+  booking.recordTurn("USER", "Yes");
+  expect(await booking.execute("confirm_service_request", { explicit_confirmation: true })).toMatchObject({ ok: false });
+  expect(fetcher).toHaveBeenCalledTimes(1);
+});
+
 function session() {
   return new VoiceBookingSession({
     apiBaseUrl: "https://api.example.test",
@@ -30,7 +71,7 @@ function session() {
   });
 }
 
-it("preserves the exact confirmed payload and key after a lost save response", async () => {
+it("preserves the exact confirmed payload and key after a lost save response and language change", async () => {
   const fetcher = vi
     .fn()
     .mockResolvedValueOnce(
@@ -59,8 +100,10 @@ it("preserves the exact confirmed payload and key after a lost save response", a
     explicit_confirmation: true,
   });
   booking.recordTurn("AGENT", "I will retry that save.");
+  booking.observeLanguageChange("es");
   await booking.execute("confirm_service_request", {
     explicit_confirmation: true,
+    readback_language: "es",
   });
   const first = fetcher.mock.calls[1][1];
   const retry = fetcher.mock.calls[2][1];
@@ -152,6 +195,32 @@ async function saveRequest(booking: VoiceBookingSession) {
     explicit_confirmation: true,
   });
 }
+
+it("retains the original appointment confirmation payload across an uncertain result and language switch", async () => {
+  const confirmed = { ...heldResponse, appointment: { ...heldResponse.appointment, status: "CONFIRMED" } };
+  const fetcher = vi.fn()
+    .mockResolvedValueOnce(Response.json({ readback: "Read back the fictional details." }))
+    .mockResolvedValueOnce(Response.json(intakeResponse))
+    .mockResolvedValueOnce(Response.json(availabilityResponse))
+    .mockResolvedValueOnce(Response.json(heldResponse))
+    .mockRejectedValueOnce(new TypeError("Connection lost"))
+    .mockResolvedValueOnce(Response.json(confirmed));
+  vi.stubGlobal("fetch", fetcher);
+  const booking = session();
+  await saveRequest(booking);
+  await booking.execute("check_appointment_availability", { day: "2026-11-03" });
+  await booking.execute("reserve_appointment", availabilityResponse.slots[0]);
+  booking.recordTurn("AGENT", heldResponse.readback);
+  booking.recordTurn("USER", "Yes");
+  expect(await booking.execute("confirm_appointment", { explicit_confirmation: true })).toMatchObject({ ok: false });
+  booking.observeLanguageChange("es");
+  booking.recordTurn("USER", "Can we speak Spanish?");
+  expect(await booking.execute("release_appointment_hold", {})).toMatchObject({ ok: false });
+  expect(await booking.execute("reserve_appointment", availabilityResponse.slots[0])).toMatchObject({ ok: false });
+  expect(fetcher).toHaveBeenCalledTimes(5);
+  expect(await booking.execute("confirm_appointment", { explicit_confirmation: true, readback_language: "es" })).toMatchObject({ ok: true, booked: true });
+  expect(fetcher.mock.calls[5][1].body).toBe(fetcher.mock.calls[4][1].body);
+});
 
 it("publishes pending work immediately and advances only when a request resolves", async () => {
   let resolveReadback!: (value: Response) => void;

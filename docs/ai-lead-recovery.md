@@ -1,5 +1,14 @@
 # AI Lead Recovery
 
+Shared [Multilingual AI Voice settings](multilingual-voice.md) do not activate
+multilingual recovery. Recovery additional languages are unsupported: confirmed
+contact-language preference is not part of the existing permission contract,
+and the exact hosted-agent preflight rejects multilingual presets/tools and a
+non-English primary language. Never infer outreach language or permission from
+an enabled language, browser/native selection or transcript. All suppression,
+channel-specific permission and outbound activation gates remain intact.
+Multilingual/recovery runtime acceptance remains **UNVERIFIED**.
+
 Delivery/continuation source implementation; **UNVERIFIED**. This follow-up ran
 no tests, builds, linters, formatters, type checks, migrations, browser checks,
 services, model/provider requests, messages, calls, hosted changes or deployments.

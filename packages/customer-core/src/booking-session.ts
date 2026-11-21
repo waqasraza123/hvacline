@@ -13,8 +13,10 @@ import type {
   BookingFailure,
 } from "./contracts";
 import { appendTranscript } from "./transcript";
+import { isLanguageCode, type LanguageCode } from "./voice-languages";
 
 export type BookingSessionOptions = Readonly<{
+  initialLanguage?: LanguageCode;
   sessionId: string;
   isActive: () => boolean;
   onSaved: (intake: ConfirmedConversationIntake) => void;
@@ -45,15 +47,20 @@ export class CustomerBookingSession {
   private availability?: Availability;
   private reservation?: { identity: string; key: string };
   private held?: VoiceAppointment;
-  private bookingAttempt?: readonly ConversationTurn[];
+  private bookingAttempt?: { transcript: readonly ConversationTurn[]; language: LanguageCode };
   private busy = false;
   private hazardReported = false;
   private draftVersion = 0;
   private pending?: VoiceBookingTool;
   private failure?: BookingFailure;
   private requestStarted = false;
+  private readbackLanguage: LanguageCode;
+  private appointmentReadbackRequired = false;
+  private languageRevision = 0;
 
-  constructor(private readonly options: BookingSessionOptions) {}
+  constructor(private readonly options: BookingSessionOptions) {
+    this.readbackLanguage = options.initialLanguage ?? "en";
+  }
 
   private publishProgress() {
     this.options.onProgress?.({
@@ -69,6 +76,23 @@ export class CustomerBookingSession {
 
   get savedIntake() {
     return this.intake;
+  }
+
+  observeLanguageChange(language: LanguageCode) {
+    if (language === this.readbackLanguage) return;
+    this.readbackLanguage = language;
+    this.languageRevision += 1;
+    this.invalidateReadbacks();
+  }
+
+  invalidateReadbacks() {
+    if (!this.confirmationAttempt) {
+      this.prepared = undefined;
+      this.preparedReadback = undefined;
+    }
+    this.appointmentReadbackRequired = this.held?.appointment.status === "HELD";
+    this.draftVersion += 1;
+    this.publishProgress();
   }
 
   recordTurn(speaker: ConversationSpeaker, text: string) {
@@ -127,7 +151,7 @@ export class CustomerBookingSession {
     try {
       switch (tool) {
         case "prepare_intake_confirmation":
-          return await this.prepare();
+          return await this.prepare(parameters);
         case "confirm_service_request":
           return await this.save(parameters);
         case "check_appointment_availability":
@@ -188,7 +212,7 @@ export class CustomerBookingSession {
     return this.options.request<T>(path, body);
   }
 
-  private async prepare() {
+  private async prepare(parameters: Record<string, unknown> = {}) {
     if (this.intake)
       return {
         ok: true,
@@ -199,6 +223,7 @@ export class CustomerBookingSession {
       throw new Error(
         "Retry confirm_service_request to resolve the previous save before changing details.",
       );
+    this.selectReadbackLanguage(parameters);
     const required = (key: keyof ConversationDraft): string => {
       const value = this.draft[key];
       if (typeof value !== "string" || !value.trim())
@@ -225,9 +250,11 @@ export class CustomerBookingSession {
       idempotencyKey: this.options.randomUUID(),
       transcript: [],
       spokenConfirmation: true,
+      ...(this.readbackLanguage === "en" ? {} : { readbackLanguage: this.readbackLanguage }),
     };
     const payload = intakePayload(input);
     const version = this.draftVersion;
+    const languageRevision = this.languageRevision;
     const result = await this.api<{
       readback: string;
       business_date: string | null;
@@ -235,8 +262,9 @@ export class CustomerBookingSession {
     }>("intake-readback", {
       customer: payload.customer,
       service: payload.service,
+      ...(this.readbackLanguage === "en" ? {} : { readback_language: this.readbackLanguage }),
     });
-    if (this.draftVersion !== version)
+    if (this.draftVersion !== version || this.languageRevision !== languageRevision)
       throw new Error(
         "The details changed. Prepare and read a new confirmation.",
       );
@@ -266,6 +294,8 @@ export class CustomerBookingSession {
       throw new Error(
         "Call prepare_intake_confirmation and read the result first.",
       );
+    if (!this.confirmationAttempt && parameters.readback_language !== undefined && parameters.readback_language !== (this.prepared.readbackLanguage ?? "en"))
+      throw new Error("Language changed. Prepare a fresh readback and wait for a new explicit confirmation.");
     this.confirmationAttempt ??= {
       ...this.prepared,
       transcript: [...this.turns],
@@ -321,6 +351,8 @@ export class CustomerBookingSession {
 
   private async reserve(parameters: Record<string, unknown>) {
     this.requireBookable();
+    if (this.bookingAttempt)
+      throw new Error("Resolve the original appointment confirmation before requesting another readback or reservation.");
     const slot: Slot | undefined = this.availability?.slots.find(
       (item) =>
         item.team_key === parameters.team_key &&
@@ -355,8 +387,11 @@ export class CustomerBookingSession {
     if (!this.reservation)
       throw new Error("Check availability again before reserving.");
     let result: VoiceAppointment;
+    const language = this.selectReadbackLanguage(parameters);
+    const languageRevision = this.languageRevision;
     try {
       result = await this.api<VoiceAppointment>("reservations", {
+        ...(language === "en" ? {} : { readback_language: language }),
         team_key: parameters.team_key,
         starts_at: parameters.starts_at,
         idempotency_key: this.reservation.key,
@@ -367,6 +402,7 @@ export class CustomerBookingSession {
       throw failure;
     }
     this.held = result;
+    this.appointmentReadbackRequired = this.languageRevision !== languageRevision;
     this.options.onAppointment(result);
     return {
       ok: true,
@@ -382,23 +418,31 @@ export class CustomerBookingSession {
     if (!this.held) throw new Error("Reserve an offered slot first.");
     if (this.held.appointment.status === "CONFIRMED")
       return { ok: true, ...this.held, booked: true };
+    if (this.appointmentReadbackRequired && !this.bookingAttempt)
+      throw new Error("Language changed. Obtain a new readback for this same held slot and wait for explicit confirmation.");
     if (parameters.explicit_confirmation !== true)
       throw new Error("Wait for a clear yes after the appointment readback.");
-    this.bookingAttempt ??= [...this.turns];
+    if (!this.bookingAttempt && parameters.readback_language !== undefined && parameters.readback_language !== this.readbackLanguage)
+      throw new Error("Language changed. Repeat reserve_appointment for the held slot to obtain a fresh readback, then wait for explicit confirmation.");
+    this.bookingAttempt ??= { transcript: [...this.turns], language: this.readbackLanguage };
     try {
       this.held = await this.api<VoiceAppointment>(
         `appointments/${this.held.appointment.id}/confirm`,
-        { explicit_confirmation: true, transcript: this.bookingAttempt },
+        { explicit_confirmation: true, transcript: this.bookingAttempt.transcript,
+          ...(this.bookingAttempt.language === "en" ? {} : { readback_language: this.bookingAttempt.language }) },
       );
     } catch (failure) {
-      // A failed readback can be corrected without changing the held appointment.
-      this.bookingAttempt = undefined;
+      // An unknown result retains the original transcript and language for retry.
+      if (!this.options.classifyFailure("confirm_appointment", failure, true).uncertain)
+        this.bookingAttempt = undefined;
       throw failure;
     }
     if (this.held.appointment.status !== "CONFIRMED")
       throw new Error(
         "The appointment was not confirmed. Do not claim it is booked.",
       );
+    this.bookingAttempt = undefined;
+    this.appointmentReadbackRequired = false;
     this.options.onAppointment(this.held);
     return {
       ok: true,
@@ -409,8 +453,19 @@ export class CustomerBookingSession {
     };
   }
 
+  private selectReadbackLanguage(parameters: Record<string, unknown>): LanguageCode {
+    const language = parameters.readback_language;
+    if (language !== undefined) {
+      if (!isLanguageCode(language)) throw new Error("Unsupported readback language. Ask the customer to choose a supported language.");
+      this.readbackLanguage = language;
+    }
+    return this.readbackLanguage;
+  }
+
   private async release() {
     this.requireBookable();
+    if (this.bookingAttempt)
+      throw new Error("Resolve the original appointment confirmation or ask staff before releasing this hold.");
     if (!this.held) return { ok: true, message: "No hold to release." };
     if (this.held.appointment.status === "CONFIRMED")
       throw new Error(

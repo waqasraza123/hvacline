@@ -36,6 +36,11 @@ afterEach(() => {
 });
 
 describe("native customer gateway", () => {
+  it("exposes language configuration as a customer read, never an administration write", () => {
+    expect(mobilePathAllowed("voice-languages", "GET")).toBe(true);
+    expect(mobilePathAllowed("voice-languages", "POST")).toBe(false);
+    expect(mobilePathAllowed("voice-languages", "PUT")).toBe(false);
+  });
   it("stays disabled without explicit server activation", async () => {
     vi.stubEnv("MOBILE_API_ENABLED", "false");
     expect(

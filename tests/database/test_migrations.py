@@ -540,6 +540,7 @@ EXPECTED_COLUMNS = {
         "contact_phone",
         "supported_insurance_categories",
         "escalation_message",
+        "voice_languages",
         "created_by",
         "updated_by",
         "created_at",
@@ -1045,6 +1046,7 @@ def test_migration_check_constraints_cover_approved_invariants(
             "ck_agency_receptionist_settings_supported_categories_valid",
             "ck_agency_receptionist_settings_escalation_message_length_valid",
             "ck_agency_receptionist_settings_row_version_positive",
+            "ck_agency_receptionist_settings_voice_languages_object",
         },
         "agency_approved_faqs": {
             "ck_agency_approved_faqs_question_length_valid",

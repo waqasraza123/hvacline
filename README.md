@@ -11,6 +11,7 @@
   <a href="https://hvacline.online">Visit HVACLine</a> ·
   <a href="https://www.hvacline.online/operations">Dashboard</a> ·
   <a href="https://www.hvacline.online/ai-lead-recovery">Try Yourself</a> ·
+  <a href="https://www.hvacline.online/multilingual-ai-voice">Try Multilingual Demo</a> ·
   <a href="LICENSE">Proprietary license</a>
 </p>
 
@@ -23,6 +24,7 @@
 ## Features
 
 - **Voice & chat:** Help customers through browser conversations, telephone, and inbound WhatsApp voice.
+- **Multilingual AI Voice · Preview:** Explore a fictional [multilingual HVAC conversation](https://www.hvacline.online/multilingual-ai-voice), switch languages during intake, and keep customer details and booking confirmations together.
 - **Appointment booking:** Match requests to service areas, business hours, and technician availability, with customer confirmation.
 - **Service intake:** Collect contact details, service addresses, equipment issues, and preferred appointment times.
 - **Operations dashboard:** Manage requests, appointments, calls, callbacks, and team handoffs in one workspace.
@@ -34,6 +36,14 @@
 - **Voice AI websites · Preview:** Customize three templates, save drafts, publish versions, and restore previous content.
 - **GoHighLevel · Preview:** Sync confirmed leads, route calendar bookings, and add contact summaries.
 - **Maintenance billing · Sandbox:** Stripe packages, purchased labor hours, and billing history.
+
+## Multilingual AI Voice · Preview
+
+Language targets: **English (en), Spanish (es), French (fr), Arabic (ar), Hindi (hi), and Mandarin Chinese (zh)**. **Urdu (ur)** is conditional on verified support across the configured speech recognition, language model, voice and agent.
+
+English remains the existing default. Additional browser and mobile languages require configured ElevenLabs support and channel-specific verification. Additional inbound telephone and lead-recovery languages remain unsupported in this revision. The public demo uses clearly labeled fictional text, without real calls or generated speech.
+
+Live language quality and runtime acceptance are **UNVERIFIED**. See [language availability and setup](docs/multilingual-voice.md).
 
 ## License
 
