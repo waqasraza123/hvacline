@@ -31,10 +31,10 @@ and API dispatch rejects demo actions. Recovery uses only its separate local sim
 Connected editors, calendar integrations,
 maintenance labor and browser voice are not mounted in demo mode.
 
-The shared top navigation initially marks Dashboard with a green dot and a short
-pulse. Selecting another item moves the dot and active styling to that item;
-desktop and mobile share the selection. Browser back/forward and hash navigation
-update the selection. Reduced-motion preferences keep a still green dot.
+The shared top navigation marks only the current pathname with a green dot and
+active styling. Home and other unmatched routes have no selected destination.
+Desktop/mobile and browser back/forward follow the router. Reduced-motion
+preferences keep a still green dot.
 
 GoHighLevel is featured below AI Lead Recovery and above the overview queue cards, with its own named
 sidebar entry with a CRM badge. The underlying section key remains `integrations`;
@@ -55,8 +55,10 @@ The Integrations section now has a separate optional read-only GoHighLevel demo.
 It requests the API's public aggregate projection when that section opens;
 credentials remain on the API server. The other sections still use local samples.
 Setup, limits, exact owner commands and manual acceptance:
-[GoHighLevel public demo](gohighlevel-public-demo.md). This follow-up remains
-unverified and is disabled until its dedicated demo credentials are configured.
+[GoHighLevel public demo](gohighlevel-public-demo.md). Previously recorded focused
+public-demo checks passed43 cases; no checks were rerun during the staged-source
+history merge. Hosted setup and live acceptance remain unverified; the demo is
+disabled until its dedicated credentials are configured.
 
 Connect your workspace replaces the demo with the existing in-memory admin-token
 gate. Returning to the demo clears that token. Connected mode retains the

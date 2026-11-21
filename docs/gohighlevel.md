@@ -8,6 +8,9 @@ earlier0024 migration result below does not include it.
 For the optional public read-only view of a dedicated fictional-data sub-account,
 see [GoHighLevel public demo](gohighlevel-public-demo.md). Its server environment
 credentials are separate from the managed lead-delivery connection below.
+Previously recorded public-demo checks passed37 backend and6 frontend cases;
+hosted setup and live acceptance remain pending. No checks were rerun during
+the staged-source history merge.
 
 Application/GHL runtime remains **unverified**. Source was published as
 `8592c9f`. On2026-11-13 the owner authorized applying the migration to the existing

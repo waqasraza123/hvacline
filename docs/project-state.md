@@ -1,3 +1,18 @@
+## Full staged snapshot committed; history merge prepared — 2026-11-21
+
+Owner ran git add . and requested commit/push of every staged file. Committed
+the exact428-file snapshot asd7058ea8997844945562e3083d34b6291bcb88bc on local
+main, parent1297b0a. Message covers mobile, multilingual voice, lead recovery
+and platform refinements; retains [skip ci] [skip render]. No hooks/checks ran.
+Most staged content already matches published mainb956ac8. Merge preserves both
+commit histories and the owner's staged application source. Six overlap conflicts
+are resolved with staged source/guides, retaining recorded public-demo test
+evidence and correcting the navigation guide to the already-implemented pathname
+behavior. Current migration readbacks in staged guides supersede older pending
+notes. No tests/builds/linters/type checks/services/migrations/provider/deployment
+commands ran; broader runtime/security/visual acceptance remains UNVERIFIED.
+Publication result is recorded separately. Never force-push the old local history.
+
 ## Professional homepage presentation published — UNVERIFIED — 2026-11-21
 
 Publishedb956ac8c895c68719a8a1b6cbc949e4fa4e20eea on canonical main from
