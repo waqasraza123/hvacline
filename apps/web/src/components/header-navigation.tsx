@@ -15,7 +15,11 @@ const links = [
     label: "Dashboard",
     description: "Explore the dashboard demo",
   },
-  { href: "/pricing", label: "Pricing", description: "Maintenance packages" },
+  {
+    href: "/pricing",
+    label: "Try Stripe Checkout",
+    description: "Maintenance packages",
+  },
   {
     href: "/ai-lead-recovery",
     label: "AI Recovery",
