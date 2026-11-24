@@ -8,13 +8,11 @@ import { HeaderNavigation } from "@/components/header-navigation";
 import headerStyles from "@/components/header-navigation.module.css";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ProductIcon, VoiceSymbol } from "@/components/product-icons";
-import { OutboundDemo } from "@/features/outbound-demo/outbound-demo";
 import {
   OutboundDemoDialog,
   OutboundDemoTrigger,
 } from "@/features/outbound-demo/outbound-demo-dialog";
 import { HomepageChat } from "@/features/homepage-chat/homepage-chat";
-import { RecoveryHomepage } from "@/features/recovery/homepage";
 import "./product.css";
 import "@/features/outbound-demo/outbound-demo.css";
 import styles from "./homepage.module.css";
@@ -135,44 +133,6 @@ export default function Home() {
               </li>
             </ul>
           </section>
-          <section
-            className={`product-container ${styles.workflow}`}
-            aria-labelledby="homepage-workflow-title"
-          >
-            <div className={styles.workflowHeading}>
-              <p className="product-eyebrow">HOW THE HVAC EXAMPLE WORKS</p>
-              <h2 id="homepage-workflow-title">
-                A conversation.
-                <br />
-                A clear next step.
-              </h2>
-            </div>
-            <ol className={styles.workflowSteps}>
-              <li>
-                <span className={styles.workflowIcon}>
-                  <ProductIcon name="chat" />
-                </span>
-                <h3>Start with what you need.</h3>
-                <p>Ask a question or describe an HVAC issue in your own words.</p>
-              </li>
-              <li>
-                <span className={styles.workflowIcon}>
-                  <ProductIcon name="calendar" />
-                </span>
-                <h3>Find a time that fits.</h3>
-                <p>Share the details and explore available appointment times.</p>
-              </li>
-              <li>
-                <span className={styles.workflowIcon}>
-                  <ProductIcon name="check" />
-                </span>
-                <h3>You make the final call.</h3>
-                <p>Review your details and explicitly confirm before booking.</p>
-              </li>
-            </ol>
-          </section>
-          <RecoveryHomepage />
-          <OutboundDemo />
           <section className={`product-container ${styles.closingSection}`}>
             <div className={`product-final-cta ${styles.closing}`}>
               <div>

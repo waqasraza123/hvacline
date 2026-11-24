@@ -35,13 +35,12 @@ accessible through Operations and the README.
 
 The conversation card reads **Meet Line** with the subtitle **HVAC example**.
 Voice remains its initial mode; Text chat and the existing guest exchange/sign-in
-continuation are preserved. The phone section is labeled **HVAC PHONE EXAMPLE**.
-Its configured number, callback flow, service wording and limits are unchanged.
+continuation are preserved. The standalone **HVAC PHONE EXAMPLE** section is
+removed from the homepage. The hero phone link and callback dialog remain available.
 
-The concise **HOW THE HVAC EXAMPLE WORKS** section reads **A conversation. A clear
-next step.**, followed by **Start with what you need.**, **Find a time that fits.**
-and **You make the final call.** It explains the existing HVAC demo flow; it does
-not advertise additional industry implementations or automatic confirmation.
+The **HOW THE HVAC EXAMPLE WORKS** section and **AI LEAD RECOVERY** teaser are
+also removed. The hero and feature badges now lead directly into the closing
+action. The dedicated lead recovery page remains available through navigation.
 
 Closing eyebrow: **EXPLORE THE HVAC EXAMPLE**
 

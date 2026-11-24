@@ -1,3 +1,14 @@
+## Three homepage sections removed — UNVERIFIED — 2026-11-24
+
+Owner requested removal of HVAC PHONE EXAMPLE, HOW THE HVAC EXAMPLE WORKS and
+the AI LEAD RECOVERY teaser. Removed their homepage markup/component imports;
+hero/badges now lead directly into the closing CTA. Hero calling links/dialog
+and dedicated recovery page remain available. Updated homepage copy guide.
+No verification commands or services ran; implementation/visual acceptance
+remain UNVERIFIED. Owner command: `npm run test:web -- src/app/page.test.ts`.
+Manual: inspect `/` on phone/desktop in both themes, confirm the three sections
+are absent, spacing flows into the closing CTA and hero calling actions remain.
+
 ## Full staged snapshot committed; history merge prepared — 2026-11-21
 
 Owner ran git add . and requested commit/push of every staged file. Committed
