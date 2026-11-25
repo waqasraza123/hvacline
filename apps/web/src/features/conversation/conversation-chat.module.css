@@ -121,3 +121,7 @@
     align-items: stretch;
   }
 }
+
+:is(:global(.customer-shell), :global(.workspace-theme)) .error {
+  color: var(--customer-error-ink);
+}

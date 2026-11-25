@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { SettingsTabs } from "@/components/ui/settings-tabs";
+import { LoadingSkeleton } from "@/components/ui/workspace-ui";
 import { Brand } from "@/components/brand";
 import { LanguageSettings } from "../conversation/language-settings";
 
@@ -113,6 +115,8 @@ export function ReceptionistSettingsEditor({
           used across the receptionist experience.
         </p>
       </header>
+      <SettingsTabs label="Agent configuration" tabs={[
+        { key: "general", label: "General", content: (
       <section className="settings-card" aria-labelledby="agency-profile-title">
         <div className="section-heading-row">
           <div>
@@ -124,7 +128,7 @@ export function ReceptionistSettingsEditor({
           )}
         </div>
         {status === "loading" ? (
-          <p aria-live="polite">Loading receptionist settings…</p>
+          <LoadingSkeleton label="Loading receptionist settings" />
         ) : (
           <div className="settings-grid">
             <SettingsField
@@ -189,6 +193,10 @@ export function ReceptionistSettingsEditor({
           >
             {status === "saving" ? "Saving…" : "Save configuration"}
           </button>
+          <button type="button" className="secondary-button" disabled={status !== "ready" || !settings}
+            onClick={() => { if (settings) { setDraft(settingsDraft(settings)); setMessage(undefined); } }}>
+            Cancel changes
+          </button>
           <p className="settings-note">
             Changes are recorded. Reload if another team member edits these
             settings.
@@ -205,7 +213,9 @@ export function ReceptionistSettingsEditor({
           </p>
         )}
       </section>
-      <LanguageSettings apiBaseUrl={apiBaseUrl} adminToken={adminToken} />
+        ) },
+        { key: "voice", label: "Voice & Languages", content: <LanguageSettings apiBaseUrl={apiBaseUrl} adminToken={adminToken} /> },
+      ]} />
     </Container>
   );
 }

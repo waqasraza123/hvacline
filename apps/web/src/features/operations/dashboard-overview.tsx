@@ -1,4 +1,5 @@
 import { ProductIcon } from "@/components/product-icons";
+import { ContentPanel, EmptyState, MetricCard } from "@/components/ui/workspace-ui";
 import type { ComponentProps, ReactNode } from "react";
 import type { Operations, ScheduleResponse } from "./api";
 import type { OperationsSection } from "./dashboard-shell";
@@ -41,11 +42,11 @@ export function DashboardOverview({
     help: string;
   }[] = [
     {
-      label: "Incoming calls",
+      label: "Total calls",
       value: data.calls.length,
       icon: "phone",
       section: "calls",
-      help: "Latest received calls",
+      help: "Received calls in the loaded queue",
     },
     {
       label: "Service requests",
@@ -55,11 +56,11 @@ export function DashboardOverview({
       help: "Confirmed customer details",
     },
     {
-      label: "Upcoming appointments",
-      value: upcoming.length,
+      label: "Confirmed bookings",
+      value: data.appointments.filter((row) => row.status === "CONFIRMED").length,
       icon: "calendar",
       section: "bookings",
-      help: "Confirmed visits after refresh",
+      help: "Confirmed in the loaded queue",
     },
     {
       label: "Pending follow-up",
@@ -72,25 +73,16 @@ export function DashboardOverview({
 
   return (
     <div className={styles.overview}>
-      {children}
       <section className={styles.metrics} aria-label="Loaded queue counts">
         {metrics.map((metric) => (
-          <button
+          <MetricCard
             key={metric.label}
-            type="button"
-            className={styles.metricCard}
+            label={metric.label}
+            value={metric.value}
+            help={metric.help}
+            icon={<ProductIcon name={metric.icon} />}
             onClick={() => onSelect(metric.section)}
-          >
-            <span className={styles.metricIcon}>
-              <ProductIcon name={metric.icon} />
-            </span>
-            <span className={styles.metricLabel}>{metric.label}</span>
-            <strong className={styles.metricValue}>{metric.value}</strong>
-            <span className={styles.metricHelp}>
-              {metric.help}
-              <ProductIcon name="arrow" />
-            </span>
-          </button>
+          />
         ))}
       </section>
       <div className={styles.overviewGrid}>
@@ -230,6 +222,16 @@ export function DashboardOverview({
           )}
         </section>
       </div>
+      <ContentPanel title="Recent conversations" description="Latest received calls in the loaded queue. Browser conversation history is not included."
+        actions={<button type="button" onClick={() => onSelect("calls")}>View calls</button>}>
+        {data.calls.length === 0 ? <EmptyState title="No calls in this queue">Received calls will appear here after the workspace refreshes.</EmptyState> :
+          <DashboardTable caption="Recent received calls" headings={["Caller", "Received", "Status"]}>
+            {[...data.calls].sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at)).slice(0, 5).map((call) => <tr key={call.id}>
+              <td>{call.caller_number ?? "Caller number unavailable"}</td><td>{timestamp(call.received_at)}</td><td><StatusBadge status={call.status} /></td>
+            </tr>)}
+          </DashboardTable>}
+      </ContentPanel>
+      {children && <div className={styles.featureGrid}>{children}</div>}
       <section className={styles.nextStep}>
         <span className={styles.metricIcon}>
           <ProductIcon name="calendar" />

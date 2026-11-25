@@ -1,0 +1,114 @@
+:root {
+  --ui-color-scheme: light;
+  --ui-font: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --ui-canvas: #fcfbf9;
+  --ui-sidebar: #f7f6f3;
+  --ui-surface: #ffffff;
+  --ui-hover: #f3f2ef;
+  --ui-ink: #171717;
+  --ui-muted: #6b6b6b;
+  --ui-border: #e8e7e4;
+  --ui-control-border: #8a8a8a;
+  --ui-primary: #171717;
+  --ui-primary-hover: #303030;
+  --ui-on-primary: #ffffff;
+  --ui-accent: #f97316;
+  --ui-accent-hover: #fb923c;
+  --ui-accent-ink: #b54708;
+  --ui-accent-soft: #fff3e8;
+  --ui-accent-border: #f4d1b2;
+  --ui-success: #22613f;
+  --ui-success-soft: #edf6ef;
+  --ui-danger: #a12730;
+  --ui-danger-soft: #fff1f1;
+  --ui-warning: #854d0e;
+  --ui-warning-soft: #fff8e6;
+  --ui-dark: #171717;
+  --ui-on-dark: #f5f5f5;
+  --ui-on-dark-muted: #bdbdbd;
+  --ui-backdrop: rgb(0 0 0 / 50%);
+  --ui-radius-panel: 14px;
+  --ui-radius-control: 10px;
+  --ui-radius-input: 9px;
+  --ui-duration: 180ms;
+  --ui-content-width: 1480px;
+}
+
+:root[data-theme="dark"] {
+  --ui-color-scheme: dark;
+  --ui-canvas: #111111;
+  --ui-sidebar: #171717;
+  --ui-surface: #1d1d1d;
+  --ui-hover: #252525;
+  --ui-ink: #f5f5f5;
+  --ui-muted: #a3a3a3;
+  --ui-border: #303030;
+  --ui-control-border: #737373;
+  --ui-primary: #f5f5f5;
+  --ui-primary-hover: #dddddd;
+  --ui-on-primary: #171717;
+  --ui-accent-ink: #fb923c;
+  --ui-accent-soft: #302219;
+  --ui-accent-border: #704020;
+  --ui-success: #86d9a5;
+  --ui-success-soft: #193125;
+  --ui-danger: #fda4af;
+  --ui-danger-soft: #351d25;
+  --ui-warning: #fcd590;
+  --ui-warning-soft: #342719;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main, .phone-demo-shell) {
+  --customer-accent: var(--ui-accent);
+  --customer-accent-hover: var(--ui-accent-hover);
+  --customer-accent-ink: var(--ui-accent-ink);
+  --customer-accent-shadow: var(--ui-accent-ink);
+  --customer-accent-light: #fdba74;
+  --customer-accent-soft: var(--ui-accent-soft);
+  --customer-accent-border: var(--ui-accent-border);
+  --customer-on-accent: var(--ui-dark);
+  --customer-ink: var(--ui-ink);
+  --customer-muted: var(--ui-muted);
+  --customer-canvas: var(--ui-canvas);
+  --customer-surface: var(--ui-surface);
+  --customer-subtle: var(--ui-hover);
+  --customer-border: var(--ui-border);
+  --customer-control-border: var(--ui-control-border);
+  --customer-panel: var(--ui-dark);
+  --customer-panel-border: var(--ui-control-border);
+  --customer-on-dark: var(--ui-on-dark);
+  --customer-on-dark-muted: var(--ui-on-dark-muted);
+  --customer-glow: transparent;
+  --customer-shadow: transparent;
+  --customer-shadow-soft: transparent;
+  --customer-backdrop: var(--ui-backdrop);
+  --customer-warning-border: var(--ui-warning);
+  --customer-warning-surface: var(--ui-warning-soft);
+  --customer-warning-ink: var(--ui-warning);
+  --customer-error-ink: var(--ui-danger);
+  --customer-error-surface: var(--ui-danger-soft);
+  --customer-error-border: var(--ui-danger);
+  --customer-success-ink: var(--ui-success);
+  --customer-success-surface: var(--ui-success-soft);
+  --customer-success-border: var(--ui-success);
+  --customer-info-ink: var(--ui-ink);
+  --customer-info-surface: var(--ui-hover);
+  --customer-info-border: var(--ui-border);
+  --ink: var(--ui-ink);
+  --muted: var(--ui-muted);
+  --line: var(--ui-border);
+  --surface: var(--ui-surface);
+  --teal: var(--ui-accent-ink);
+  --teal-dark: var(--ui-accent-ink);
+  --mint: var(--ui-accent-soft);
+  --orange: var(--ui-accent-ink);
+  color-scheme: var(--ui-color-scheme);
+  font-family: var(--ui-font);
+  color: var(--ui-ink);
+  background: var(--ui-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --ui-duration: 0ms; }
+}

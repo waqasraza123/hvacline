@@ -17,10 +17,8 @@
   top: 2rem;
   padding: clamp(1.5rem, 3vw, 2.5rem);
   border: 1px solid var(--customer-panel-border);
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at 100% 0%, rgb(249 115 22 / 15%), transparent 65%),
-    var(--customer-panel);
+  border-radius: var(--ui-radius-panel);
+  background: var(--customer-panel);
   color: var(--customer-on-dark);
 }
 
@@ -43,9 +41,9 @@
 
 .eyebrow,
 .smallLabel {
-  font-size: 0.61rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0.03em;
   line-height: 1.6;
 }
 
@@ -84,7 +82,7 @@
   align-items: center;
   gap: 0.7rem;
   color: var(--customer-on-dark-muted);
-  font-size: 0.76rem;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -96,20 +94,20 @@
   place-items: center;
   border: 1px solid var(--customer-panel-border);
   border-radius: 50%;
-  font-size: 0.63rem;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
 .steps li[aria-current] {
   color: var(--customer-on-dark);
-  font-weight: 700;
+  font-weight: 550;
 }
 
 .steps li[aria-current] > span,
 .steps li[data-complete="true"] > span {
   border-color: var(--customer-accent-light);
   background: var(--customer-accent-light);
-  color: var(--customer-ink);
+  color: var(--ui-dark);
 }
 
 .steps svg {
@@ -136,7 +134,7 @@
 
 .storyNote p {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: 13px;
   line-height: 1.7;
 }
 
@@ -144,7 +142,7 @@
   min-width: 0;
   padding: clamp(1.25rem, 3vw, 2.5rem);
   border: 1px solid var(--customer-border);
-  border-radius: 24px;
+  border-radius: var(--ui-radius-panel);
   background: var(--customer-surface);
   box-shadow: 0 14px 50px var(--customer-shadow-soft);
 }
@@ -193,7 +191,7 @@
 .setup {
   margin: 1.5rem 0;
   border: 1px solid var(--customer-border);
-  border-radius: 16px;
+  border-radius: var(--ui-radius-panel);
   overflow: hidden;
 }
 
@@ -232,7 +230,7 @@
 .manualContent p {
   margin: 0 0 0.6rem;
   color: var(--customer-muted);
-  font-size: 0.72rem;
+  font-size: 13px;
   line-height: 1.7;
 }
 
@@ -253,7 +251,7 @@
   min-height: 48px;
   padding: 0.7rem 1rem;
   color: var(--customer-ink);
-  font-size: 0.73rem;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   list-style: none;
@@ -298,7 +296,7 @@
 .inputLabel {
   color: var(--customer-ink);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 550;
 }
 
 .codeInput,
@@ -346,7 +344,7 @@
 .help {
   margin: 0;
   color: var(--customer-muted);
-  font-size: 0.72rem;
+  font-size: 13px;
   line-height: 1.7;
 }
 
@@ -365,7 +363,7 @@
   background: transparent;
   color: var(--customer-muted);
   font: inherit;
-  font-size: 0.74rem;
+  font-size: 13px;
   line-height: 1.6;
   text-align: center;
   cursor: pointer;
@@ -397,7 +395,7 @@
   gap: 0.4rem;
   margin: 0.5rem 0 0;
   color: var(--customer-muted);
-  font-size: 0.64rem;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -472,7 +470,7 @@
 
 .footer {
   color: var(--customer-muted);
-  font-size: 0.69rem;
+  font-size: 12px;
   line-height: 1.7;
   text-align: center;
 }
@@ -527,7 +525,7 @@
 
   .story > p:not(.eyebrow) {
     margin-bottom: 0;
-    font-size: 0.76rem;
+    font-size: 13px;
   }
 
   .card {

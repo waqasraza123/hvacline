@@ -46,12 +46,14 @@ it("renders broader business positioning beside the existing hero badges and pri
       new URL("./styles.css", import.meta.url),
       "utf8",
     );
+    const tokens = readFileSync(new URL("./design-tokens.css", import.meta.url), "utf8");
+    const controls = readFileSync(new URL("./interface.css", import.meta.url), "utf8");
     const hero = html.match(
       /<section class="product-hero[\s\S]*?<\/section>/,
     )?.[0];
     writeFileSync(
       process.env.HVACLINE_HERO_PREVIEW_PATH,
-      `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${globalCss}\n${css}</style></head><body class="product-site">${hero}</body></html>`,
+      `<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${globalCss}\n${tokens}\n${css}\n${controls}</style></head><body class="product-site">${hero}</body></html>`,
     );
   }
 });

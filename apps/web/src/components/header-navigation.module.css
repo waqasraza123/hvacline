@@ -1,5 +1,5 @@
 .header {
-  min-height: 88px;
+  min-height: 76px;
   gap: 20px;
   flex-wrap: nowrap;
 }
@@ -14,22 +14,21 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px;
-  border: 1px solid var(--customer-border);
-  border-radius: 999px;
-  background: var(--customer-surface);
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 .desktop a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 10px 14px;
-  border-radius: 999px;
+  border-radius: var(--ui-radius-control);
   color: var(--customer-muted);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 500;
   white-space: nowrap;
 }
 .desktop a[data-active="true"] {
@@ -43,29 +42,8 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  color: #16a34a;
+  color: var(--ui-accent-ink);
   background: currentColor;
-  box-shadow: 0 0 6px rgb(22 163 74 / 25%);
-}
-.activeDot::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border: 1px solid currentColor;
-  border-radius: inherit;
-  opacity: 0;
-  animation: activeDotPulse 2.4s ease-out infinite;
-}
-@keyframes activeDotPulse {
-  0% {
-    opacity: 0.65;
-    transform: scale(0.65);
-  }
-  35%,
-  100% {
-    opacity: 0;
-    transform: scale(1.45);
-  }
 }
 .desktop a:hover {
   background: var(--customer-subtle);
@@ -99,7 +77,8 @@
   overflow-y: auto;
   padding: 24px;
   background: var(--customer-canvas);
-  box-shadow: -20px 0 80px rgb(0 0 0 / 12%);
+  border-left: 1px solid var(--ui-border);
+  box-shadow: none;
 }
 .drawerTop {
   display: flex;
@@ -150,13 +129,13 @@
   align-items: center;
   gap: 10px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .mobile small {
   display: block;
   margin-top: 4px;
   color: var(--customer-muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .mobile a[data-active="true"] strong {
   color: var(--customer-accent-ink);
@@ -173,10 +152,10 @@
   margin-top: 32px;
   padding: 16px 20px;
   border-radius: 12px;
-  color: var(--customer-on-accent);
-  background: var(--customer-accent);
+  color: var(--ui-on-primary);
+  background: var(--ui-primary);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
 }
 .footer {
   flex-wrap: wrap;
@@ -244,16 +223,11 @@
     gap: 6px;
   }
   .header :global(.product-login) {
-    font-size: 11px;
+    font-size: 13px;
   }
 }
 @media (min-width: 360px) and (max-width: 390px) {
   .header :global(.brand-link em) {
     display: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .activeDot::after {
-    animation: none;
   }
 }

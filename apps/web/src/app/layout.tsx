@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { themeInitializationScript } from "@/components/theme-preference";
 import { ThemeSync } from "@/components/theme-sync";
 import "./styles.css";
+import "./design-tokens.css";
+import "./interface.css";
 export const metadata: Metadata = {
   title: {
     default: "HVACLine | Customizable AI Voice Agents for Business",

@@ -1,3 +1,34 @@
+## Web redesign publication authorized — UNVERIFIED — 2026-11-25
+
+Owner explicitly requests pushing the completed web redesign to main. Local and
+remote main both start at1a7c4a13f64f08ee5ef6a9dd683cc3a4c5b1f79b. Publication
+includes the frontend source, unexecuted regression source and design/feature
+notes. Preserve existing history and tags; use a normal non-force push with
+[skip ci] [skip render] and hooks disabled. No execution checks, services,
+providers, migrations or deployment commands are authorized. Runtime/visual/
+accessibility acceptance remains UNVERIFIED; owner commands/manual checks:
+docs/web-design-system.md. Publication outcome is recorded in local handoff.
+
+## Shared web redesign — local source, UNVERIFIED — 2026-11-25
+
+Resumed the owner's frontend-only redesign. Root-loaded design tokens and scoped
+control styles unify neutral/orange light/dark application shells. Operations
+keeps existing section keys/access gates with grouped navigation, loaded-queue
+metrics, upcoming/attention panels and five latest received calls. General/Voice
+settings tabs retain mounted drafts and expose cancellation to saved values.
+Recovery uses shared metrics/loading states, selected-case styling and a strictly
+fictional selected-lead timeline/confirmation. Homepage/navigation/customer forms,
+appointments/memory/MFA/details share typography and theme-aware status surfaces.
+Published website templates retain their scoped styling; backend/native/provider/
+booking/authentication contracts and activation flags are unchanged.
+
+Added unexecuted regression source for navigation gates, loaded records/order,
+empty queues, tab-panel retention and recovery rendering. Static source review
+only; no tests/builds/linters/formatters/type checks/browser checks/services/
+installs/migrations/providers/commits/pushes/deployments ran. Runtime, visual and
+accessibility acceptance remain UNVERIFIED. Source is local only. Owner commands
+and exact responsive/theme/keyboard/draft/manual checks: docs/web-design-system.md.
+
 ## Three homepage sections removed — UNVERIFIED — 2026-11-24
 
 Owner requested removal of HVAC PHONE EXAMPLE, HOW THE HVAC EXAMPLE WORKS and

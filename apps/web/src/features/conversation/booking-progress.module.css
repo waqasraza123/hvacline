@@ -131,3 +131,17 @@
   outline: 3px solid var(--customer-accent-ink, #2458eb);
   outline-offset: 3px;
 }
+
+:is(:global(.customer-shell), :global(.workspace-theme)) .stageNote {
+  color: var(--customer-error-ink);
+}
+:is(:global(.customer-shell), :global(.workspace-theme)) .warning {
+  border-color: var(--customer-warning-border);
+  background: var(--customer-warning-surface);
+  color: var(--customer-warning-ink);
+}
+:is(:global(.customer-shell), :global(.workspace-theme)) .receipt {
+  border-color: var(--customer-success-border);
+  background: var(--customer-success-surface);
+  color: var(--customer-success-ink);
+}

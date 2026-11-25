@@ -1,0 +1,119 @@
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main, .phone-demo-shell) :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main, .phone-demo-shell) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ui-accent-ink);
+  outline-offset: 3px;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main, .phone-demo-shell) :is(button, a, input, select, textarea) {
+  transition: background-color var(--ui-duration) ease, border-color var(--ui-duration) ease, color var(--ui-duration) ease;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(.primary-button, .primary-link, .product-button) {
+  min-height: 44px;
+  border: 1px solid var(--ui-primary);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
+  font-weight: 550;
+  box-shadow: none;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(.primary-button, .primary-link, .product-button):hover:not(:disabled) {
+  background: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
+  box-shadow: none;
+  transform: none;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(.secondary-button, .secondary-link) {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-control);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-weight: 500;
+  box-shadow: none;
+}
+
+:is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(.secondary-button, .secondary-link):hover:not(:disabled) {
+  background: var(--ui-hover);
+  border-color: var(--ui-control-border);
+}
+
+:is(.customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea) {
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-input);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  font-size: 14px;
+  box-shadow: none;
+}
+
+:is(.customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--ui-accent-ink);
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) :is(.ops-card, .settings-card, .voice-card) {
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-surface);
+  box-shadow: none;
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) :is(.section-kicker, .eyebrow, .preview-label) {
+  color: var(--ui-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) :is(.section-help, .field-help, .settings-note) {
+  color: var(--ui-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) :is(.settings-grid, .faq-fields, .form-grid) label {
+  color: var(--ui-ink);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) :is(.faq-editor, .receptionist-context, .lookup-result, .disclosure) {
+  border-color: var(--ui-border);
+  background: var(--ui-hover);
+  color: var(--ui-ink);
+}
+
+:is(.workspace-theme, .settings-shell, .voice-main) .page-header h1 {
+  max-width: 100%;
+  font-size: 30px;
+  font-weight: 550;
+  line-height: 1.25;
+}
+
+.workspace-theme .settings-shell > .page-header { display: none; }
+.workspace-theme .settings-actions { gap: 12px; padding-top: 20px; border-top: 1px solid var(--ui-border); }
+.workspace-theme .settings-actions p { flex-basis: 100%; margin: 0; }
+.workspace-theme :is(.ops-form-grid, .settings-grid, .faq-fields, .form-grid) { gap: 20px; }
+.workspace-theme :is(.empty-state, .customer-empty) { color: var(--ui-muted); padding: 24px; }
+.workspace-theme :is(.ops-card, .settings-card) > h2 { margin-bottom: 16px; font-weight: 550; }
+.workspace-theme :is(.ops-card, .settings-card) fieldset { min-width: 0; border-color: var(--ui-border); border-radius: 10px; }
+.workspace-theme .request-row { border-color: var(--ui-border); }
+.workspace-theme :is(.sample-badge, .version-badge) { border-radius: 7px; font-size: 12px; font-weight: 500; }
+
+@media (max-width: 640px) {
+  :is(.product-site, .customer-shell, .workspace-theme, .settings-shell, .voice-main) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 16px; }
+  .workspace-theme :is(.ops-form-grid, .settings-grid, .faq-fields, .form-grid) { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}

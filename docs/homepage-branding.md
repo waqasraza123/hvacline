@@ -1,5 +1,15 @@
 # Homepage branding handoff
 
+## Current local redesign — November 25, 2026 — UNVERIFIED
+
+The homepage and guest chat now share the neutral light/dark theme, flat
+surfaces and quieter controls with the application. The closing CTA keeps a
+dark panel and orange action. Shared navigation uses a still orange marker for
+the current pathname. The phone example, workflow and recovery teaser remain
+removed. Older presentation descriptions below are historical. No checks,
+formatters, services, publication or deployment ran. Current owner commands and
+manual checks: [Web design system](web-design-system.md).
+
 ## Professional homepage presentation — November 21, 2026 — UNVERIFIED
 
 Owner requested a further visual refinement after the first hierarchy pass was

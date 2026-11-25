@@ -1,5 +1,15 @@
 # Customer color refresh
 
+## Current local redesign — November 25, 2026 — UNVERIFIED
+
+Shared application tokens now supply the neutral light/dark and orange palette
+for customer authentication, booking, appointments, memory, MFA and details.
+Status receipts/warnings follow the theme and the QR retains its white surface.
+Operations/settings also use this design system; older temporary-checkout/color
+instructions below are historical. No checks, formatters, services, publication
+or deployment ran. Current checkout, commands and manual acceptance:
+[Web design system](web-design-system.md).
+
 Implemented in `/private/tmp/hvacline-browser-demo`. Implementation and browser appearance remain owner-unverified.
 
 ## Design

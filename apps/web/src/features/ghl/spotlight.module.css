@@ -1,17 +1,12 @@
 .feature {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
-  gap: clamp(24px, 4vw, 56px);
-  padding: clamp(24px, 3.5vw, 40px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+  padding: 24px;
   border: 1px solid var(--customer-border);
-  border-top: 3px solid var(--customer-accent);
-  border-radius: 18px;
-  background: linear-gradient(
-    115deg,
-    var(--customer-surface) 45%,
-    var(--customer-accent-soft)
-  );
-  box-shadow: 0 8px 30px var(--customer-shadow-soft);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-surface);
+  box-shadow: none;
 }
 .introduction,
 .capabilities {
@@ -24,9 +19,9 @@
   gap: 12px;
   margin-bottom: 22px;
   color: var(--customer-muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 12px;
+  font-weight: 550;
+  letter-spacing: 0;
 }
 .mark {
   display: grid;
@@ -45,14 +40,15 @@
   border: 1px solid var(--customer-border);
   border-radius: 999px;
   color: var(--customer-muted);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0;
 }
 .feature h2 {
   max-width: 560px;
   margin: 0;
   color: var(--customer-ink);
-  font-size: clamp(25px, 2.4vw, 34px);
+  font-size: 22px;
+  font-weight: 550;
   line-height: 1.17;
   letter-spacing: -0.045em;
 }
@@ -70,12 +66,13 @@
   gap: 10px;
 }
 .actions button.primary {
-  border-color: var(--customer-accent-ink);
-  background: var(--customer-accent);
-  color: var(--customer-on-accent);
+  border-color: var(--ui-primary);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
 }
 .actions button.primary:hover:not(:disabled) {
-  filter: brightness(1.06);
+  background: var(--ui-primary-hover);
+  border-color: var(--ui-primary-hover);
 }
 .actions button.secondary {
   background: var(--customer-surface);

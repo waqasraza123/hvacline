@@ -3,12 +3,12 @@
   min-width: 0;
   position: relative;
   scroll-margin-top: 2rem;
-  background: #18181b;
-  color: #fafaf9;
-  border: 1px solid #3f3f46;
-  border-radius: 24px;
+  background: var(--ui-surface);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-panel);
   overflow: hidden;
-  box-shadow: 0 18px 40px -24px #09090b80;
+  box-shadow: none;
 }
 .header {
   display: flex;
@@ -16,7 +16,7 @@
   align-items: center;
   gap: 12px;
   padding: 22px 24px;
-  border-bottom: 1px solid #ffffff12;
+  border-bottom: 1px solid var(--ui-border);
 }
 .mark,
 .dialogMark {
@@ -25,9 +25,9 @@
   flex: none;
   width: 42px;
   height: 42px;
-  background: #f97316;
-  color: #18181b;
-  border-radius: 13px;
+  background: var(--ui-accent-soft);
+  color: var(--ui-ink);
+  border-radius: 10px;
 }
 .mark svg,
 .dialogMark svg {
@@ -42,7 +42,7 @@
 .header h2 span {
   display: block;
   margin-top: 4px;
-  color: #a1a1aa;
+  color: var(--ui-muted);
   font-size: 0.75rem;
   font-weight: 400;
   letter-spacing: 0;
@@ -53,14 +53,14 @@
   align-items: center;
   gap: 6px;
   padding: 6px 9px;
-  border: 1px solid #ffffff24;
-  border-radius: 30px;
+  border: 1px solid var(--ui-border);
+  border-radius: 7px;
   font-size: 0.75rem;
 }
 .badge > span {
   width: 5px;
   height: 5px;
-  background: #fb923c;
+  background: var(--ui-accent-ink);
   border-radius: 50%;
 }
 .modes {
@@ -68,9 +68,9 @@
   gap: 4px;
   margin: 20px 24px 0;
   padding: 4px;
-  border: 1px solid #ffffff12;
+  border: 1px solid var(--ui-border);
   border-radius: 12px;
-  background: #09090b;
+  background: var(--ui-hover);
 }
 .modes button {
   display: flex;
@@ -83,16 +83,16 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #a1a1aa;
+  color: var(--ui-muted);
   font: inherit;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
 }
 .modes button[aria-pressed="true"] {
-  background: #27272a;
-  color: #fed7aa;
-  box-shadow: 0 2px 6px #0003;
+  background: var(--ui-surface);
+  color: var(--ui-accent-ink);
+  box-shadow: none;
 }
 .modes svg {
   width: 17px;
@@ -101,7 +101,7 @@
 .voicePreview {
   padding: 28px 32px;
   text-align: center;
-  background: radial-gradient(ellipse at 50% 30%, #f9731614, transparent 65%);
+  background: var(--ui-surface);
 }
 .voiceOrb {
   display: grid;
@@ -109,35 +109,34 @@
   width: 88px;
   height: 88px;
   margin: 4px auto 24px;
-  border: 1px solid #fdba7470;
+  border: 1px solid var(--ui-accent-border);
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 25%, #fdba74, #f97316 55%, #9a3412);
-  color: #18181b;
-  box-shadow:
-    0 0 0 12px #f973160a,
-    0 0 60px #f9731626;
+  background: var(--ui-accent-soft);
+  color: var(--ui-ink);
+  box-shadow: none;
 }
 .eyebrow {
-  color: #fb923c;
+  color: var(--ui-accent-ink);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 550;
   line-height: 1.7;
   letter-spacing: 0.06em;
 }
 .voicePreview h3 {
   margin: 16px 0 12px;
-  color: #fafaf9;
+  color: var(--ui-ink);
   font-size: clamp(2rem, 3vw, 2.75rem);
   line-height: 1.08;
   font-weight: 600;
   letter-spacing: -0.055em;
 }
 .voicePreview > p:not(.eyebrow) {
-  color: #d4d4d8;
+  color: var(--ui-muted);
   font-size: 1rem;
   line-height: 1.7;
 }
 .voiceAction {
+  border: 1px solid var(--ui-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -146,20 +145,20 @@
   margin-top: 28px;
   padding: 12px 18px;
   border-radius: 10px;
-  background: #f97316;
-  color: #18181b;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 550;
 }
 .voiceAction:hover {
-  background: #fb923c;
+  background: var(--ui-primary-hover);
 }
 .voiceAction svg:last-child {
   margin-left: auto;
 }
 .voicePreview > .voiceHelp {
   margin: 12px 0 0;
-  color: #a1a1aa;
+  color: var(--ui-muted);
   font-size: 0.75rem;
 }
 .messages {
@@ -172,7 +171,7 @@
   flex-direction: column;
   gap: 12px;
   scrollbar-width: thin;
-  scrollbar-color: #52525b transparent;
+  scrollbar-color: var(--ui-control-border) transparent;
 }
 .lineMessage,
 .userMessage {
@@ -183,22 +182,22 @@
 }
 .lineMessage {
   align-self: flex-start;
-  background: #27272a;
+  background: var(--ui-hover);
   border-bottom-left-radius: 4px;
 }
 .userMessage {
   align-self: flex-end;
-  color: #18181b;
-  background: #ffedd5;
+  color: var(--ui-ink);
+  background: var(--ui-accent-soft);
   border-bottom-right-radius: 4px;
 }
 .lineMessage span,
 .userMessage span {
   display: block;
   font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  opacity: 0.65;
+  font-weight: 550;
+  letter-spacing: 0;
+  opacity: 1;
 }
 .lineMessage p,
 .userMessage p {
@@ -216,8 +215,8 @@
 }
 .suggestions button {
   background: transparent;
-  color: #d4d4d8;
-  border: 1px solid #ffffff20;
+  color: var(--ui-muted);
+  border: 1px solid var(--ui-border);
   border-radius: 9px;
   min-height: 44px;
   padding: 10px 12px;
@@ -233,11 +232,11 @@
     background 0.15s;
 }
 .suggestions button:hover {
-  background: #ffffff08;
-  border-color: #fb923c;
+  background: var(--ui-hover);
+  border-color: var(--ui-accent-ink);
 }
 .suggestions button span {
-  color: #fb923c;
+  color: var(--ui-accent-ink);
 }
 .form {
   padding: 8px 24px 17px;
@@ -245,7 +244,7 @@
 .label {
   display: block;
   margin-bottom: 8px;
-  color: #d4d4d8;
+  color: var(--ui-muted);
   font-size: 0.75rem;
 }
 .composer {
@@ -253,13 +252,13 @@
   align-items: flex-end;
   gap: 8px;
   padding: 10px;
-  background: #fafaf9;
-  border: 2px solid transparent;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-control-border);
   border-radius: 12px;
 }
 .composer:focus-within {
-  border-color: #fb923c;
-  box-shadow: 0 0 0 3px #f9731626;
+  border-color: var(--ui-accent-ink);
+  box-shadow: none;
 }
 .composer textarea {
   flex: 1;
@@ -269,7 +268,7 @@
   resize: vertical;
   padding: 3px;
   background: transparent;
-  color: #18181b;
+  color: var(--ui-ink);
   border: 0;
   outline: none;
   font: inherit;
@@ -277,7 +276,7 @@
   line-height: 1.65;
 }
 .composer textarea::placeholder {
-  color: #71717a;
+  color: var(--ui-muted);
 }
 .composer button {
   display: flex;
@@ -289,16 +288,16 @@
   padding: 10px;
   border: 0;
   border-radius: 8px;
-  background: #f97316;
-  color: #18181b;
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
 }
 .composer button:disabled {
-  background: #e4e4e7;
-  color: #71717a;
+  background: var(--ui-hover);
+  color: var(--ui-muted);
   cursor: default;
 }
 .composer button svg {
@@ -306,14 +305,14 @@
   height: 18px;
 }
 .help {
-  color: #a1a1aa;
+  color: var(--ui-muted);
   font-size: 0.75rem;
   line-height: 1.7;
   margin: 9px 0 0;
 }
 .disclosure {
   margin-top: 8px;
-  color: #a1a1aa;
+  color: var(--ui-muted);
   font-size: 0.75rem;
   line-height: 1.8;
 }
@@ -330,8 +329,8 @@
   align-items: center;
   justify-content: center;
   gap: 7px;
-  color: #a1a1aa;
-  border-top: 1px solid #ffffff12;
+  color: var(--ui-muted);
+  border-top: 1px solid var(--ui-border);
   padding: 14px 18px;
   font-size: 0.75rem;
   line-height: 1.6;
@@ -344,16 +343,16 @@
 .continuation {
   margin: 4px 24px 12px;
   padding: 12px;
-  border: 1px solid #fb923c40;
+  border: 1px solid var(--ui-accent-border);
   border-radius: 10px;
-  background: #f973160a;
+  background: var(--ui-accent-soft);
 }
 .continuation > span {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #fed7aa;
-  font-size: 0.62rem;
+  color: var(--ui-accent-ink);
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 .continuation svg {
@@ -368,7 +367,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #fb923c;
+  color: var(--ui-accent-ink);
   font: inherit;
   font-size: 0.77rem;
   font-weight: 600;
@@ -384,7 +383,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #fb923c;
+  background: var(--ui-accent-ink);
   animation: pulse 1.2s infinite;
 }
 .thinking i:nth-child(2) {
@@ -395,12 +394,12 @@
 }
 .thinking span {
   margin-left: 5px;
-  color: #a1a1aa;
-  font-size: 0.65rem;
+  color: var(--ui-muted);
+  font-size: 0.75rem;
 }
 .error {
-  color: #fecaca;
-  font-size: 0.7rem;
+  color: var(--ui-danger);
+  font-size: 0.8125rem;
   line-height: 1.7;
 }
 .fallback {
@@ -412,12 +411,12 @@
 }
 .fallback button,
 .fallback a {
-  color: #fb923c;
+  color: var(--ui-accent-ink);
   background: none;
   border: 0;
   padding: 0;
   font: inherit;
-  font-size: 0.7rem;
+  font-size: 0.8125rem;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -427,7 +426,7 @@
   max-height: calc(100dvh - 32px);
   padding: 0;
   border: 1px solid var(--customer-border);
-  border-radius: 24px;
+  border-radius: var(--ui-radius-panel);
   background: var(--customer-surface);
   color: var(--customer-ink);
   box-shadow: 0 30px 100px #0005;
@@ -446,8 +445,8 @@
   top: 12px;
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: 0;
   border-radius: 50%;
   color: var(--customer-muted);
@@ -490,8 +489,8 @@
   border-radius: 9px;
 }
 .primary {
-  background: var(--customer-accent);
-  color: var(--customer-on-accent);
+  background: var(--ui-primary);
+  color: var(--ui-on-primary);
 }
 .secondary {
   color: var(--customer-ink);
@@ -504,7 +503,7 @@
   justify-content: center;
   gap: 7px;
   color: var(--customer-muted);
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   margin-top: 22px;
   line-height: 1.7;
 }
@@ -516,7 +515,7 @@
 .panel button:focus-visible,
 .panel a:focus-visible,
 .panel summary:focus-visible {
-  outline: 2px solid #fb923c;
+  outline: 2px solid var(--ui-accent-ink);
   outline-offset: 4px;
 }
 @keyframes appear {

@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import type { Dispatch } from "react";
+import { MetricCard } from "@/components/ui/workspace-ui";
 import { ProductIcon } from "@/components/product-icons";
 import { availableDemoSlots, demoMetrics } from "./demo";
 import type { DemoAction, DemoState, DemoStatus } from "./demo";
@@ -15,7 +16,7 @@ export function DemoMetrics({ state }: { state: DemoState }) {
   const metrics = demoMetrics(state);
   return <div className={styles.metrics} aria-label="Demo recovery metrics">
     {[{ label: "Recovery opportunities", value: metrics.total, help: "Fictional cohort · all outcomes" }, { label: "Recovered appointments", value: metrics.recovered, help: "Simulated bookings only" },
-      { label: "Recovery conversion", value: `${(metrics.conversion * 100).toFixed(1)}%`, help: "Recovered / fictional cohort" }, { label: "Estimated recovered revenue", value: money(metrics.revenue), help: "Fictional estimate · not actual revenue" }].map((metric) => <div className={styles.metric} key={metric.label}><span>{metric.label}</span><strong>{metric.value}</strong><small>{metric.help}</small></div>)}
+      { label: "Recovery conversion", value: `${(metrics.conversion * 100).toFixed(1)}%`, help: "Recovered / fictional cohort" }, { label: "Estimated recovered revenue", value: money(metrics.revenue), help: "Fictional estimate · not actual revenue" }].map((metric) => <MetricCard key={metric.label} label={metric.label} value={metric.value} help={metric.help} />)}
   </div>;
 }
 
@@ -37,12 +38,12 @@ export function RecoveryDemo({ state, dispatch, compact = false, onLive }: { sta
       <div className={styles.panel}>
         <h3>Every opportunity has a next step</h3>
         {!compact && <div className={styles.filters} aria-label="Filter fictional cases">{filters.map((item) => <button type="button" key={item.label} aria-pressed={item.status === filter} onClick={() => setFilter(item.status)}>{item.label}</button>)}</div>}
-        <div className={styles.tableWrap}><table className={styles.table}><caption className={styles.muted}>DEMO DATA · select a fictional customer to explore</caption><thead><tr><th>Customer / source</th><th>Contact / status</th>{!compact && <><th>Last activity / next attempt</th><th>Outcome</th></>}<th>Action</th></tr></thead><tbody>
-          {(compact ? [selected, ...rows.filter((row) => row.id !== selected.id)].slice(0, 4) : rows).map((row) => <tr key={row.id} aria-selected={row.id === selected.id}><td><button type="button" className={styles.rowButton} onClick={() => { dispatch({ type: "SELECT", id: row.id }); setSelectedSlot(""); }}>{row.customer}</button><small>{row.source} · DEMO DATA</small></td><td>{row.channel === "VOICE" ? "AI call simulation" : "SMS simulation"}<br /><span className={styles.status} data-status={row.status}>{statusLabel(row.status)}</span></td>{!compact && <><td>{row.lastActivity}<small>{row.status === "SCHEDULED" ? "Next: Nov 20 · 4:00 PM ET (fictional)" : "No scheduled demo contact"}</small></td><td>{row.appointment?.label ?? (row.status === "CLOSED" ? "Closed in demo" : "No booking")}</td></>}<td><button type="button" aria-label={`Explore ${row.customer}, demo data`} onClick={() => { dispatch({ type: "SELECT", id: row.id }); setSelectedSlot(""); }}>Explore</button></td></tr>)}
+        <div className={styles.tableWrap} role="region" aria-label="Fictional recovery leads" tabIndex={0}><table className={styles.table}><caption className={styles.muted}>DEMO DATA · select a fictional customer to explore</caption><thead><tr><th scope="col">Customer / source</th><th scope="col">Contact / status</th>{!compact && <><th scope="col">Last activity / next attempt</th><th scope="col">Outcome</th></>}<th scope="col">Action</th></tr></thead><tbody>
+          {(compact ? [selected, ...rows.filter((row) => row.id !== selected.id)].slice(0, 4) : rows).map((row) => <tr key={row.id} data-selected={row.id === selected.id}><td><button type="button" className={styles.rowButton} aria-pressed={row.id === selected.id} onClick={() => { dispatch({ type: "SELECT", id: row.id }); setSelectedSlot(""); }}>{row.customer}</button><small>{row.source} · DEMO DATA</small></td><td>{row.channel === "VOICE" ? "AI call simulation" : "SMS simulation"}<br /><span className={styles.status} data-status={row.status}>{statusLabel(row.status)}</span></td>{!compact && <><td>{row.lastActivity}<small>{row.status === "SCHEDULED" ? "Next: Nov 20 · 4:00 PM ET (fictional)" : "No scheduled demo contact"}</small></td><td>{row.appointment?.label ?? (row.status === "CLOSED" ? "Closed in demo" : "No booking")}</td></>}<td><button type="button" aria-label={`Explore ${row.customer}, demo data`} onClick={() => { dispatch({ type: "SELECT", id: row.id }); setSelectedSlot(""); }}>Explore</button></td></tr>)}
           {!rows.length && <tr><td colSpan={compact ? 3 : 5}>No fictional cases match this filter.</td></tr>}
         </tbody></table></div>
       </div>
-      <div className={styles.panel} aria-label="Selected fictional recovery case">
+      <div className={`${styles.panel} ${styles.selectedPanel}`} aria-label="Selected fictional recovery case">
         <div className={styles.toolbar}><div><span className={styles.badge}>DEMO DATA</span><h3 style={{ marginTop: ".8rem" }}>{selected.customer}</h3></div><ProductIcon name={selected.channel === "VOICE" ? "phone" : "chat"} /></div>
         <p className={styles.muted}>{selected.reference} · {selected.source}<br />{selected.service}</p>
         <details open key={selected.id}><summary>Why this qualifies</summary><p className={styles.muted}>{selected.reason}</p><p className={styles.muted}>Consent, eligibility, contact times and slots in this panel are fictional. Live Mode checks persisted permission and scheduling separately.</p></details>
@@ -51,7 +52,7 @@ export function RecoveryDemo({ state, dispatch, compact = false, onLive }: { sta
           <div className={styles.bubble}><small>DEMO DATA · SIMULATED AI ASSISTANT</small>Hi, this is the AI assistant for Demo Comfort HVAC. You recently asked about {selected.service.split(" · ")[0].toLowerCase()} but didn’t finish booking. Would you like help scheduling? {selected.channel === "SMS" && "Reply YES for help or STOP to opt out."}</div>
           {["SLOTS", "BOOKED"].includes(selected.step) && <><div className={`${styles.bubble} ${styles.customer}`}><small>DEMO DATA · SIMULATED CUSTOMER</small>Yes, I’d like to continue.</div><div className={styles.bubble}><small>DEMO DATA · SIMULATED AI ASSISTANT</small>I have your confirmed service details. Here are the available fictional appointment times. Choose one, then confirm your simulated booking.</div></>}
           {selected.step === "DECLINED" && <div className={`${styles.bubble} ${styles.customer}`}><small>DEMO DATA · SIMULATED CUSTOMER</small>STOP. Please don’t follow up.</div>}
-          {selected.appointment && <div className={styles.bubble}><small>DEMO DATA · SIMULATED BOOKING CONFIRMATION</small>{selected.appointment.label}<br />Fictional appointment confirmed. No real appointment, calendar event or provider action occurred.</div>}
+          {selected.appointment && <div className={`${styles.bubble} ${styles.confirmation}`} role="status"><small>DEMO DATA · SIMULATED BOOKING CONFIRMATION</small>{selected.appointment.label}<br />Fictional appointment confirmed. No real appointment, calendar event or provider action occurred.</div>}
         </div>}
         {selected.step === "ASKED" && <div className={styles.actions}><button type="button" className={styles.primary} onClick={() => dispatch({ type: "YES" })}>Simulate customer YES</button><button type="button" onClick={() => dispatch({ type: "STOP" })}>Simulate STOP</button></div>}
         {selected.step === "SLOTS" && <div className={styles.slots}>
@@ -62,6 +63,12 @@ export function RecoveryDemo({ state, dispatch, compact = false, onLive }: { sta
         </div>}
         {["NEEDS_REVIEW", "CLOSED"].includes(selected.status) && <p className={styles.notice}>This demo case cannot be contacted. Select a scheduled case to explore the simulation.</p>}
         {state.notice && <p className={styles.notice} role="status">DEMO DATA · {state.notice}</p>}
+        {!compact && <section className={styles.activityPanel} aria-label="Selected lead timeline">
+          <h3>Follow-up timeline</h3>
+          <ul className={styles.activity}>{state.activity.filter((event) => event.caseId === selected.id).slice(0, 6).map((event) =>
+            <li key={event.id}>{event.message}<small>DEMO DATA · {event.channel} simulation · {event.time}</small></li>)}</ul>
+          {!state.activity.some((event) => event.caseId === selected.id) && <p className={styles.muted}>No simulated follow-up activity for this lead yet.</p>}
+        </section>}
       </div>
     </div>
     {!compact && <section className={styles.panel} style={{ marginTop: "1rem" }} aria-label="Simulated follow-up activity"><h3>Recent SMS & AI call simulations</h3><ul className={styles.activity}>{state.activity.slice(0, 6).map((event) => <li key={event.id}><span className={styles.badge}>DEMO DATA</span> {event.message}<small>{state.cases.find((row) => row.id === event.caseId)?.customer} · {event.channel} simulation · {event.time}</small></li>)}</ul></section>}

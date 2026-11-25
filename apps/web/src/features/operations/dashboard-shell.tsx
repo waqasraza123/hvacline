@@ -3,65 +3,16 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Brand } from "@/components/brand";
 import { ProductIcon } from "@/components/product-icons";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge, PageHeader } from "@/components/ui/workspace-ui";
+import { navigationGroups, sections } from "./dashboard-navigation";
+import type { OperationsSection } from "./dashboard-navigation";
 import styles from "./dashboard.module.css";
 
-const sections = [
-  { key: "multilingual", label: "Multilingual AI Voice", icon: "mic", group: "Workspace" },
-  { key: "recovery", label: "AI Lead Recovery", icon: "phone", group: "Workspace" },
-  {
-    key: "integrations",
-    label: "GoHighLevel",
-    icon: "shield",
-    group: "Workspace",
-  },
-  { key: "websites", label: "Websites", icon: "home", group: "Manage" },
-  { key: "overview", label: "Overview", icon: "home", group: "Workspace" },
-  {
-    key: "requests",
-    label: "Service requests",
-    icon: "chat",
-    group: "Workspace",
-  },
-  {
-    key: "bookings",
-    label: "Appointments",
-    icon: "calendar",
-    group: "Workspace",
-  },
-  { key: "calls", label: "Calls", icon: "phone", group: "Workspace" },
-  { key: "handoffs", label: "Follow-up", icon: "clock", group: "Workspace" },
-  { key: "scheduling", label: "Scheduling", icon: "calendar", group: "Manage" },
-  { key: "receptionist", label: "Receptionist", icon: "mic", group: "Manage" },
-  {
-    key: "knowledge",
-    label: "Knowledge base",
-    icon: "shield",
-    group: "Manage",
-  },
-  {
-    key: "maintenance hours",
-    label: "Maintenance hours",
-    icon: "clock",
-    group: "Manage",
-  },
-  {
-    key: "browser voice",
-    label: "Browser voice",
-    icon: "mic",
-    group: "Manage",
-  },
-] as const satisfies ReadonlyArray<{
-  key: string;
-  label: string;
-  icon: ComponentProps<typeof ProductIcon>["name"];
-  group: string;
-}>;
-
-export type OperationsSection = (typeof sections)[number]["key"];
+export type { OperationsSection } from "./dashboard-navigation";
 
 export function DashboardShell({
   section,
@@ -101,7 +52,7 @@ export function DashboardShell({
   function navigation() {
     return (
       <nav aria-label="Operations sections" className={styles.navigation}>
-        {["Workspace", "Manage"].map((group) => (
+        {navigationGroups.map((group) => (
           <div key={group} className={styles.navGroup}>
             <p className={styles.groupLabel}>{group}</p>
             <ul>
@@ -116,9 +67,6 @@ export function DashboardShell({
                     <button
                       type="button"
                       className={styles.navItem}
-                      data-featured={
-                        item.key === "integrations" || item.key === "recovery" ? "true" : undefined
-                      }
                       aria-current={section === item.key ? "page" : undefined}
                       aria-label={item.label}
                       title={item.label}
@@ -151,7 +99,7 @@ export function DashboardShell({
 
   return (
     <div
-      className={`${styles.theme} ${styles.shell} ${collapsed ? styles.collapsed : ""}`}
+      className={`workspace-theme ${styles.theme} ${styles.shell} ${collapsed ? styles.collapsed : ""}`}
     >
       <a href={`#${mainId}`} className={styles.skipLink}>
         Skip to workspace
@@ -168,8 +116,8 @@ export function DashboardShell({
         <div className={styles.sidebarFooter}>
           <ProductIcon name="shield" />
           <div className={styles.navLabel}>
-            <strong>Your service workspace</strong>
-            <p>Keep the next job moving.</p>
+            <strong>{demo ? "Demo workspace" : connected ? "Connected workspace" : "Workspace setup"}</strong>
+            <p>{demo ? "Fictional sample data" : "Protected administrator access"}</p>
           </div>
         </div>
       </aside>
@@ -198,7 +146,7 @@ export function DashboardShell({
               </Dialog.Trigger>
               <Dialog.Portal>
                 <Dialog.Overlay className={styles.overlay} />
-                <Dialog.Content className={`${styles.theme} ${styles.drawer}`}>
+                <Dialog.Content className={`workspace-theme ${styles.theme} ${styles.drawer}`}>
                   <div className={styles.drawerHeading}>
                     <Brand />
                     <Dialog.Close asChild>
@@ -228,39 +176,29 @@ export function DashboardShell({
             </div>
           </div>
           <div className={styles.headerActions}>
+            <span className={styles.headerStatus}><Badge tone={demo ? "accent" : "neutral"}>{demo ? "Demo data" : connected ? "Connected" : "Setup required"}</Badge></span>
             <ThemeToggle />
-            <Link href="/#call-me" className={styles.phoneLink}>
-              <ProductIcon name="phone" />
-              <span>Phone receptionist</span>
+            <Link href="/book" className={styles.phoneLink} aria-label="Open customer account">
+              <ProductIcon name="shield" />
+              <span>My account</span>
             </Link>
           </div>
         </header>
         <main id={mainId} tabIndex={-1} className={styles.content}>
-          <div className={styles.pageHeading}>
-            <div>
-              <p className={styles.eyebrow}>HVACLINE OPERATIONS</p>
-              <h1>{connected ? label : "Your service workspace"}</h1>
-              <p className={styles.subtitle}>
-                {section === "recovery" && connected
-                  ? "Turn missed opportunities into the next confirmed appointment."
-                  : section === "integrations" && connected
-                  ? "Your CRM, calendar booking and contact summaries."
-                  : section === "overview" || !connected
-                    ? "A clear view of your calls, bookings and next steps."
-                    : "Manage your service business, one next step at a time."}
-              </p>
-            </div>
-            {connected && !demo && (
-              <button
-                type="button"
-                className={styles.refreshButton}
-                onClick={onRefresh}
-                disabled={busy}
-              >
-                {busy ? "Refreshing…" : "Refresh workspace"}
-              </button>
-            )}
-          </div>
+          <PageHeader
+            title={connected ? label ?? "Workspace" : "Connect your workspace"}
+            description={section === "recovery" && connected
+              ? "Turn missed opportunities into the next confirmed appointment."
+              : section === "integrations" && connected
+                ? "Manage CRM connections, calendar booking and contact summaries."
+                : section === "overview" || !connected
+                  ? "Your calls, service requests and next steps, in one place."
+                  : section === "multilingual"
+                    ? "Explore a fictional multilingual conversation. Live languages require verified provider setup."
+                    : "Manage your service business with clear, connected tools."}
+            actions={connected && !demo ? <button type="button" className={styles.refreshButton}
+              onClick={onRefresh} disabled={busy}>{busy ? "Refreshing…" : "Refresh workspace"}</button> : undefined}
+          />
           {children}
         </main>
       </div>

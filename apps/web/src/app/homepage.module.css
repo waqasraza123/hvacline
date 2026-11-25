@@ -1,14 +1,11 @@
 .home {
   color: var(--customer-ink);
-  background:
-    radial-gradient(ellipse at 85% 8%, var(--customer-accent-soft), transparent 36rem),
-    var(--customer-canvas);
-  font-family:
-    ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--ui-canvas);
+  font-family: var(--ui-font);
 }
 
 .home .header {
-  min-height: 88px;
+  min-height: 76px;
   border-bottom-color: var(--customer-border);
 }
 
@@ -29,16 +26,16 @@
   min-height: 52px;
   gap: 0.75rem;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--ui-radius-control);
   padding: 0.875rem 1.5rem;
   font-size: 0.9375rem;
   line-height: 1.5;
-  box-shadow: 0 4px 12px var(--customer-shadow-soft);
+  box-shadow: none;
 }
 
 .home :global(.product-button):hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 18px var(--customer-shadow);
+  transform: none;
+  box-shadow: none;
 }
 
 .home :global(.product-button):active:not(:disabled) {
@@ -74,7 +71,7 @@
 
 .hero h1 {
   margin-bottom: 1.5rem;
-  font-size: clamp(3rem, 4.8vw, 5.75rem);
+  font-size: clamp(2.75rem, 4.5vw, 5rem);
   font-weight: 600;
   line-height: 1.06;
   letter-spacing: -0.055em;
@@ -159,15 +156,9 @@
 .demoFrame {
   padding: 12px;
   border: 1px solid var(--customer-border);
-  border-radius: 36px;
-  background: linear-gradient(
-    145deg,
-    var(--customer-surface),
-    var(--customer-accent-soft)
-  );
-  box-shadow:
-    0 30px 70px -35px var(--customer-shadow),
-    0 8px 24px var(--customer-shadow-soft);
+  border-radius: 22px;
+  background: var(--ui-hover);
+  box-shadow: none;
 }
 
 .demoCaption {
@@ -188,123 +179,6 @@
   height: 16px;
 }
 
-.workflow {
-  display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 2fr);
-  align-items: start;
-  gap: 3rem;
-  padding-block: clamp(2.5rem, 4vw, 4rem);
-  border-block: 1px solid var(--customer-border);
-  background: var(--customer-surface);
-}
-
-.workflowHeading :global(.product-eyebrow) {
-  margin-bottom: 1rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-}
-
-.workflowHeading h2 {
-  margin: 0;
-  font-size: clamp(1.75rem, 2.4vw, 2.5rem);
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: -0.04em;
-}
-
-.workflowSteps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.workflowSteps li {
-  min-width: 0;
-  padding-left: 1.5rem;
-  border-left: 1px solid var(--customer-border);
-}
-
-.workflowIcon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  margin-bottom: 1.25rem;
-  border: 1px solid var(--customer-accent-border);
-  border-radius: 12px;
-  background: var(--customer-accent-soft);
-  color: var(--customer-accent-ink);
-}
-
-.workflowSteps h3 {
-  margin: 0 0 0.625rem;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: -0.02em;
-}
-
-.workflowSteps p {
-  margin: 0;
-  color: var(--customer-muted);
-  font-size: 1rem;
-  line-height: 1.75;
-}
-
-.home :global(.outbound-demo) {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(2rem, 6vw, 6rem);
-  padding-block: clamp(3rem, 6vw, 6rem);
-  border-top: 0;
-}
-
-.home :global(.outbound-demo-intro) h2 {
-  font-size: clamp(2.5rem, 4vw, 4rem);
-  font-weight: 600;
-  line-height: 1.1;
-}
-
-.home :global(.outbound-demo-intro) :global(.product-eyebrow) {
-  font-size: 0.75rem;
-}
-
-.home :global(.calling-preview) {
-  gap: 1rem;
-  padding: clamp(1.25rem, 3vw, 2rem);
-  border-radius: 24px;
-  box-shadow: 0 16px 40px -24px var(--customer-shadow);
-}
-
-.home :global(.calling-preview) article {
-  padding: 1.25rem;
-  border: 1px solid var(--customer-border);
-  border-radius: 14px;
-  background: var(--customer-subtle);
-}
-
-.home :global(.calling-preview) article > svg {
-  width: 38px;
-  height: 38px;
-  padding: 9px;
-  border-radius: 10px;
-  background: var(--customer-accent-soft);
-}
-
-.home :global(.calling-preview) p {
-  font-size: 1rem;
-}
-
-.home :global(.outbound-demo-browser) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  font-size: 0.875rem;
-}
-
 .closingSection {
   padding-bottom: 1rem;
 }
@@ -313,16 +187,14 @@
   position: relative;
   gap: 2rem;
   padding: clamp(2rem, 5vw, 5rem);
-  border: 1px solid #ffffff1a;
-  border-radius: 28px;
-  background:
-    radial-gradient(ellipse at 95% 5%, #f9731626, transparent 60%),
-    #18181b;
-  color: #fafaf9;
+  border: 1px solid var(--ui-control-border);
+  border-radius: var(--ui-radius-panel);
+  background: var(--ui-dark);
+  color: var(--ui-on-dark);
 }
 
 .closing :global(.product-eyebrow) {
-  color: #fdba74;
+  color: var(--customer-accent-light);
   font-size: 0.75rem;
   letter-spacing: 0.08em;
 }
@@ -338,7 +210,7 @@
 .closingCopy {
   max-width: 42ch;
   margin: 1.25rem 0 0;
-  color: #d6d3d1;
+  color: var(--ui-on-dark-muted);
   font-size: 1rem;
   line-height: 1.75;
 }
@@ -411,16 +283,6 @@
   .home .badges {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-
-  .workflow {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2rem;
-  }
-
-  .workflowSteps li:first-child {
-    padding-left: 0;
-    border-left: 0;
-  }
 }
 
 @media (max-width: 850px) {
@@ -436,10 +298,6 @@
 
   .home .demo {
     justify-self: center;
-  }
-
-  .home :global(.outbound-demo) {
-    grid-template-columns: minmax(0, 1fr);
   }
 
   .home .closing {
@@ -483,27 +341,11 @@
 
   .demoFrame {
     padding: 6px;
-    border-radius: 30px;
-  }
-
-  .workflowSteps {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1.5rem;
-  }
-
-  .workflowSteps li,
-  .workflowSteps li:first-child {
-    padding: 1.5rem 0 0;
-    border-top: 1px solid var(--customer-border);
-    border-left: 0;
-  }
-
-  .workflowIcon {
-    margin-bottom: 1rem;
+    border-radius: 18px;
   }
 
   .home .closing {
-    border-radius: 20px;
+    border-radius: var(--ui-radius-panel);
   }
 
   .home .footer {
@@ -527,4 +369,15 @@
   .home :global(.voice-launcher):hover {
     transform: none;
   }
+}
+
+.home .closing :global(.product-button) {
+  border-color: var(--ui-accent);
+  background: var(--ui-accent);
+  color: var(--ui-dark);
+}
+.home .closing :global(.product-button):hover {
+  border-color: var(--ui-accent-hover);
+  background: var(--ui-accent-hover);
+  color: var(--ui-dark);
 }

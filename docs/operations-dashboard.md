@@ -1,12 +1,21 @@
 # Operations dashboard
 
+## Local redesign — November 25, 2026 — UNVERIFIED
+
+The shared neutral/orange theme, grouped navigation, loaded-queue metrics,
+recent-call panel, settings tabs and Recovery layout are implemented locally.
+No execution checks, formatters, services, provider operations, publication or
+deployment ran. Exact commands and responsive/keyboard/draft checks:
+[Web design system](web-design-system.md). This is a presentation change;
+existing access and backend behavior remain.
+
 ## AI Lead Recovery — source UNVERIFIED
 
 AI Lead Recovery now has dedicated header/sidebar access, a prominent overview
 card and a public `/ai-lead-recovery` demo. The overview's prominent **Try
 Yourself** link opens this dedicated page in the dashboard shell; connected
-workspaces retain their in-place recovery action. The homepage shows only a
-compact introduction and the same link. Legacy `/lead-recovery` URLs redirect
+workspaces retain their in-place recovery action. The homepage recovery teaser
+was removed at the owner’s request; shared navigation still links to the demo. Legacy `/lead-recovery` URLs redirect
 to the new route, retaining the setup option. Its 24 fictional opportunities and
 interactive follow-up/booking simulation stay separate from authenticated live
 data. AI Provider Settings store encrypted text-model credentials; recovery SMS
@@ -22,7 +31,7 @@ Implementation and runtime acceptance are **unverified**. The owner requested
 coding and publication only; no execution checks or services are authorized.
 
 `/operations` opens a sample-data demo for all visitors without sign-in. The
-shared desktop navbar and mobile menu offer Dashboard, Pricing and AI Recovery; Calling has
+shared desktop navbar and mobile menu offer Dashboard, Try Stripe Checkout and AI Recovery; Calling has
 been removed from both. The dashboard's initial
 render uses local fictional fixtures and makes no backend or provider request.
 The example schedule is November 12, 2026 in America/New_York; upcoming visits
@@ -31,12 +40,12 @@ and API dispatch rejects demo actions. Recovery uses only its separate local sim
 Connected editors, calendar integrations,
 maintenance labor and browser voice are not mounted in demo mode.
 
-The shared top navigation marks only the current pathname with a green dot and
+The shared top navigation marks only the current pathname with a still orange dot and
 active styling. Home and other unmatched routes have no selected destination.
-Desktop/mobile and browser back/forward follow the router. Reduced-motion
-preferences keep a still green dot.
+Desktop/mobile and browser back/forward follow the router. The dot has no pulse animation.
 
-GoHighLevel is featured below AI Lead Recovery and above the overview queue cards, with its own named
+GoHighLevel and AI Lead Recovery follow the overview metrics and queue panels.
+GoHighLevel retains its own named
 sidebar entry with a CRM badge. The underlying section key remains `integrations`;
 older setup guides referring to Integrations mean this GoHighLevel entry.
 The feature card highlights contact/opportunity sync, GHL calendar booking and
@@ -75,9 +84,10 @@ the dashboard and its portaled mobile drawer. Radix Dialog provides modal focus
 containment, Escape/outside dismissal and focus restoration. Responsive sidebar
 collapse and the mobile drawer share the same section definitions.
 
-Overview shows loaded calls, service requests, upcoming confirmed appointments,
+Overview shows loaded calls, service requests, all loaded confirmed bookings,
 and open follow-up. Upcoming appointments are sorted by start time as of the
-last refresh; only five appear on Overview. Needs attention shows up to two
+last refresh; only five appear on Overview. Recent conversations shows the five
+latest loaded received calls, not browser conversation history. Needs attention shows up to two
 hazard handoff requests and four open callbacks/transfers, with navigation to the
 full loaded queues. Counts are explicitly capped by the existing API's latest
 100 records per queue; they are not historical analytics or unique-customer
@@ -102,20 +112,18 @@ Manual acceptance:
    `/ai-lead-recovery` with the dashboard sidebar and full fictional recovery
    demo. In a connected workspace, confirm Open AI Lead Recovery keeps the
    authenticated workspace and opens its recovery section.
-   Confirm the GoHighLevel feature appears above overview metrics and the named
+   Confirm the GoHighLevel feature appears after overview metrics/queue panels and the named
    sidebar item opens the same section. Test Explore GoHighLevel and Connect your
    workspace; the latter must require the admin token and open GHL after sign-in.
    The overview feature itself must make no public-demo or administrator requests
    in demo mode; the public read-only fetch occurs only on entering GoHighLevel.
-   The top-right Phone receptionist link must open the homepage Calling section
-   (`/#call-me`), rather than the sandbox-gated `/phone-demo` route.
+   The top-right My account link must open `/book`.
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
    horizontally scrollable tables, wrapped request details and no page overflow.
-   On a fresh homepage load, confirm Dashboard shows the green pulsing dot before
-   any interaction. Confirm Calling is absent. Select Pricing and Dashboard;
-   confirm the active marker moves
-   on navigation. Repeat with the mobile menu and keyboard, check browser back/
-   forward, and enable reduced motion to confirm the dot stays visible and still.
+   On the homepage, confirm no navigation destination is selected. Confirm
+   Calling is absent. Open Try Stripe Checkout and Dashboard; the still orange
+   marker must follow the current pathname. Repeat in the mobile menu, with
+   keyboard navigation, browser back/forward and reduced motion.
 3. Use keyboard-only navigation: skip link, desktop collapse/expand, mobile drawer
    focus containment, Escape/outside dismissal and trigger focus restoration.
    Resize from an open mobile drawer to desktop; navigation must remain usable.
@@ -130,5 +138,5 @@ Manual acceptance:
    confirmation/cancellation flows, editor updates, scheduling/calendar controls,
    maintenance labor and conditional browser voice. Hazardous requests must
    remain ineligible for automatic booking.
-6. Confirm customer-facing home, booking, authentication, pricing and billing
-   styles remain intact. No global Tailwind reset or template dependency is added.
+6. Review customer-facing home, booking, authentication, pricing and billing
+   against the shared design guide and confirm existing interactions remain. No global Tailwind reset or template dependency is added.

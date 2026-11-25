@@ -3,7 +3,7 @@
   max-height: calc(100dvh - 2rem);
   padding: 1.5rem;
   border: 1px solid var(--customer-border, #dce3ed);
-  border-radius: 18px;
+  border-radius: var(--ui-radius-panel);
   background: var(--customer-surface, #fff);
   color: var(--customer-ink, #14233d);
   overflow-y: auto;
@@ -45,21 +45,23 @@
 }
 .receipt {
   padding: 1.1rem;
-  border: 1px solid #d5e9dc;
+  border: 1px solid var(--customer-success-border);
   border-radius: 12px;
-  background: #f0faf4;
+  background: var(--customer-success-surface);
+  color: var(--customer-success-ink);
 }
 .receipt span {
   display: inline-block;
   padding: 0.3rem 0.6rem;
   border-radius: 20px;
-  background: #d5e9dc;
-  color: #22613f;
+  background: var(--customer-success-surface);
+  color: var(--customer-success-ink);
   font-size: 0.75rem;
   text-transform: capitalize;
 }
 .receipt[data-confirmed="false"] {
   background: var(--customer-subtle, #f3f5f9);
+  color: var(--customer-ink);
   border-color: var(--customer-border, #dce3ed);
 }
 .receipt[data-confirmed="false"] span {

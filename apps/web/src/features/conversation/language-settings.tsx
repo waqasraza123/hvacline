@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/workspace-ui";
 import { useEffect, useState } from "react";
 import { LANGUAGE_NAMES, parseVoiceLanguageRegistry, type LanguageCode, type VoiceChannel, type VoiceLanguageConfiguration, type VoiceLanguageRegistry } from "@insurance-operations/customer-core";
 import { requestApi } from "../operations/api";
@@ -63,6 +64,7 @@ export function LanguageSettings({ apiBaseUrl, adminToken }: { apiBaseUrl: strin
     </fieldset>)}</div>
     <div className={styles.controls}>
       <button className="primary-button" disabled={busy || !registry || registry.row_version < 1} type="button" onClick={() => void save()}>{busy ? "Saving…" : "Save Languages & Voice"}</button>
+      <button type="button" disabled={busy || !registry} onClick={() => { if (registry) { setDraft(registry.configuration); setMessage(""); } }}>Cancel changes</button>
       <button type="button" disabled={busy} onClick={() => { setDraft(DEFAULT); setMessage("English-only default selected. Save to persist; any hosted multilingual setup must also be reverted before live use."); }}>Restore English-only default</button>
       <button type="button" disabled={busy} onClick={() => { setBusy(true); void api().then((value) => { setRegistry(value); setDraft(value.configuration); setMessage(""); }).catch((error: unknown) => setMessage(error instanceof Error ? error.message : "Reload failed.")).finally(() => setBusy(false)); }}>Reload saved settings</button>
     </div>
@@ -74,7 +76,7 @@ export function LanguageSettings({ apiBaseUrl, adminToken }: { apiBaseUrl: strin
       <div className={styles.tableWrap}><table><caption>Server-authoritative language availability</caption><thead><tr><th>Language</th>{CHANNELS.map((item) => <th key={item}>{CHANNEL_LABELS[item]}</th>)}</tr></thead><tbody>
         {CODES.map((code) => <tr key={code}><th>{LANGUAGE_NAMES[code]}</th>{CHANNELS.map((item) => {
           const row = registry.languages.find((entry) => entry.code === code && entry.channel === item);
-          return <td key={item}>{row?.status === "existing_english_default" ? "Existing English default · runtime UNVERIFIED" : row?.available ? "Verified configuration" : row?.status === "unsupported" ? "Unsupported" : "Requires Provider Setup"}</td>;
+          return <td key={item}><Badge tone={row?.available ? "success" : row?.status === "unsupported" ? "neutral" : "warning"}>{row?.status === "existing_english_default" ? "Existing English default · runtime UNVERIFIED" : row?.available ? "Verified configuration" : row?.status === "unsupported" ? "Unsupported" : "Requires Provider Setup"}</Badge></td>;
         })}</tr>)}
       </tbody></table></div>
       <details><summary>Exact provider setup required</summary><ol>

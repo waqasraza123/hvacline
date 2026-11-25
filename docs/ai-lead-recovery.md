@@ -1,5 +1,15 @@
 # AI Lead Recovery
 
+## Local presentation refresh — November 25, 2026 — UNVERIFIED
+
+Recovery demo/live/overview metrics share application cards and theme tokens.
+Tables expose keyboard scrolling and selected leads; the demo detail panel adds
+a selected-case timeline and distinct fictional confirmation. Existing request,
+permission and provider behavior stays in place. The homepage teaser was removed
+at the owner's request; shared navigation still exposes the dedicated demo.
+No checks, formatters, services, providers, publication or deployment ran.
+Current design commands/manual checks: [Web design system](web-design-system.md).
+
 Shared [Multilingual AI Voice settings](multilingual-voice.md) do not activate
 multilingual recovery. Recovery additional languages are unsupported: confirmed
 contact-language preference is not part of the existing permission contract,
@@ -21,9 +31,8 @@ runs no local hooks and establishes no runtime or provider acceptance.
 
 ## Product experience
 
-The homepage places a compact recovery card after the hero, with one sentence
-and a prominent **Try Yourself** link to `/ai-lead-recovery`. The homepage no
-longer embeds the recovery simulation, metrics or setup controls. The dedicated
+The shared homepage navigation links to `/ai-lead-recovery`. The homepage
+recovery card, simulation, metrics and setup controls are absent. The dedicated
 page opens recovery in the dashboard shell in Demo Mode;
 `/ai-lead-recovery?setup=1` opens the existing administrator connection gate.
 The dashboard overview's demo card also links to that page as **Try Yourself**;
