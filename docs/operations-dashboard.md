@@ -1,5 +1,15 @@
 # Operations dashboard
 
+## Business staff workspace — November 26, 2026 — UNVERIFIED
+
+The header now links Staff sign in to `/workspace`. Owner-created businesses,
+private staff invitations, password/authenticator sign-in and selected-business
+roles use independent staff sessions. Existing public demo/development actor and
+customer login remain separate. Migration0030 after pending0029 is UNAPPLIED;
+portal defaults off. Setup, limits and exact owner checks:
+[Business onboarding](business-onboarding.md). No checks, services, migrations or
+sends ran; publication is requested separately from runtime acceptance.
+
 ## Staff follow-up and Resend alerts — November 26, 2026 — UNVERIFIED
 
 Connected Follow-up now supports explicit, versioned acknowledge/complete/cancel
@@ -128,7 +138,7 @@ Manual acceptance:
    workspace; the latter must require the admin token and open GHL after sign-in.
    The overview feature itself must make no public-demo or administrator requests
    in demo mode; the public read-only fetch occurs only on entering GoHighLevel.
-   The top-right My account link must open `/book`.
+   The top-right Staff sign in link must open `/workspace`.
 2. Inspect 320/768/1440px and both themes. Verify readable cards, statuses,
    horizontally scrollable tables, wrapped request details and no page overflow.
    On the homepage, confirm no navigation destination is selected. Confirm

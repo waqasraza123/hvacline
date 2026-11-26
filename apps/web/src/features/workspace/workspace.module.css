@@ -1,0 +1,24 @@
+.root { min-height: 100dvh; }
+.main { max-width: 1440px; padding-block: 32px 64px; }
+.main h1 { font-size: clamp(28px, 4vw, 38px); line-height: 1.25; }
+.main h2 { font-size: 24px; line-height: 1.3; }
+.main :global(.ops-card) { min-width: 0; margin-block: 24px; padding: 24px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-panel); background: var(--ui-surface); }
+.main :is(form, fieldset) { min-width: 0; }
+.main label { display: grid; gap: 8px; margin-block: 14px; font-size: 14px; }
+.main :is(input:not([type="checkbox"]), select, textarea) { min-width: 0; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--ui-control-border); border-radius: var(--ui-radius-input); font: inherit; }
+.main button { min-height: 44px; padding: 10px 16px; border: 1px solid var(--ui-control-border); border-radius: var(--ui-radius-control); background: var(--ui-surface); color: var(--ui-ink); font: inherit; cursor: pointer; margin: 4px 8px 4px 0; }
+.main button:hover:not(:disabled) { background: var(--ui-hover); }
+.main button:disabled { opacity: .5; cursor: not-allowed; }
+.main fieldset { border: 1px solid var(--ui-border); border-radius: var(--ui-radius-control); padding: 16px; }
+.main p { line-height: 1.65; }
+.toolbar, .listRow { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.listRow { padding-block: 20px; border-top: 1px solid var(--ui-border); }
+.listRow p, .member p { margin-bottom: 0; color: var(--ui-muted); }
+.toolbar label { min-width: min(320px, 100%); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--ui-border); padding-bottom: 12px; margin-block: 24px; }
+.tabs button[aria-current="page"] { color: var(--ui-accent-ink); border-color: var(--ui-accent-ink); background: var(--ui-accent-soft); }
+.metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-block: 24px; }
+.member { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; padding-block: 24px; border-top: 1px solid var(--ui-border); }
+.main .checkbox { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 900px) { .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .member { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 600px) { .main :global(.ops-card) { padding: 16px; } .main :is(input:not([type="checkbox"]), select, textarea) { font-size: 16px; } }

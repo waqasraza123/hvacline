@@ -40,7 +40,8 @@ export function filterFollowUps(rows: FollowUp[], status: string, kind: string, 
   });
 }
 
-export async function updateFollowUp(apiBaseUrl: string, token: string, row: FollowUp, status: FollowUpAction, demo: boolean): Promise<FollowUp> {
+export async function updateFollowUp(apiBaseUrl: string, token: string, row: FollowUp, status: FollowUpAction, demo: boolean,
+  send?: (path: string, body: { status: FollowUpAction; expected_row_version: number }) => Promise<unknown>): Promise<FollowUp> {
   if (demo) throw new Error("Connect a workspace to update follow-up.");
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(row.id)) {
     throw new Error("The follow-up reference is invalid. Refresh the workspace.");
@@ -48,10 +49,9 @@ export async function updateFollowUp(apiBaseUrl: string, token: string, row: Fol
   if (!allowedFollowUpActions(row).includes(status)) {
     throw new Error("This action is unavailable. Refresh the workspace before continuing.");
   }
-  const response = await requestApi<unknown>(apiBaseUrl, token, `handoff-requests/${row.id}/status`, "POST", {
-    status,
-    expected_row_version: row.row_version,
-  });
+  const body = { status, expected_row_version: row.row_version! };
+  const path = `handoff-requests/${row.id}/status`;
+  const response = send ? await send(path, body) : await requestApi<unknown>(apiBaseUrl, token, path, "POST", body);
   if (typeof response !== "object" || response === null ||
     !("id" in response) || response.id !== row.id ||
     !("lead_id" in response) || response.lead_id !== row.lead_id ||

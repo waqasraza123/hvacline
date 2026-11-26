@@ -4,6 +4,11 @@ from sqlalchemy.engine import Engine
 from insurance_operations.database.models import TABLE_OWNERSHIP, Base
 
 EXPECTED_OWNERSHIP = {
+    "workspace_businesses": ("workspace", "agency_id"),
+    "workspace_invitations": ("workspace", "agency_id"),
+    "workspace_credentials": ("workspace", None),
+    "workspace_sessions": ("workspace", None),
+    "workspace_login_limits": ("workspace", None),
     "lead_recovery_grants": ("recovery", "agency_id"),
     "lead_recovery_webhooks": ("recovery", "agency_id"),
     "lead_recovery_cases": ("recovery", "agency_id"),

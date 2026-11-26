@@ -1,3 +1,24 @@
+## Business onboarding and staff access — source UNVERIFIED — 2026-11-26
+
+Owner requested the next feature and push to main. Implemented owner-created
+businesses with invited staff as the stated default: /workspace/setup and
+/workspace, an independent portal proxy/HttpOnly cookie and password plus required
+TOTP sign-in. Single-use/expiring invitations, membership-derived tenant access,
+Owner/Admin/Staff permissions, last-owner protection and versioned team writes
+reuse existing identity/crypto/profile/scheduling/follow-up conventions. Existing
+customer/development actors are not staff sessions; legacy agencies are not
+claimed. Invitations are manually shared; no automatic email/provider activation.
+
+Migration20261126_0030 after pending0029 adds five workspace tables and a STAFF
+membership-role default; UNAPPLIED. Apply before combined API deployment because
+membership reads include the new role column. Portal defaults off. Added
+unexecuted access/tenant/concurrency/replay/proxy regressions, schema/ownership
+specs and disposable-test cleanup. No tests/builds/linters/formatters/type checks/
+migrations/services/sends/providers/deployments ran. Security/runtime/visual
+acceptance is UNVERIFIED. Commands/setup/manual scenarios:
+docs/business-onboarding.md. Publish scoped source/docs without hooks or force,
+retaining [skip ci] [skip render]. Publication result belongs in local handoff.
+
 ## Follow-up and Resend staff alert publication authorized — 2026-11-26
 
 Owner requests pushing the completed Steps1–2 source to main. Local/remote main

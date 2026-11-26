@@ -25,9 +25,10 @@ from insurance_operations.hvac.service import SchedulingService, unavailable
 
 
 def create_hvac_router(
-    sessions: sessionmaker[Session], actor_dependency: Callable[..., ActorContext]
+    sessions: sessionmaker[Session], actor_dependency: Callable[..., ActorContext],
+    *, prefix: str = "/api/v1/development/hvac",
 ) -> APIRouter:
-    router = APIRouter(prefix="/api/v1/development/hvac")
+    router = APIRouter(prefix=prefix)
     service = SchedulingService(sessions)
     Actor = Annotated[ActorContext, Depends(actor_dependency)]
 

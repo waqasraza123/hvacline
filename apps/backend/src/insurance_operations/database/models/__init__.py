@@ -107,6 +107,7 @@ from insurance_operations.database.models.website import (
 )
 from insurance_operations.database.models.whatsapp import WhatsAppConversation
 from insurance_operations.database.models.staff_alert import StaffAlert, StaffAlertPolicy
+from insurance_operations.database.models.workspace import WorkspaceBusiness, WorkspaceCredential, WorkspaceInvitation, WorkspaceLoginLimit, WorkspaceSession
 
 
 @dataclass(frozen=True)
@@ -116,6 +117,11 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "workspace_businesses": TableOwnership(module="workspace", agency_column="agency_id"),
+    "workspace_invitations": TableOwnership(module="workspace", agency_column="agency_id"),
+    "workspace_credentials": TableOwnership(module="workspace", agency_column=None),
+    "workspace_sessions": TableOwnership(module="workspace", agency_column=None),
+    "workspace_login_limits": TableOwnership(module="workspace", agency_column=None),
     "staff_alert_policies": TableOwnership(module="notifications", agency_column="agency_id"),
     "staff_alerts": TableOwnership(module="notifications", agency_column="agency_id"),
     "lead_recovery_grants": TableOwnership(module="recovery", agency_column="agency_id"),
@@ -322,6 +328,11 @@ __all__ = [
     "OutboundPhoneVerification",
     "StaffAlert",
     "StaffAlertPolicy",
+    "WorkspaceBusiness",
+    "WorkspaceCredential",
+    "WorkspaceInvitation",
+    "WorkspaceLoginLimit",
+    "WorkspaceSession",
     "TableOwnership",
     "Website",
     "WebsiteAgentBinding",

@@ -90,6 +90,7 @@ from insurance_operations.leads import (
 )
 from insurance_operations.notifications.email_events import create_email_event_router
 from insurance_operations.notifications.staff_routes import create_staff_alert_router
+from insurance_operations.workspace.routes import create_workspace_router
 from insurance_operations.receptionist import (
     ReceptionistSettingsInput,
     ReceptionistSettingsResponse,
@@ -223,6 +224,7 @@ def create_app(
     )
     application.include_router(create_homepage_chat_router(settings, session_factory))
     application.include_router(create_email_event_router(settings, session_factory))
+    application.include_router(create_workspace_router(settings, session_factory))
     application.include_router(create_recovery_webhooks(settings, session_factory))
     application.include_router(create_recovery_continuation_routes(settings, session_factory))
     application.include_router(create_recovery_voice_tools(settings, session_factory))

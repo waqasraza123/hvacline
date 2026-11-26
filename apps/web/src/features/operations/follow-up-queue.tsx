@@ -7,7 +7,7 @@ import { allowedFollowUpActions, filterFollowUps, followUpActions, followUpAge, 
 import type { FollowUpAction } from "./follow-up";
 import styles from "./follow-up.module.css";
 
-export function FollowUpQueue({ rows, demo, apiBaseUrl, token, loadedAt, busy, onBusyChange, onReload, onUpdated, timestamp }: {
+export function FollowUpQueue({ rows, demo, apiBaseUrl, token, loadedAt, busy, onBusyChange, onReload, onUpdated, timestamp, update }: {
   rows: FollowUp[];
   demo: boolean;
   apiBaseUrl: string;
@@ -18,6 +18,7 @@ export function FollowUpQueue({ rows, demo, apiBaseUrl, token, loadedAt, busy, o
   onReload: () => Promise<void>;
   onUpdated: (row: FollowUp) => void;
   timestamp: (value: string) => string;
+  update?: (row: FollowUp, status: FollowUpAction) => Promise<FollowUp>;
 }) {
   const [status, setStatus] = useState("ALL");
   const [kind, setKind] = useState("ALL");
@@ -47,7 +48,7 @@ export function FollowUpQueue({ rows, demo, apiBaseUrl, token, loadedAt, busy, o
         if (!current || current.row_version !== pending.row.row_version || current.status !== pending.row.status) {
           throw new Error("This follow-up changed. Refresh before choosing another action.");
         }
-        const result = await updateFollowUp(apiBaseUrl, token, current, pending.status, demo);
+        const result = update ? await update(current, pending.status) : await updateFollowUp(apiBaseUrl, token, current, pending.status, demo);
         onUpdated(result);
         setPending(undefined);
         setMessage(`Follow-up ${result.status.toLowerCase()}. No call or message was sent.`);

@@ -116,6 +116,7 @@ class AgencyMembership(
 ):
     __tablename__ = "agency_memberships"
     __table_args__ = (
+        CheckConstraint("role IN ('OWNER', 'ADMIN', 'STAFF')", name="role_valid"),
         CheckConstraint(
             "status IN ('ACTIVE', 'INACTIVE')",
             name="status_valid",
@@ -146,3 +147,4 @@ class AgencyMembership(
         DateTime(timezone=True),
         nullable=True,
     )
+    role: Mapped[str] = mapped_column(Text, nullable=False, server_default="STAFF")

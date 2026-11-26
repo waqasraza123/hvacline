@@ -370,6 +370,39 @@ class ApiSettings(DatabaseSettings):
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
     customer_mfa_encryption_key: SecretStr | None = None
+    workspace_portal_enabled: bool = False
+    workspace_login_per_minute: int = Field(default=120, ge=10, le=1000)
+    workspace_portal_secret: SecretStr | None = None
+    workspace_bootstrap_token: SecretStr | None = None
+    workspace_mfa_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_workspace_portal(self) -> Self:
+        if not self.workspace_portal_enabled:
+            return self
+        if self.workspace_portal_secret is None or len(self.workspace_portal_secret.get_secret_value()) < 32:
+            raise ValueError("WORKSPACE_PORTAL_SECRET must contain at least 32 characters")
+        if self.workspace_bootstrap_token is not None and len(self.workspace_bootstrap_token.get_secret_value()) < 32:
+            raise ValueError("WORKSPACE_BOOTSTRAP_TOKEN must contain at least 32 characters")
+        if self.workspace_mfa_encryption_key is None:
+            raise ValueError("WORKSPACE_MFA_ENCRYPTION_KEY is required for staff accounts")
+        from cryptography.fernet import Fernet
+        try:
+            Fernet(self.workspace_mfa_encryption_key.get_secret_value().encode())
+        except (ValueError, TypeError) as error:
+            raise ValueError("WORKSPACE_MFA_ENCRYPTION_KEY must be a Fernet key") from error
+        access_keys = [self.workspace_portal_secret.get_secret_value()]
+        if self.workspace_bootstrap_token is not None:
+            access_keys.append(self.workspace_bootstrap_token.get_secret_value())
+        if any(value.strip() != value or "\r" in value or "\n" in value for value in access_keys):
+            raise ValueError("Workspace access keys must not contain surrounding whitespace or line breaks")
+        values = [self.workspace_portal_secret.get_secret_value(), self.workspace_mfa_encryption_key.get_secret_value()]
+        if self.workspace_bootstrap_token is not None:
+            values.append(self.workspace_bootstrap_token.get_secret_value())
+        existing = [value.get_secret_value() for value in (self.demo_admin_token, self.customer_portal_secret, self.customer_mfa_encryption_key) if value is not None]
+        if len(values) != len(set(values)) or any(value in existing for value in values):
+            raise ValueError("Workspace secrets must be distinct from each other and existing access keys")
+        return self
 
     @model_validator(mode="after")
     def validate_ghl_demo(self) -> Self:

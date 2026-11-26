@@ -178,9 +178,9 @@ export function DashboardShell({
           <div className={styles.headerActions}>
             <span className={styles.headerStatus}><Badge tone={demo ? "accent" : "neutral"}>{demo ? "Demo data" : connected ? "Connected" : "Setup required"}</Badge></span>
             <ThemeToggle />
-            <Link href="/book" className={styles.phoneLink} aria-label="Open customer account">
+            <Link href="/workspace" className={styles.phoneLink} aria-label="Open staff workspace">
               <ProductIcon name="shield" />
-              <span>My account</span>
+              <span>Staff sign in</span>
             </Link>
           </div>
         </header>

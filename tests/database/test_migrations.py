@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "workspace_businesses", "workspace_credentials", "workspace_sessions", "workspace_invitations", "workspace_login_limits",
     "staff_alert_policies",
     "staff_alerts",
     "lead_recovery_grants",
@@ -758,7 +759,13 @@ EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
 }
 
 
+EXPECTED_COLUMNS["agency_memberships"].add("role")
 EXPECTED_COLUMNS.update({
+    "workspace_businesses": {"agency_id", "creation_key", "fingerprint", "owner_email", "created_at"},
+    "workspace_credentials": {"app_user_id", "email", "password_hash", "secret_ciphertext", "last_totp_counter"},
+    "workspace_sessions": {"token_digest", "app_user_id", "created_at", "expires_at", "revoked_at"},
+    "workspace_invitations": {"id", "agency_id", "email", "role", "created_by", "token_digest", "expires_at", "consumed_at", "revoked_at", "pending_name", "pending_password_hash", "pending_secret_ciphertext", "failed_attempts", "created_at", "updated_at", "row_version"},
+    "workspace_login_limits": {"key", "attempts", "expires_at"},
     "staff_alert_policies": {"agency_id", "enabled", "recipients", "sender", "row_version", "created_at", "updated_at"},
     "staff_alerts": {"id", "agency_id", "event_type", "source_id", "recipient", "policy_version", "payload", "status", "created_at", "due_at", "first_attempt_at", "attempts", "provider_reference", "last_error", "delivery_status"},
     "lead_recovery_cases": {"id", "agency_id", "service_request_id", "lead_id", "source_type", "source_reference", "status", "eligible_at", "last_activity_at", "recovered_appointment_id", "paused", "assigned_to", "reason", "created_at", "updated_at", "row_version"},
@@ -1000,6 +1007,7 @@ def test_migration_check_constraints_cover_approved_invariants(
             "ck_app_users_row_version_positive",
         },
         "agency_memberships": {
+            "ck_agency_memberships_role_valid",
             "ck_agency_memberships_status_valid",
             "ck_agency_memberships_row_version_positive",
         },
