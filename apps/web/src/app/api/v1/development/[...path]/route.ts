@@ -12,6 +12,8 @@ import {
 
 const identifier = "[a-fA-F0-9-]{36}";
 const postPaths = [
+  /^phone-access\/(preview|approve)$/,
+  new RegExp(`^phone-access/${identifier}/revoke$`),
   /^memory\/(consent|delete|facts)$/,
   /^memory\/facts\/[a-z_]{1,40}\/delete$/,
   /^memory\/whatsapp\/(link|unlink)$/,
@@ -45,6 +47,7 @@ async function handle(request: NextRequest, context: Context) {
             "appointments",
             "booking-limits",
             "memory",
+            "phone-access",
           ].includes(path) ||
           new RegExp(`^appointments/${identifier}$`).test(path)
         : postPaths.some((pattern) => pattern.test(path));

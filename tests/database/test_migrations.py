@@ -38,6 +38,7 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "customer_phone_access",
     "workspace_businesses", "workspace_credentials", "workspace_sessions", "workspace_invitations", "workspace_login_limits",
     "staff_alert_policies",
     "staff_alerts",
@@ -759,6 +760,11 @@ EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
 }
 
 
+EXPECTED_COLUMNS["customer_phone_access"] = {
+    "id", "agency_id", "conversation_session_id", "account_id", "login_session_id",
+    "code_digest", "created_at", "expires_at", "approved_at", "revoked_at",
+    "share_memory", "memory_revision",
+}
 EXPECTED_COLUMNS["agency_memberships"].add("role")
 EXPECTED_COLUMNS.update({
     "workspace_businesses": {"agency_id", "creation_key", "fingerprint", "owner_email", "created_at"},
@@ -883,6 +889,7 @@ def test_migration_creates_only_the_documented_foundation_indexes(
         "ix_conversation_sessions_agency_created",
         "ix_conversation_sessions_agency_status_expires",
         "uq_conversation_sessions_inbound_call",
+        "uq_conversation_sessions_owned",
     }
     assert conversation_intake_indexes == {
         "ix_conversation_intakes_customer_confirmed",
@@ -946,7 +953,9 @@ def test_migration_unique_constraints_match_the_approved_scopes(
                 "idempotency_key",
             )
         },
-        "conversation_sessions": {("inbound_call_id",)},
+        "conversation_sessions": {("inbound_call_id",), ("agency_id", "id")},
+        "customer_login_sessions": {("token_hash",), ("account_id", "id")},
+        "customer_phone_access": {("conversation_session_id",), ("code_digest",)},
         "conversation_intakes": {("conversation_session_id",)},
         "conversation_intake_confirmation_receipts": {
             ("conversation_session_id",),
@@ -977,6 +986,12 @@ def test_migration_check_constraints_cover_approved_invariants(
 ) -> None:
     database_inspector = inspect(migrated_database)
     expected_constraint_names = {
+        "customer_phone_access": {
+            "ck_customer_phone_access_approval_consistent",
+            "ck_customer_phone_access_memory_consistent",
+            "ck_customer_phone_access_digest_valid",
+            "ck_customer_phone_access_expiry_valid",
+        },
         "customer_login_sessions": {"ck_customer_login_sessions_mfa_consistent"},
         "customer_mfa_factors": {
             "ck_customer_mfa_factors_version_valid",

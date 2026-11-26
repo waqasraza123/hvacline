@@ -1,0 +1,21 @@
+.panel { display: grid; gap: 1.5rem; padding-block: 2rem 4rem; }
+.heading { display: flex; align-items: start; justify-content: space-between; gap: 1.5rem; }
+.heading h1 { margin-block: .3rem 1rem; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: -.04em; }
+.heading p, .card p { line-height: 1.6; }
+.card { display: grid; gap: 1rem; border: 1px solid var(--customer-border); border-radius: 1.25rem; padding: clamp(1rem, 3vw, 2rem); background: var(--customer-surface); }
+.card h2, .card p { margin: 0; }
+.card input:not([type="checkbox"]) { width: 100%; min-width: 0; min-height: 2.8rem; padding: .75rem; border: 1px solid var(--customer-border); border-radius: .6rem; background: var(--ui-canvas); color: var(--customer-ink); font: inherit; }
+.codeRow { display: flex; gap: .75rem; max-width: 40rem; }
+.warning { margin: 0; padding: 1rem 1.25rem; border-left: 3px solid var(--customer-accent-ink); background: var(--customer-surface); line-height: 1.6; }
+.check { display: flex; align-items: start; gap: .75rem; line-height: 1.5; }
+.check input { margin-top: .3rem; accent-color: var(--customer-accent-ink); }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.card dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 0; }
+.card dt { font-size: .85rem; }
+.card dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
+.list { margin: 0; padding: 0; list-style: none; }
+.list li { display: flex; align-items: start; justify-content: space-between; gap: 1rem; padding-block: 1rem; border-top: 1px solid var(--customer-border); }
+@media (max-width: 600px) { .heading, .codeRow, .list li { flex-direction: column; } .card dl { grid-template-columns: 1fr; } }
+.secondary { min-height: 44px; padding: .75rem 1rem; border: 1px solid var(--customer-control-border); border-radius: var(--ui-radius-control); color: var(--customer-ink); background: var(--customer-surface); font: inherit; cursor: pointer; }
+.secondary:hover:not(:disabled) { background: var(--customer-subtle); }
+.secondary:disabled { opacity: .5; cursor: not-allowed; }

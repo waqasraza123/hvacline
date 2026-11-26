@@ -1,3 +1,26 @@
+## Telephone account access — source UNVERIFIED — 2026-11-26
+
+Owner requested the next feature. Implemented /phone-access with fixed MFA login
+continuation, explicit masked call review/approval, optional memory consent and
+revocation/history. Four provider tools bind one active PHONE conversation to the
+approving customer session. Shared identity resolution rechecks session/MFA/user/
+business state for each read. Caller ID/email matching grants no account access;
+queries return only owned upcoming confirmed appointments and separately allowed
+bounded memory. Existing browser booking changes remain separate.
+
+Migration20261126_0031 after pending0030/0029 adds customer_phone_access and
+composite ownership constraints; UNAPPLIED. API and Next server flags default off;
+existing development-only customer/provider gates remain. No hosted tools changed,
+no tests/builds/linters/type checks/migrations/services/providers/sends/deployments
+ran. Added unexecuted isolation/revocation/expiry/replay/concurrent-approval/schema/
+proxy regressions. Runtime/security/provider/visual acceptance UNVERIFIED. Owner
+setup, exact commands and manual checks: docs/telephone-account-access.md.
+Closing tabs/local cookie clearance do not prove server session revocation; use
+explicit call revocation. No production customer identity or telephone booking
+mutations are introduced. Owner subsequently requested publication to main. Push
+the scoped source/docs without hooks or force, retaining [skip ci] [skip render].
+No execution checks or activation are authorized. Outcome: local handoff.
+
 ## Business onboarding and staff access — source UNVERIFIED — 2026-11-26
 
 Owner requested the next feature and push to main. Implemented owner-created

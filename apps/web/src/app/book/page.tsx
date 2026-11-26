@@ -36,6 +36,7 @@ export default async function BookPage() {
     <CustomerBooking
       user={customer.user}
       voiceEnabled={process.env.NEXT_PUBLIC_CONVERSATION_AI_ENABLED === "true"}
+      phoneAccessEnabled={process.env.PHONE_ACCOUNT_ACCESS_ENABLED === "true"}
     />
   );
 }

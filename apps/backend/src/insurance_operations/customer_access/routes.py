@@ -52,6 +52,7 @@ from insurance_operations.hvac.schemas import (
     ReservationInput,
 )
 from insurance_operations.hvac.service import SchedulingService
+from insurance_operations.phone_access.routes import create_customer_phone_access_router
 from insurance_operations.receptionist import (
     ReceptionistSettingsResponse,
     ReceptionistSettingsService,
@@ -372,6 +373,7 @@ def create_customer_router(
             sessions, actor, prefix="/conversation-sessions/{session_id}/booking"
         )
     )
+    router.include_router(create_customer_phone_access_router(settings, sessions, portal))
     router.include_router(create_customer_booking_router(sessions, actor))
     router.include_router(create_customer_memory_router(settings, sessions, actor))
     router.include_router(create_voice_language_router(sessions, settings, actor, prefix="/voice-languages"))

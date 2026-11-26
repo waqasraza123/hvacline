@@ -1,5 +1,5 @@
 export type AuthIntent =
-  "demo-call" | "billing" | `website:${string}` | undefined;
+  "demo-call" | "billing" | "phone-access" | `website:${string}` | undefined;
 
 export type AuthPageProps = {
   searchParams: Promise<{ intent?: string | string[] }>;
@@ -12,7 +12,9 @@ export function parseAuthIntent(value: unknown): AuthIntent {
     value.length <= 72
   )
     return value as `website:${string}`;
-  return value === "demo-call" || value === "billing" ? value : undefined;
+  return value === "demo-call" || value === "billing" || value === "phone-access"
+    ? value
+    : undefined;
 }
 
 export function authPageHref(
@@ -29,5 +31,7 @@ export function authReturnHref(intent?: AuthIntent): string {
     ? "/?demo_call=1"
     : intent === "billing"
       ? "/billing"
-      : "/book";
+      : intent === "phone-access"
+        ? "/phone-access"
+        : "/book";
 }

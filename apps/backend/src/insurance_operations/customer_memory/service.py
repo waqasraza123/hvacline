@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 import secrets
+from contextlib import nullcontext
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -109,7 +110,7 @@ def supported_facts(intake: ConversationIntake) -> list[MemoryFactInput]:
 def redact_pairing_codes(
     turns: list[ConversationTurn],
 ) -> list[ConversationTurn]:
-    pattern = r"HVACMEM-[A-Za-z0-9_-]{32}"
+    pattern = r"HVACMEM-[A-Za-z0-9_-]{32}|(?i:CALL(?:[\s-]*[A-F0-9]){12})"
     return [
         turn.model_copy(
             update={
@@ -548,10 +549,15 @@ class CustomerMemoryService:
         context_only: bool = False,
         whatsapp_binding_id: UUID | None = None,
         browser_session_id: UUID | None = None,
+        authorized_session: Session | None = None,
     ) -> dict[str, object]:
         if context_only:
             self.enabled()
-        with self.sessions() as session, session.begin():
+        with (
+            nullcontext(authorized_session)
+            if authorized_session is not None
+            else self.sessions.begin()
+        ) as session:
             account = self.account(session, actor)
             policy = self.policy(session, account)
             if browser_session_id is not None:

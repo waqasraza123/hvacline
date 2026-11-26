@@ -2,6 +2,11 @@
 
 # ElevenLabs Phone Agent Setup
 
+The optional [telephone account access](telephone-account-access.md) source adds
+four account-read tools behind explicit MFA-authenticated browser approval. It
+defaults off and has not changed the hosted agent. Its setup/acceptance is separate
+from the existing eight-tool anonymous intake and booking sequence below.
+
 The [Multilingual AI Voice registry](multilingual-voice.md) reports additional
 telephone languages as unsupported in this revision. Browser/native verification
 does not establish localized phone disclosure, consent or booking acceptance.

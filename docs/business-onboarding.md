@@ -179,5 +179,7 @@ configure keys, enable the portal or establish runtime acceptance.
    copy feedback and business switching without stale data/drafts. Regression-check
    existing customer MFA/booking, public demo, staff alerts and development routes.
 
-Record owner results before removing **UNVERIFIED**. The next planned feature is
-verified telephone access to existing customer information and appointment changes.
+Record owner results before removing **UNVERIFIED**. The next source slice,
+[telephone account access](telephone-account-access.md), adds call-bound browser
+approval for existing customer information. Telephone appointment changes remain
+separate; existing browser booking changes are retained.

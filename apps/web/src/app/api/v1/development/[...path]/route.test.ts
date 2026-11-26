@@ -10,6 +10,36 @@ const context = (path: string) => ({
   params: Promise.resolve({ path: path.split("/") }),
 });
 
+it("forwards telephone approvals only through the customer session scope", async () => {
+  fetcher.mockResolvedValueOnce(Response.json({ approved: true }));
+  const path = "phone-access/approve";
+  const response = await POST(new NextRequest(`https://hvacline.example/api/v1/development/${path}`, {
+    method: "POST", headers: { Origin: "https://hvacline.example", "Content-Type": "application/json", Authorization: "Bearer ignored-browser-value" }, body: "{}",
+  }), context(path));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("Cache-Control")).toBe("no-store");
+  expect(cookieStore.get).toHaveBeenCalledWith("hvacline-session");
+  expect(fetcher).toHaveBeenCalledWith("https://api.example.com/api/v1/customer/phone-access/approve", expect.objectContaining({
+    headers: expect.objectContaining({ Authorization: "Bearer synthetic-customer-session" }),
+  }));
+});
+
+it.each(["phone-access/preview", "phone-access/approve", `phone-access/${id}/revoke`])("rejects cross-origin telephone %s writes before forwarding", async (path) => {
+  const response = await POST(new NextRequest(`https://hvacline.example/api/v1/development/${path}`, {
+    method: "POST", headers: { Origin: "https://another.example", "Content-Type": "application/json" }, body: "{}",
+  }), context(path));
+  expect(response.status).toBe(403);
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
+it("does not expose provider call tools through the customer proxy", async () => {
+  const response = await POST(new NextRequest("https://hvacline.example/api/v1/development/phone-access/begin", {
+    method: "POST", headers: { Origin: "https://hvacline.example", "Content-Type": "application/json" }, body: "{}",
+  }), context("phone-access/begin"));
+  expect(response.status).toBe(404);
+  expect(fetcher).not.toHaveBeenCalled();
+});
+
 it("does not forward customer language-administration writes", async () => {
   const response = await POST(new NextRequest("https://hvacline.example/api/v1/development/voice-languages", {
     method: "POST", headers: { Origin: "https://hvacline.example", "Content-Type": "application/json" }, body: "{}",

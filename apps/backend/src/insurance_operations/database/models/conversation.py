@@ -43,6 +43,7 @@ class ConversationChannel(StrEnum):
 class ConversationSession(UuidPrimaryKeyMixin, TimestampedMixin, VersionedMixin, Base):
     __tablename__ = "conversation_sessions"
     __table_args__ = (
+        UniqueConstraint("agency_id", "id", name="uq_conversation_sessions_owned"),
         CheckConstraint(
             "jsonb_typeof(website_capabilities) = 'object'",
             name="website_capabilities_object",

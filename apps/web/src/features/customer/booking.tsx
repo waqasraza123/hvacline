@@ -18,9 +18,11 @@ import { CustomerAppointments } from "./appointments";
 export function CustomerBooking({
   user,
   voiceEnabled,
+  phoneAccessEnabled = false,
 }: {
   user: Customer;
   voiceEnabled: boolean;
+  phoneAccessEnabled?: boolean;
 }) {
   const router = useRouter();
   const [tab, setTab] = useState<"book" | "appointments" | "memory">("book");
@@ -64,6 +66,17 @@ export function CustomerBooking({
           >
             My package
           </Link>
+          {phoneAccessEnabled && (
+            <Link
+              href="/phone-access"
+              aria-disabled={voiceActive}
+              onClick={(event) => {
+                if (voiceActive) event.preventDefault();
+              }}
+            >
+              Telephone access
+            </Link>
+          )}
           <AccountAvatar fullName={user.full_name} disabled={voiceActive} />
           <span>{user.full_name}</span>
           <button

@@ -6,6 +6,12 @@ import {
 } from "./auth-continuation";
 
 describe("callback sign-in continuation", () => {
+  it("returns telephone approval to its fixed route after MFA without a call code in the URL", () => {
+    const intent = parseAuthIntent("phone-access");
+    expect(authPageHref("/mfa", intent)).toBe("/mfa?intent=phone-access");
+    expect(authReturnHref(intent)).toBe("/phone-access");
+    expect(parseAuthIntent("phone-access/CALL-ABCD-1234-FFFF")).toBeUndefined();
+  });
   it("returns a website conversation to the same published site after MFA", () => {
     const intent = parseAuthIntent("website:studio-one");
     expect(authPageHref("/mfa", intent)).toBe("/mfa?intent=website:studio-one");

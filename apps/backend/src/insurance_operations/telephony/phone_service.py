@@ -15,6 +15,7 @@ from insurance_operations.actors import (
 )
 from insurance_operations.approved_faqs.service import ApprovedFaqService
 from insurance_operations.conversations.schemas import ConversationTurn
+from insurance_operations.customer_memory.service import redact_pairing_codes
 from insurance_operations.customers import CustomerInput, customer_from_input
 from insurance_operations.database.models.conversation import (
     ConversationChannel,
@@ -618,7 +619,8 @@ class PhoneReceptionistService:
             created_by=actor.app_user_id,
             intake_intent=receipt.intake_intent,
             confirmed_transcript=[
-                turn.model_dump(mode="json") for turn in normalized.transcript
+                turn.model_dump(mode="json")
+                for turn in redact_pairing_codes(normalized.transcript)
             ],
             confirmed_at=receipt.confirmed_at,
         )
@@ -893,7 +895,7 @@ def require_phone_session_context(
         ConversationSession.channel == ConversationChannel.PHONE.value,
     )
     if for_update:
-        statement = statement.with_for_update()
+        statement = statement.with_for_update().execution_options(populate_existing=True)
     conversation_session = session.scalar(statement)
     if conversation_session is None or conversation_session.status not in {
         ConversationSessionStatus.AUTHORIZED.value,

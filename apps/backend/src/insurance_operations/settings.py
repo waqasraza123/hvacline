@@ -367,6 +367,7 @@ class ApiSettings(DatabaseSettings):
     demo_sandbox_enabled: bool = False
     demo_admin_token: SecretStr | None = None
     demo_result_ttl_minutes: int = Field(default=15, ge=5, le=60)
+    phone_account_access_enabled: bool = False
     customer_portal_enabled: bool = False
     customer_portal_secret: SecretStr | None = None
     customer_mfa_encryption_key: SecretStr | None = None
@@ -375,6 +376,19 @@ class ApiSettings(DatabaseSettings):
     workspace_portal_secret: SecretStr | None = None
     workspace_bootstrap_token: SecretStr | None = None
     workspace_mfa_encryption_key: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_phone_account_access(self) -> Self:
+        if self.phone_account_access_enabled and not (
+            self.customer_portal_enabled
+            and self.demo_sandbox_enabled
+            and self.app_environment is RuntimeEnvironment.DEVELOPMENT
+            and self.development_actor_user_id is not None
+        ):
+            raise ValueError(
+                "Telephone account access requires the existing development customer portal"
+            )
+        return self
 
     @model_validator(mode="after")
     def validate_workspace_portal(self) -> Self:

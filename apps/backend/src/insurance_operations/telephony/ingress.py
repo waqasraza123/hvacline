@@ -14,6 +14,8 @@ from twilio.twiml.voice_response import VoiceResponse
 from insurance_operations.database.models.telephony import AgencyInboundNumber
 from insurance_operations.errors import ApiError
 from insurance_operations.hvac.phone import create_hvac_phone_router
+from insurance_operations.phone_access.routes import create_phone_access_tools_router
+from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.contracts import (
     TelephonyAdapter,
     TelephonyAdapterError,
@@ -537,6 +539,13 @@ def configure_telephony_ingress(
     application.include_router(
         create_hvac_phone_router(session_factory, ingress_service.verify_phone_tool)
     )
+    api_settings = getattr(application.state, "integration_settings", None)
+    if isinstance(api_settings, ApiSettings):
+        application.include_router(
+            create_phone_access_tools_router(
+                api_settings, session_factory, ingress_service.verify_phone_tool
+            )
+        )
     application.state.telephony_ingress_service = ingress_service
 
     return ingress_service

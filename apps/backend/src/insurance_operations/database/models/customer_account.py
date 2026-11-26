@@ -37,6 +37,7 @@ class CustomerAccount(UuidPrimaryKeyMixin, Base):
 class CustomerLoginSession(UuidPrimaryKeyMixin, Base):
     __tablename__ = "customer_login_sessions"
     __table_args__ = (
+        UniqueConstraint("account_id", "id", name="uq_customer_login_sessions_account"),
         CheckConstraint(
             (
                 "(mfa_verified_at IS NULL AND mfa_version IS NULL) "

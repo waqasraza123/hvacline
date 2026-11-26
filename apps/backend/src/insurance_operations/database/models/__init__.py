@@ -79,6 +79,7 @@ from insurance_operations.database.models.outbound_demo import OutboundDemoCall
 from insurance_operations.database.models.outbound_verification import (
     OutboundPhoneVerification,
 )
+from insurance_operations.database.models.phone_access import CustomerPhoneAccess
 from insurance_operations.database.models.receptionist import (
     AgencyReceptionistSettings,
 )
@@ -117,6 +118,7 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "customer_phone_access": TableOwnership(module="phone_access", agency_column="agency_id"),
     "workspace_businesses": TableOwnership(module="workspace", agency_column="agency_id"),
     "workspace_invitations": TableOwnership(module="workspace", agency_column="agency_id"),
     "workspace_credentials": TableOwnership(module="workspace", agency_column=None),
@@ -300,6 +302,7 @@ __all__ = [
     "ConversationSession",
     "Customer",
     "CustomerAccount",
+    "CustomerPhoneAccess",
     "CustomerAuthLimit",
     "CustomerLoginSession",
     "CustomerMemoryFact",

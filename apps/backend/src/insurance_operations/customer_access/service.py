@@ -1,7 +1,7 @@
 import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -186,48 +186,71 @@ class CustomerAccessService:
         if not token or len(token) > 128:
             raise unauthorized()
         with self.sessions() as session:
-            result = session.execute(
-                select(CustomerLoginSession, CustomerAccount, AppUser, Agency)
-                .join(
-                    CustomerAccount,
-                    CustomerAccount.id == CustomerLoginSession.account_id,
-                )
-                .join(AppUser, AppUser.id == CustomerAccount.app_user_id)
-                .join(Agency, Agency.id == CustomerAccount.agency_id)
-                .join(
-                    CustomerMfaFactor,
-                    CustomerMfaFactor.account_id == CustomerAccount.id,
-                )
-                .where(
-                    CustomerLoginSession.token_hash
-                    == hashlib.sha256(token.encode()).hexdigest(),
-                    CustomerLoginSession.revoked_at.is_(None),
-                    CustomerLoginSession.expires_at > datetime.now(UTC),
-                    CustomerLoginSession.mfa_verified_at.is_not(None),
-                    CustomerLoginSession.mfa_version == CustomerMfaFactor.version,
-                    CustomerMfaFactor.enabled_at.is_not(None),
-                    CustomerMfaFactor.agency_id == Agency.id,
-                    AppUser.status == "ACTIVE",
-                    AppUser.disabled_at.is_(None),
-                    Agency.archived_at.is_(None),
-                    Agency.environment_kind == "DEVELOPMENT",
-                )
-            ).one_or_none()
-            if result is None:
-                raise unauthorized()
-            _, account, user, agency = result
-            business = self._business(session)
-            if agency.id != business.agency_id:
-                raise unauthorized()
-            return ActorContext(
+            actor, account, _ = self.session_identity(session, token)
+            return actor, account
+
+    def session_identity(
+        self,
+        session: Session,
+        token: str | None = None,
+        *,
+        login_session_id: UUID | None = None,
+    ) -> tuple[ActorContext, AccountView, CustomerLoginSession]:
+        if login_session_id is not None and token is not None:
+            raise unauthorized()
+        if login_session_id is None and (not token or len(token) > 128):
+            raise unauthorized()
+        result = session.execute(
+            select(CustomerLoginSession, CustomerAccount, AppUser, Agency)
+            .select_from(CustomerLoginSession)
+            .join(
+                CustomerAccount,
+                CustomerAccount.id == CustomerLoginSession.account_id,
+            )
+            .join(AppUser, AppUser.id == CustomerAccount.app_user_id)
+            .join(Agency, Agency.id == CustomerAccount.agency_id)
+            .join(
+                CustomerMfaFactor,
+                CustomerMfaFactor.account_id == CustomerAccount.id,
+            )
+            .where(
+                (
+                    CustomerLoginSession.id == login_session_id
+                    if login_session_id is not None
+                    else CustomerLoginSession.token_hash
+                    == hashlib.sha256((token or "").encode()).hexdigest()
+                ),
+                CustomerLoginSession.revoked_at.is_(None),
+                CustomerLoginSession.expires_at > datetime.now(UTC),
+                CustomerLoginSession.mfa_verified_at.is_not(None),
+                CustomerLoginSession.mfa_version == CustomerMfaFactor.version,
+                CustomerMfaFactor.enabled_at.is_not(None),
+                CustomerMfaFactor.agency_id == Agency.id,
+                AppUser.status == "ACTIVE",
+                AppUser.disabled_at.is_(None),
+                Agency.archived_at.is_(None),
+                Agency.environment_kind == "DEVELOPMENT",
+            )
+        ).one_or_none()
+        if result is None:
+            raise unauthorized()
+        login_session, account, user, agency = result
+        business = self._business(session)
+        if agency.id != business.agency_id:
+            raise unauthorized()
+        return (
+            ActorContext(
                 app_user_id=user.id,
                 display_name=user.display_name,
                 agency_id=agency.id,
                 agency_name=agency.name,
                 agency_environment=agency.environment_kind,
-            ), AccountView(
+            ),
+            AccountView(
                 id=account.id, full_name=user.display_name, email=account.email
-            )
+            ),
+            login_session,
+        )
 
     def logout(self, token: str | None) -> None:
         if not token or len(token) > 128:
