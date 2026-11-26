@@ -106,6 +106,7 @@ from insurance_operations.database.models.website import (
     WebsiteVersion,
 )
 from insurance_operations.database.models.whatsapp import WhatsAppConversation
+from insurance_operations.database.models.staff_alert import StaffAlert, StaffAlertPolicy
 
 
 @dataclass(frozen=True)
@@ -115,6 +116,8 @@ class TableOwnership:
 
 
 TABLE_OWNERSHIP = {
+    "staff_alert_policies": TableOwnership(module="notifications", agency_column="agency_id"),
+    "staff_alerts": TableOwnership(module="notifications", agency_column="agency_id"),
     "lead_recovery_grants": TableOwnership(module="recovery", agency_column="agency_id"),
     "lead_recovery_webhooks": TableOwnership(module="recovery", agency_column="agency_id"),
     "lead_recovery_policies": TableOwnership(module="recovery", agency_column="agency_id"),
@@ -317,6 +320,8 @@ __all__ = [
     "LeadUrgency",
     "OutboundDemoCall",
     "OutboundPhoneVerification",
+    "StaffAlert",
+    "StaffAlertPolicy",
     "TableOwnership",
     "Website",
     "WebsiteAgentBinding",

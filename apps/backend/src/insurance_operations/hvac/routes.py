@@ -3,12 +3,13 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, Response
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, sessionmaker
 
 from insurance_operations.actors import ActorContext
+from insurance_operations.database.models.customer import Customer
 from insurance_operations.database.models.hvac import Appointment, HvacServiceRequest
-from insurance_operations.database.models.lead import LeadHandoffRequest
+from insurance_operations.database.models.lead import AgencyLead, LeadHandoffRequest
 from insurance_operations.database.models.telephony import InboundCall
 from insurance_operations.hvac.schemas import (
     AppointmentAction,
@@ -80,8 +81,24 @@ def create_hvac_router(
                 .order_by(InboundCall.received_at.desc())
                 .limit(100)
             ).all()
-            handoffs = session.scalars(
-                select(LeadHandoffRequest)
+            handoffs = session.execute(
+                select(LeadHandoffRequest, Customer)
+                .select_from(LeadHandoffRequest)
+                .outerjoin(
+                    AgencyLead,
+                    and_(
+                        AgencyLead.id == LeadHandoffRequest.lead_id,
+                        AgencyLead.agency_id == actor.agency_id,
+                    ),
+                )
+                .outerjoin(
+                    Customer,
+                    and_(
+                        Customer.id == AgencyLead.customer_id,
+                        Customer.agency_id == actor.agency_id,
+                        Customer.archived_at.is_(None),
+                    ),
+                )
                 .where(
                     LeadHandoffRequest.agency_id == actor.agency_id,
                     LeadHandoffRequest.status.in_(["REQUESTED", "ACKNOWLEDGED"]),
@@ -106,8 +123,19 @@ def create_hvac_router(
                         "status": row.status,
                         "reason": row.reason,
                         "lead_id": str(row.lead_id),
+                        "row_version": row.row_version,
+                        "created_at": row.created_at.isoformat(),
+                        "preferred_contact_method": row.preferred_contact_method,
+                        "availability": row.availability,
+                        "customer": {
+                            "full_name": customer.full_name,
+                            "phone": customer.phone,
+                            "email": customer.email,
+                        }
+                        if customer is not None
+                        else None,
                     }
-                    for row in handoffs
+                    for row, customer in handoffs
                 ],
                 "service_requests": [
                     {

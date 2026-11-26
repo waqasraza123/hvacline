@@ -40,6 +40,8 @@ EXPECTED_OWNERSHIP = {
     "calendar_authorizations": ("hvac", "agency_id"),
     "calendar_bookings": ("hvac", "agency_id"),
     "booking_notifications": ("notifications", "agency_id"),
+    "staff_alerts": ("notifications", "agency_id"),
+    "staff_alert_policies": ("notifications", "agency_id"),
     "booking_email_events": ("notifications", None),
     "customer_accounts": ("customer_access", "agency_id"),
     "customer_login_sessions": ("customer_access", None),

@@ -15,6 +15,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 def clear_disposable_conversations(database_engine: Engine) -> None:
     with database_engine.begin() as connection:
+        if inspect(connection).has_table("staff_alerts"):
+            connection.execute(text("TRUNCATE TABLE staff_alerts"))
         if inspect(connection).has_table("lead_recovery_cases"):
             connection.execute(text("TRUNCATE TABLE lead_recovery_cases CASCADE"))
         if inspect(connection).has_table("conversation_sessions"):

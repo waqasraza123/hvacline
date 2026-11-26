@@ -38,6 +38,8 @@ from insurance_operations.settings import (
 )
 
 EXPECTED_TABLES = {
+    "staff_alert_policies",
+    "staff_alerts",
     "lead_recovery_grants",
     "lead_recovery_webhooks",
     "lead_recovery_cases",
@@ -757,6 +759,8 @@ EXPECTED_COLUMNS["ghl_calendar_bookings"] = {
 
 
 EXPECTED_COLUMNS.update({
+    "staff_alert_policies": {"agency_id", "enabled", "recipients", "sender", "row_version", "created_at", "updated_at"},
+    "staff_alerts": {"id", "agency_id", "event_type", "source_id", "recipient", "policy_version", "payload", "status", "created_at", "due_at", "first_attempt_at", "attempts", "provider_reference", "last_error", "delivery_status"},
     "lead_recovery_cases": {"id", "agency_id", "service_request_id", "lead_id", "source_type", "source_reference", "status", "eligible_at", "last_activity_at", "recovered_appointment_id", "paused", "assigned_to", "reason", "created_at", "updated_at", "row_version"},
     "lead_recovery_attempts": {"id", "agency_id", "recovery_case_id", "channel", "attempt_number", "status", "scheduled_at", "started_at", "completed_at", "provider_reference", "failure_code", "idempotency_key", "created_at", "updated_at", "provider", "recipient_digest", "dispatch_configuration", "provider_terminal_at", "last_reconciled_at"},
     "lead_recovery_policies": {"agency_id", "enabled", "configuration", "capture_from", "created_at", "updated_at", "row_version"},

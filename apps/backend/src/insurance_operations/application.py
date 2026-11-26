@@ -89,6 +89,7 @@ from insurance_operations.leads import (
     LeadUpdateInput,
 )
 from insurance_operations.notifications.email_events import create_email_event_router
+from insurance_operations.notifications.staff_routes import create_staff_alert_router
 from insurance_operations.receptionist import (
     ReceptionistSettingsInput,
     ReceptionistSettingsResponse,
@@ -860,6 +861,7 @@ def create_app(
         )
     )
     application.include_router(create_hvac_router(session_factory, development_actor))
+    application.include_router(create_staff_alert_router(settings, session_factory, development_actor))
     application.include_router(create_voice_language_router(session_factory, settings, development_actor, administrator=True))
     application.include_router(create_recovery_router(settings, session_factory, development_actor))
     application.include_router(

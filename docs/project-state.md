@@ -1,3 +1,33 @@
+## Follow-up and Resend staff alert publication authorized — 2026-11-26
+
+Owner requests pushing the completed Steps1–2 source to main. Local/remote main
+start atc47aa7881195203b9a013bfecffb8080f825faea. Publish scoped backend/web,
+migration0029, unexecuted tests and guides with hooks disabled and existing
+[skip ci] [skip render] markers. Preserve history/tags and use a non-force push.
+No checks, services, migrations, sends, activation or deployment commands are
+authorized. Migration0029 remains UNAPPLIED and staff email defaults off.
+Acceptance remains UNVERIFIED; exact owner commands/manual scenarios:
+docs/staff-follow-up.md and docs/staff-email-alerts.md. Outcome: local handoff.
+
+## Receptionist sequence Steps 1–2 — local source, UNVERIFIED — 2026-11-26
+
+Owner requested implementing the reviewed gaps one by one and selected Resend
+email for staff alerts. Step1 adds connected Operations follow-up status controls,
+contact context and queue filters/age using existing tenant-scoped audited/versioned
+transitions; demo stays read-only. Step2 adds per-business staff recipient settings,
+prospective transactional handoff/hazard capture, immutable email outbox, bounded
+same-key job delivery and signed Resend receipt projection. Staff email runtime
+flag defaults off and existing development identity gates remain.
+
+Forward migration20261126_0029 after0028 is UNAPPLIED. New sources/tests/docs,
+metadata expectations and disposable-test cleanup are implemented locally. No
+tests/builds/linters/formatters/type checks/migrations/services/providers/sends/
+activation/commits/pushes/deployments ran. Runtime/security/provider/visual
+acceptance is UNVERIFIED. Exact owner commands/manual checks:
+docs/staff-follow-up.md and docs/staff-email-alerts.md. Later onboarding/caller
+verification/reporting/account-recovery work is not implemented by these slices.
+Business-onboarding model selection remains pending before Step3.
+
 ## Web redesign publication authorized — UNVERIFIED — 2026-11-25
 
 Owner explicitly requests pushing the completed web redesign to main. Local and

@@ -16,6 +16,8 @@ import { CalendarConnections } from "./calendar-connections";
 import { DashboardShell } from "./dashboard-shell";
 import type { OperationsSection } from "./dashboard-shell";
 import { DashboardOverview } from "./dashboard-overview";
+import { FollowUpQueue } from "./follow-up-queue";
+import { StaffAlertSettings } from "./staff-alert-settings";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
 import { WebsiteManager } from "@/features/websites/website-manager";
 import { GhlIntegration } from "@/features/ghl/integration";
@@ -510,31 +512,26 @@ export function OperationsWorkspace({
             </section>
           )}
           {tab === "handoffs" && (
-            <section className="ops-card">
-              <h2>Human follow-up</h2>
-              {data.handoffs.length === 0 ? (
-                <p className="empty-state">
-                  No pending callbacks or human handoffs.
-                </p>
-              ) : (
-                <DashboardTable
-                  caption="Pending human follow-up"
-                  headings={["Follow-up", "Reason", "Status"]}
-                >
-                  {data.handoffs.map((row) => (
-                    <tr key={row.id}>
-                      <td>
-                        <strong>{row.kind.replaceAll("_", " ")}</strong>
-                      </td>
-                      <td>{row.reason}</td>
-                      <td>
-                        <StatusBadge status={row.status} />
-                      </td>
-                    </tr>
-                  ))}
-                </DashboardTable>
-              )}
-            </section>
+            <FollowUpQueue
+              key={demo ? "follow-up-demo" : "follow-up-live"}
+              rows={data.handoffs}
+              demo={demo}
+              apiBaseUrl={apiBaseUrl}
+              token={token}
+              loadedAt={loadedAt}
+              busy={busy}
+              onBusyChange={setBusy}
+              onReload={load}
+              timestamp={timestamp}
+              onUpdated={(row) => setData((current) => current ? {
+                ...current,
+                handoffs: current.handoffs.map((item) => item.id === row.id ? row : item)
+                  .filter((item) => ["REQUESTED", "ACKNOWLEDGED"].includes(item.status)),
+              } : current)}
+            />
+          )}
+          {!demo && tab === "handoffs" && (
+            <StaffAlertSettings apiBaseUrl={apiBaseUrl} token={token} busy={busy} onBusyChange={setBusy} timestamp={timestamp} />
           )}
           {!demo && tab === "receptionist" && (
             <ReceptionistSettingsEditor

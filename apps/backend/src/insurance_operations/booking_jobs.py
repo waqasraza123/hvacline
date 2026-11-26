@@ -31,6 +31,7 @@ from insurance_operations.job_execution import (
 )
 from insurance_operations.notifications.booking import deliver_notification
 from insurance_operations.notifications.email_events import apply_delivery_events
+from insurance_operations.notifications.staff_alerts import collect_staff_alert_jobs
 from insurance_operations.recovery.jobs import collect_recovery_jobs
 
 # Shared by HTTP invocations and the standalone worker in this database.
@@ -138,8 +139,8 @@ def collect_booking_jobs(
             ).all()
         )
     jobs: list[Callable[[], None]] = []
-    for notification, binding, connection, ghl_job, recovery_job in zip_longest(
-        notifications, bindings, connections, collect_ghl_jobs(sessions, batch_size), collect_recovery_jobs(sessions, batch_size)
+    for notification, binding, connection, ghl_job, recovery_job, staff_alert_job in zip_longest(
+        notifications, bindings, connections, collect_ghl_jobs(sessions, batch_size), collect_recovery_jobs(sessions, batch_size), collect_staff_alert_jobs(sessions, batch_size)
     ):
         if notification is not None:
             jobs.append(partial(deliver_notification, sessions, notification))
@@ -157,6 +158,8 @@ def collect_booking_jobs(
             jobs.append(ghl_job)
         if recovery_job is not None:
             jobs.append(recovery_job)
+        if staff_alert_job is not None:
+            jobs.append(staff_alert_job)
     return jobs
 
 

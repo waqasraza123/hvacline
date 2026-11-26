@@ -704,6 +704,25 @@ def test_lead_lifecycle_detail_and_handoff_are_versioned_and_idempotent(
     handoff_id = first_handoff[1]["id"]
     assert isinstance(handoff_id, str)
 
+    queue_status, queue, _headers = asyncio.run(
+        request_json(
+            development_conversation_api.application,
+            "GET",
+            "/api/v1/development/hvac/operations",
+        )
+    )
+    assert queue_status == 200
+    queue_rows = queue["handoffs"]
+    assert isinstance(queue_rows, list)
+    projected = next(item for item in queue_rows if isinstance(item, dict) and item["id"] == handoff_id)
+    assert projected["row_version"] == 1
+    assert projected["created_at"] == first_handoff[1]["created_at"]
+    assert projected["preferred_contact_method"] == "PHONE"
+    assert projected["availability"] == "Weekday afternoon"
+    assert isinstance(projected["customer"], dict)
+    assert projected["customer"]["full_name"] == "Synthetic Handoff Customer"
+    assert "transcript" not in projected
+
     handoff_status, acknowledged, _headers = asyncio.run(
         post_json(
             development_conversation_api.application,
@@ -714,6 +733,32 @@ def test_lead_lifecycle_detail_and_handoff_are_versioned_and_idempotent(
     assert handoff_status == 200
     assert acknowledged["status"] == "ACKNOWLEDGED"
     assert acknowledged["row_version"] == 2
+
+    stale_status, _stale, _headers = asyncio.run(
+        post_json(
+            development_conversation_api.application,
+            f"/api/v1/development/handoff-requests/{handoff_id}/status",
+            {"status": "COMPLETED", "expected_row_version": 1},
+        )
+    )
+    assert stale_status == 409
+    completed_status, completed, _headers = asyncio.run(
+        post_json(
+            development_conversation_api.application,
+            f"/api/v1/development/handoff-requests/{handoff_id}/status",
+            {"status": "COMPLETED", "expected_row_version": 2},
+        )
+    )
+    assert completed_status == 200
+    assert completed["status"] == "COMPLETED"
+    assert completed["row_version"] == 3
+    assert completed["completed_at"] is not None
+    final_queue_status, final_queue, _headers = asyncio.run(
+        request_json(development_conversation_api.application, "GET", "/api/v1/development/hvac/operations")
+    )
+    assert final_queue_status == 200
+    assert final_queue["handoffs"] == []
+
 
     invalid_status, invalid, _headers = asyncio.run(
         post_json(

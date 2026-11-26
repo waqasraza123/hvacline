@@ -1,5 +1,15 @@
 # Operations dashboard
 
+## Staff follow-up and Resend alerts — November 26, 2026 — UNVERIFIED
+
+Connected Follow-up now supports explicit, versioned acknowledge/complete/cancel
+controls, owned contact context, loaded-queue filters/search and age. Demo stays
+read-only. Staff email settings/history use Resend through a separate disabled
+runtime flag and a prospective transactional outbox. Migration0029 is UNAPPLIED;
+combined API/job/web deployment requires it. No checks, services, sends, activation
+or publication ran. Commands and manual acceptance:
+[Follow-up controls](staff-follow-up.md), [Resend staff alerts](staff-email-alerts.md).
+
 ## Local redesign — November 25, 2026 — UNVERIFIED
 
 The shared neutral/orange theme, grouped navigation, loaded-queue metrics,
@@ -92,7 +102,8 @@ hazard handoff requests and four open callbacks/transfers, with navigation to th
 full loaded queues. Counts are explicitly capped by the existing API's latest
 100 records per queue; they are not historical analytics or unique-customer
 counts. Missing customer joins use a neutral label. No sample revenue or growth
-charts are added. Follow-up completion is not implemented by this UI slice.
+charts are added. Follow-up completion now uses the existing audited backend
+transitions; see the current follow-up guide above.
 
 Owner command for later execution, only when authorized:
 

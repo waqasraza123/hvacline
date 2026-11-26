@@ -1,0 +1,9 @@
+.heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.heading h2 { margin: 0; }
+.filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr); gap: 16px; margin-block: 20px; }
+.detail { display: block; margin-top: 6px; color: var(--ui-muted); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.confirmation { padding: 20px; margin-block: 20px; border: 1px solid var(--ui-control-border); border-radius: var(--ui-radius-panel); background: var(--ui-hover); }
+.confirmation h3 { margin-top: 0; }
+.confirmation p { font-size: 14px; line-height: 1.6; }
+@media (max-width: 760px) { .filters { grid-template-columns: minmax(0, 1fr); } .heading { flex-direction: column; } }

@@ -28,6 +28,19 @@ export type Appointment = {
   status: string;
   hold_expires_at: string;
 };
+export type FollowUp = {
+  id: string;
+  kind: string;
+  status: string;
+  reason: string;
+  lead_id: string;
+  row_version?: number;
+  created_at?: string;
+  preferred_contact_method?: string;
+  availability?: string | null;
+  customer?: { full_name: string; phone: string | null; email: string | null } | null;
+};
+
 export type Operations = {
   service_requests: ServiceRequest[];
   appointments: Appointment[];
@@ -37,13 +50,7 @@ export type Operations = {
     received_at: string;
     caller_number: string | null;
   }[];
-  handoffs: {
-    id: string;
-    kind: string;
-    status: string;
-    reason: string;
-    lead_id: string;
-  }[];
+  handoffs: FollowUp[];
 };
 export type Window = { weekday: number; start: string; end: string };
 export type Schedule = {

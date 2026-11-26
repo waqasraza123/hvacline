@@ -141,6 +141,11 @@ export const demoOperations: Operations = {
       reason:
         "Sample installation consultation: homeowner asked to discuss equipment options with the team.",
       lead_id: "demo-lead-1",
+      row_version: 1,
+      created_at: "2026-11-12T11:00:00Z",
+      preferred_contact_method: "PHONE",
+      availability: "Sample weekday afternoon",
+      customer: { full_name: "Sample homeowner C", phone: null, email: null },
     },
     {
       id: "demo-handoff-2",
@@ -149,6 +154,10 @@ export const demoOperations: Operations = {
       reason:
         "Sample heating request: staff follow-up needed after a safety concern.",
       lead_id: "demo-lead-2",
+      row_version: 2,
+      created_at: "2026-11-12T12:00:00Z",
+      preferred_contact_method: "PHONE",
+      customer: { full_name: "Sample homeowner D", phone: null, email: null },
     },
   ],
 };

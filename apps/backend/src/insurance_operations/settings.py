@@ -205,6 +205,7 @@ class DatabaseSettings(DatabaseConnectionSettings):
     google_redirect_uri: str | None = None
     calendar_token_encryption_key: SecretStr | None = None
     booking_email_enabled: bool = False
+    staff_alert_email_enabled: bool = False
     resend_api_key: SecretStr | None = None
     resend_webhook_secret: SecretStr | None = None
     booking_email_from: EmailStr | None = None
@@ -249,7 +250,7 @@ class DatabaseSettings(DatabaseConnectionSettings):
 
     @model_validator(mode="after")
     def validate_booking_integrations(self) -> Self:
-        if (self.google_calendar_enabled or self.booking_email_enabled) and (
+        if (self.google_calendar_enabled or self.booking_email_enabled or self.staff_alert_email_enabled) and (
             self.app_environment is RuntimeEnvironment.PRODUCTION
         ):
             raise ValueError(
@@ -297,7 +298,7 @@ class DatabaseSettings(DatabaseConnectionSettings):
                     "GOOGLE_REDIRECT_URI must be an HTTPS callback URL "
                     "(HTTP loopback is allowed)"
                 )
-        if self.booking_email_enabled and not (
+        if (self.booking_email_enabled or self.staff_alert_email_enabled) and not (
             self.resend_api_key
             and self.resend_api_key.get_secret_value().strip()
             and self.resend_webhook_secret
@@ -311,7 +312,7 @@ class DatabaseSettings(DatabaseConnectionSettings):
                 "RESEND_API_KEY, RESEND_WEBHOOK_SECRET and "
                 "BOOKING_EMAIL_FROM are required"
             )
-        if self.booking_email_enabled and self.resend_webhook_secret:
+        if (self.booking_email_enabled or self.staff_alert_email_enabled) and self.resend_webhook_secret:
             try:
                 key = base64.b64decode(
                     self.resend_webhook_secret.get_secret_value()[6:], validate=True

@@ -17,6 +17,7 @@ from insurance_operations.database.models.booking_integrations import (
     BookingNotification,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.database.models.staff_alert import StaffAlert
 from insurance_operations.settings import ApiSettings
 
 DELIVERY_STATES = {
@@ -126,6 +127,15 @@ def apply_delivery_events(session: Session) -> None:
     by_rank = {value: key for key, value in ranks.items()}
     for row, rank in rows:
         row.delivery_status = by_rank[rank]
+    staff_rows = session.execute(
+        select(StaffAlert, states.c.rank)
+        .join(states, states.c.provider_reference == StaffAlert.provider_reference)
+        .where(states.c.rank > case(ranks, value=StaffAlert.delivery_status, else_=0))
+        .limit(100)
+        .with_for_update(of=StaffAlert, skip_locked=True)
+    )
+    for alert, rank in staff_rows:
+        alert.delivery_status = by_rank[rank]
 
 
 def create_email_event_router(
@@ -136,7 +146,7 @@ def create_email_event_router(
     @router.post("/api/v1/providers/resend/booking-events", include_in_schema=False)
     async def receive(request: Request) -> Response:
         secret = settings.resend_webhook_secret
-        if not settings.booking_email_enabled or secret is None:
+        if not (settings.booking_email_enabled or settings.staff_alert_email_enabled) or secret is None:
             raise ApiError(
                 status_code=404,
                 code="NOT_FOUND",
