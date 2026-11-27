@@ -2,6 +2,10 @@
 
 import { MultilingualDemoPanel } from "../conversation/multilingual-demo-panel";
 import { useReducer, useState } from "react";
+import { usePathname } from "next/navigation";
+import { resolveOperationsPath } from "./dashboard-navigation";
+import type { OperationsSubpage } from "./dashboard-navigation";
+import { navigateOperations } from "./operations-link";
 import { demoReducer, initialDemo } from "@/features/recovery/demo";
 import { RecoveryDemo } from "@/features/recovery/demo-panel";
 import { RecoveryLive } from "@/features/recovery/live";
@@ -61,7 +65,13 @@ export function OperationsWorkspace({
   const [schedule, setSchedule] = useState<ScheduleResponse | null>(
     initialSetup ? null : demoSchedule,
   );
-  const [tab, setTab] = useState<OperationsSection>(initialSection);
+  const pathname = usePathname();
+  const destination = resolveOperationsPath(pathname);
+  const tab = destination?.section ?? initialSection;
+  const subpage = destination?.subpage;
+  function setTab(section: OperationsSection, child?: OperationsSubpage) {
+    navigateOperations(section, child);
+  }
   const [loadedAt, setLoadedAt] = useState(demoReferenceTime);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -111,7 +121,7 @@ export function OperationsWorkspace({
     setAvailability(null);
     setMessage("Reserved for five minutes. Confirm the appointment below.");
   }
-  function connectWorkspace(section: OperationsSection = "overview") {
+  function connectWorkspace(section: OperationsSection = tab) {
     if (!backendConfigured) {
       setError("Live setup requires the existing NEXT_PUBLIC_API_BASE_URL configuration for your authenticated backend. The interactive demos remain available without it.");
       return;
@@ -142,7 +152,7 @@ export function OperationsWorkspace({
   return (
     <DashboardShell
       section={tab}
-      onSelect={setTab}
+      subpage={subpage}
       connected={data !== null}
       busy={busy}
       conversationAiEnabled={conversationAiEnabled}
@@ -233,7 +243,6 @@ export function OperationsWorkspace({
               schedule={schedule}
               loadedAt={loadedAt}
               timestamp={timestamp}
-              onSelect={setTab}
             >
               <RecoverySpotlight
                 key={demo ? "recovery-demo" : "recovery-live"}
@@ -255,7 +264,7 @@ export function OperationsWorkspace({
             ? <RecoveryDemo state={recoveryDemo} dispatch={recoveryDispatch} onLive={() => connectWorkspace("recovery")} />
             : <RecoveryLive apiBaseUrl={apiBaseUrl} token={token} onDemo={exploreDemo} />)}
           {tab === "multilingual" && <MultilingualDemoPanel onSetup={() => demo ? connectWorkspace("receptionist") : setTab("receptionist")} />}
-          {demo && tab !== "integrations" && tab !== "recovery" && tab !== "multilingual" && <DemoSection section={tab} />}
+          {demo && tab !== "integrations" && tab !== "recovery" && tab !== "multilingual" && <DemoSection section={tab} subpage={subpage} />}
           {demo && tab === "integrations" && (
             <>
               <GhlDemo apiBaseUrl={apiBaseUrl} />
@@ -511,7 +520,7 @@ export function OperationsWorkspace({
               )}
             </section>
           )}
-          {tab === "handoffs" && (
+          {tab === "handoffs" && subpage !== "alerts" && (
             <FollowUpQueue
               key={demo ? "follow-up-demo" : "follow-up-live"}
               rows={data.handoffs}
@@ -530,7 +539,7 @@ export function OperationsWorkspace({
               } : current)}
             />
           )}
-          {!demo && tab === "handoffs" && (
+          {!demo && tab === "handoffs" && subpage !== "queue" && (
             <StaffAlertSettings apiBaseUrl={apiBaseUrl} token={token} busy={busy} onBusyChange={setBusy} timestamp={timestamp} />
           )}
           {!demo && tab === "receptionist" && (
@@ -538,7 +547,12 @@ export function OperationsWorkspace({
               apiBaseUrl={apiBaseUrl}
               adminToken={token}
               embedded
+              selectedTab={subpage === "voice" ? "voice" : "general"}
+              onTabChange={(key) => setTab("receptionist", key === "voice" ? "voice" : "general")}
             />
+          )}
+          {demo && tab === "handoffs" && subpage === "alerts" && (
+            <section className="ops-card"><h2>Staff email alerts</h2><p>Connect your workspace to manage staff recipients and review email delivery history.</p></section>
           )}
           {!demo && tab === "browser voice" && (
             <BrowserVoicePanel apiBaseUrl={apiBaseUrl} adminToken={token} />
@@ -552,12 +566,12 @@ export function OperationsWorkspace({
           )}
           {!demo && tab === "scheduling" && schedule && (
             <>
-              <CalendarConnections
+              <div hidden={subpage === "rules"}><CalendarConnections
                 baseUrl={apiBaseUrl}
                 token={token}
                 schedule={schedule}
-              />
-              <ScheduleForm
+              /></div>
+              <div hidden={subpage === "calendars"}><ScheduleForm
                 key={schedule.version}
                 value={schedule}
                 busy={busy}
@@ -571,7 +585,7 @@ export function OperationsWorkspace({
                     setBusy(false);
                   }
                 }}
-              />
+              /></div>
             </>
           )}
         </>

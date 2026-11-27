@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="https://hvacline.online">Visit HVACLine</a> ·
-  <a href="https://www.hvacline.online/operations">Dashboard</a> ·
+  <a href="https://www.hvacline.online/dashboard">Dashboard</a> ·
   <a href="https://www.hvacline.online/ai-lead-recovery">Try Yourself</a> ·
   <a href="https://www.hvacline.online/multilingual-ai-voice">Try Multilingual Demo</a> ·
   <a href="LICENSE">Proprietary license</a>

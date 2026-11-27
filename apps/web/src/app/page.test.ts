@@ -65,7 +65,7 @@ it("omits the demo showcase while retaining booking, pricing and calling links",
   expect(html).not.toContain('href="/demos/');
   expect(html).toContain('href="/book"');
   expect(html).toContain('href="/pricing"');
-  expect(html).toContain('href="/operations"');
+  expect(html).toContain('href="/dashboard"');
   expect(html).toContain('href="tel:+12014097805"');
 });
 
@@ -88,7 +88,10 @@ it("keeps pricing separate and removes homepage service and package navigation",
 it.each([
   ["/", undefined],
   ["/book", undefined],
-  ["/operations", "/operations"],
+  ["/dashboard", "/dashboard"],
+  ["/dashboard/calls", "/dashboard"],
+  ["/dashboard/scheduling/rules", "/dashboard"],
+  ["/dashboard-other", undefined],
   ["/pricing", "/pricing"],
   ["/ai-lead-recovery", "/ai-lead-recovery"],
 ] as const)(

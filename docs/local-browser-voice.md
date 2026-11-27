@@ -92,7 +92,7 @@ uvicorn insurance_operations.api:app --host 127.0.0.1 --port 8000
 npm run dev:web
 ```
 
-Open `/voice-test`. A protected local `/operations` workspace can instead retain
+Open `/voice-test`. A protected local `/dashboard` workspace can instead retain
 its existing sandbox/admin configuration. Never expose an unprotected development
 API publicly. No new public provider variable or frontend credential is required.
 

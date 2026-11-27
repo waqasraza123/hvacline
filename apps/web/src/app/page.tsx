@@ -58,7 +58,7 @@ export default function Home() {
                 <Link className="product-button" href="/book">
                   <ProductIcon name="mic" /> Try Voice Chat
                 </Link>
-                <Link className={styles.secondaryAction} href="/operations">
+                <Link className={styles.secondaryAction} href="/dashboard">
                   Explore the dashboard
                 </Link>
               </div>

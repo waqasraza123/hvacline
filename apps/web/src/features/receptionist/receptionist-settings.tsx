@@ -23,6 +23,8 @@ type ReceptionistSettingsProperties = Readonly<{
   apiBaseUrl: string;
   adminToken?: string;
   embedded?: boolean;
+  selectedTab?: string;
+  onTabChange?: (key: string) => void;
 }>;
 
 const EMPTY_DRAFT: ReceptionistSettingsDraft = {
@@ -39,6 +41,8 @@ export function ReceptionistSettingsEditor({
   apiBaseUrl,
   adminToken,
   embedded = false,
+  selectedTab,
+  onTabChange,
 }: ReceptionistSettingsProperties) {
   const [settings, setSettings] = useState<ReceptionistSettings>();
   const [draft, setDraft] = useState<ReceptionistSettingsDraft>(EMPTY_DRAFT);
@@ -115,7 +119,7 @@ export function ReceptionistSettingsEditor({
           used across the receptionist experience.
         </p>
       </header>
-      <SettingsTabs label="Agent configuration" tabs={[
+      <SettingsTabs selectedKey={selectedTab} onSelect={onTabChange} label="Agent configuration" tabs={[
         { key: "general", label: "General", content: (
       <section className="settings-card" aria-labelledby="agency-profile-title">
         <div className="section-heading-row">

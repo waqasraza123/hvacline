@@ -15,7 +15,7 @@ and acceptance; no secret value is recorded here.
 
 ## What visitors see
 
-Open `/operations` → GoHighLevel without connecting an administrator workspace.
+Open `/dashboard` → GoHighLevel without connecting an administrator workspace.
 The GoHighLevel card reads a public projection of the configured demo sub-account:
 pipeline/stage names and counts for up to 100 latest opportunities, broken down
 by open, won, lost and abandoned status. A timestamp records the successful read.
@@ -93,7 +93,7 @@ curl --silent --show-error --dump-header - --output /dev/null \
 ```
 
 Expect `Access-Control-Allow-Origin: https://www.hvacline.online`. Then reload
-`https://www.hvacline.online/operations` and inspect the demo request in browser
+`https://www.hvacline.online/dashboard` and inspect the demo request in browser
 Network tools: the response must be readable without a CORS error. Confirm its
 state and UI match: `live` shows a successful read timestamp, `disabled` requires
 the hosted demo flag, and `unavailable` requires separate provider diagnosis.

@@ -37,14 +37,14 @@ alembic upgrade head
 insurance-operations-seed-development
 ```
 
-For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` and no telephone fields for browser-only use. The `/operations` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
+For hosted development, enable `DEMO_SANDBOX_ENABLED` and configure a strong `DEMO_ADMIN_TOKEN` and no telephone fields for browser-only use. The `/dashboard` workspace accepts the admin token in page memory. This is development access, not production authentication. Do not expose an unprotected development API publicly.
 
 ```bash
 npm run dev:web
 uvicorn insurance_operations.api:app --host "$API_HOST" --port "$API_PORT"
 ```
 
-The development seed initializes a missing fictional-business calendar in `business_schedules`: booking enabled, America/New_York, ZIP 10001, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice, and one Test Team. It preserves existing calendars, including deliberately disabled ones, and creates no appointments. Open `/operations` → **Scheduling** to review or edit the persisted values. Other businesses require their own configuration. See [development calendar defaults](development-calendar-defaults.md) for owner commands and checks; this change is unverified.
+The development seed initializes a missing fictional-business calendar in `business_schedules`: booking enabled, America/New_York, ZIP 10001, Monday–Friday 09:00–17:00, 60-minute visits, 120-minute booking/change notice, and one Test Team. It preserves existing calendars, including deliberately disabled ones, and creates no appointments. Open `/dashboard` → **Scheduling** to review or edit the persisted values. Other businesses require their own configuration. See [development calendar defaults](development-calendar-defaults.md) for owner commands and checks; this change is unverified.
 
 Teams without an external connection use the maintained internal schedule. Google Calendar connection, live conflict checks, durable event recovery/reconciliation and queued booking emails/reminders are now implemented behind opt-in development settings, but remain owner-unverified. Migration `20261027_0012`, OAuth/Resend setup and scheduled job execution are required. Jobs can use a [Vercel Python function with a free external scheduler](vercel-booking-jobs.md), or the standalone worker. See [calendar and booking messages](calendar-and-booking-messages.md) for behavior, limitations, exact commands and manual acceptance.
 
@@ -88,6 +88,6 @@ APP_ENVIRONMENT=test alembic current
 APP_ENVIRONMENT=test alembic check
 ```
 
-Automated provider fixtures do not prove a live telephone call. The first live acceptance gate is a synthetic caller reaching the configured number, completing consent and intake, receiving a database-confirmed appointment, and the operator seeing the request and booking in `/operations`.
+Automated provider fixtures do not prove a live telephone call. The first live acceptance gate is a synthetic caller reaching the configured number, completing consent and intake, receiving a database-confirmed appointment, and the operator seeing the request and booking in `/dashboard`.
 
 See [architecture](hvacline-architecture.md), [current project state](project-state.md), and [remaining product work](ai-receptionist-product-plan.md). Historical insurance-era continuation notes are archived; they are not current requirements.

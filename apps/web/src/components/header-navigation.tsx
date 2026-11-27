@@ -11,7 +11,7 @@ import styles from "./header-navigation.module.css";
 
 const links = [
   {
-    href: "/operations",
+    href: "/dashboard",
     label: "Dashboard",
     description: "Explore the dashboard demo",
   },
@@ -30,7 +30,8 @@ const links = [
 export function HeaderNavigation() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const activeHref = links.find((link) => link.href === pathname)?.href;
+  const activeHref = links.find((link) => link.href === pathname ||
+    (link.href === "/dashboard" && pathname.startsWith("/dashboard/")))?.href;
   useEffect(() => {
     const media = window.matchMedia("(min-width: 1121px)");
     const closeOnDesktop = () => {

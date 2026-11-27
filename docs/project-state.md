@@ -1,3 +1,15 @@
+## Canonical dashboard route decision — source UNVERIFIED — 2026-11-27
+
+Owner selected /dashboard as the canonical dashboard route, including all nested
+section and settings URLs. Source now mounts its validated catch-all page under
+app/dashboard. Public links, route mapping, breadcrumbs, current guides and
+regression expectations use /dashboard. Next configuration permanently redirects
+legacy /operations and descendant URLs to the matching /dashboard path. Backend
+operations endpoints and internal feature-module names retain their contracts.
+No execution checks/services/publication/deployment ran. Runtime, redirect and
+visual acceptance remain UNVERIFIED. Exact owner commands/manual checks:
+docs/operations-dashboard.md. Source outcome/handoff is in local session notes.
+
 ## Telephone account access — source UNVERIFIED — 2026-11-26
 
 Owner requested the next feature. Implemented /phone-access with fixed MFA login

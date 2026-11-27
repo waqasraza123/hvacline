@@ -7,8 +7,8 @@
 .panelHeader h2 { margin: 0; color: var(--ui-ink); font-size: 17px; line-height: 1.4; font-weight: 550; }
 .panelHeader p { margin: 6px 0 0; color: var(--ui-muted); font-size: 13px; line-height: 1.6; }
 .metric.metric { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 20px; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-panel); background: var(--ui-surface); color: var(--ui-ink); text-align: left; font: inherit; }
-button.metric { width: 100%; cursor: pointer; transition: background-color var(--ui-duration), border-color var(--ui-duration); }
-button.metric:hover { background: var(--ui-hover); border-color: var(--ui-control-border); }
+button.metric, a.metric { width: 100%; cursor: pointer; transition: background-color var(--ui-duration), border-color var(--ui-duration); }
+button.metric:hover, a.metric:hover { background: var(--ui-hover); border-color: var(--ui-control-border); }
 .metricTop { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: var(--ui-muted); font-size: 13px; }
 .metricTop svg { flex-shrink: 0; width: 18px; height: 18px; }
 .value { margin-block: 4px; font-size: clamp(28px, 3vw, 34px); font-weight: 500; letter-spacing: -.04em; line-height: 1.25; font-variant-numeric: tabular-nums; }

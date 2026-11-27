@@ -40,6 +40,7 @@ describe("callback sign-in continuation", () => {
     "",
     "https://attacker.example",
     "//attacker.example",
+    "/dashboard",
     "/operations",
     ["demo-call", "https://attacker.example"],
   ])("ignores unapproved continuation input %j", (value) => {

@@ -15,7 +15,7 @@ identity, consent and confirmation gates remain.
 1. Apply migrations through `20261024_0009` on an owner-selected development Neon branch. Do not downgrade a shared database.
 2. Run the development seed. Existing fixture data must be reviewed for old insurance wording before showing the agent; never overwrite customer configuration automatically.
 3. Configure the public HTTPS API origin and `WEB_ORIGIN`. For hosted development, enable the sandbox and set a strong server-only demo admin token. Keep public status sanitized.
-4. Open `/operations`; enter the admin token. Configure timezone, ZIP codes, opening hours, named technician teams and hours, time off, visit duration, notice, and cancellation notice. Explicitly enable the internal booking calendar. No availability is seeded.
+4. Open `/dashboard`; enter the admin token. Configure timezone, ZIP codes, opening hours, named technician teams and hours, time off, visit duration, notice, and cancellation notice. Explicitly enable the internal booking calendar. No availability is seeded.
 5. Configure approved business FAQs and the receptionist profile for Harborline Heating & Air. Never enter unsupported prices or response-time commitments.
 
 ## Configure an already authorized test number

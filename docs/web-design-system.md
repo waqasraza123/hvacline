@@ -71,7 +71,7 @@ There are no migrations or installation requirements for this redesign.
 
 ## Owner manual acceptance
 
-1. Inspect `/`, `/operations`, `/ai-lead-recovery`, `/multilingual-ai-voice`,
+1. Inspect `/`, `/dashboard`, `/ai-lead-recovery`, `/multilingual-ai-voice`,
    `/pricing`, `/login`, `/signup`, `/mfa`, `/book` and `/billing` at 320, 390,
    640, 768, 1024, 1280 and 1920px, with 200% zoom, both themes and reduced
    motion. Check text contrast, control boundaries, readable badges, focus rings,

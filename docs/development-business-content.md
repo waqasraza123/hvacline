@@ -56,7 +56,7 @@ The database fixture downgrades/rebuilds its target and downgrades it again at t
 
 Manual acceptance:
 
-1. Open `/operations` → knowledge and confirm the seeded questions and approved answers. Review office hours and all business-specific statements against the current fictional configuration.
+1. Open `/dashboard` → knowledge and confirm the seeded questions and approved answers. Review office hours and all business-specific statements against the current fictional configuration.
 2. Use knowledge lookup preview for a supported canonical question, then an unrelated request. Confirm a source-backed answer for the former and the staff-assistance fallback for the latter.
 3. Edit and deactivate an FAQ, rerun the content command, and confirm the edit/status/version remain unchanged. Keep the business calendar and phone settings unchanged when reseeding.
 4. In fictional browser voice, ask about maintenance, pricing, warranty and a topic outside the approved scope. Confirm the assistant follows returned answers and does not invent terms or promise delivery/dispatch.

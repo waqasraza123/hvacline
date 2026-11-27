@@ -1,3 +1,4 @@
+import type { OperationsSubpage } from "./dashboard-navigation";
 import type { Operations, ScheduleResponse } from "./api";
 import type { OperationsSection } from "./dashboard-shell";
 import { DashboardTable, StatusBadge } from "./dashboard-table";
@@ -191,7 +192,12 @@ export const demoSchedule: ScheduleResponse = {
   },
 };
 
-export function DemoSection({ section }: { section: OperationsSection }) {
+export function DemoSection({ section, subpage }: { section: OperationsSection; subpage?: OperationsSubpage }) {
+  if (section === "receptionist" && subpage === "voice") return (
+    <section className="ops-card"><h2>Voice & languages</h2>
+      <p className="section-help">Connect your workspace to review voice and supported language settings. Demo navigation does not configure a live agent.</p>
+    </section>
+  );
   if (section === "websites")
     return (
       <section className="ops-card">
@@ -210,7 +216,7 @@ export function DemoSection({ section }: { section: OperationsSection }) {
           Sample booking rules and technician calendars. Connect a workspace to
           manage availability.
         </p>
-        <dl className={styles.demoFields}>
+        <dl hidden={subpage === "calendars"} className={styles.demoFields}>
           <div>
             <dt>Service area</dt>
             <dd>New York · ZIP 10001</dd>
@@ -228,7 +234,7 @@ export function DemoSection({ section }: { section: OperationsSection }) {
             <dd>2 hours</dd>
           </div>
         </dl>
-        <DashboardTable
+        <div hidden={subpage === "rules"}><DashboardTable
           caption="Sample service teams"
           headings={["Team", "Hours", "Calendar"]}
         >
@@ -246,7 +252,7 @@ export function DemoSection({ section }: { section: OperationsSection }) {
             <td>Monday–Friday · 9am–5pm</td>
             <td>Internal calendar</td>
           </tr>
-        </DashboardTable>
+        </DashboardTable></div>
         <p className="section-help">
           Google Calendar sync and booking emails require separate setup in a
           connected workspace.

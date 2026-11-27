@@ -3,6 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   transpilePackages: ["@insurance-operations/customer-core"],
+  async redirects() {
+    return [{
+      source: "/operations/:path*",
+      destination: "/dashboard/:path*",
+      permanent: true,
+    }];
+  },
   async headers() {
     return [
       {

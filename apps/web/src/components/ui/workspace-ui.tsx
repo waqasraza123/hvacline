@@ -24,14 +24,20 @@ export function ContentPanel({ title, description, actions, children }: {
   </section>;
 }
 
-export function MetricCard({ label, value, help, icon, onClick }: {
+export function MetricCard({ label, value, help, icon, onClick, href }: {
   label: string;
   value: ReactNode;
   help: string;
   icon?: ReactNode;
   onClick?: () => void;
+  href?: string;
 }) {
   const content = <><span className={styles.metricTop}><span>{label}</span>{icon}</span><strong className={styles.value}>{value}</strong><span className={styles.help}>{help}</span></>;
+  if (href) return <a href={href} className={styles.metric} onClick={(event) => {
+    if (!onClick || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    onClick();
+  }}>{content}</a>;
   return onClick
     ? <button type="button" className={styles.metric} onClick={onClick}>{content}</button>
     : <div className={styles.metric}>{content}</div>;

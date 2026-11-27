@@ -1,3 +1,5 @@
+import { OperationsLink, navigateOperations } from "./operations-link";
+import { operationsHref } from "./dashboard-navigation";
 import { ProductIcon } from "@/components/product-icons";
 import { ContentPanel, EmptyState, MetricCard } from "@/components/ui/workspace-ui";
 import type { ComponentProps, ReactNode } from "react";
@@ -11,14 +13,12 @@ export function DashboardOverview({
   schedule,
   loadedAt,
   timestamp,
-  onSelect,
   children,
 }: {
   data: Operations;
   schedule: ScheduleResponse | null;
   loadedAt: number;
   timestamp: (value: string) => string;
-  onSelect: (section: OperationsSection) => void;
   children?: ReactNode;
 }) {
   const upcoming = data.appointments
@@ -81,7 +81,8 @@ export function DashboardOverview({
             value={metric.value}
             help={metric.help}
             icon={<ProductIcon name={metric.icon} />}
-            onClick={() => onSelect(metric.section)}
+            href={operationsHref(metric.section)}
+            onClick={() => navigateOperations(metric.section)}
           />
         ))}
       </section>
@@ -92,9 +93,9 @@ export function DashboardOverview({
               <h2 id="upcoming-heading">Upcoming appointments</h2>
               <p>Next confirmed visits in the loaded queue.</p>
             </div>
-            <button type="button" onClick={() => onSelect("bookings")}>
+            <OperationsLink className={styles.dashboardAction} section="bookings">
               View all
-            </button>
+            </OperationsLink>
           </div>
           {upcoming.length === 0 ? (
             <div className={styles.emptyState}>
@@ -104,9 +105,9 @@ export function DashboardOverview({
                 Confirmed appointments will appear here. Review requests to book
                 the next visit.
               </p>
-              <button type="button" onClick={() => onSelect("requests")}>
+              <OperationsLink className={styles.dashboardAction} section="requests">
                 View service requests
-              </button>
+              </OperationsLink>
             </div>
           ) : (
             <DashboardTable
@@ -174,13 +175,13 @@ export function DashboardOverview({
                       Human attention required
                     </span>
                   </div>
-                  <button type="button" onClick={() => onSelect("requests")}>
+                  <OperationsLink className={styles.dashboardAction} section="requests">
                     Review
                     <span className={styles.srOnly}>
                       {" "}
                       urgent service requests
                     </span>
-                  </button>
+                  </OperationsLink>
                 </li>
               ))}
               {handoffs.slice(0, 4).map((handoff) => (
@@ -199,9 +200,9 @@ export function DashboardOverview({
                     <p>{handoff.reason}</p>
                     <StatusBadge status={handoff.status} />
                   </div>
-                  <button type="button" onClick={() => onSelect("handoffs")}>
+                  <OperationsLink className={styles.dashboardAction} section="handoffs">
                     Review<span className={styles.srOnly}> follow-up</span>
-                  </button>
+                  </OperationsLink>
                 </li>
               ))}
             </ul>
@@ -209,21 +210,21 @@ export function DashboardOverview({
           {(urgent.length > 0 || handoffs.length > 0) && (
             <div className={styles.panelFooter}>
               {urgent.length > 0 && (
-                <button type="button" onClick={() => onSelect("requests")}>
+                <OperationsLink className={styles.dashboardAction} section="requests">
                   All service requests
-                </button>
+                </OperationsLink>
               )}
               {handoffs.length > 0 && (
-                <button type="button" onClick={() => onSelect("handoffs")}>
+                <OperationsLink className={styles.dashboardAction} section="handoffs">
                   All follow-up
-                </button>
+                </OperationsLink>
               )}
             </div>
           )}
         </section>
       </div>
       <ContentPanel title="Recent conversations" description="Latest received calls in the loaded queue. Browser conversation history is not included."
-        actions={<button type="button" onClick={() => onSelect("calls")}>View calls</button>}>
+        actions={<OperationsLink className={styles.dashboardAction} section="calls">View calls</OperationsLink>}>
         {data.calls.length === 0 ? <EmptyState title="No calls in this queue">Received calls will appear here after the workspace refreshes.</EmptyState> :
           <DashboardTable caption="Recent received calls" headings={["Caller", "Received", "Status"]}>
             {[...data.calls].sort((a, b) => Date.parse(b.received_at) - Date.parse(a.received_at)).slice(0, 5).map((call) => <tr key={call.id}>
@@ -243,10 +244,10 @@ export function DashboardOverview({
             accepting new bookings.
           </p>
         </div>
-        <button type="button" onClick={() => onSelect("scheduling")}>
+        <OperationsLink className={styles.dashboardAction} section="scheduling">
           Manage scheduling
           <ProductIcon name="arrow" />
-        </button>
+        </OperationsLink>
       </section>
     </div>
   );

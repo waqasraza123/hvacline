@@ -8,15 +8,16 @@ import { Brand } from "@/components/brand";
 import { ProductIcon } from "@/components/product-icons";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge, PageHeader } from "@/components/ui/workspace-ui";
-import { navigationGroups, sections } from "./dashboard-navigation";
-import type { OperationsSection } from "./dashboard-navigation";
+import { navigationGroups, sections, subpages } from "./dashboard-navigation";
+import type { OperationsSection, OperationsSubpage } from "./dashboard-navigation";
+import { OperationsLink } from "./operations-link";
 import styles from "./dashboard.module.css";
 
 export type { OperationsSection } from "./dashboard-navigation";
 
 export function DashboardShell({
   section,
-  onSelect,
+  subpage,
   connected,
   busy,
   demo,
@@ -25,7 +26,7 @@ export function DashboardShell({
   children,
 }: {
   section: OperationsSection;
-  onSelect: (section: OperationsSection) => void;
+  subpage?: OperationsSubpage;
   connected: boolean;
   busy: boolean;
   demo: boolean;
@@ -38,6 +39,20 @@ export function DashboardShell({
   const mainId = useId();
   const sidebarId = useId();
   const label = sections.find((item) => item.key === section)?.label;
+  const childrenLinks = subpages.filter((item) => item.section === section);
+  const childLabel = childrenLinks.find((item) => item.key === subpage)?.label;
+  const navigationDisabled = !connected || busy;
+  function closeNavigation() { setMobileOpen(false); }
+
+  useEffect(() => {
+    document.title = `${childLabel ? `${childLabel} · ` : ""}${label ?? "Dashboard"} · Dashboard`;
+  }, [label, childLabel]);
+
+  useEffect(() => {
+    if (!connected) return;
+    document.getElementById(mainId)?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0 });
+  }, [section, connected, mainId]);
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -64,30 +79,31 @@ export function DashboardShell({
                 )
                 .map((item) => (
                   <li key={item.key}>
-                    <button
-                      type="button"
-                      className={styles.navItem}
-                      aria-current={section === item.key ? "page" : undefined}
-                      aria-label={item.label}
-                      title={item.label}
-                      disabled={!connected || busy}
-                      onClick={() => {
-                        onSelect(item.key);
-                        setMobileOpen(false);
-                      }}
-                    >
-                      <ProductIcon name={item.icon} />
-                      <span className={styles.navLabel}>{item.label}</span>
-                      {item.key === "integrations" && (
-                        <span
-                          className={styles.navFeatureBadge}
-                          aria-hidden="true"
-                        >
-                          CRM
-                        </span>
-                      )}
-                      {item.key === "recovery" && <span className={styles.navFeatureBadge} aria-hidden="true">AI</span>}
-                    </button>
+                    {navigationDisabled ? (
+                      <span className={styles.navItem} aria-disabled="true" aria-label={item.label} title={item.label}>
+                        <ProductIcon name={item.icon} /><span className={styles.navLabel}>{item.label}</span>
+                      </span>
+                    ) : (
+                      <OperationsLink section={item.key} className={styles.navItem}
+                        data-active={section === item.key || undefined}
+                        aria-current={section === item.key && !subpage ? "page" : undefined}
+                        aria-label={item.label} title={item.label} onNavigate={closeNavigation}>
+                        <ProductIcon name={item.icon} />
+                        <span className={styles.navLabel}>{item.label}</span>
+                        {item.key === "integrations" && <span className={styles.navFeatureBadge} aria-hidden="true">CRM</span>}
+                        {item.key === "recovery" && <span className={styles.navFeatureBadge} aria-hidden="true">AI</span>}
+                      </OperationsLink>
+                    )}
+                    {section === item.key && !navigationDisabled && childrenLinks.length > 0 && (
+                      <ul className={styles.subnavigation} aria-label={`${item.label} pages`}>
+                        {childrenLinks.map((child) => <li key={child.key}>
+                          <OperationsLink section={section} subpage={child.key} className={styles.subnavItem}
+                            aria-current={subpage === child.key ? "page" : undefined} onNavigate={closeNavigation}>
+                            {child.label}
+                          </OperationsLink>
+                        </li>)}
+                      </ul>
+                    )}
                   </li>
                 ))}
             </ul>
@@ -169,11 +185,20 @@ export function DashboardShell({
                 </Dialog.Content>
               </Dialog.Portal>
             </Dialog.Root>
-            <div className={styles.breadcrumb}>
-              <span>Workspace</span>
-              <span aria-hidden="true">/</span>
-              <strong>{connected ? label : "Connect"}</strong>
-            </div>
+            <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
+              <ol>
+                <li>{section === "overview" && connected
+                  ? <strong aria-current="page">Overview</strong>
+                  : <OperationsLink section="overview">Dashboard</OperationsLink>}</li>
+                {section !== "overview" && <li>
+                  <span aria-hidden="true">/</span>
+                  {childLabel ? <OperationsLink section={section}>{label}</OperationsLink>
+                    : <strong aria-current={connected ? "page" : undefined}>{label}</strong>}
+                </li>}
+                {childLabel && <li><span aria-hidden="true">/</span><strong aria-current={connected ? "page" : undefined}>{childLabel}</strong></li>}
+                {!connected && <li><span aria-hidden="true">/</span><strong aria-current="page">Connect</strong></li>}
+              </ol>
+            </nav>
           </div>
           <div className={styles.headerActions}>
             <span className={styles.headerStatus}><Badge tone={demo ? "accent" : "neutral"}>{demo ? "Demo data" : connected ? "Connected" : "Setup required"}</Badge></span>
@@ -186,7 +211,7 @@ export function DashboardShell({
         </header>
         <main id={mainId} tabIndex={-1} className={styles.content}>
           <PageHeader
-            title={connected ? label ?? "Workspace" : "Connect your workspace"}
+            title={connected ? childLabel ?? label ?? "Workspace" : "Connect your workspace"}
             description={section === "recovery" && connected
               ? "Turn missed opportunities into the next confirmed appointment."
               : section === "integrations" && connected
@@ -199,6 +224,11 @@ export function DashboardShell({
             actions={connected && !demo ? <button type="button" className={styles.refreshButton}
               onClick={onRefresh} disabled={busy}>{busy ? "Refreshing…" : "Refresh workspace"}</button> : undefined}
           />
+          {connected && childrenLinks.length > 0 && <nav aria-label={`${label} navigation`} className={styles.sectionLinks}>
+            <OperationsLink section={section} aria-current={!subpage ? "page" : undefined}>Overview</OperationsLink>
+            {childrenLinks.map((child) => <OperationsLink key={child.key} section={section} subpage={child.key}
+              aria-current={subpage === child.key ? "page" : undefined}>{child.label}</OperationsLink>)}
+          </nav>}
           {children}
         </main>
       </div>

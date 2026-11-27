@@ -50,7 +50,7 @@ Exact source manifest, setup, owner commands, limits and acceptance:
 Implementation and runtime acceptance are **unverified**. The owner requested
 coding and publication only; no execution checks or services are authorized.
 
-`/operations` opens a sample-data demo for all visitors without sign-in. The
+`/dashboard` opens a sample-data demo for all visitors without sign-in. The
 shared desktop navbar and mobile menu offer Dashboard, Try Stripe Checkout and AI Recovery; Calling has
 been removed from both. The dashboard's initial
 render uses local fictional fixtures and makes no backend or provider request.
@@ -124,7 +124,7 @@ npm run verify:web
 Manual acceptance:
 
 1. While signed out, open Dashboard from the top navbar and mobile menu;
-   confirm `/operations` opens without sign-in. Repeat while signed in.
+   confirm `/dashboard` opens without sign-in. Repeat while signed in.
    Visit every visible section without
    connecting; confirm sample labels and no backend/provider/microphone activity
    outside the optional read-only GoHighLevel Integrations section.
@@ -161,3 +161,92 @@ Manual acceptance:
    remain ineligible for automatic booking.
 6. Review customer-facing home, booking, authentication, pricing and billing
    against the shared design guide and confirm existing interactions remain. No global Tailwind reset or template dependency is added.
+
+## Canonical Dashboard route — November 27, 2026 — UNVERIFIED
+
+The canonical dashboard URL is `/dashboard`, including every nested destination.
+Homepage/header links, navigation state, breadcrumbs, titles, public README links,
+current guides and regression expectations use this path. The actual Next page
+lives under `app/dashboard/[[...path]]`. The Next configuration permanently
+redirects `/operations` and `/operations/:path*` to the matching Dashboard path,
+retaining query parameters. Existing backend operations endpoints and internal
+feature-module paths keep their established names and contracts.
+
+No execution checks ran. In addition to the checks below, manually open
+`/operations`, `/operations/calls` and
+`/operations/scheduling/rules?example=1`; confirm they redirect to `/dashboard`,
+`/dashboard/calls` and `/dashboard/scheduling/rules?example=1`. Check that the
+public header selects Dashboard on nested dashboard pages and remains unselected
+on unrelated routes. Deployment or a restart of the owner's existing web process
+is needed to load the changed Next configuration.
+
+## URL navigation — November 27, 2026 — UNVERIFIED
+
+Dashboard destinations now use shareable `/dashboard/...` paths. A validated
+optional catch-all page serves direct visits and refreshes; unknown paths and
+flag-disabled browser voice paths return not found. The central navigation module
+maps existing section keys to paths and labels. Sidebar links, overview metrics,
+queue shortcuts and feature actions update the URL. Native History navigation
+integrates with Next pathname updates and preserves the mounted workspace's
+in-memory connection and loaded records during section changes. Back/Forward
+selects the matching section. Ordinary anchors retain new-tab/modifier-click
+behavior. Credentials are never serialized into URLs or browser storage.
+
+| Destination | URL |
+| --- | --- |
+| Overview | `/dashboard` |
+| Calls | `/dashboard/calls` |
+| Leads and requests | `/dashboard/requests` |
+| Appointments | `/dashboard/appointments` |
+| Follow-up overview | `/dashboard/follow-up` |
+| Follow-up queue / email alerts | `/dashboard/follow-up/queue`, `/dashboard/follow-up/alerts` |
+| Recovery | `/dashboard/recovery` |
+| Multilingual voice | `/dashboard/voice-languages` |
+| Knowledge | `/dashboard/knowledge` |
+| Agent settings | `/dashboard/agent-settings` |
+| General / voice settings | `/dashboard/agent-settings/general`, `/dashboard/agent-settings/voice` |
+| Browser voice (feature gated) | `/dashboard/browser-voice` |
+| Scheduling overview | `/dashboard/scheduling` |
+| Calendar connections / availability and teams | `/dashboard/scheduling/calendars`, `/dashboard/scheduling/rules` |
+| GoHighLevel | `/dashboard/integrations/gohighlevel` |
+| Maintenance / websites | `/dashboard/maintenance-hours`, `/dashboard/websites` |
+
+Active sections reveal nested sidebar links and a horizontal section navigation.
+Breadcrumbs link back to the dashboard and current section, with the current page
+marked accessibly. General/Voice settings and scheduling panels stay mounted
+between their subpages to retain drafts. Demo subpages remain read-only and show
+setup guidance where live configuration is required. Public `/ai-lead-recovery`
+and `/multilingual-ai-voice` entry points still open their original demos; further
+navigation adopts the canonical Dashboard paths. A full reload or new tab still
+starts the sample-data demo: connected administrator state remains memory-only.
+
+No tests, builds, linters, type checks, services or other execution checks ran.
+Implementation, browser history, accessibility and visual acceptance are
+**UNVERIFIED**. Owner commands from the repository root:
+
+```sh
+npm run test:web -- src/features/operations/dashboard-navigation.test.ts src/features/operations/dashboard.test.tsx src/components/ui/settings-tabs.test.tsx src/app/page.test.ts src/features/customer/auth-continuation.test.ts
+npm run typecheck:web
+npm run lint:web
+npm run build:web
+```
+
+Manual checks on the owner's running application:
+
+1. Visit every URL above directly and refresh it. Check its heading, selected
+   navigation and breadcrumbs. Unknown `/dashboard/unknown` must return not found;
+   browser voice must remain unavailable when its existing flag is off.
+2. Click sidebar links, metric cards, View/Review actions and overview feature
+   actions. Confirm each destination changes the address bar. Use Back/Forward
+   across sections and nested pages. Open links in new tabs with modifier-click.
+3. Open General/Voice settings in a connected development workspace. Edit a draft,
+   switch through nested links, settings tabs and Back/Forward, and confirm the
+   draft remains. Repeat for availability rules and calendar subpages. Leaving
+   the whole section retains the existing editor unmount behavior.
+4. Confirm section navigation retains the connected workspace without another
+   sign-in; a new tab/full reload must reset to demo. Check no credential enters
+   the URL and demo navigation never enables live mutations.
+5. At phone and desktop widths, in both themes, inspect nested links, sidebar
+   collapse, mobile drawer closing, long breadcrumb wrapping and visible keyboard
+   focus. Use Tab/Enter and the settings tabs' arrow/Home/End keys. Click ancestor
+   breadcrumbs to return to their section/dashboard.

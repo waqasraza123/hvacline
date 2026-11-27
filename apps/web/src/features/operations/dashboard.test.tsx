@@ -8,7 +8,6 @@ import { DashboardShell } from "./dashboard-shell";
 it("retains the existing section destinations while gating browser voice", () => {
   const render = (connected: boolean, conversationAiEnabled: boolean) => renderToStaticMarkup(createElement(DashboardShell, {
     section: "recovery",
-    onSelect: () => {},
     connected,
     busy: false,
     demo: true,
@@ -22,13 +21,15 @@ it("retains the existing section destinations while gating browser voice", () =>
   }
   expect(connected).not.toContain('aria-label="Browser voice"');
   expect(render(true, true)).toContain('aria-label="Browser voice"');
-  expect(connected.match(/aria-current="page"/g)).toHaveLength(1);
+  const sidebar = connected.match(/<nav\b[^>]*aria-label="Operations sections"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  expect(sidebar.match(/aria-current="page"/g)).toHaveLength(1);
+  expect(sidebar).toContain('href="/dashboard/recovery"');
+  expect(sidebar).toContain('href="/dashboard/integrations/gohighlevel"');
   expect(connected).toContain("Fictional sample data");
   const disconnected = render(false, true);
   const nav = disconnected.match(/<nav\b[^>]*aria-label="Operations sections"[\s\S]*?<\/nav>/)?.[0] ?? "";
-  const buttons = nav.match(/<button\b[^>]*>/g) ?? [];
-  expect(buttons).toHaveLength(14);
-  for (const button of buttons) expect(button).toContain('disabled=""');
+  expect(nav.match(/aria-disabled="true"/g)).toHaveLength(14);
+  expect(nav).not.toContain("href=");
 });
 
 it("uses only loaded records for counts and the five most recent calls", () => {
@@ -55,7 +56,6 @@ it("uses only loaded records for counts and the five most recent calls", () => {
     schedule: null,
     loadedAt: Date.parse("2026-11-24T12:00:00Z"),
     timestamp: (value: string) => value,
-    onSelect: () => {},
   }));
   expect(html).toMatch(/Total calls[\s\S]*?<strong[^>]*>7<\/strong>/);
   expect(html).toMatch(/Confirmed bookings[\s\S]*?<strong[^>]*>2<\/strong>/);
@@ -76,10 +76,23 @@ it("renders empty loaded queues without substituting sample records", () => {
     schedule: null,
     loadedAt: Date.parse("2026-11-24T12:00:00Z"),
     timestamp: (value: string) => value,
-    onSelect: () => {},
   }));
   expect(html).toContain("No calls in this queue");
   expect(html).toContain("No upcoming visits in this queue");
   expect(html).toContain("No pending follow-up in this queue");
   expect(html).not.toContain("Sample homeowner");
+});
+
+
+it("renders nested links and clickable breadcrumb ancestors", () => {
+  const html = renderToStaticMarkup(createElement(DashboardShell, {
+    section: "scheduling", subpage: "rules", connected: true, busy: false,
+    demo: true, conversationAiEnabled: false, onRefresh: () => {}, children: null,
+  }));
+  expect(html).toContain('href="/dashboard/scheduling/rules"');
+  expect(html).toContain('href="/dashboard/scheduling/calendars"');
+  const breadcrumb = html.match(/<nav\b[^>]*aria-label="Breadcrumb"[\s\S]*?<\/nav>/)?.[0] ?? "";
+  expect(breadcrumb).toContain('href="/dashboard"');
+  expect(breadcrumb).toContain('href="/dashboard/scheduling"');
+  expect(breadcrumb).toContain('aria-current="page">Availability &amp; teams');
 });

@@ -19,7 +19,7 @@ questions, capture enquiries, and support your business.
 
 Primary hero/header/launcher action: **Try Voice Chat**, linking to `/book`.
 
-Secondary hero action: **Explore the dashboard**, linking to `/operations`.
+Secondary hero action: **Explore the dashboard**, linking to `/dashboard`.
 
 Action note: Try the HVAC example. Sign in, then connect when you’re ready.
 

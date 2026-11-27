@@ -52,7 +52,7 @@ The database fixture downgrades and rebuilds its target, and downgrades it again
 
 Manual checks:
 
-1. Seed a development business with no calendar, then open `/operations` → Scheduling. Confirm the persisted defaults above and refresh the page to check they remain.
+1. Seed a development business with no calendar, then open `/dashboard` → Scheduling. Confirm the persisted defaults above and refresh the page to check they remain.
 2. Book with fictional details using ZIP 10001 and a future configured weekday. Confirm business timezone, the two-hour notice, available team slots and the final CONFIRMED receipt.
 3. Edit the calendar through Scheduling, including disabling booking, save, and rerun the development seed. Confirm all edits and the version remain unchanged, and disabled booking returns no slots.
 4. Confirm another business is unconfigured and no appointments were created by seeding.
