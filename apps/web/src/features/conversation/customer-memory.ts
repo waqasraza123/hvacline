@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import type { ConversationSpeaker, ConversationTurn } from "./contracts";
 import { appendTranscript } from "./review";
 
@@ -45,7 +46,7 @@ export function customerMemoryTools({
           body = pendingSave.body;
         }
       }
-      const response = await fetch(
+      const response = await providerFetch(
         `/api/v1/development/conversation-sessions/${encodeURIComponent(current)}/memory/${action}`,
         {
           method: "POST",

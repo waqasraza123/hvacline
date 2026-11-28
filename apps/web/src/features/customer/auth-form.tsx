@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -29,7 +31,7 @@ export function AuthForm({
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(`/api/account/${mode}`, {
+      const response = await providerFetch(`/api/account/${mode}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

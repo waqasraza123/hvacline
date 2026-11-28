@@ -1,3 +1,36 @@
+## Shared external provider notifications — source UNVERIFIED — 2026-11-28
+
+Owner requested completing and pushing the pending notification work. Source adds
+request-local, bounded provider/category collection for existing external adapters,
+safe HTTP/header/proxy propagation and shared Sonner notifications for interactive
+web requests and supported saved job/status failures. Handled upstream API errors
+use HTTP424; ordinary application errors without provider evidence retain their
+status. Approved ElevenLabs account copy remains separate from other categories.
+Server rendering skips notifications; JSON inspection is bounded and response
+bodies remain readable. SDK asynchronous connection rejection is handled; normal
+endings/microphone errors do not generate provider toasts. Existing unknown-outcome,
+retry/idempotency/no-redial/ownership controls and feature gates remain in place.
+
+No new schema/configuration, live balance queries or background browser delivery.
+Added unexecuted regressions and owner guide: docs/external-provider-notifications.md.
+No tests/builds/linters/type checks/migrations/services/providers/deployment ran.
+Runtime/security/visual acceptance remains UNVERIFIED. Publish source/docs normally
+to main, preserving history/tags, disabling hooks and retaining [skip ci] [skip render].
+Publication outcome is recorded in local session memory.
+
+## External ElevenLabs failure notification decision — UNVERIFIED — 2026-11-27
+
+Owner requested Sonner-backed toast presentation for external ElevenLabs billing,
+credit and account-access restrictions, with supplied credit/refill wording and
+explicit separation from application server errors. Source carries a sanitized
+provider marker and uses HTTP424 for known interactive provider restrictions;
+SDK error/connection/disconnect boundaries also notify. Generic application/auth/
+network/rate errors retain their own handling. No live balance query or migration.
+Dependency metadata and unexecuted regressions are added; no checks, services,
+provider calls or publication/deployment ran. Owner commands/manual acceptance,
+exact copy, supported web flows and background-notification boundary:
+docs/elevenlabs-error-toasts.md. Outcome remains local and UNVERIFIED.
+
 ## Canonical dashboard route decision — source UNVERIFIED — 2026-11-27
 
 Owner selected /dashboard as the canonical dashboard route, including all nested

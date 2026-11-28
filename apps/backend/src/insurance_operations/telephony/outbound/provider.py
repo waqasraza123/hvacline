@@ -6,6 +6,11 @@ from urllib.parse import quote
 
 import httpx
 
+from insurance_operations.external_failures import provider_request, record_provider_exception
+from insurance_operations.elevenlabs_errors import (
+    elevenlabs_http_error_restricted,
+    elevenlabs_response_restricted,
+)
 from insurance_operations.telephony.contracts import TelephonyAdapterError
 from insurance_operations.telephony.outbound.destinations import E164
 from insurance_operations.telephony.outbound.prompt import (
@@ -22,9 +27,10 @@ from insurance_operations.telephony.providers.elevenlabs import (
 
 
 class OutboundProviderError(RuntimeError):
-    def __init__(self, *, outcome_unknown: bool) -> None:
+    def __init__(self, *, outcome_unknown: bool, account_restricted: bool = False) -> None:
         super().__init__("Outbound provider unavailable")
         self.outcome_unknown = outcome_unknown
+        self.account_restricted = account_restricted
 
 
 @dataclass(frozen=True)
@@ -140,7 +146,7 @@ class ElevenLabsOutboundProvider:
             follow_redirects=False,
         )
         try:
-            return client.request(
+            return provider_request("elevenlabs", client,
                 method,
                 path,
                 headers={"xi-api-key": secret.get_secret_value()},
@@ -183,7 +189,11 @@ class ElevenLabsOutboundProvider:
             ):
                 raise OutboundProviderError(outcome_unknown=False)
         except (httpx.HTTPError, ValueError, TypeError) as error:
-            raise OutboundProviderError(outcome_unknown=False) from error
+            record_provider_exception("elevenlabs", error)
+            raise OutboundProviderError(
+                outcome_unknown=False,
+                account_restricted=elevenlabs_http_error_restricted(error),
+            ) from error
 
     def dial(self, data: DemoCallInput, call_id: str) -> OutboundCallReceipt:
         settings = self.settings
@@ -213,12 +223,16 @@ class ElevenLabsOutboundProvider:
                 },
             )
         except httpx.HTTPError as error:
-            raise OutboundProviderError(outcome_unknown=True) from error
+            raise OutboundProviderError(
+                outcome_unknown=True,
+                account_restricted=elevenlabs_http_error_restricted(error),
+            ) from error
         # An undocumented error or malformed response may follow a successful dial.
         if response.status_code >= 400:
             raise OutboundProviderError(
                 outcome_unknown=response.status_code
-                not in {400, 401, 403, 404, 422, 429}
+                not in {400, 401, 403, 404, 422, 429},
+                account_restricted=elevenlabs_response_restricted(response),
             )
         try:
             receipt = object_value(response.json())
@@ -234,7 +248,11 @@ class ElevenLabsOutboundProvider:
                 raise OutboundProviderError(outcome_unknown=True)
             return OutboundCallReceipt(conversation_id, sip_call_id)
         except (ValueError, TypeError) as error:
-            raise OutboundProviderError(outcome_unknown=True) from error
+            record_provider_exception("elevenlabs", error)
+            raise OutboundProviderError(
+                outcome_unknown=True,
+                account_restricted=elevenlabs_http_error_restricted(error),
+            ) from error
 
     def conversation(self, conversation_id: str) -> dict[str, Any]:
         try:
@@ -250,7 +268,11 @@ class ElevenLabsOutboundProvider:
                 raise OutboundProviderError(outcome_unknown=True)
             return data
         except (httpx.HTTPError, ValueError, TypeError) as error:
-            raise OutboundProviderError(outcome_unknown=True) from error
+            record_provider_exception("elevenlabs", error)
+            raise OutboundProviderError(
+                outcome_unknown=True,
+                account_restricted=elevenlabs_http_error_restricted(error),
+            ) from error
 
     def verify_webhook(
         self, headers: Mapping[str, str], body: bytes

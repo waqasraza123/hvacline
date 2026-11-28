@@ -1,5 +1,10 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
+import { ELEVENLABS_CREDITS_MESSAGE } from "@/lib/elevenlabs-errors";
+import { notifyElevenLabsError } from "@/lib/elevenlabs-toast";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
@@ -78,7 +83,7 @@ export function HomepageChat() {
   async function refreshStatus() {
     const version = ++statusVersion.current;
     try {
-      const response = await fetch("/api/homepage-chat", {
+      const response = await providerFetch("/api/homepage-chat", {
         cache: "no-store",
         signal: AbortSignal.timeout(15_000),
       });
@@ -167,7 +172,7 @@ export function HomepageChat() {
     if (!attempt.current || attempt.current.message !== message)
       attempt.current = { id: crypto.randomUUID(), message };
     try {
-      const response = await fetch("/api/homepage-chat", {
+      const response = await providerFetch("/api/homepage-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -190,6 +195,7 @@ export function HomepageChat() {
         return;
       }
       if (!response.ok) {
+        const accountRestricted = notifyElevenLabsError(data);
         const failure =
           typeof data === "object" &&
           data !== null &&
@@ -204,7 +210,7 @@ export function HomepageChat() {
           return;
         }
         throw new Error(
-          "message" in failure && typeof failure.message === "string"
+          accountRestricted ? ELEVENLABS_CREDITS_MESSAGE : "message" in failure && typeof failure.message === "string"
             ? failure.message
             : "Line couldn’t reply. Please retry or sign in.",
         );

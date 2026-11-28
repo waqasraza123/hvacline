@@ -8,6 +8,8 @@ from zoneinfo import ZoneInfo
 
 import httpx
 
+from insurance_operations.external_failures import provider_request
+
 
 class CalendarUnavailable(RuntimeError):
     pass
@@ -53,17 +55,19 @@ class GoogleCalendarAdapter:
         *,
         params: dict[str, str] | None = None,
         etag: str | None = None,
+        ignored_statuses: frozenset[int] = frozenset(),
     ) -> httpx.Response:
         try:
             headers = {"Authorization": "Bearer " + self.access_token()}
             if etag:
                 headers["If-Match"] = etag
-            response = self.client.request(
+            response = provider_request("google_calendar", self.client,
                 method,
                 "https://www.googleapis.com/calendar/v3" + path,
                 headers=headers,
                 json=payload,
                 params=params,
+                ignored_statuses=ignored_statuses,
                 timeout=10,
             )
             if response.status_code == 403:
@@ -96,6 +100,7 @@ class GoogleCalendarAdapter:
             + quote(self.calendar_id, safe="")
             + "/events/"
             + appointment_id.hex,
+            ignored_statuses=frozenset({404, 410}),
         )
         if response.status_code in {404, 410}:
             return None
@@ -252,6 +257,7 @@ class GoogleCalendarAdapter:
             + "/events/"
             + appointment_id.hex,
             etag=etag,
+            ignored_statuses=frozenset({404, 410, 412}),
         )
         if response.status_code == 412:
             raise CalendarConflict("Calendar event changed during cancellation")
@@ -310,6 +316,7 @@ class GoogleCalendarAdapter:
                     "private": {"hvacline_appointment_id": str(appointment_id)}
                 },
             },
+            ignored_statuses=frozenset({409}),
         )
         if response.status_code == 409:
             response = self._request("GET", path + "/" + event_id)
@@ -343,6 +350,7 @@ class GoogleCalendarAdapter:
             + quote(self.calendar_id, safe="")
             + "/events/"
             + quote(event_id, safe=""),
+            ignored_statuses=frozenset({404, 410}),
         )
         if response.status_code not in {204, 404, 410}:
             raise CalendarUnavailable(

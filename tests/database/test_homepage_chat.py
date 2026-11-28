@@ -189,3 +189,19 @@ def test_daily_budget_and_expired_processing_lease_fail_closed(
         row.state = "PROCESSING"
         row.lease_expires_at = datetime.now(UTC) - timedelta(seconds=1)
     assert service.status("e" * 43).state == "used"
+
+
+def test_provider_restriction_is_a_handled_dependency_failure(
+    homepage: tuple[HomepageChatService, ReplyProvider], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    service, provider = homepage
+
+    def restricted_reply(message: str, lookup: Callable[[str], str]) -> str:
+        raise HomepageProviderError(message_sent=False, account_restricted=True)
+
+    monkeypatch.setattr(provider, "reply", restricted_reply)
+    with pytest.raises(ApiError) as failure:
+        service.reply("r" * 43, message())
+    assert failure.value.status_code == 424
+    assert failure.value.details["provider_error_code"] == "ELEVENLABS_ACCOUNT_RESTRICTED"
+    assert service.status("r" * 43).remaining == 1

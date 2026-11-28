@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import { useEffect, useState } from "react";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import { DashboardTable } from "@/features/operations/dashboard-table";
@@ -16,7 +18,7 @@ export function GhlDemo({ apiBaseUrl }: { apiBaseUrl: string }) {
     const controller = new AbortController();
     let active = true;
     const timeout = window.setTimeout(() => controller.abort(), 20_000);
-    fetch(`${apiBaseUrl}/api/v1/public/ghl-demo`, {
+    providerFetch(`${apiBaseUrl}/api/v1/public/ghl-demo`, {
       method: "GET",
       cache: "no-store",
       credentials: "omit",

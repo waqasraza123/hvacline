@@ -6,6 +6,7 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
+from insurance_operations.external_failures import provider_request, record_provider_exception, response_failure
 from insurance_operations.database.models.booking_integrations import (
     BookingNotification,
     CalendarBooking,
@@ -126,7 +127,7 @@ class ResendBookingEmail:
         if key is None:
             return "FAILED", "EMAIL_NOT_CONFIGURED"
         try:
-            response = self.client.post(
+            response = provider_request("resend", self.client, "POST",
                 "https://api.resend.com/emails",
                 json=row.payload,
                 headers={
@@ -134,6 +135,7 @@ class ResendBookingEmail:
                     "Idempotency-Key": "hvacline-booking-" + str(row.id),
                 },
                 timeout=10,
+                ignored_statuses=frozenset({409}),
             )
             if response.status_code == 409:
                 data = response.json()
@@ -144,9 +146,9 @@ class ResendBookingEmail:
                     return "PENDING", "EMAIL_RETRY"
                 return "FAILED", "EMAIL_IDEMPOTENCY_CONFLICT"
             if response.status_code in {400, 401, 403, 404, 422}:
-                return "FAILED", "EMAIL_REJECTED"
+                return "FAILED", response_failure("resend", response).code
             if response.status_code == 429 or response.status_code >= 500:
-                return "PENDING", "EMAIL_RETRY"
+                return "PENDING", response_failure("resend", response).code
             response.raise_for_status()
             data = response.json()
             if (
@@ -156,8 +158,9 @@ class ResendBookingEmail:
             ):
                 return "PENDING", "EMAIL_RESPONSE_UNKNOWN"
             return "ACCEPTED", str(data["id"])
-        except (httpx.HTTPError, ValueError):
-            return "PENDING", "EMAIL_RESPONSE_UNKNOWN"
+        except (httpx.HTTPError, ValueError) as error:
+            failure = record_provider_exception("resend", error)
+            return "PENDING", "EMAIL_RESPONSE_UNKNOWN" if isinstance(error, ValueError) else failure.code
 
 
 def deliver_notification(

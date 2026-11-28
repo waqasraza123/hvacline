@@ -39,6 +39,7 @@ from insurance_operations.database.models.operations import (
     IdempotencyRecord,
     IdempotencyStatus,
 )
+from insurance_operations.elevenlabs_errors import elevenlabs_error_details
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings
 from insurance_operations.websites.guards import active_website, session_website
@@ -160,7 +161,10 @@ class ConversationService:
                 validate_language(language_config, request.voice_channel)
             grant = self._provider.authorize_session(input_mode=request.input_mode)
         except ConversationProviderError as error:
-            language_failure = isinstance(error, ConversationLanguageConfigurationError)
+            language_failure = (
+                isinstance(error, ConversationLanguageConfigurationError)
+                and not error.account_restricted
+            )
             with self._session_factory() as session, session.begin():
                 failed_session = session.get(
                     ConversationSession,
@@ -175,7 +179,9 @@ class ConversationService:
                     )
                     failed_session.ended_at = datetime.now(UTC)
             raise ApiError(
-                status_code=409 if language_failure else 503,
+                status_code=(
+                    424 if error.account_restricted else 409 if language_failure else 503
+                ),
                 code=("VOICE_LANGUAGE_PROVIDER_SETUP_REQUIRED" if language_failure
                     else "CONVERSATION_PROVIDER_UNAVAILABLE"),
                 message=(
@@ -184,6 +190,7 @@ class ConversationService:
                     if language_failure
                     else "The conversation service is temporarily unavailable"
                 ),
+                details=elevenlabs_error_details(error.account_restricted),
             ) from error
 
         authorized_at = datetime.now(UTC)

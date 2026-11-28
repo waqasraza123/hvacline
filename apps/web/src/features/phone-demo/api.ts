@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import type { PhoneDemoState, PhoneDemoStatus } from "./contracts";
 
 const PHONE_DEMO_PATH = "/api/v1/demo/latest-phone-call";
@@ -15,7 +16,7 @@ const STATES: readonly PhoneDemoState[] = [
 export async function getPhoneDemoStatus(
   apiBaseUrl: string,
 ): Promise<PhoneDemoStatus> {
-  const response = await fetch(`${apiBaseUrl}${PHONE_DEMO_PATH}`, {
+  const response = await providerFetch(`${apiBaseUrl}${PHONE_DEMO_PATH}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
   });

@@ -1,0 +1,6 @@
+.toast {
+  font-family: var(--ui-font);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgb(0 0 0 / 12%);
+}
+.title { font-size: 14px; font-weight: 500; line-height: 1.6; }

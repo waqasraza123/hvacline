@@ -14,6 +14,7 @@ from insurance_operations.database.models.booking_integrations import (
     BookingNotification,
 )
 from insurance_operations.errors import ApiError
+from insurance_operations.external_failures import collect_external_failures, current_external_failures
 from insurance_operations.hvac.calendar import (
     CalendarAuthorizationRequired,
     CalendarConflict,
@@ -122,6 +123,41 @@ def test_calendar_lists_all_pages_recurring_and_all_day_busy_times() -> None:
     assert periods[0].ends_at.astimezone(UTC) - periods[0].starts_at.astimezone(
         UTC
     ) == timedelta(hours=25)
+
+
+def test_calendar_expected_missing_event_is_distinct_from_unavailable_calendar() -> None:
+    with httpx.Client(
+        transport=httpx.MockTransport(lambda request: httpx.Response(404))
+    ) as client:
+        adapter = GoogleCalendarAdapter(
+            calendar_id="synthetic", access_token=lambda: "synthetic", client=client
+        )
+        with collect_external_failures():
+            assert adapter.event(uuid4()) is None
+            assert current_external_failures() == []
+            with pytest.raises(CalendarUnavailable):
+                adapter.busy_events(
+                    datetime.now(UTC), datetime.now(UTC) + timedelta(hours=1)
+                )
+            assert current_external_failures() == [
+                {"provider": "google_calendar", "kind": "rejected"}
+            ]
+
+
+def test_google_rate_limit_does_not_request_account_reauthorization() -> None:
+    with httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(
+        403, json={"error": {"errors": [{"reason": "userRateLimitExceeded"}]}}
+    ))) as client:
+        adapter = GoogleCalendarAdapter(
+            calendar_id="synthetic", access_token=lambda: "synthetic", client=client
+        )
+        with collect_external_failures():
+            with pytest.raises(CalendarUnavailable, match="rate limited") as caught:
+                adapter.busy_events(datetime.now(UTC), datetime.now(UTC) + timedelta(hours=1))
+            assert not isinstance(caught.value, CalendarAuthorizationRequired)
+            assert current_external_failures() == [
+                {"provider": "google_calendar", "kind": "rate_limited"}
+            ]
 
 
 def test_incomplete_calendar_page_fails_closed() -> None:

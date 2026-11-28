@@ -822,3 +822,16 @@ def test_unbound_failure_is_retryable_and_never_guesses_a_destination(
             )
             is None
         )
+
+
+def test_provider_account_restriction_is_returned_without_redial(
+    context: Context, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def restricted_preflight(phone_number: str) -> None:
+        raise OutboundProviderError(outcome_unknown=False, account_restricted=True)
+
+    monkeypatch.setattr(context.provider, "preflight", restricted_preflight)
+    response = context.create_verified(data(), OWNER)
+    assert response.status is DemoCallStatus.FAILED
+    assert response.provider_error_code == "ELEVENLABS_ACCOUNT_RESTRICTED"
+    assert context.provider.dial_count == 0

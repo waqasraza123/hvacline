@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { themeInitializationScript } from "@/components/theme-preference";
+import { AppToaster } from "@/components/app-toaster";
 import { ThemeSync } from "@/components/theme-sync";
 import "./styles.css";
 import "./design-tokens.css";
@@ -38,6 +39,7 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeSync />
+        <AppToaster />
         {children}
       </body>
     </html>

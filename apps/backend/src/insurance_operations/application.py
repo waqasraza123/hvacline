@@ -70,6 +70,11 @@ from insurance_operations.database.models.approved_faq import ApprovedFaqStatus
 from insurance_operations.database.models.lead import LeadStatus
 from insurance_operations.database.models.telephony import InboundCallStatus
 from insurance_operations.demo_security import require_demo_admin_token
+from insurance_operations.external_failures import (
+    EXTERNAL_FAILURES_HEADER,
+    collect_external_failures,
+    external_failures_header,
+)
 from insurance_operations.errors import ApiError, api_error_handler
 from insurance_operations.ghl.demo import create_ghl_demo_router
 from insurance_operations.ghl.routes import create_ghl_router
@@ -239,7 +244,7 @@ def create_app(
             "X-Correlation-ID",
             "X-Demo-Admin-Token",
         ],
-        expose_headers=["Idempotent-Replayed", "X-Correlation-ID"],
+        expose_headers=["Idempotent-Replayed", "X-Correlation-ID", EXTERNAL_FAILURES_HEADER],
     )
 
     if local_conversation_service is not None:
@@ -294,7 +299,11 @@ def create_app(
         except ValueError:
             correlation_id = uuid4()
         request.state.correlation_id = str(correlation_id)
-        response = await call_next(request)
+        with collect_external_failures():
+            response = await call_next(request)
+            failures = external_failures_header()
+            if failures and response.status_code < 500:
+                response.headers[EXTERNAL_FAILURES_HEADER] = failures
         response.headers["X-Correlation-ID"] = str(correlation_id)
         return response
 

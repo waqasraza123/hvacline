@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Brand } from "@/components/brand";
@@ -17,7 +19,7 @@ type Session = {
 type Readback = { readback: string; nonce: string; row_version: number };
 
 async function api<T>(path = "", body?: unknown): Promise<T> {
-  const response = await fetch(`/api/recovery${path ? `/${path}` : ""}`, {
+  const response = await providerFetch(`/api/recovery${path ? `/${path}` : ""}`, {
     method: body === undefined ? "GET" : "POST", headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body), cache: "no-store", signal: AbortSignal.timeout(25000),
   });

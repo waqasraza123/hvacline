@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from insurance_operations.external_failures import provider_request, record_provider_exception, response_failure
 from insurance_operations.actors import ActorContext
 from insurance_operations.database.models.hvac import HvacServiceRequest
 from insurance_operations.database.models.identity import Agency
@@ -112,23 +113,24 @@ def send_staff_email(client: httpx.Client, settings: DatabaseSettings, row: Staf
     if key is None:
         return "FAILED", "EMAIL_NOT_CONFIGURED"
     try:
-        response = client.post("https://api.resend.com/emails", json=row.payload, headers={
+        response = provider_request("resend", client, "POST","https://api.resend.com/emails", json=row.payload, headers={
             "Authorization": "Bearer " + key.get_secret_value(),
             "Idempotency-Key": "hvacline-staff-alert-" + str(row.id),
-        }, timeout=10)
+        }, timeout=10, ignored_statuses=frozenset({409}))
         if response.status_code == 409:
             data = response.json()
             return ("PENDING", "EMAIL_RETRY") if isinstance(data, dict) and data.get("name") == "concurrent_idempotent_requests" else ("FAILED", "EMAIL_IDEMPOTENCY_CONFLICT")
         if response.status_code == 429 or response.status_code >= 500:
-            return "PENDING", "EMAIL_RETRY"
+            return "PENDING", response_failure("resend", response).code
         if not 200 <= response.status_code < 300:
-            return "FAILED", "EMAIL_REJECTED"
+            return "FAILED", response_failure("resend", response).code
         data = response.json()
         if not isinstance(data, dict) or not isinstance(data.get("id"), str) or not data["id"] or len(data["id"]) > 256:
             return "PENDING", "EMAIL_RESPONSE_UNKNOWN"
         return "ACCEPTED", data["id"]
-    except (httpx.HTTPError, ValueError):
-        return "PENDING", "EMAIL_RESPONSE_UNKNOWN"
+    except (httpx.HTTPError, ValueError) as error:
+        failure = record_provider_exception("resend", error)
+        return "PENDING", "EMAIL_RESPONSE_UNKNOWN" if isinstance(error, ValueError) else failure.code
 
 
 def deliver_staff_alert(sessions: sessionmaker[Session], identifier: UUID) -> None:

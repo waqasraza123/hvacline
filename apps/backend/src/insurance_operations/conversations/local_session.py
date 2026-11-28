@@ -15,6 +15,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.orm import Session, sessionmaker
 
+from insurance_operations.external_failures import provider_request
 from insurance_operations.actors import ActorContext, resolve_development_actor
 from insurance_operations.approved_faqs import ApprovedFaqService
 from insurance_operations.conversations.providers.local import credential_digest
@@ -117,7 +118,7 @@ class LocalVoiceRuntime:
         transcript: list[dict[str, str]],
         draft: LocalDraft,
     ) -> LocalExtraction:
-        response = self._ollama_client.post(
+        response = provider_request("ollama", self._ollama_client, "POST",
             "/api/chat",
             json={
                 "model": self._ollama_model,

@@ -3,6 +3,7 @@ from urllib.parse import quote
 
 import httpx
 
+from insurance_operations.external_failures import provider_request, record_provider_exception
 from insurance_operations.errors import ApiError
 from insurance_operations.telephony.outbound.destinations import US_REGIONS
 from insurance_operations.telephony.outbound.settings import OutboundDemoSettings
@@ -38,9 +39,10 @@ class TelnyxVerificationProvider:
             base_url="https://api.telnyx.com", timeout=12, follow_redirects=False
         )
         try:
-            response = client.request(
+            response = provider_request("telnyx", client,
                 method,
                 path,
+                ignored_statuses=frozenset({400, 404}) if invalid_code else frozenset(),
                 json=payload,
                 headers={"Authorization": f"Bearer {key.get_secret_value()}"},
             )
@@ -52,7 +54,8 @@ class TelnyxVerificationProvider:
             if not isinstance(data, dict):
                 raise sms_unavailable()
             return data
-        except (httpx.HTTPError, ValueError, TypeError):
+        except (httpx.HTTPError, ValueError, TypeError) as error:
+            record_provider_exception("telnyx", error)
             raise sms_unavailable() from None
         finally:
             if self.client is None:

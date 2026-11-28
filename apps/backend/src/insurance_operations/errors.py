@@ -5,6 +5,8 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from insurance_operations.external_failures import current_external_failures
+
 
 class ApiErrorDetail(BaseModel):
     code: str
@@ -37,16 +39,18 @@ class ApiError(Exception):
 
 async def api_error_handler(request: Request, error: ApiError) -> JSONResponse:
     correlation_id = getattr(request.state, "correlation_id", str(uuid4()))
+    external = current_external_failures()
+    dependency_failure = bool(external) and error.status_code >= 500
     response = ApiErrorResponse(
         error=ApiErrorDetail(
             code=error.code,
             message=error.message,
-            details=error.details,
+            details={**error.details, **({"external_failures": external} if external else {})},
             correlation_id=correlation_id,
         )
     )
     return JSONResponse(
-        status_code=error.status_code,
+        status_code=424 if dependency_failure else error.status_code,
         content=response.model_dump(mode="json"),
         headers=error.headers,
     )

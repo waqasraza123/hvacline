@@ -17,6 +17,7 @@ from insurance_operations.actors import ActorContext
 from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.recovery import RecoveryAiConnection
 from insurance_operations.errors import ApiError
+from insurance_operations.external_failures import ExternalProvider, collect_external_failures, external_failure, record_external_failure
 from insurance_operations.recovery.domain import audit
 from insurance_operations.recovery.schemas import AiInput
 from insurance_operations.settings import DatabaseSettings
@@ -88,13 +89,26 @@ def chat_completion(endpoint: str, key: str, model: str, prompt: str, *, test: b
     host = urlsplit(endpoint).hostname
     if host is None:
         raise problem("AI_ENDPOINT_REJECTED", "Provider hostname unavailable.")
-    addresses = public_addresses(host)
+    provider: ExternalProvider = "openai" if host == "api.openai.com" else "openai_compatible"
+    try:
+        addresses = public_addresses(host)
+    except ApiError as failure:
+        if failure.code == "AI_DNS_FAILED":
+            record_external_failure(external_failure(provider))
+        raise
     connection = PinnedHttpsConnection(host, addresses[0])
     payload = json.dumps({"model": model, "messages": [{"role": "system", "content": "You assist HVAC staff. Never claim a booking, price, slot, delivery, call or external action occurred. No tools are available."}, {"role": "user", "content": prompt}], "max_tokens": 16 if test else 300, "stream": False})
     deadline = time.monotonic() + 12
     try:
         connection.request("POST", "/v1/chat/completions", payload.encode(), {"Content-Type": "application/json", "Authorization": f"Bearer {key}"})
         response = connection.getresponse()
+        if response.status != 200:
+            raw_error = response.read(65536)
+            try:
+                provider_payload: object = json.loads(raw_error)
+            except ValueError:
+                provider_payload = None
+            record_external_failure(external_failure(provider, status=response.status, payload=provider_payload))
         if response.status != 200 or response.getheader("Content-Type", "").split(";")[0].strip() != "application/json":
             raise problem("AI_CONNECTION_REJECTED", "The provider rejected this model or credential. Only text Chat Completions are supported.", 503)
         content = bytearray()
@@ -120,7 +134,8 @@ def chat_completion(endpoint: str, key: str, model: str, prompt: str, *, test: b
         return answer.strip()
     except ApiError:
         raise
-    except (OSError, http.client.HTTPException, ValueError, TypeError, KeyError, IndexError):
+    except (OSError, http.client.HTTPException, ValueError, TypeError, KeyError, IndexError) as error:
+        record_external_failure(external_failure(provider, error=error))
         raise problem("AI_CONNECTION_FAILED", "The provider did not return a supported text response. No fallback provider was used.", 503) from None
     finally:
         connection.close()
@@ -221,14 +236,15 @@ class RecoveryAiService:
             version = row.row_version
         result, failure = None, None
         try:
-            result = self.provider.complete(endpoint, key, model, prompt, test=test)
+            with collect_external_failures() as external:
+                result = self.provider.complete(endpoint, key, model, prompt, test=test)
         except ApiError as error:
             failure = error
         with self.sessions() as session, session.begin():
             row = session.get(RecoveryAiConnection, actor.agency_id, with_for_update=True)
             if not row or row.row_version != version:
                 raise problem("AI_CONFIGURATION_CHANGED", "Configuration changed during the request. Discarded the previous result.")
-            row.status, row.last_error = ("ERROR", failure.code) if failure else ("CONNECTED", None)
+            row.status, row.last_error = ("ERROR", external[-1].code if external else failure.code) if failure else ("CONNECTED", None)
             audit(session, actor.agency_id, "RECOVERY_AI_TESTED" if test else "RECOVERY_AI_DRAFTED", {"status": row.status}, actor.app_user_id)
             session.flush()
             session.refresh(row)

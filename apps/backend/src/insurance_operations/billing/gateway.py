@@ -6,6 +6,7 @@ from uuid import UUID
 import stripe
 from stripe.params.checkout import SessionCreateParams
 
+from insurance_operations.external_failures import external_failure, record_external_failure
 from insurance_operations.billing.catalog import PLANS, PaidPlanKey
 from insurance_operations.billing.errors import billing_error
 from insurance_operations.billing.settings import BillingSettings
@@ -71,6 +72,10 @@ class StripeGateway:
                 stripe_version="2026-10-28.endive",
             )
         except stripe.StripeError as error:
+            record_external_failure(external_failure(
+                "stripe", status=error.http_status,
+                payload={"error": {"code": error.code}},
+            ))
             if not translate_errors:
                 raise
             raise billing_error(

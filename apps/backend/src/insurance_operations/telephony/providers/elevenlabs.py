@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 
 import httpx
 
+from insurance_operations.external_failures import provider_request, record_provider_exception
 from insurance_operations.telephony.contracts import TelephonyAdapterError
 
 ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
@@ -49,7 +50,7 @@ class ElevenLabsPhoneProvider:
             timeout=httpx.Timeout(10),
         )
         try:
-            response = client.post(
+            response = provider_request("elevenlabs", client, "POST",
                 "/v1/convai/twilio/register-call",
                 headers={"xi-api-key": self._api_key},
                 json={
@@ -72,6 +73,7 @@ class ElevenLabsPhoneProvider:
             validate_twiml(twiml)
             return twiml
         except (httpx.HTTPError, ValueError, ElementTree.ParseError) as error:
+            record_provider_exception("elevenlabs", error)
             raise TelephonyAdapterError(
                 "phone conversation provider registration failed"
             ) from error

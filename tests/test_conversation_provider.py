@@ -157,3 +157,25 @@ def test_local_provider_returns_one_time_websocket_grant(
         grant.credential
     )
     assert grant.credential not in grant.metadata.as_storage_value().values()
+
+
+@pytest.mark.parametrize("input_mode", ["VOICE", "TEXT"])
+@pytest.mark.parametrize("status", [402, 403])
+def test_provider_carries_sanitized_account_restriction(
+    input_mode: ConversationInputMode, status: int
+) -> None:
+    provider = ElevenLabsConversationProvider(
+        api_key="server-only-secret",
+        agent_id="agent_test",
+        client=httpx.Client(
+            base_url=ELEVENLABS_API_BASE_URL,
+            transport=httpx.MockTransport(lambda _: httpx.Response(
+                status, json={"detail": {"message": "private provider detail"}}
+            )),
+        ),
+    )
+    with pytest.raises(ConversationProviderError) as failure:
+        provider.authorize_session(input_mode=input_mode)
+    assert failure.value.account_restricted is True
+    assert str(failure.value) == "conversation provider authorization failed"
+    assert "private provider detail" not in str(failure.value)

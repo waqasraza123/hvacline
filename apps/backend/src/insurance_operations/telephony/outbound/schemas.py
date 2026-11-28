@@ -72,6 +72,7 @@ class DemoCallResponse(BaseModel):
     created_at: datetime
     terminal: bool
     message: str
+    provider_error_code: Literal["ELEVENLABS_ACCOUNT_RESTRICTED"] | None = None
 
 
 MESSAGES = {

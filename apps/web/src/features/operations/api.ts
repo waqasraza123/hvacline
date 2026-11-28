@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 export type ServiceRequest = {
   id: string;
   status: string;
@@ -102,7 +103,7 @@ export async function requestApi<T>(
   body?: unknown,
   idempotencyKey?: string,
 ): Promise<T> {
-  const response = await fetch(`${baseUrl}/api/v1/development/${path}`, {
+  const response = await providerFetch(`${baseUrl}/api/v1/development/${path}`, {
     method,
     headers: {
       "Content-Type": "application/json",

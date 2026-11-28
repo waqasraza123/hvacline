@@ -10,6 +10,7 @@ from insurance_operations.database.models.booking_integrations import (
 )
 from insurance_operations.database.models.hvac import Appointment
 from insurance_operations.errors import ApiError
+from insurance_operations.external_failures import collect_external_failures
 from insurance_operations.hvac.calendar import (
     CalendarAuthorizationRequired,
     CalendarConflict,
@@ -136,14 +137,14 @@ def request_cleanup(session: Session, row: Appointment) -> None:
 def reconcile_connection(session: Session, connection: CalendarConnection) -> None:
     now = datetime.now(UTC)
     try:
-        with calendar_adapter(session, connection) as adapter:
+        with collect_external_failures() as external, calendar_adapter(session, connection) as adapter:
             adapter.busy_events(now, now + timedelta(minutes=1))
         connection.last_error = None
     except CalendarAuthorizationRequired:
         connection.status = "REAUTH_REQUIRED"
-        connection.last_error = "REAUTH_REQUIRED"
+        connection.last_error = external[-1].code if external else "REAUTH_REQUIRED"
     except CalendarUnavailable:
-        connection.last_error = "CALENDAR_UNAVAILABLE"
+        connection.last_error = external[-1].code if external else "CALENDAR_UNAVAILABLE"
     connection.last_checked_at = now
 
 
@@ -162,7 +163,7 @@ def reconcile_booking(
     if connection is None or connection.agency_id != row.agency_id:
         raise CalendarUnavailable("Calendar connection is unavailable")
     try:
-        with calendar_adapter(session, connection) as adapter:
+        with collect_external_failures() as external, calendar_adapter(session, connection) as adapter:
             if row.status in {"CANCELLED", "EXPIRED"} or (
                 row.status == "HELD" and row.hold_expires_at <= now
             ):
@@ -182,14 +183,14 @@ def reconcile_booking(
             connection.last_error = None
     except CalendarAuthorizationRequired:
         connection.status = "REAUTH_REQUIRED"
-        connection.last_error = "REAUTH_REQUIRED"
-        binding.last_error = "REAUTH_REQUIRED"
+        connection.last_error = external[-1].code if external else "REAUTH_REQUIRED"
+        binding.last_error = external[-1].code if external else "REAUTH_REQUIRED"
     except CalendarConflict:
         binding.status = "ATTENTION"
         binding.last_error = "CALENDAR_CONFLICT"
     except CalendarUnavailable:
-        binding.last_error = "CALENDAR_UNAVAILABLE"
-        connection.last_error = "CALENDAR_UNAVAILABLE"
+        binding.last_error = external[-1].code if external else "CALENDAR_UNAVAILABLE"
+        connection.last_error = external[-1].code if external else "CALENDAR_UNAVAILABLE"
     binding.next_attempt_at = now + timedelta(seconds=60)
     if previous != (binding.status, binding.last_error):
         session.add(

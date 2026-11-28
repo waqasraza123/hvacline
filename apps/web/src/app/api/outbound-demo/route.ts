@@ -1,3 +1,5 @@
+import { externalFailureHeaders } from "@/lib/external-failures";
+import { elevenLabsErrorDetails } from "@/lib/elevenlabs-errors";
 import { createHmac, randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { requireSameOrigin } from "@/features/customer/proxy";
@@ -15,10 +17,10 @@ const COOKIE =
     : "hvacline-call-visitor";
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, upstream?: Response) {
   return NextResponse.json(body, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", ...(upstream ? externalFailureHeaders(upstream) : {}) },
   });
 }
 
@@ -147,11 +149,11 @@ async function phoneVerification(
               "Text verification is unavailable. Please try again later.",
           },
         },
-        response.status,
+        response.status, response,
       );
     }
     if (!isSmsChallenge(value)) throw new Error("Invalid response");
-    return json(value);
+    return json(value, 200, response);
   } catch {
     return json(
       {
@@ -204,9 +206,10 @@ export async function GET(request: NextRequest) {
           error: {
             message:
               "Call status is unavailable. Contact the demo owner before requesting another call.",
+            details: elevenLabsErrorDetails(value),
           },
         },
-        upstream.status,
+        upstream.status, upstream,
       );
     if (
       requestId
@@ -217,7 +220,7 @@ export async function GET(request: NextRequest) {
           typeof value.available !== "boolean"
     )
       throw new Error("Invalid response");
-    const response = json(value);
+    const response = json(value, 200, upstream);
     if (token !== existing)
       response.cookies.set(COOKIE, token, {
         httpOnly: true,
@@ -367,10 +370,10 @@ export async function POST(request: NextRequest) {
           : upstream.status === 429
             ? "The demo call limit has been reached. Please try browser Voice."
             : "The call outcome is unconfirmed. Contact the demo owner before retrying.";
-      return json({ error: { message } }, upstream.status);
+      return json({ error: { message, details: elevenLabsErrorDetails(result) } }, upstream.status, upstream);
     }
     if (!isDemoCall(result)) throw new Error("Invalid response");
-    return json(result);
+    return json(result, 200, upstream);
   } catch {
     return json(
       {

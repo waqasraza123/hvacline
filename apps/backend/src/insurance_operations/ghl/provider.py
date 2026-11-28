@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 import httpx
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, ValidationError
 
+from insurance_operations.external_failures import provider_stream
 from insurance_operations.ghl.schemas import ConnectionInput, GhlId
 
 API_ORIGIN = "https://services.leadconnectorhq.com"
@@ -198,7 +199,7 @@ class GhlClient:
         creating: bool = False,
     ) -> dict[str, Any]:
         try:
-            with self.client.stream(
+            with provider_stream("gohighlevel", self.client,
                 method,
                 API_ORIGIN + path,
                 headers={

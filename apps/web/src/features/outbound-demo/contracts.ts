@@ -27,6 +27,7 @@ export type DemoCall = {
   created_at: string;
   terminal: boolean;
   message: string;
+  provider_error_code?: "ELEVENLABS_ACCOUNT_RESTRICTED" | null;
 };
 
 export const UUID_PATTERN =

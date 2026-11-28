@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { requestBody } from "./proxy";
+import { forwardResponse, requestBody } from "./proxy";
 
 describe("customer request body limits", () => {
   it("reads a valid JSON body split across chunks", async () => {
@@ -40,4 +40,18 @@ describe("customer request body limits", () => {
     expect(cancelled).toBe(true);
     expect(reads).toBeLessThanOrEqual(2);
   });
+});
+
+it("forwards only allowlisted provider notification metadata", () => {
+  const upstream = new Response(null, { status: 424, headers: {
+    "X-External-Failures": JSON.stringify([
+      { provider: "stripe", kind: "billing", private_detail: "must-not-forward" },
+      { provider: "unknown", kind: "access" },
+    ]),
+    "Idempotent-Replayed": "true",
+  } });
+  const result = forwardResponse(upstream, '{"error":{"code":"STRIPE_UNAVAILABLE"}}');
+  expect(result.status).toBe(424);
+  expect(result.headers.get("X-External-Failures")).toBe('[{"provider":"stripe","kind":"billing"}]');
+  expect(result.headers.get("Idempotent-Replayed")).toBe("true");
 });

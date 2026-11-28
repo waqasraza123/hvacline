@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import type {
   ApprovedFaq,
   ApprovedFaqDraft,
@@ -207,7 +208,7 @@ async function requestJson(
   init?: RequestInit,
   adminToken?: string,
 ): Promise<unknown> {
-  const response = await fetch(url, {
+  const response = await providerFetch(url, {
     ...init,
     cache: "no-store",
     headers: {

@@ -5,6 +5,8 @@ import {
   useConversation,
   useConversationControls,
 } from "@elevenlabs/react";
+import { ELEVENLABS_CREDITS_MESSAGE } from "@/lib/elevenlabs-errors";
+import { notifyElevenLabsError } from "@/lib/elevenlabs-toast";
 import { useState } from "react";
 import { languageSessionOverrides, ProviderLanguageObserver, type LanguageCode } from "@insurance-operations/customer-core";
 import type { ReactNode } from "react";
@@ -188,16 +190,18 @@ function AdapterBridge({
       release_appointment_hold: (parameters: Record<string, unknown>) =>
         onBookingTool("release_appointment_hold", parameters),
     },
-    onDisconnect: () => {
+    onDisconnect: (details) => {
+      notifyElevenLabsError(details, "sdk");
       languageObserver.start();
       memory.end();
       pendingTextEchoes.clear();
       onDisconnect();
     },
-    onError: (message) => {
+    onError: (message, context) => {
+      const accountRestricted = notifyElevenLabsError({ message, context }, "sdk");
       memory.end();
       onError(
-        typeof message === "string"
+        accountRestricted ? ELEVENLABS_CREDITS_MESSAGE : typeof message === "string"
           ? message
           : "Conversation connection failed",
       );
@@ -235,15 +239,16 @@ function AdapterBridge({
             new Error("Conversation connection timed out. Try a new session."),
           );
         }, 20_000);
-        const fail = () => {
+        const fail = (failure?: unknown) => {
+          const accountRestricted = notifyElevenLabsError(failure, "sdk");
           memory.end();
           window.clearTimeout(timer);
           reject(
-            new Error("Conversation connection could not be established."),
+            new Error(accountRestricted ? ELEVENLABS_CREDITS_MESSAGE : "Conversation connection could not be established."),
           );
         };
         try {
-          conversation.startSession({
+          void Promise.resolve(conversation.startSession({
             ...connection,
             ...languageSessionOverrides(authorization.voiceLanguage),
             dynamicVariables: { homepage_guest: false },
@@ -265,10 +270,11 @@ function AdapterBridge({
               window.clearTimeout(timer);
               resolve();
             },
-            onError: fail,
+            onError: (message, context) => fail({ message, context }),
             onDisconnect: fail,
-          });
+          })).catch(fail);
         } catch (failure) {
+          notifyElevenLabsError(failure, "sdk");
           memory.end();
           window.clearTimeout(timer);
           reject(failure);

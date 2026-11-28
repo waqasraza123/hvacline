@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
@@ -76,7 +78,7 @@ export function WebsiteVoice(properties: Properties) {
       onApprovedFaqLookup={async (query) => {
         if (!sessionIdRef.current) return unavailable;
         try {
-          const response = await fetch(
+          const response = await providerFetch(
             conversationApiPath(
               "",
               `conversation-sessions/${sessionIdRef.current}/approved-faq-lookup`,
@@ -485,7 +487,7 @@ function WebsiteInquiry({
     setBusy(true);
     setError("");
     try {
-      const response = await fetch(
+      const response = await providerFetch(
         conversationApiPath("", "conversation-intakes", slug),
         {
           method: "POST",

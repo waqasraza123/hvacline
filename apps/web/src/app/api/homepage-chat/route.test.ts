@@ -103,3 +103,16 @@ it("preserves the backend sign-in gate instead of generating a second answer", a
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(fetcher.mock.calls[0][1].headers["X-Homepage-Visitor"]).toBe(token);
 });
+
+it("passes only the safe account marker through the homepage proxy", async () => {
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ error: {
+    code: "HOMEPAGE_CHAT_UNAVAILABLE", message: "Line could not connect.",
+    details: { provider_error_code: "ELEVENLABS_ACCOUNT_RESTRICTED", private_detail: "must-not-forward" },
+  } }, { status: 424 })));
+  const response = await POST(post());
+  expect(response.status).toBe(424);
+  const result = await response.json();
+  expect(result.error.code).toBe("HOMEPAGE_CHAT_UNAVAILABLE");
+  expect(result.error.details).toEqual({ provider_error_code: "ELEVENLABS_ACCOUNT_RESTRICTED" });
+  expect(JSON.stringify(result)).not.toContain("must-not-forward");
+});

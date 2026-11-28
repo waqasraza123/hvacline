@@ -1,3 +1,6 @@
+import { providerFetch } from "@/lib/provider-fetch";
+import { ELEVENLABS_CREDITS_MESSAGE } from "@/lib/elevenlabs-errors";
+import { notifyElevenLabsError } from "@/lib/elevenlabs-toast";
 import {
   intakePayload,
   type ConfirmationInput,
@@ -52,7 +55,7 @@ export async function authorizeConversationSession(
   websiteSlug?: string,
   language?: LanguageCode,
 ): Promise<ConversationSessionAuthorization> {
-  const response = await fetch(
+  const response = await providerFetch(
     conversationApiPath(apiBaseUrl, "conversation-sessions", websiteSlug),
     {
       method: "POST",
@@ -148,7 +151,7 @@ export async function endConversationSession(
   adminToken?: string,
   websiteSlug?: string,
 ): Promise<boolean> {
-  const response = await fetch(
+  const response = await providerFetch(
     conversationApiPath(
       apiBaseUrl,
       `conversation-sessions/${sessionId}/end`,
@@ -202,7 +205,7 @@ export async function confirmConversationIntake(
   input: ConfirmationInput,
   adminToken?: string,
 ): Promise<ConfirmedConversationIntake> {
-  const response = await fetch(
+  const response = await providerFetch(
     `${apiBaseUrl}/api/v1/development/conversation-intakes`,
     {
       method: "POST",
@@ -256,7 +259,7 @@ export async function createCallbackHandoff(
   idempotencyKey: string,
   adminToken?: string,
 ): Promise<void> {
-  const response = await fetch(
+  const response = await providerFetch(
     `${apiBaseUrl}/api/v1/development/leads/${leadId}/handoff-requests`,
     {
       method: "POST",
@@ -286,6 +289,7 @@ async function readJson(response: Response): Promise<unknown> {
 }
 
 function apiError(response: Response, body: unknown): ConversationApiError {
+  const accountRestricted = notifyElevenLabsError(body);
   const errorBody = isRecord(body) ? (body as ErrorBody) : undefined;
   const message = errorBody?.error?.message;
   const code = requiredString(errorBody?.error?.code);
@@ -296,7 +300,7 @@ function apiError(response: Response, body: unknown): ConversationApiError {
   const seconds = recovery.retry_after_seconds;
   return new ConversationApiError(
     response.status,
-    typeof message === "string" && message.trim()
+    accountRestricted ? ELEVENLABS_CREDITS_MESSAGE : typeof message === "string" && message.trim()
       ? message
       : "The request could not be completed",
     {

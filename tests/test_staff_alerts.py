@@ -66,7 +66,7 @@ def test_uncertain_staff_delivery_preserves_pending_for_same_key_retry() -> None
         raise httpx.ReadTimeout("fictional timeout", request=request)
 
     with httpx.Client(transport=httpx.MockTransport(timeout)) as client:
-        assert send_staff_email(client, settings, row) == ("PENDING", "EMAIL_RESPONSE_UNKNOWN")
+        assert send_staff_email(client, settings, row) == ("PENDING", "EXTERNAL_RESEND_TIMEOUT")
 
 
 def test_policy_changes_and_expired_retry_windows_never_create_a_fresh_send() -> None:

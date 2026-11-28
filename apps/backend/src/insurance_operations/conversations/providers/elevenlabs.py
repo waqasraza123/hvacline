@@ -3,6 +3,7 @@ from urllib.parse import quote, urlsplit
 import httpx
 from pydantic import BaseModel, Field, ValidationError
 
+from insurance_operations.external_failures import provider_request, record_provider_exception
 from insurance_operations.conversations.contracts import (
     ConnectionGrant,
     ConversationInputMode,
@@ -10,6 +11,7 @@ from insurance_operations.conversations.contracts import (
     ConversationProviderError,
     ProviderSessionMetadata,
 )
+from insurance_operations.elevenlabs_errors import elevenlabs_http_error_restricted
 from insurance_operations.voice_languages import VoiceChannel, VoiceLanguageConfiguration
 
 ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io"
@@ -45,7 +47,7 @@ class ElevenLabsConversationProvider:
     def validate_language_configuration(self, expected: VoiceLanguageConfiguration, channel: VoiceChannel) -> None:
         """Read hosted configuration before issuing a multilingual session grant."""
         try:
-            response = self._client.get(
+            response = provider_request("elevenlabs", self._client, "GET",
                 f"/v1/convai/agents/{quote(self._agent_id, safe='')}",
                 headers={"xi-api-key": self._api_key},
             )
@@ -88,7 +90,12 @@ class ElevenLabsConversationProvider:
                 if voice != preset.voice_id or greeting != preset.greeting:
                     raise ValueError("Hosted voice or reviewed greeting differs from settings")
         except (httpx.HTTPError, KeyError, TypeError, AttributeError, ValueError) as error:
-            raise ConversationLanguageConfigurationError("Multilingual provider setup could not be verified") from error
+            if isinstance(error, httpx.HTTPError):
+                record_provider_exception("elevenlabs", error)
+            raise ConversationLanguageConfigurationError(
+                "Multilingual provider setup could not be verified",
+                account_restricted=elevenlabs_http_error_restricted(error),
+            ) from error
 
     def authorize_session(
         self, *, input_mode: ConversationInputMode = "VOICE"
@@ -96,7 +103,7 @@ class ElevenLabsConversationProvider:
         try:
             if input_mode == "TEXT":
                 return self._authorize_text_session()
-            response = self._client.get(
+            response = provider_request("elevenlabs", self._client, "GET",
                 "/v1/convai/conversation/token",
                 params={"agent_id": self._agent_id},
                 headers={"xi-api-key": self._api_key},
@@ -104,8 +111,10 @@ class ElevenLabsConversationProvider:
             response.raise_for_status()
             token_response = ConversationTokenResponse.model_validate(response.json())
         except (httpx.HTTPError, ValidationError, ValueError) as error:
+            record_provider_exception("elevenlabs", error)
             raise ConversationProviderError(
-                "conversation provider authorization failed"
+                "conversation provider authorization failed",
+                account_restricted=elevenlabs_http_error_restricted(error),
             ) from error
 
         return ConnectionGrant(
@@ -119,7 +128,7 @@ class ElevenLabsConversationProvider:
         )
 
     def _authorize_text_session(self) -> ConnectionGrant:
-        response = self._client.get(
+        response = provider_request("elevenlabs", self._client, "GET",
             "/v1/convai/conversation/get-signed-url",
             params={"agent_id": self._agent_id, "include_conversation_id": "true"},
             headers={"xi-api-key": self._api_key},

@@ -1,3 +1,5 @@
+import { externalFailureHeaders } from "@/lib/external-failures";
+import { elevenLabsErrorDetails } from "@/lib/elevenlabs-errors";
 import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { currentCustomer } from "@/features/customer/server";
@@ -10,10 +12,10 @@ const COOKIE =
 const TOKEN = /^[A-Za-z0-9_-]{43}$/;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, upstream?: Response) {
   return NextResponse.json(body, {
     status,
-    headers: { "Cache-Control": "no-store" },
+    headers: { "Cache-Control": "no-store", ...(upstream ? externalFailureHeaders(upstream) : {}) },
   });
 }
 
@@ -197,9 +199,10 @@ export async function POST(request: NextRequest) {
               "code" in error && typeof error.code === "string"
                 ? error.code
                 : "HOMEPAGE_CHAT_UNAVAILABLE",
+            details: elevenLabsErrorDetails(result),
           },
         },
-        upstream.status,
+        upstream.status, upstream,
       );
     }
     if (
@@ -211,7 +214,7 @@ export async function POST(request: NextRequest) {
       result.remaining !== 0
     )
       throw new Error("Invalid reply");
-    return json({ reply: result.reply, remaining: 0 });
+    return json({ reply: result.reply, remaining: 0 }, 200, upstream);
   } catch {
     return json(
       {

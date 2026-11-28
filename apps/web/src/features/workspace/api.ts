@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import type { Operations } from "@/features/operations/api";
 
 export type Role = "OWNER" | "ADMIN" | "STAFF";
@@ -13,7 +14,7 @@ export class WorkspaceError extends Error { constructor(readonly status: number,
 export function identifier(value: string): string { if (!uuid.test(value)) throw new Error("The workspace reference is invalid. Reload the page."); return value; }
 
 export async function workspaceRequest(path: string, method = "GET", body?: unknown): Promise<unknown> {
-  const response = await fetch(`/api/workspace/${path}`, { method, cache: "no-store", redirect: "error",
+  const response = await providerFetch(`/api/workspace/${path}`, { method, cache: "no-store", redirect: "error",
     headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(20000) });
   if (response.status === 204) return null;
   const result: unknown = await response.json();

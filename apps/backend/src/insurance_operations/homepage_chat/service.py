@@ -14,6 +14,7 @@ from insurance_operations.database.models.homepage_chat import (
     HomepageChatVisitor,
 )
 from insurance_operations.database.models.identity import Agency
+from insurance_operations.elevenlabs_errors import elevenlabs_error_details
 from insurance_operations.errors import ApiError
 from insurance_operations.homepage_chat.provider import (
     HomepageProviderError,
@@ -102,14 +103,17 @@ class HomepageChatService:
                 actor.agency_id, token_hash, data.request_id, used=error.message_sent
             )
             raise ApiError(
-                status_code=503,
+                status_code=424 if error.account_restricted else 503,
                 code="HOMEPAGE_CHAT_OUTCOME_UNKNOWN"
                 if error.message_sent
                 else "HOMEPAGE_CHAT_UNAVAILABLE",
                 message="Line\u2019s reply was interrupted. Sign in to continue."
                 if error.message_sent
                 else "Line couldn\u2019t connect. Your message is kept; please retry.",
-                details={"remaining": 0 if error.message_sent else 1},
+                details={
+                    "remaining": 0 if error.message_sent else 1,
+                    **elevenlabs_error_details(error.account_restricted),
+                },
             ) from error
         except Exception:
             self._finish(actor.agency_id, token_hash, data.request_id, used=True)

@@ -1479,3 +1479,22 @@ def test_customer_accounts_cannot_access_another_customers_booking(
         )[0]
         == 200
     )
+
+
+def test_external_account_restriction_is_not_an_application_server_error(
+    development_conversation_api: DevelopmentConversationApi,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from insurance_operations.conversations.contracts import ConversationProviderError
+
+    def restricted_session(
+        self: FakeConversationProvider, *, input_mode: ConversationInputMode = "VOICE"
+    ) -> ConnectionGrant:
+        raise ConversationProviderError("Provider unavailable", account_restricted=True)
+
+    monkeypatch.setattr(FakeConversationProvider, "authorize_session", restricted_session)
+    status, body, _ = authorize_session(development_conversation_api)
+    assert status == 424
+    error = body["error"]
+    assert isinstance(error, dict)
+    assert error["details"] == {"provider_error_code": "ELEVENLABS_ACCOUNT_RESTRICTED"}

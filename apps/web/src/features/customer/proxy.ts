@@ -1,3 +1,4 @@
+import { externalFailureHeaders } from "@/lib/external-failures";
 import { NextRequest, NextResponse } from "next/server";
 import { CustomerBackendError } from "./server";
 
@@ -77,6 +78,7 @@ export function forwardResponse(response: Response, body: string) {
     headers: {
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
+      ...externalFailureHeaders(response),
       ...(response.headers.has("Idempotent-Replayed")
         ? {
             "Idempotent-Replayed": response.headers.get("Idempotent-Replayed")!,

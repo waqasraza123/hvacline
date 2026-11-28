@@ -6,7 +6,9 @@ ConversationTransport = Literal["webrtc", "websocket"]
 
 
 class ConversationProviderError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, account_restricted: bool = False) -> None:
+        super().__init__(message)
+        self.account_restricted = account_restricted
 
 
 class ConversationLanguageConfigurationError(ConversationProviderError):

@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +38,7 @@ export function CustomerBooking({
     setSigningOut(true);
     setError("");
     try {
-      const response = await fetch("/api/account/logout", {
+      const response = await providerFetch("/api/account/logout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",

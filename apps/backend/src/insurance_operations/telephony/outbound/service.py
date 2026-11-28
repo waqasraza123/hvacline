@@ -13,6 +13,10 @@ from insurance_operations.actors import ActorResolutionError, resolve_developmen
 from insurance_operations.database.models.identity import Agency
 from insurance_operations.database.models.operations import AuditEvent
 from insurance_operations.database.models.outbound_demo import OutboundDemoCall
+from insurance_operations.elevenlabs_errors import (
+    ELEVENLABS_ACCOUNT_RESTRICTED,
+    elevenlabs_error_details,
+)
 from insurance_operations.errors import ApiError
 from insurance_operations.settings import ApiSettings
 from insurance_operations.telephony.outbound.destinations import validate_us_destination
@@ -126,7 +130,10 @@ class OutboundDemoService:
                     )
                     if not error.outcome_unknown:
                         row.finalized_at = datetime.now(UTC)
-                return self._response(row)
+                response = self._response(row)
+                if error.account_restricted:
+                    response.provider_error_code = ELEVENLABS_ACCOUNT_RESTRICTED
+                return response
         with self.sessions() as session, session.begin():
             row = self._owned(session, call_id, owner, lock=True)
             if (
@@ -307,7 +314,11 @@ class OutboundDemoService:
         try:
             data = self.provider.conversation(conversation_id)
         except OutboundProviderError as error:
-            raise unavailable() from error
+            failure = unavailable()
+            if error.account_restricted:
+                failure.status_code = 424
+            failure.details.update(elevenlabs_error_details(error.account_restricted))
+            raise failure from error
         self.apply_provider_data(data, event_type="refresh", fingerprint=None)
         return self.get(call_id, None)
 

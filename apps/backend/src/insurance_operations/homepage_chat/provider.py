@@ -3,17 +3,21 @@ import time
 from collections.abc import Callable
 from typing import Protocol
 
+from websockets.exceptions import WebSocketException
 from websockets.sync.client import connect
 
 from insurance_operations.conversations.providers.elevenlabs import (
     ElevenLabsConversationProvider,
 )
+from insurance_operations.elevenlabs_errors import elevenlabs_account_restricted
+from insurance_operations.external_failures import external_failure, record_external_failure
 
 
 class HomepageProviderError(Exception):
-    def __init__(self, *, message_sent: bool) -> None:
+    def __init__(self, *, message_sent: bool, account_restricted: bool = False) -> None:
         super().__init__("The homepage conversation could not finish")
         self.message_sent = message_sent
+        self.account_restricted = account_restricted
 
 
 class HomepageReplyProvider(Protocol):
@@ -134,9 +138,19 @@ class ElevenLabsHomepageProvider:
                             raise ValueError("Missing complete guest response")
                         return reply
                     elif kind in {"error", "client_error"}:
-                        raise ValueError("Provider rejected guest conversation")
+                        record_external_failure(external_failure("elevenlabs", payload=event))
+                        raise HomepageProviderError(
+                            message_sent=message_sent,
+                            account_restricted=elevenlabs_account_restricted(event),
+                        )
         except Exception as error:
-            raise HomepageProviderError(message_sent=message_sent) from error
+            if isinstance(error, (OSError, TimeoutError, WebSocketException)):
+                record_external_failure(external_failure("elevenlabs", error=error))
+            raise HomepageProviderError(
+                message_sent=message_sent,
+                account_restricted=getattr(error, "account_restricted", False)
+                or elevenlabs_account_restricted(str(error)),
+            ) from error
         finally:
             provider.close()
 

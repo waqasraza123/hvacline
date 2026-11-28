@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+import { ELEVENLABS_CREDITS_MESSAGE } from "@/lib/elevenlabs-errors";
 import { afterEach, expect, it, vi } from "vitest";
 import {
   authorizeConversationSession,
@@ -309,4 +311,20 @@ it("preserves protected workspace authorization and retry identity for callback 
   expect(options.headers["X-Demo-Admin-Token"]).toBe("synthetic-admin-token");
   expect(options.headers["Idempotency-Key"]).toBe("save-1-handoff");
   expect(JSON.parse(options.body).request_kind).toBe("CALLBACK");
+});
+
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+
+it("shows the credit toast while preserving the conversation API failure code", async () => {
+  vi.mocked(toast.error).mockClear();
+  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ error: {
+    code: "CONVERSATION_PROVIDER_UNAVAILABLE", message: "Temporarily unavailable",
+    details: { provider_error_code: "ELEVENLABS_ACCOUNT_RESTRICTED" },
+  } }, { status: 424 })));
+  await expect(authorizeConversationSession("", undefined, "TEXT")).rejects.toMatchObject({
+    message: ELEVENLABS_CREDITS_MESSAGE, code: "CONVERSATION_PROVIDER_UNAVAILABLE", status: 424,
+  });
+  expect(toast.error).toHaveBeenCalledWith(ELEVENLABS_CREDITS_MESSAGE, expect.objectContaining({
+    id: "elevenlabs-account-restricted",
+  }));
 });

@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import type {
   ReceptionistSettings,
   ReceptionistSettingsDraft,
@@ -21,7 +22,7 @@ export async function getReceptionistSettings(
   apiBaseUrl: string,
   adminToken?: string,
 ): Promise<ReceptionistSettings> {
-  const response = await fetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
+  const response = await providerFetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
     cache: "no-store",
     headers: adminToken ? { "X-Demo-Admin-Token": adminToken } : undefined,
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MILLISECONDS),
@@ -39,7 +40,7 @@ export async function replaceReceptionistSettings(
   expectedRowVersion: number,
   adminToken?: string,
 ): Promise<ReceptionistSettings> {
-  const response = await fetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
+  const response = await providerFetch(`${apiBaseUrl}${SETTINGS_PATH}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

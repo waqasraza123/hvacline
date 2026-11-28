@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -13,7 +15,7 @@ class AccessError extends Error {
 }
 
 async function accessRequest(path = "", body?: unknown): Promise<unknown> {
-  const response = await fetch(`/api/v1/development/phone-access${path}`, {
+  const response = await providerFetch(`/api/v1/development/phone-access${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),

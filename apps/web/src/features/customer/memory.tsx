@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ProductIcon } from "@/components/product-icons";
 import { parseMemory } from "./memory-model";
@@ -28,7 +30,7 @@ export function CustomerMemory() {
 
   const load = useCallback(async () => {
     const request = ++version.current;
-    const response = await fetch("/api/v1/development/memory", {
+    const response = await providerFetch("/api/v1/development/memory", {
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     });
@@ -82,7 +84,7 @@ export function CustomerMemory() {
     setError("");
     setMessage("");
     try {
-      const response = await fetch(`/api/v1/development/memory/${path}`, {
+      const response = await providerFetch(`/api/v1/development/memory/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: AbortSignal.timeout(15000),

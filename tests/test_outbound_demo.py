@@ -952,3 +952,16 @@ def test_consented_us_preflight_preserves_tls_digest_and_caller_loop_protection(
     assert all(
         request.headers["xi-api-key"] == "synthetic-api-key" for request in requests
     )
+
+
+def test_outbound_preflight_preserves_account_restriction() -> None:
+    provider = ElevenLabsOutboundProvider(
+        settings(),
+        client=httpx.Client(transport=httpx.MockTransport(
+            lambda _: httpx.Response(403, json={"detail": {"status": "access_denied"}})
+        ), base_url="https://api.elevenlabs.io"),
+    )
+    with pytest.raises(OutboundProviderError) as failure:
+        provider.preflight(NUMBER)
+    assert failure.value.account_restricted is True
+    assert failure.value.outcome_unknown is False

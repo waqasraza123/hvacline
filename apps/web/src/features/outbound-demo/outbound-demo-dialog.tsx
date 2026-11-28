@@ -1,5 +1,9 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
+import { notifyElevenLabsError } from "@/lib/elevenlabs-toast";
+
 import * as Dialog from "@radix-ui/react-dialog";
 import Link from "next/link";
 import {
@@ -102,11 +106,12 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
     setAuthentication("loading");
     setAvailable(false);
     try {
-      const response = await fetch("/api/outbound-demo", {
+      const response = await providerFetch("/api/outbound-demo", {
         cache: "no-store",
         signal: AbortSignal.timeout(45_000),
       });
       const data: unknown = await response.json();
+      notifyElevenLabsError(data);
       if (version !== availabilityVersion.current) return;
       if (signInRequired(data)) {
         setAuthentication("required");
@@ -140,11 +145,12 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
     checking.current = true;
     setBusy(true);
     try {
-      const response = await fetch(
+      const response = await providerFetch(
         `/api/outbound-demo?request_id=${requestId.current}`,
         { cache: "no-store", signal: AbortSignal.timeout(45_000) },
       );
       const data: unknown = await response.json();
+      notifyElevenLabsError(data);
       if (signInRequired(data)) {
         setAuthentication("required");
         setAvailable(false);
@@ -243,7 +249,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
         : "Checking your code…",
     );
     try {
-      const response = await fetch("/api/outbound-demo", {
+      const response = await providerFetch("/api/outbound-demo", {
         method: "POST",
         signal: AbortSignal.timeout(45_000),
         headers: { "Content-Type": "application/json" },
@@ -329,7 +335,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
     }
     setMessage("Requesting your one-time call. Keep your phone nearby.");
     try {
-      const response = await fetch("/api/outbound-demo", {
+      const response = await providerFetch("/api/outbound-demo", {
         method: "POST",
         signal: AbortSignal.timeout(45_000),
         headers: { "Content-Type": "application/json" },
@@ -343,6 +349,7 @@ export function OutboundDemoDialog({ children }: { children: ReactNode }) {
         }),
       });
       const data: unknown = await response.json();
+      notifyElevenLabsError(data);
       if (!response.ok) {
         if (signInRequired(data)) {
           setAuthentication("required");

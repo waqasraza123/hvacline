@@ -11,6 +11,7 @@ import httpx
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy.orm import Session
 
+from insurance_operations.external_failures import provider_request, record_provider_exception
 from insurance_operations.database.models.booking_integrations import CalendarConnection
 from insurance_operations.hvac.calendar import (
     CalendarAuthorizationRequired,
@@ -96,7 +97,7 @@ class GoogleOAuth:
         if secret is None or not self.settings.google_client_id:
             raise CalendarUnavailable("Google OAuth is not configured")
         try:
-            response = self.client.post(
+            response = provider_request("google_calendar", self.client, "POST",
                 "https://oauth2.googleapis.com/token",
                 data={
                     **values,
@@ -122,13 +123,14 @@ class GoogleOAuth:
                 raise ValueError("invalid token lifetime")
             return data
         except (httpx.HTTPError, ValueError) as error:
+            record_provider_exception("google_calendar", error)
             raise CalendarUnavailable(
                 "Google authorization is temporarily unavailable"
             ) from error
 
     def calendar(self, access_token: str, calendar_id: str) -> str:
         try:
-            response = self.client.get(
+            response = provider_request("google_calendar", self.client, "GET",
                 "https://www.googleapis.com/calendar/v3/users/me/calendarList/"
                 + quote(calendar_id, safe=""),
                 headers={"Authorization": "Bearer " + access_token},
@@ -145,6 +147,7 @@ class GoogleOAuth:
                 raise ValueError("writable calendar required")
             return str(data["id"])
         except (httpx.HTTPError, ValueError, AttributeError) as error:
+            record_provider_exception("google_calendar", error)
             raise CalendarUnavailable(
                 "Select a Google calendar with write access"
             ) from error

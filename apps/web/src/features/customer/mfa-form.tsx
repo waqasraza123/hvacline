@@ -1,5 +1,7 @@
 "use client";
 
+import { providerFetch } from "@/lib/provider-fetch";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -29,7 +31,7 @@ async function securityRequest(
   action: string,
   body?: object,
 ): Promise<unknown> {
-  const response = await fetch(`/api/account/${action}`, {
+  const response = await providerFetch(`/api/account/${action}`, {
     method: body === undefined ? "GET" : "POST",
     cache: "no-store",
     headers: { "Content-Type": "application/json" },

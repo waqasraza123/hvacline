@@ -8,6 +8,7 @@ import httpx
 
 from insurance_operations.job_execution import JobDeadlineExceeded, check_job_deadline, provider_client
 from insurance_operations.errors import ApiError
+from insurance_operations.external_failures import ExternalProvider, provider_stream, record_provider_exception, response_failure
 from insurance_operations.recovery.configuration import channel_configured
 from insurance_operations.recovery.providers import DeliveryOutcome, RecoveryContact, RECOVERY_VOICE_INSTRUCTIONS, VOICE_FIRST_MESSAGE, sms_message
 from insurance_operations.settings import DatabaseSettings
@@ -24,13 +25,14 @@ class TransportFailure(RuntimeError):
 
 
 def json_request(method: str, url: str, *, auth: tuple[str, str] | None = None, headers: dict[str, str] | None = None,
-                 data: dict[str, str] | None = None, payload: dict[str, object] | None = None) -> dict[str, Any]:
+                 data: dict[str, str] | None = None, payload: dict[str, object] | None = None,
+                 provider: ExternalProvider = "twilio") -> dict[str, Any]:
     check_job_deadline()
     try:
-        with provider_client() as client, client.stream(method, url, auth=auth, headers=headers, data=data,
+        with provider_client() as client, provider_stream(provider, client, method, url, auth=auth, headers=headers, data=data,
                 json=payload, follow_redirects=False, timeout=httpx.Timeout(8, connect=3)) as response:
             if response.status_code >= 300:
-                raise TransportFailure("PROVIDER_REJECTED", unknown=method == "POST" and response.status_code not in {400, 401, 403, 404, 422, 429})
+                raise TransportFailure(response_failure(provider, response).code, unknown=method == "POST" and response.status_code not in {400, 401, 403, 404, 422, 429})
             content = bytearray()
             for chunk in response.iter_bytes():
                 check_job_deadline()
@@ -43,8 +45,9 @@ def json_request(method: str, url: str, *, auth: tuple[str, str] | None = None, 
             return result
     except TransportFailure:
         raise
-    except (httpx.HTTPError, ValueError, TypeError):
-        raise TransportFailure("PROVIDER_OUTCOME_UNRESOLVED", unknown=method == "POST") from None
+    except (httpx.HTTPError, ValueError, TypeError) as error:
+        failure = record_provider_exception(provider, error)
+        raise TransportFailure(failure.code, unknown=method == "POST") from None
 
 
 class TwilioRecoverySms:
@@ -105,7 +108,7 @@ class ElevenLabsRecoveryVoice:
         if secret is None:
             raise TransportFailure("VOICE_PROVIDER_UNAVAILABLE")
         return json_request(method, "https://api.elevenlabs.io" + path,
-            headers={"xi-api-key": secret.get_secret_value()}, payload=payload)
+            headers={"xi-api-key": secret.get_secret_value()}, payload=payload, provider="elevenlabs")
 
     def preflight(self, contact: RecoveryContact) -> None:
         s = self.settings

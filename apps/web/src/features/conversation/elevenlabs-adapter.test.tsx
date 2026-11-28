@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+import { ELEVENLABS_CREDITS_MESSAGE } from "@/lib/elevenlabs-errors";
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, expect, it, vi } from "vitest";
@@ -140,3 +142,43 @@ it.each(["VOICE", "TEXT"] as const)(
     });
   },
 );
+
+vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
+
+it("shows the credit toast for an SDK account restriction during connection", async () => {
+  vi.stubGlobal("window", { setTimeout, clearTimeout });
+  let client!: ConversationClient;
+  renderToStaticMarkup(<ElevenLabsConversationAdapter memoryEnabled={false}
+    onDisconnect={vi.fn()} onDraft={vi.fn()} onError={vi.fn()}
+    onApprovedFaqLookup={vi.fn()} onTranscript={vi.fn()} onBookingTool={vi.fn()}>
+    {(value) => { client = value; return null; }}
+  </ElevenLabsConversationAdapter>);
+  sdk.startSession.mockImplementationOnce((options) => {
+    (options as unknown as { onError: (message: string) => void }).onError("quota_exceeded");
+  });
+  await expect(client.start({
+    sessionId: "synthetic-session", inputMode: "VOICE", transport: "webrtc",
+    credential: "synthetic-token", maximumDurationSeconds: 180,
+    confirmationExpiresAt: "2030-01-01T00:30:00Z",
+  })).rejects.toThrow(ELEVENLABS_CREDITS_MESSAGE);
+  expect(toast.error).toHaveBeenCalledWith(ELEVENLABS_CREDITS_MESSAGE, expect.objectContaining({
+    id: "elevenlabs-account-restricted",
+  }));
+});
+
+it("handles a rejected SDK connection promise without waiting for the connection timer", async () => {
+  vi.stubGlobal("window", { setTimeout, clearTimeout });
+  let client!: ConversationClient;
+  renderToStaticMarkup(<ElevenLabsConversationAdapter memoryEnabled={false}
+    onDisconnect={vi.fn()} onDraft={vi.fn()} onError={vi.fn()}
+    onApprovedFaqLookup={vi.fn()} onTranscript={vi.fn()} onBookingTool={vi.fn()}>
+    {(value) => { client = value; return null; }}
+  </ElevenLabsConversationAdapter>);
+  sdk.startSession.mockImplementationOnce(() => Promise.reject(new Error("insufficient_credits")));
+  await expect(client.start({
+    sessionId: "synthetic-session", inputMode: "VOICE", transport: "webrtc",
+    credential: "synthetic-token", maximumDurationSeconds: 180,
+    confirmationExpiresAt: "2030-01-01T00:30:00Z",
+  })).rejects.toThrow(ELEVENLABS_CREDITS_MESSAGE);
+  expect(toast.error).toHaveBeenCalledWith(ELEVENLABS_CREDITS_MESSAGE, expect.anything());
+});

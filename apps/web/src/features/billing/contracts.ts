@@ -1,3 +1,4 @@
+import { providerFetch } from "@/lib/provider-fetch";
 import defaults from "../../../../backend/src/insurance_operations/billing/plans.json";
 
 export type PlanKey = "essential" | "comfort" | "complete";
@@ -119,7 +120,7 @@ export async function billingRequest<T>(
 ): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`/api/billing/${path}`, {
+    response = await providerFetch(`/api/billing/${path}`, {
       method,
       cache: "no-store",
       redirect: "error",

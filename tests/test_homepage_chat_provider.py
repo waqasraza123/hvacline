@@ -124,3 +124,10 @@ def test_guest_input_requires_a_bounded_message_and_explicit_disclosure(
                 "ai_disclosure_accepted": accepted,
             }
         )
+
+
+def test_guest_provider_preserves_account_restriction_without_spending_a_message() -> None:
+    with pytest.raises(HomepageProviderError) as failure:
+        run_provider([event("error", detail={"status": "insufficient_credits"})])
+    assert failure.value.account_restricted is True
+    assert failure.value.message_sent is False
